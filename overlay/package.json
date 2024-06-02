@@ -1,0 +1,14 @@
+{
+  "name": "memeover",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Simon HAZARD",
+  "license": "MIT",
+  "description": "An overlay app to integrate to Discord",
+  "devDependencies": {
+    "electron": "^30.0.9"
+  }
+}
