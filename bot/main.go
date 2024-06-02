@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/gorilla/websocket"
@@ -27,42 +27,43 @@ var wsConn *websocket.Conn
 // 	Guild = flag.String("guild", os.Getenv("GUILD_ID"), "Guild ID")
 // )
 
-func main() {
-	err := godotenv.Load("local.env")
-	if err != nil {
-		log.Fatal("Error")
-	}
-	botToken := os.Getenv("BOT_TOKEN")
-	// bot.BotToken = botToken
-	// bot.Run()
-
-	dg, err := discordgo.New("Bot " + botToken)
-
-	dg.AddHandler(messageCreate)
-
-	err = dg.Open()
-	if err != nil {
-		fmt.Println("error opening connection,", err)
-		return
-	}
-	defer dg.Close()
-
-	http.HandleFunc("/ws", handleConnections)
-	log.Println("http server started on :8080")
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+func checkNilErr(e error, message string) {
+	if e != nil {
+		log.Fatal("Error message" + message)
 	}
 }
 
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Println("message", m.Attachments)
-	if m.Author.ID == s.State.User.ID {
+func main() {
+	err := godotenv.Load("local.env")
+	checkNilErr(err, "env error")
+
+	botToken := os.Getenv("BOT_TOKEN")
+
+	discord, discordErr := discordgo.New("Bot " + botToken)
+	checkNilErr(discordErr, "discord init error")
+
+	discord.AddHandler(messageCreate)
+
+	err = discord.Open()
+	checkNilErr(err, "discord open error")
+
+	defer discord.Close()
+
+	http.HandleFunc("/ws", handleConnections)
+
+	log.Println("http server started on :8080")
+
+	err = http.ListenAndServe(":8080", nil)
+	checkNilErr(err, "listen and server error")
+}
+
+func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate) {
+	if message.Author.ID == discord.State.User.ID {
 		return
 	}
 
-	for _, attachments := range m.Attachments {
-		if attachments.ContentType == "image" {
+	for _, attachments := range message.Attachments {
+		if strings.Contains(attachments.ContentType, "image") {
 			sendMessageToWebSocket(attachments.URL)
 		}
 	}
@@ -86,7 +87,7 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendMessageToWebSocket(message string) {
-	log.Println(message)
+	log.Println("message", message)
 	if wsConn != nil {
 		err := wsConn.WriteMessage(websocket.TextMessage, []byte(message))
 		if err != nil {
