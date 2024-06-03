@@ -27,6 +27,7 @@ var wsConn *websocket.Conn
 // 	Guild = flag.String("guild", os.Getenv("GUILD_ID"), "Guild ID")
 // )
 
+// Handle error
 func checkNilErr(e error, message string) {
 	if e != nil {
 		log.Fatal("Error message" + message)

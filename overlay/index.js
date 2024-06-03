@@ -4,23 +4,32 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("node:path");
 
+if (!app.isPackaged) {
+  app.disableHardwareAcceleration();
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    alwaysOnTop: true,
-    frame: false,
-    autoHideMenuBar: true,
-    transparent: true,
+    x: 50,
+    y: 50,
+    focusable: false,
+    useContentSize: true,
+    alwaysOnTop: app.isPackaged ? true : false,
+    frame: app.isPackaged ? false : true,
+    autoHideMenuBar: app.isPackaged ? true : false,
+    transparent: app.isPackaged ? true : false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
   });
-
+  mainWindow.setIgnoreMouseEvents(true);
   // and load the index.html of the app.
   mainWindow.loadFile("index.html");
 
+  mainWindow.on("close", () => {
+    mainWindow = null;
+  });
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
 };
@@ -30,7 +39,7 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
-
+  createWindow();
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
