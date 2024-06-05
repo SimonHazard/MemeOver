@@ -6,9 +6,12 @@
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "package": "electron-forge package --platform=win32",
+    "package:linux": "electron-forge package",
+    "make": "electron-forge make --platform=win32",
+    "make:linux": "electron-forge make",
+    "publish": "env-cmd electron-forge publish --platform=win32",
+    "publish:linux": "env-cmd electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "devDependencies": {

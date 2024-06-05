@@ -1,7 +1,8 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
-import { MakerDeb } from "@electron-forge/maker-deb";
+// Doesn't work with my current OS
+// import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
@@ -13,10 +14,13 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({
+      authors: "SimonHazard",
+      description: "An overlay app to integrate to Discord",
+    }),
     new MakerZIP({}, ["darwin"]),
     new MakerRpm({}),
-    new MakerDeb({}),
+    // new MakerDeb({}),
   ],
   plugins: [
     new VitePlugin({
@@ -57,8 +61,8 @@ const config: ForgeConfig = {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "Simon HAZARD",
-          name: "memeover",
+          owner: "SimonHazard",
+          name: "MemeOver",
         },
         prerelease: true,
       },
