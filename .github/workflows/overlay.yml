@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,8 +41,43 @@ jobs:
           name: linux-build
           path: overlay/out/make/*
 
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('overlay/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: cd overlay && yarn install
+
+      - name: Build the Electron app
+        run: cd overlay && yarn package
+
+      - name: Make the Electron app
+        run: cd overlay && yarn make
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: overlay/out/make/*
+
   release:
-    needs: build
+    needs: [build-linux, build-windows]
     permissions: write-all
     runs-on: ubuntu-latest
 
@@ -53,6 +88,12 @@ jobs:
           name: linux-build
           path: ./builds/linux
 
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: ./builds/windows
+
       - name: Generate release tag
         id: tag
         run: |
@@ -62,7 +103,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./builds/linux/*.deb
+          files: |
+            ./builds/linux/*.deb
+            ./builds/windows/*.exe
           tag_name: ${{ steps.tag.outputs.release_tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
