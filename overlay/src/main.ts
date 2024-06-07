@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, BrowserWindowConstructorOptions } from "electron";
 import path from "path";
 import { updateElectronApp } from "update-electron-app";
 
@@ -13,19 +13,26 @@ if (!app.isPackaged) {
   app.disableHardwareAcceleration();
 }
 
+const browserWindowConstructorOptions: BrowserWindowConstructorOptions =
+  app.isPackaged
+    ? {
+        // x: 50,
+        // y: 50,
+        // focusable: false,
+        // alwaysOnTop: true,
+        // frame: false,
+        // autoHideMenuBar: true,
+        // transparent: true,
+      }
+    : {};
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    x: app.isPackaged ? 50 : undefined,
-    y: app.isPackaged ? 50 : undefined,
-    focusable: app.isPackaged ? false : true,
     useContentSize: true,
-    alwaysOnTop: app.isPackaged ? true : false,
-    frame: app.isPackaged ? false : true,
-    autoHideMenuBar: app.isPackaged ? true : false,
-    transparent: app.isPackaged ? true : false,
+    ...browserWindowConstructorOptions,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
