@@ -8,7 +8,6 @@ on:
 jobs:
   publish-linux:
     runs-on: ubuntu-latest
-    permissions: write-all
 
     steps:
       - name: Checkout code
@@ -43,7 +42,6 @@ jobs:
 
   publish-windows:
     runs-on: windows-latest
-    permissions: write-all
 
     steps:
       - name: Checkout code
@@ -78,7 +76,6 @@ jobs:
 
   publish-macos:
     runs-on: macos-latest
-    permissions: write-all
 
     steps:
       - name: Checkout code
