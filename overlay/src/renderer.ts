@@ -28,21 +28,21 @@
 
 import "./index.css";
 
-const socket = new WebSocket("ws://localhost:8080/ws");
+// const socket = new WebSocket("ws://localhost:8080/ws");
 
-socket.onmessage = function (event) {
-  console.log(event);
-  const imgURL = event.data;
-  const imgElement = document.createElement("img");
-  imgElement.src = imgURL;
-  imgElement.style.width = "300px";
-  document.getElementById("images").appendChild(imgElement);
-};
+// socket.onmessage = function (event) {
+//   console.log(event);
+//   const imgURL = event.data;
+//   const imgElement = document.createElement("img");
+//   imgElement.src = imgURL;
+//   imgElement.style.width = "300px";
+//   document.getElementById("images").appendChild(imgElement);
+// };
 
-socket.onclose = function (event) {
-  console.log("WebSocket closed: ", event);
-};
+// socket.onclose = function (event) {
+//   console.log("WebSocket closed: ", event);
+// };
 
-socket.onerror = function (error) {
-  console.log("WebSocket error: ", error);
-};
+// socket.onerror = function (error) {
+//   console.log("WebSocket error: ", error);
+// };

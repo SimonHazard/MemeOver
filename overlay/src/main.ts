@@ -1,4 +1,4 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions } from "electron";
+import { app, BrowserWindow } from "electron";
 import path from "path";
 import { updateElectronApp } from "update-electron-app";
 
@@ -9,38 +9,38 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-if (!app.isPackaged) {
-  app.disableHardwareAcceleration();
-}
+// if (!app.isPackaged) {
+//   app.disableHardwareAcceleration();
+// }
 
-const browserWindowConstructorOptions: BrowserWindowConstructorOptions =
-  app.isPackaged
-    ? {
-        // x: 50,
-        // y: 50,
-        // focusable: false,
-        // alwaysOnTop: true,
-        // frame: false,
-        // autoHideMenuBar: true,
-        // transparent: true,
-      }
-    : {};
+// const browserWindowConstructorOptions: BrowserWindowConstructorOptions =
+//   app.isPackaged
+//     ? {
+//         // x: 50,
+//         // y: 50,
+//         // focusable: false,
+//         // alwaysOnTop: true,
+//         // frame: false,
+//         // autoHideMenuBar: true,
+//         // transparent: true,
+//       }
+//     : {};
 
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    useContentSize: true,
-    ...browserWindowConstructorOptions,
+    // useContentSize: true,
+    // ...browserWindowConstructorOptions,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
   });
 
-  if (app.isPackaged) {
-    mainWindow.setIgnoreMouseEvents(true);
-  }
+  // if (app.isPackaged) {
+  //   mainWindow.setIgnoreMouseEvents(true);
+  // }
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
