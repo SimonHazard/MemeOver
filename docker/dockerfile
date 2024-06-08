@@ -14,7 +14,7 @@ RUN go mod download
 COPY ../bot .
 
 # Build the Go app
-RUN go build -o memeover-discord-bot .
+RUN go build -o discord-bot .
 
 # Start a new stage from scratch
 FROM alpine:latest
@@ -23,7 +23,7 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/memeover-discord-bot .
+COPY --from=builder /app/discord-bot .
 
 # Command to run the executable
-CMD ["./memeover-discord-bot"]
+CMD ["./discord-bot"]

@@ -35,10 +35,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/memeover-discord-bot:latest
+          tags: ghcr.io/memeover/discord-bot:latest
+          file: ./docker/dockerfile
           build-args: 
             BOT_TOKEN=${{ secrets.BOT_TOKEN }}
             APPLICATION_ID=${{ secrets.APPLICATION_ID }}
