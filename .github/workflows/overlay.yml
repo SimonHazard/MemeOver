@@ -104,8 +104,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./builds/linux/*.deb
-            ./builds/windows/*.exe
+            ./builds/linux/deb/x64/*.deb
+            ./builds/linux/rpm/x64/*.rpm
+            ./builds/windows/squirrel.windows/x64/*.exe
           tag_name: ${{ steps.tag.outputs.release_tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
