@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "An overlay app to integrate to Discord",
   "main": ".vite/build/main.js",
+  "repository": "https://github.com/SimonHazard/MemeOver",
   "scripts": {
     "start": "electron-forge start",
     "package:windows": "electron-forge package --platform=win32",
