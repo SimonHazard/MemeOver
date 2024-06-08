@@ -61,6 +61,7 @@ const config: ForgeConfig = {
           name: "MemeOver",
         },
         prerelease: true,
+        draft: false,
       },
     },
   ],
