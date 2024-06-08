@@ -7,11 +7,16 @@
   "scripts": {
     "start": "electron-forge start",
     "package:windows": "electron-forge package --platform=win32",
+    "package:linux": "electron-forge package --platform=linux",
+    "package:macos": "electron-forge package --platform=darwin",
     "package": "electron-forge package",
     "make:windows": "electron-forge make --platform=win32",
+    "make:linux": "electron-forge make --platform=linux",
+    "make:macos": "electron-forge make --platform=darwin",
     "make": "electron-forge make",
-    "publish:windows": "env-cmd electron-forge publish --platform=win32",
-    "publish": "env-cmd electron-forge publish",
+    "publish:windows": "electron-forge publish --platform=win32",
+    "publish:linux": "electron-forge publish --platform=linux",
+    "publish:macos": "electron-forge publish --platform=darwin",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "devDependencies": {
