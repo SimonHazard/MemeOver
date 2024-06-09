@@ -6,8 +6,17 @@ on:
       - main
 
 jobs:
-  publish-linux:
-    runs-on: ubuntu-latest
+  publish:
+    strategy:
+      matrix:
+        os:
+          - version: ubuntu-latest
+            cmd: linux
+          - version: windows-latest
+            cmd: windows
+          - version: macos-latest
+            cmd: macos
+    runs-on: ${{ matrix.os.version }}
 
     steps:
       - name: Checkout code
@@ -29,82 +38,7 @@ jobs:
       - name: Install dependencies
         run: cd overlay && yarn install
 
-      - name: Build the Electron app
-        run: cd overlay && yarn package:linux
-
-      - name: Make the Electron app
-        run: cd overlay && yarn make:linux
-
-      - name: Publish to GitHub
-        run: cd overlay && yarn publish:linux
+      - name: Build, Make and Publish to GitHub
+        run: cd overlay && yarn publish:${{ matrix.os.cmd }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-windows:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('overlay/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install dependencies
-        run: cd overlay && yarn install
-
-      - name: Build the Electron app
-        run: cd overlay && yarn package:windows
-
-      - name: Make the Electron app
-        run: cd overlay && yarn make:windows
-
-      - name: Publish to GitHub
-        run: cd overlay && yarn publish:windows
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-macos:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('overlay/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install dependencies
-        run: cd overlay && yarn install
-
-      - name: Build the Electron app
-        run: cd overlay && yarn package:macos
-
-      - name: Make the Electron app
-        run: cd overlay && yarn make:macos
-
-      - name: Publish to GitHub
-        run: cd overlay && yarn publish:macos
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

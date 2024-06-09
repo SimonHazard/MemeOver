@@ -18,6 +18,7 @@
     "publish:windows": "electron-forge publish --platform=win32",
     "publish:linux": "electron-forge publish --platform=linux",
     "publish:macos": "electron-forge publish --platform=darwin",
+    "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "devDependencies": {
