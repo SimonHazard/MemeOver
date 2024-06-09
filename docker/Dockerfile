@@ -5,13 +5,13 @@ FROM golang:1.22.4 AS build-stage
 WORKDIR /app
 
 # Copy go.mod and go.sum files
-COPY ../bot/go.mod ../bot/go.sum ./
+COPY bot/go.mod bot/go.sum ./
 
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
 # Copy the source from the current directory to the Working Directory inside the container
-COPY ../bot/*.go ./
+COPY bot/*.go ./
 
 # Build the Go app
 RUN go build -o discord-bot .
