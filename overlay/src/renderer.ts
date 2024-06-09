@@ -28,21 +28,55 @@
 
 import "./index.css";
 
-// const socket = new WebSocket("ws://localhost:8080/ws");
+const socket = new WebSocket("ws://localhost:8080/ws");
 
-// socket.onmessage = function (event) {
-//   console.log(event);
-//   const imgURL = event.data;
-//   const imgElement = document.createElement("img");
-//   imgElement.src = imgURL;
-//   imgElement.style.width = "300px";
-//   document.getElementById("images").appendChild(imgElement);
-// };
+type Message = {
+  text: string | null;
+  image_urls: string[] | null;
+  video_urls: string[] | null;
+};
 
-// socket.onclose = function (event) {
-//   console.log("WebSocket closed: ", event);
-// };
+socket.onmessage = function (event) {
+  const data: Message = JSON.parse(event.data);
 
-// socket.onerror = function (error) {
-//   console.log("WebSocket error: ", error);
-// };
+  const messageDiv = document.createElement("div");
+
+  messageDiv.className = "message";
+
+  if (data.text) {
+    const textElement = document.createElement("p");
+    textElement.textContent = data.text;
+    messageDiv.appendChild(textElement);
+  }
+
+  data.image_urls?.forEach((url: string) => {
+    const imgElement = document.createElement("img");
+    imgElement.src = url;
+    imgElement.style.width = "300px";
+    messageDiv.appendChild(imgElement);
+  });
+
+  data.video_urls?.forEach((url: string) => {
+    const videoElement = document.createElement("video");
+    videoElement.src = url;
+    videoElement.controls = false;
+    videoElement.style.width = "300px";
+    videoElement.autoplay = true;
+    messageDiv.appendChild(videoElement);
+  });
+
+  document.getElementById("messages").appendChild(messageDiv);
+
+  // Remove the messageDiv after 5 seconds
+  setTimeout(() => {
+    messageDiv.remove();
+  }, 5000);
+};
+
+socket.onclose = function (event) {
+  console.log("WebSocket closed: ", event);
+};
+
+socket.onerror = function (error) {
+  console.log("WebSocket error: ", error);
+};
