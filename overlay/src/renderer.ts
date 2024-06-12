@@ -34,14 +34,23 @@ type Message = {
   text: string | null;
   image_urls: string[] | null;
   video_urls: string[] | null;
+  code?: string;
 };
 
 socket.onmessage = function (event) {
   const data: Message = JSON.parse(event.data);
 
   const messageDiv = document.createElement("div");
+  const messageDivCode = document.createElement("div");
 
   messageDiv.className = "message";
+  messageDivCode.className = "messageCode";
+
+  if (data.code) {
+    const textElement = document.createElement("p");
+    textElement.textContent = data.code;
+    messageDivCode.appendChild(textElement);
+  }
 
   if (data.text) {
     const textElement = document.createElement("p");
@@ -66,6 +75,7 @@ socket.onmessage = function (event) {
   });
 
   document.getElementById("messages").appendChild(messageDiv);
+  document.getElementById("messageCode").appendChild(messageDivCode);
 
   // Remove the messageDiv after 5 seconds
   setTimeout(() => {
