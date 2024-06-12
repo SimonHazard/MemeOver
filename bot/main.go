@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -12,6 +14,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type Message struct {
+	Text      string   `json:"text"`
+	ImageURLs []string `json:"image_urls"`
+	VideoURLs []string `json:"video_urls"`
+}
+
+type MessageUnpaired struct {
+	Code string `json:"code"`
+}
+
+// Websocket parameters
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -20,19 +33,49 @@ var wsUpgrader = websocket.Upgrader{
 	},
 }
 
-type Message struct {
-	Text      string   `json:"text"`
-	ImageURLs []string `json:"image_urls"`
-	VideoURLs []string `json:"video_urls"`
-}
+// Bot parameters
+var (
+	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+)
 
-var websocketConnection *websocket.Conn
+// Temporary map to store websocket connection unpaired
+var websocketConnectionsUnpaired = make(map[string]*websocket.Conn)
 
-// var (
-// 	Token = flag.String("token", os.Getenv("BOT_TOKEN"), "Bot authentication token")
-// 	App   = flag.String("app", os.Getenv("APPLICATION_ID"), "Application ID")
-// 	Guild = flag.String("guild", os.Getenv("GUILD_ID"), "Guild ID")
-// )
+// var websocketConnectionsPaired = make(map[string][]string)
+
+var (
+	dmPermission = false
+	commands     = []*discordgo.ApplicationCommand{
+		{
+			Name:         "join",
+			Description:  "This command permits to join a MemeOver session",
+			DMPermission: &dmPermission,
+		},
+		{
+			Name:         "hello",
+			Description:  "say hello to the bot",
+			DMPermission: &dmPermission,
+		}}
+
+	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"join": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Hey there! Congratulations, you just executed your first slash command",
+				},
+			})
+		},
+		"hello": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Hey there! Congratulations, you just executed your first slash command",
+				},
+			})
+		},
+	}
+)
 
 // Handle error
 func checkNilErr(err error, message string) {
@@ -46,14 +89,26 @@ func main() {
 	checkNilErr(err, "env error:")
 
 	botToken := os.Getenv("BOT_TOKEN")
+	applicationId := os.Getenv("APPLICATION_ID")
 
 	discord, discordErr := discordgo.New("Bot " + botToken)
 	checkNilErr(discordErr, "discord init error:")
 
 	discord.AddHandler(messageCreate)
 
+	discord.AddHandler(interactionCreate)
+
 	err = discord.Open()
 	checkNilErr(err, "discord open error:")
+
+	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
+	for i, v := range commands {
+		cmd, err := discord.ApplicationCommandCreate(applicationId, "", v)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+		}
+		registeredCommands[i] = cmd
+	}
 
 	defer discord.Close()
 
@@ -63,13 +118,44 @@ func main() {
 
 	err = http.ListenAndServe(":8080", nil)
 	checkNilErr(err, "listen and server error")
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	log.Println("Press Ctrl+C to exit")
+	<-stop
+
+	if *RemoveCommands {
+		log.Println("Removing commands...")
+		for _, v := range registeredCommands {
+			err := discord.ApplicationCommandDelete(applicationId, "", v.ID)
+			if err != nil {
+				log.Panicf("Cannot delete '%v' command: %v", v.Name, err)
+			}
+		}
+	}
+
+	log.Println("Gracefully shutting down.")
 }
 
+func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.Type != discordgo.InteractionApplicationCommand {
+		return
+	}
+
+	if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+		h(s, i)
+	}
+}
+
+// Handle only server messages
 // Create the message to send through the websocket
 func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate) {
 	if message.Author.ID == discord.State.User.ID {
 		return
 	}
+
+	log.Print("message", message.GuildID)
+	log.Print("discord", discord)
 
 	var imageUrls []string
 	var videoUrls []string
@@ -104,37 +190,50 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 // Handle the connection of the websocket
 func handleConnections(w http.ResponseWriter, r *http.Request) {
 	var err error
+	var websocketConnection *websocket.Conn
 
 	websocketConnection, err = wsUpgrader.Upgrade(w, r, nil)
 
 	checkNilErr(err, "ws connection:")
 
-	defer websocketConnection.Close()
+	// TODO Create a unique ID
+	// TODO When websocket close, remove the ID of the user disconnected
+	websocketConnectionsUnpaired["a"] = websocketConnection
 
-	for {
-		_, _, err := websocketConnection.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
+	messageToSend := MessageUnpaired{
+		Code: "a",
 	}
+
+	messageJSON, err := json.Marshal(messageToSend)
+
+	if err != nil {
+		log.Println("error marshaling message:", err)
+		return
+	}
+
+	websocketConnection.WriteMessage(websocket.TextMessage, messageJSON)
 }
 
+// TODO Filter by GuildID
 // Send JSON message to our websocket
 func sendMessageToWebSocket(message Message) {
 	log.Println("message", message)
-	if websocketConnection != nil {
-		messageJSON, err := json.Marshal(message)
 
-		if err != nil {
-			log.Println("error marshaling message:", err)
-			return
-		}
+	for _, websocketConnection := range websocketConnectionsUnpaired {
+		if websocketConnection != nil {
+			messageJSON, err := json.Marshal(message)
 
-		err = websocketConnection.WriteMessage(websocket.TextMessage, messageJSON)
+			if err != nil {
+				log.Println("error marshaling message:", err)
+				return
+			}
 
-		if err != nil {
-			log.Println("write:", err)
+			err = websocketConnection.WriteMessage(websocket.TextMessage, messageJSON)
+
+			if err != nil {
+				log.Println("write:", err)
+			}
 		}
 	}
+
 }
