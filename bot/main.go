@@ -26,9 +26,8 @@ func main() {
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
-	log.Println("Press Ctrl+C to exit")
 	<-stop
 
 	cleanupCommands(discord, applicationId)
-	log.Println("Gracefully shutting down.")
+	log.Println("http server shutting down")
 }

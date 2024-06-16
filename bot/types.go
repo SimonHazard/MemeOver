@@ -6,6 +6,6 @@ type Message struct {
 	VideoURLs []string `json:"video_urls"`
 }
 
-type MessageUnpaired struct {
+type MessageCode struct {
 	Code string `json:"code"`
 }
