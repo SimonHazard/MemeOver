@@ -34,6 +34,7 @@ const createWindow = () => {
     useContentSize: true,
     ...browserWindowConstructorOptions,
     webPreferences: {
+      nodeIntegration: true,
       preload: path.join(__dirname, "preload.js"),
     },
   });

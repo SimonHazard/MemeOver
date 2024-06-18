@@ -6,6 +6,8 @@ import {
   external,
   pluginHotRestart,
 } from "./vite.base.config";
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
@@ -24,7 +26,7 @@ export default defineConfig((env) => {
         external,
       },
     },
-    plugins: [pluginHotRestart("restart")],
+    plugins: [pluginHotRestart("restart"), react(), tsconfigPaths()],
     define,
     resolve: {
       // Load the Node.js entry.
