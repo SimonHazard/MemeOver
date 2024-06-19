@@ -1,12 +1,12 @@
 import React from "react";
 
-const App: React.FC = () => {
-  return (
-    <div>
-      <div id="messages"></div>
-      <div id="messageCode"></div>
-    </div>
-  );
+const App = () => {
+	return (
+		<div>
+			<div id="messages" />
+			<div id="messageCode" />
+		</div>
+	);
 };
 
 export default App;
