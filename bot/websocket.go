@@ -29,7 +29,6 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		log.Println("ws connection:", err)
 		return
 	}
-	defer websocketConnection.Close()
 
 	uniqueID := getUniqueID()
 	websocketConnectionsWithKey[uniqueID] = websocketConnection
