@@ -1,9 +1,9 @@
 package main
 
 type Message struct {
-	Text      string   `json:"text"`
-	ImageURLs []string `json:"image_urls"`
-	VideoURLs []string `json:"video_urls"`
+	Text       string `json:"text"`
+	URL        string `json:"url"`
+	IsAnimated bool   `json:"isAnimated"`
 }
 
 type MessageCode struct {

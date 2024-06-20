@@ -135,29 +135,33 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 
 	// Check if there are paired connections for this guild
 	if connections, exists := usersByGuildId[guildID]; exists {
-		var imageUrls []string
-		var videoUrls []string
+		var url string
+		var isAnimated bool
 
 		for _, attachments := range message.Attachments {
 			if strings.Contains(attachments.ContentType, "image") {
-				imageUrls = append(imageUrls, attachments.URL)
+				url = attachments.URL
+				isAnimated = false
 			} else if strings.Contains(attachments.ContentType, "video") {
-				videoUrls = append(videoUrls, attachments.URL)
+				url = attachments.URL
+				isAnimated = true
 			}
 		}
 
 		for _, embed := range message.Embeds {
 			if embed.Type == "image" {
-				imageUrls = append(imageUrls, embed.URL)
+				url = embed.URL
+				isAnimated = false
 			} else if embed.Type == "video" {
-				videoUrls = append(videoUrls, embed.URL)
+				url = embed.URL
+				isAnimated = true
 			}
 		}
 
 		messageToSend := Message{
-			Text:      message.Content,
-			ImageURLs: imageUrls,
-			VideoURLs: videoUrls,
+			Text:       message.Content,
+			URL:        url,
+			IsAnimated: isAnimated,
 		}
 
 		// Send the message to each user in the paired connections
