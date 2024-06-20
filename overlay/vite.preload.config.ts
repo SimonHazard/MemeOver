@@ -11,7 +11,7 @@ export default defineConfig((env) => {
 			rollupOptions: {
 				external,
 				// Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
-				// biome-ignore lint/style/noNonNullAssertion: <explanation>
+				// biome-ignore lint/style/noNonNullAssertion: Default electron config
 				input: forgeConfigSelf.entry!,
 				output: {
 					format: "cjs",

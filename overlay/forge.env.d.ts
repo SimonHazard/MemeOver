@@ -1,4 +1,4 @@
-// biome-ignore lint/style/useExportType: <explanation>
+// biome-ignore lint/style/useExportType: Default electron config
 export {}; // Make this a module
 
 declare global {

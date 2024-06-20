@@ -43,7 +43,7 @@ export function getDefineKeys(names: string[]) {
 			VITE_NAME: `${NAME}_VITE_NAME`,
 		};
 
-		// biome-ignore lint/performance/noAccumulatingSpread: <explanation>
+		// biome-ignore lint/performance/noAccumulatingSpread: Default electron config
 		return { ...acc, [name]: keys };
 	}, define);
 }
@@ -52,7 +52,7 @@ export function getBuildDefine(env: ConfigEnv<"build">) {
 	const { command, forgeConfig } = env;
 	const names = forgeConfig.renderer
 		.filter(({ name }) => name != null)
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: Default electron config
 		.map(({ name }) => name!);
 	const defineKeys = getDefineKeys(names);
 	const define = Object.entries(defineKeys).reduce(
@@ -65,10 +65,10 @@ export function getBuildDefine(env: ConfigEnv<"build">) {
 						: undefined,
 				[VITE_NAME]: JSON.stringify(name),
 			};
-			// biome-ignore lint/performance/noAccumulatingSpread: <explanation>
+			// biome-ignore lint/performance/noAccumulatingSpread: Default electron config
 			return { ...acc, ...def };
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		// biome-ignore lint/suspicious/noExplicitAny: Default electron config
 		{} as Record<string, any>,
 	);
 
@@ -86,7 +86,7 @@ export function pluginExposeRenderer(name: string): Plugin {
 			process.viteDevServers[name] = server;
 
 			server.httpServer?.once("listening", () => {
-				// biome-ignore lint/style/noNonNullAssertion: <explanation>
+				// biome-ignore lint/style/noNonNullAssertion: Default electron config
 				const addressInfo = server.httpServer!.address() as AddressInfo;
 				// Expose env constant for main process use.
 				process.env[VITE_DEV_SERVER_URL] =

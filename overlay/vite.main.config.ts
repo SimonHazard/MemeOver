@@ -17,7 +17,7 @@ export default defineConfig((env) => {
 	const config: UserConfig = {
 		build: {
 			lib: {
-				// biome-ignore lint/style/noNonNullAssertion: <explanation>
+				// biome-ignore lint/style/noNonNullAssertion: Default electron config
 				entry: forgeConfigSelf.entry!,
 				fileName: () => "[name].js",
 				formats: ["cjs"],
