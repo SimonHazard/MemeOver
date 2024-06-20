@@ -1,7 +1,7 @@
 {
 	"name": "memeover",
 	"productName": "memeover",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "An overlay app to integrate to Discord",
 	"main": ".vite/build/main.js",
 	"repository": "https://github.com/SimonHazard/MemeOver",
