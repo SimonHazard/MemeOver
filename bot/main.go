@@ -11,7 +11,10 @@ import (
 
 func main() {
 	err := godotenv.Load("local.env")
-	checkNilErr(err, "env error:")
+	if err != nil {
+		log.Fatal("env error:", err)
+		return
+	}
 
 	botToken := os.Getenv("BOT_TOKEN")
 	applicationId := os.Getenv("APPLICATION_ID")
@@ -22,7 +25,10 @@ func main() {
 	http.HandleFunc("/ws", handleConnections)
 	log.Println("http server started on :8080")
 	err = http.ListenAndServe(":8080", nil)
-	checkNilErr(err, "listen and serve error")
+	if err != nil {
+		log.Fatal("env error:", err)
+		return
+	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)

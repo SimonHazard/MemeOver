@@ -70,13 +70,17 @@ var (
 
 func initDiscord(botToken, applicationId string) *discordgo.Session {
 	discord, err := discordgo.New("Bot " + botToken)
-	checkNilErr(err, "discord init error:")
+	if err != nil {
+		log.Fatal("discord init error:", err)
+	}
 
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(interactionCreate)
 
 	err = discord.Open()
-	checkNilErr(err, "discord open error:")
+	if err != nil {
+		log.Fatal("discord open error:", err)
+	}
 
 	registerCommands(discord, applicationId)
 
@@ -88,7 +92,10 @@ func registerCommands(discord *discordgo.Session, applicationId string) {
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
 	for i, v := range commands {
 		cmd, err := discord.ApplicationCommandCreate(applicationId, "", v)
-		checkNilErr(err, "Cannot create '"+v.Name+"' command:")
+		if err != nil {
+			log.Printf("Cannot create '"+v.Name+"' command:", err)
+			break
+		}
 		registeredCommands[i] = cmd
 	}
 }
@@ -99,7 +106,10 @@ func cleanupCommands(discord *discordgo.Session, applicationId string) {
 		log.Println("Removing commands...")
 		for _, v := range commands {
 			err := discord.ApplicationCommandDelete(applicationId, "", v.ID)
-			checkNilErr(err, "Cannot delete '"+v.Name+"' command:")
+			if err != nil {
+				log.Printf("Cannot delete '"+v.Name+"' command:", err)
+				break
+			}
 		}
 	}
 }

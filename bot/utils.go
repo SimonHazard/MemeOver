@@ -1,16 +1,9 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"time"
 )
-
-func checkNilErr(err error, message string) {
-	if err != nil {
-		log.Fatal(message, err)
-	}
-}
 
 // Helper function to generate a unique ID easy to write for the user
 func generateUniqueID() string {

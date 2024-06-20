@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -24,7 +25,11 @@ var usersByGuildId = make(map[string][]string)
 // Handle the connection of the websocket
 func handleConnections(w http.ResponseWriter, r *http.Request) {
 	websocketConnection, err := wsUpgrader.Upgrade(w, r, nil)
-	checkNilErr(err, "ws connection:")
+	if err != nil {
+		log.Println("ws connection:", err)
+		return
+	}
+	defer websocketConnection.Close()
 
 	uniqueID := getUniqueID()
 	websocketConnectionsWithKey[uniqueID] = websocketConnection
@@ -34,10 +39,16 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 
 	messageJSON, err := json.Marshal(messageToSend)
-	checkNilErr(err, "error marshaling message:")
+	if err != nil {
+		log.Println("error marshaling message:", err)
+		return
+	}
 
 	err = websocketConnection.WriteMessage(websocket.TextMessage, messageJSON)
-	checkNilErr(err, "write:")
+	if err != nil {
+		log.Println("Write error:", err)
+		return
+	}
 }
 
 // Send JSON message to our websocket
@@ -45,9 +56,15 @@ func sendMessageToWebSocket(connection string, message Message) {
 	websocketConnection := websocketConnectionsWithKey[connection]
 	if websocketConnection != nil {
 		messageJSON, err := json.Marshal(message)
-		checkNilErr(err, "marshal message:")
+		if err != nil {
+			log.Println("error marshaling message:", err)
+			return
+		}
 		err = websocketConnection.WriteMessage(websocket.TextMessage, messageJSON)
-		checkNilErr(err, "write message:")
+		if err != nil {
+			log.Println("Write error:", err)
+			return
+		}
 	}
 
 }
