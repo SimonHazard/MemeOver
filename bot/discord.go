@@ -25,6 +25,10 @@ var (
 				},
 			},
 		},
+		{
+			Name: "help",
+			Description: "How to use MemeOver?",
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -43,7 +47,7 @@ var (
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
-							Content: "You have successfully joined the session!",
+							Content: "You have successfully joined the session! You can now use `!send` command to send memes to your friends!",
 						},
 					})
 				} else {
@@ -64,6 +68,14 @@ var (
 					},
 				})
 			}
+		},
+		"help": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "To join a session, you need to launch MemeOver app, then you'll have a code for the `/join` command. After that, `!send` in your message to send meme to your friends.",
+				},
+			})
 		},
 	}
 )
@@ -131,6 +143,10 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 		return
 	}
 
+	if !strings.HasPrefix(message.Content, "!send") {
+		return
+	}
+
 	guildID := message.GuildID
 
 	// Check if there are paired connections for this guild
@@ -158,8 +174,11 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 			}
 		}
 
+		content := message.Content
+		content = strings.TrimSpace(strings.TrimPrefix(content, "!send"))
+
 		messageToSend := Message{
-			Text:       message.Content,
+			Text:       content,
 			URL:        url,
 			IsAnimated: isAnimated,
 		}
