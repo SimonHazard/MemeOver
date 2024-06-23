@@ -40,6 +40,10 @@ The bot component listens to a Discord channel and sends the images to the overl
     air
     ```
 
+Invite the bot to your Discord
+
+`https://discord.com/oauth2/authorize?client_id=1246897287351894158&permissions=2147486720&integration_type=0&scope=bot+applications.commands`
+
 ## Configuration
 
 Make sure to configure your Discord bot token and channel ID in the appropriate configuration files.

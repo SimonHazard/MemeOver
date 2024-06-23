@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useEffect, useState } from "react";
 
 const URL = "ws://localhost:8080/ws";
 
@@ -12,6 +13,7 @@ type Message = {
 const App = () => {
 	const [message, setMessage] = useState<Message>();
 	const [code, setCode] = useState<string>();
+	let timeoutId: NodeJS.Timeout;
 
 	useEffect(() => {
 		let socket: WebSocket;
@@ -24,9 +26,21 @@ const App = () => {
 				setMessage(data);
 				setCode("");
 
+				let timeout = data.isAnimated ? 10000 : 5000;
+
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+
 				if (data.code) {
 					setCode(data.code);
+					timeout = 30000;
 				}
+
+				timeoutId = setTimeout(() => {
+					setMessage(undefined);
+					setCode("");
+				}, timeout);
 			};
 
 			socket.onclose = (event) => {
@@ -46,27 +60,41 @@ const App = () => {
 			if (socket) {
 				socket.close();
 			}
+
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
 		};
-	}, []);
+	}, [timeoutId]);
 
 	return (
-		<div className="h-full w-full p-2 flex mx-auto justify-center items-center flex-col space-y-4">
-			<div id="flex justify-center items-center flex-col">
-				{message?.text ? <p className="text-center">{message.text}</p> : null}
+		<div className="h-full w-full p-2 flex justify-center items-center flex-col space-y-4 text-white text-stroke">
+			<div className="relative h-full w-full">
 				{message?.url && !message?.isAnimated ? (
-					<img src={message.url} alt={message.url} />
+					<img src={message.url} alt={message.url} className="w-full h-full" />
 				) : null}
 				{message?.url && message?.isAnimated ? (
-					<video key={message.url} src={message.url} controls={false} autoPlay>
+					<video
+						key={message.url}
+						src={message.url}
+						controls={false}
+						autoPlay
+						className="w-full h-full"
+					>
 						<track kind="captions" />
 					</video>
 				) : null}
+				{message?.text ? (
+					<p className="absolute bottom-0 w-full text-center p-2 text-6xl whitespace-normal break-words">
+						{message.text}
+					</p>
+				) : null}
+				{code ? (
+					<div className=" text-8xl h-full flex justify-center items-center tracking-widest">
+						<p>{code}</p>
+					</div>
+				) : null}
 			</div>
-			{code ? (
-				<div className="text-black text-2xl flex justify-center items-center">
-					<p>{code}</p>
-				</div>
-			) : null}
 		</div>
 	);
 };
