@@ -1,9 +1,9 @@
 {
 	"productName": "MemeOver",
 	"version": "0.2.0",
-	"identifier": "com.tauri.dev",
+	"identifier": "memeover",
 	"build": {
-		"frontendDist": "../build",
+		"frontendDist": "../dist",
 		"devUrl": "http://localhost:5173",
 		"beforeDevCommand": "pnpm run dev",
 		"beforeBuildCommand": "pnpm run build"
@@ -21,7 +21,9 @@
 				"resizable": false,
 				"alwaysOnTop": true,
 				"transparent": true,
-				"decorations": false
+				"decorations": false,
+				"skipTaskbar": true,
+				"hiddenTitle": true
 			}
 		],
 		"security": {
