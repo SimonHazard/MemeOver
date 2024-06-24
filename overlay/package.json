@@ -1,60 +1,30 @@
 {
 	"name": "memeover",
-	"productName": "memeover",
-	"version": "0.1.6",
-	"description": "An overlay app to integrate to Discord",
-	"main": ".vite/build/main.js",
-	"repository": "https://github.com/SimonHazard/MemeOver",
+	"private": true,
+	"version": "0.2.1",
+	"type": "module",
+	"license": "MIT",
 	"scripts": {
-		"start": "electron-forge start",
-		"package:windows": "electron-forge package --platform=win32",
-		"package:linux": "electron-forge package --platform=linux",
-		"package:macos": "electron-forge package --platform=darwin",
-		"package": "electron-forge package",
-		"make:windows": "electron-forge make --platform=win32",
-		"make:linux": "electron-forge make --platform=linux",
-		"make:macos": "electron-forge make --platform=darwin",
-		"make": "electron-forge make",
-		"publish:windows": "electron-forge publish --platform=win32",
-		"publish:linux": "electron-forge publish --platform=linux",
-		"publish:macos": "electron-forge publish --platform=darwin",
-		"publish": "electron-forge publish",
-		"lint": "yarn biome check --write ./src"
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"lint": "pnpm biome check --write ./src",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.8.1",
-		"@electron-forge/cli": "^7.4.0",
-		"@electron-forge/maker-deb": "^7.4.0",
-		"@electron-forge/maker-rpm": "^7.4.0",
-		"@electron-forge/maker-squirrel": "^7.4.0",
-		"@electron-forge/maker-zip": "^7.4.0",
-		"@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
-		"@electron-forge/plugin-fuses": "^7.4.0",
-		"@electron-forge/plugin-vite": "^7.4.0",
-		"@electron-forge/publisher-github": "^7.4.0",
-		"@electron/fuses": "^1.8.0",
+		"@biomejs/biome": "1.8.2",
+		"@tauri-apps/cli": "2.0.0-beta.20",
+		"@types/node": "^20.14.8",
 		"@types/react": "^18.3.3",
 		"@types/react-dom": "^18.3.0",
 		"@vitejs/plugin-react": "^4.3.1",
 		"autoprefixer": "^10.4.19",
-		"electron": "30.0.9",
 		"postcss": "^8.4.38",
 		"tailwindcss": "^3.4.4",
-		"ts-node": "^10.0.0",
-		"typescript": "~4.5.4",
-		"update-electron-app": "^3.0.0",
-		"vite": "^5.0.12",
-		"vite-tsconfig-paths": "^4.3.2"
-	},
-	"keywords": [],
-	"author": {
-		"name": "Simon Hazard",
-		"email": "simon.hazard@outlook.fr"
-	},
-	"license": "MIT",
-	"dependencies": {
-		"electron-squirrel-startup": "^1.0.1",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
+		"typescript": "^5.2.2",
+		"vite": "^5.3.1"
 	}
 }

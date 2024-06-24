@@ -11,7 +11,7 @@ Follow these steps to get the project up and running on your local machine for d
 Make sure you have the following software installed:
 
 - [Node.js](https://nodejs.org/)
-- [Yarn](https://yarnpkg.com/)
+- [pnpm](https://pnpm.io/)
 - [Air](https://github.com/cosmtrek/air) (for hot reloading in Go applications)
 
 ### Overlay
@@ -21,13 +21,13 @@ The overlay electron-js is responsible for displaying the images received from t
 1. **Install dependencies**:
 
     ```bash
-    yarn
+    pnpm install
     ```
 
 2. **Start the development**:
 
     ```bash
-    yarn start
+    pnpm tauri dev
     ```
 
 ### Bot

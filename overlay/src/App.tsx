@@ -1,4 +1,3 @@
-import React from "react";
 import { useEffect, useState } from "react";
 
 const URL = "ws://localhost:8080/ws";
@@ -15,6 +14,7 @@ const App = () => {
 	const [code, setCode] = useState<string>();
 	let timeoutId: NodeJS.Timeout;
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: NodeJS.Timeout
 	useEffect(() => {
 		let socket: WebSocket;
 
@@ -65,7 +65,7 @@ const App = () => {
 				clearTimeout(timeoutId);
 			}
 		};
-	}, [timeoutId]);
+	}, []);
 
 	return (
 		<div className="h-full w-full p-2 flex justify-center items-center flex-col space-y-4 text-white text-stroke">
