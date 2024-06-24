@@ -1,9 +1,9 @@
 [package]
-name = "app"
-version = "0.2.0"
-description = "A Tauri App"
+name = "memeover"
+version = "0.2.1"
+description = "MemeOver app"
 authors = ["you"]
-license = ""
+license = "MIT"
 repository = ""
 edition = "2021"
 rust-version = "1.70"

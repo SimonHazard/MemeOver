@@ -3,7 +3,7 @@ name: Publish Tauri app
 on:
   push:
     branches:
-      - tauri
+      - main
 
 jobs:
   lint:
