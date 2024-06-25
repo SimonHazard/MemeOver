@@ -16,6 +16,12 @@ COPY *.go ./
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o /discord-bot
 
+# Use a smaller base image for the runtime environment
+FROM alpine:latest
+
+# Copy the built Go binary from the build stage
+COPY --from=build-stage /discord-bot /discord-bot
+
 EXPOSE 8080
 
 # Command to run the executable

@@ -10,14 +10,20 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("local.env")
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("env error:", err)
-		return
+		log.Print("env error:", err)
 	}
 
 	botToken := os.Getenv("BOT_TOKEN")
 	applicationId := os.Getenv("APPLICATION_ID")
+
+	if botToken == "" {
+		log.Fatal("BOT_TOKEN environment variable not set")
+	}
+	if applicationId == "" {
+		log.Fatal("APPLICATION_ID environment variable not set")
+	}
 
 	discord := initDiscord(botToken, applicationId)
 	defer discord.Close()
