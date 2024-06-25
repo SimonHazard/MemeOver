@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-const URL = "ws://localhost:8080/ws";
+const URL = import.meta.env.PROD
+	? "ws://bot.simonhazard.com/ws"
+	: "ws://localhost:8080/ws";
 
 type Message = {
 	text?: string | null;
