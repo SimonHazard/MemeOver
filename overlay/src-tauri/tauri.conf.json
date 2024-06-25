@@ -1,6 +1,6 @@
 {
 	"productName": "MemeOver",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"identifier": "memeover",
 	"build": {
 		"frontendDist": "../dist",
@@ -22,7 +22,6 @@
 				"alwaysOnTop": true,
 				"transparent": true,
 				"decorations": false,
-				"skipTaskbar": true,
 				"hiddenTitle": true,
 				"shadow": false
 			}

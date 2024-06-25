@@ -1,8 +1,8 @@
 # MemeOver
 
-An overlay application that shares images from a Discord channel and displays them in real-time on your overlay.
+An overlay application that lets friends send memes to each other in real time from a Discord text channel. With the MemeOver repository, you can create your own Discord bot and connect it to this open-source solution.
 
-## Getting Started
+## Development
 
 Follow these steps to get the project up and running on your local machine for development and testing purposes.
 
@@ -12,11 +12,13 @@ Make sure you have the following software installed:
 
 - [Node.js](https://nodejs.org/)
 - [pnpm](https://pnpm.io/)
+- [Rust](https://www.rust-lang.org/)
 - [Air](https://github.com/cosmtrek/air) (for hot reloading in Go applications)
+- [Go](https://go.dev/)
 
 ### Overlay
 
-The overlay electron-js is responsible for displaying the images received from the Discord channel.
+The overlay [Tauri](https://v2.tauri.app/) is responsible for displaying the messages received from the Discord channel.
 
 1. **Install dependencies**:
 
@@ -32,7 +34,13 @@ The overlay electron-js is responsible for displaying the images received from t
 
 ### Bot
 
-The bot component listens to a Discord channel and sends the images to the overlay.
+The bot [Go](https://go.dev/) service listens to a Discord channel and sends the messages to the overlay.
+
+1. **Install dependencies**:
+
+    ```bash
+    go mod download
+    ```
 
 1. **Start the bot**:
 
@@ -40,18 +48,28 @@ The bot component listens to a Discord channel and sends the images to the overl
     air
     ```
 
-Invite the bot to your Discord
+### Deployment
 
-`https://discord.com/oauth2/authorize?client_id=1246897287351894158&permissions=2147486720&integration_type=0&scope=bot+applications.commands`
+If you wanna see a deploy example, please check the [overlay](.github/workflows/overlay.yml) and the [bot](.github/workflows/bot.yml) workflows
 
-## Configuration
+### Configuration
 
-Make sure to configure your Discord bot token and channel ID in the appropriate configuration files.
+Make sure to configure your container discord bot with correct env :
+
+#### Local
 
 ```env
 BOT_TOKEN=my_bot_token
 APPLICATION_ID=my_discord_application_id
 ```
+
+#### Docker
+
+`docker run -e BOT_TOKEN=my-bot-token -e APPLICATION_ID=my-application-id -d --name memeover-container -p <port>:<port> <my-image>`
+
+## Discord
+
+Invite your bot to your Discord with the settings `permissions=2147486720&integration_type=0&scope=bot+applications.commands`
 
 ## Contributing
 
