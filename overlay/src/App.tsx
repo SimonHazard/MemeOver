@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import useWebSocket from "react-use-websocket";
 
 const URL = import.meta.env.PROD
 	? "ws://bot.simonhazard.com/ws"
@@ -11,63 +12,54 @@ type Message = {
 	code?: string;
 };
 
+const HEARTBEAT_INTERVAL = 30000;
+const HEARTBEAT_TIMEOUT = 30000;
+const RECONNECT_RETRIES = 5;
+const RECONNECT_INTERVAL = 5;
+
 const App = () => {
 	const [message, setMessage] = useState<Message>();
 	const [code, setCode] = useState<string>();
-	let timeoutId: NodeJS.Timeout;
+	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: NodeJS.Timeout
+	const { lastJsonMessage } = useWebSocket(URL, {
+		heartbeat: {
+			message: "ping",
+			returnMessage: "pong",
+			timeout: HEARTBEAT_TIMEOUT,
+			interval: HEARTBEAT_INTERVAL,
+		},
+		reconnectAttempts: RECONNECT_RETRIES,
+		reconnectInterval: RECONNECT_INTERVAL,
+		shouldReconnect: () => true,
+	});
+
 	useEffect(() => {
-		let socket: WebSocket;
+		if (lastJsonMessage !== null) {
+			const data: Message | undefined = lastJsonMessage;
 
-		function createWebSocketConnection() {
-			socket = new WebSocket(URL);
+			if (!data) return;
 
-			socket.onmessage = (event) => {
-				const data: Message = JSON.parse(event.data);
-				setMessage(data);
+			setMessage(data);
+			setCode("");
+
+			let timeout = data.isAnimated ? 10000 : 5000;
+
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+
+			if (data.code) {
+				setCode(data.code);
+				timeout = 30000;
+			}
+
+			timeoutRef.current = setTimeout(() => {
+				setMessage(undefined);
 				setCode("");
-
-				let timeout = data.isAnimated ? 10000 : 5000;
-
-				if (timeoutId) {
-					clearTimeout(timeoutId);
-				}
-
-				if (data.code) {
-					setCode(data.code);
-					timeout = 30000;
-				}
-
-				timeoutId = setTimeout(() => {
-					setMessage(undefined);
-					setCode("");
-				}, timeout);
-			};
-
-			socket.onclose = (event) => {
-				console.log("WebSocket closed: ", event);
-			};
-
-			socket.onerror = (error) => {
-				console.log("WebSocket error: ", error);
-				socket.close();
-			};
+			}, timeout);
 		}
-
-		// Initialize the first connection
-		createWebSocketConnection();
-
-		return () => {
-			if (socket) {
-				socket.close();
-			}
-
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-			}
-		};
-	}, []);
+	}, [lastJsonMessage]);
 
 	return (
 		<div className="h-full w-full p-2 flex justify-center items-center flex-col space-y-4 text-white text-stroke">

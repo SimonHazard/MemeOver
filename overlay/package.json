@@ -1,7 +1,7 @@
 {
 	"name": "memeover",
 	"private": true,
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"type": "module",
 	"license": "MIT",
 	"scripts": {
@@ -12,7 +12,8 @@
 	},
 	"dependencies": {
 		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
+		"react-dom": "^18.3.1",
+		"react-use-websocket": "^4.8.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.8.2",
