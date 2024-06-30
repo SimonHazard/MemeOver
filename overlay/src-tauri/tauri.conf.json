@@ -1,6 +1,6 @@
 {
 	"productName": "MemeOver",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"identifier": "memeover",
 	"build": {
 		"frontendDist": "../dist",
@@ -28,10 +28,6 @@
 		],
 		"security": {
 			"csp": null
-		},
-		"trayIcon": {
-			"iconPath": "icons/icon.png",
-			"iconAsTemplate": true
 		}
 	},
 	"bundle": {
