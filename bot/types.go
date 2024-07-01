@@ -9,3 +9,7 @@ type Message struct {
 type MessageCode struct {
 	Code string `json:"code"`
 }
+
+type MessageConnected struct {
+	IsConnected bool `json:"isConnected"`
+}

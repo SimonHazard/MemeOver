@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/gorilla/websocket"
 )
 
 var (
@@ -41,8 +43,26 @@ var (
 				guildID := i.GuildID
 
 				// Check if the code exists in the unpaired connections
-				if _, exists := websocketConnectionsWithKey[code]; exists {
+				if conn, exists := websocketConnectionsWithKey[code]; exists {
 					usersByGuildId[guildID] = append(usersByGuildId[guildID], code)
+					
+					// Send "isConnected" message to WebSocket
+					messageToSend := MessageConnected{
+						IsConnected: true,
+					}
+
+					messageJSON, err := json.Marshal(messageToSend)
+					if err != nil {
+						log.Println("error marshaling message:", err)
+						return
+					}
+
+					err = conn.WriteMessage(websocket.TextMessage, messageJSON)
+					if err != nil {
+						log.Println("Write error:", err)
+						return
+					}
+
 					// Respond with a success message
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -10,6 +10,7 @@ type Message = {
 	url?: string | null;
 	isAnimated?: boolean | null;
 	code?: string;
+	isConnected?: boolean | null;
 };
 
 const HEARTBEAT_INTERVAL = 30000;
@@ -38,25 +39,26 @@ const App = () => {
 		if (lastJsonMessage !== null) {
 			const data: Message | undefined = lastJsonMessage;
 
-			if (!data) return;
+			if (!data) {
+				return;
+			}
+
+			if (data.code) {
+				setCode(data.code);
+				return;
+			}
 
 			setMessage(data);
 			setCode("");
 
-			let timeout = data.isAnimated ? 10000 : 5000;
+			const timeout = data.isAnimated ? 10000 : 5000;
 
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
 			}
 
-			if (data.code) {
-				setCode(data.code);
-				timeout = 30000;
-			}
-
 			timeoutRef.current = setTimeout(() => {
 				setMessage(undefined);
-				setCode("");
 			}, timeout);
 		}
 	}, [lastJsonMessage]);
