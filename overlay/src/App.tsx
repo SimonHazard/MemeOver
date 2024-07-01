@@ -112,8 +112,12 @@ const App = () => {
 					</p>
 				) : null}
 				{code ? (
-					<div className=" text-8xl h-full flex justify-center items-center tracking-widest">
-						<p>{code}</p>
+					<div className="h-full flex flex-col text-center justify-center items-center tracking-widest">
+						<p className="text-3xl">
+							To start using the application, please enter the following code in
+							the /join command of the MemeOver bot
+						</p>
+						<p className="text-8xl ">{code}</p>
 					</div>
 				) : null}
 			</div>
