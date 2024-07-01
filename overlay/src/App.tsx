@@ -36,6 +36,16 @@ const App = () => {
 		shouldReconnect: () => true,
 	});
 
+	const handleMediaPlay = () => {
+		if (timeoutRef.current) {
+			clearTimeout(timeoutRef.current);
+		}
+		timeoutRef.current = setTimeout(() => {
+			setMessage(undefined);
+			setCode("");
+		}, 10000);
+	};
+
 	useEffect(() => {
 		if (lastJsonMessage !== null) {
 			const data: Message | undefined = lastJsonMessage;
@@ -52,7 +62,9 @@ const App = () => {
 			setMessage(data);
 			setCode("");
 
-			const timeout = data.isAnimated || data.isAudio ? 10000 : 5000;
+			if (data.isAnimated || data.isAudio) {
+				return;
+			}
 
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
@@ -60,7 +72,7 @@ const App = () => {
 
 			timeoutRef.current = setTimeout(() => {
 				setMessage(undefined);
-			}, timeout);
+			}, 5000);
 		}
 	}, [lastJsonMessage]);
 
@@ -77,6 +89,7 @@ const App = () => {
 						controls={false}
 						autoPlay
 						className="w-full h-full"
+						onPlay={handleMediaPlay}
 					>
 						<track kind="captions" />
 					</video>
@@ -88,6 +101,7 @@ const App = () => {
 						controls={false}
 						autoPlay
 						className="hidden"
+						onPlay={handleMediaPlay}
 					>
 						<track kind="captions" />
 					</audio>
