@@ -12,6 +12,8 @@
 		"windows": [
 			{
 				"title": "MemeOver",
+				"label": "main",
+				"url": "index.html",
 				"width": 800,
 				"height": 600,
 				"fullscreen": false,
@@ -24,6 +26,17 @@
 				"decorations": false,
 				"hiddenTitle": true,
 				"shadow": false
+			},
+			{
+				"title": "MemeOver Settings",
+				"label": "settings",
+				"url": "settings.html",
+				"width": 400,
+				"height": 600,
+				"fullscreen": false,
+				"center": true,
+				"minimizable": true,
+				"closable": true
 			}
 		],
 		"security": {
