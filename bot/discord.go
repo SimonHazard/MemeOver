@@ -174,14 +174,21 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 	if connections, exists := usersByGuildId[guildID]; exists {
 		var url string
 		var isAnimated bool
+		var isAudio bool
 
 		for _, attachments := range message.Attachments {
 			if strings.Contains(attachments.ContentType, "image") {
 				url = attachments.URL
 				isAnimated = false
+				isAudio = false
 			} else if strings.Contains(attachments.ContentType, "video") {
 				url = attachments.URL
 				isAnimated = true
+				isAudio = false
+			} else if strings.Contains(attachments.ContentType, "audio") {
+				url = attachments.URL
+				isAnimated = false
+				isAudio = true
 			}
 		}
 
@@ -189,9 +196,11 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 			if embed.Type == "image" {
 				url = embed.URL
 				isAnimated = false
+				isAudio = false
 			} else if embed.Type == "video" {
 				url = embed.URL
 				isAnimated = true
+				isAudio = false
 			}
 		}
 
@@ -206,6 +215,7 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 			Text:       content,
 			URL:        url,
 			IsAnimated: isAnimated,
+			IsAudio: isAudio,
 		}
 
 		// Send the message to each user in the paired connections

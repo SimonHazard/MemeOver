@@ -9,6 +9,7 @@ type Message = {
 	text?: string | null;
 	url?: string | null;
 	isAnimated?: boolean | null;
+	isAudio?: boolean | null;
 	code?: string;
 	isConnected?: boolean | null;
 };
@@ -51,7 +52,7 @@ const App = () => {
 			setMessage(data);
 			setCode("");
 
-			const timeout = data.isAnimated ? 10000 : 5000;
+			const timeout = data.isAnimated || data.isAudio ? 10000 : 5000;
 
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
@@ -66,7 +67,7 @@ const App = () => {
 	return (
 		<div className="h-full w-full p-2 flex justify-center items-center flex-col space-y-4 text-white text-stroke">
 			<div className="relative h-full w-full">
-				{message?.url && !message?.isAnimated ? (
+				{message?.url && !message?.isAnimated && !message?.isAudio ? (
 					<img src={message.url} alt={message.url} className="w-full h-full" />
 				) : null}
 				{message?.url && message?.isAnimated ? (
@@ -79,6 +80,17 @@ const App = () => {
 					>
 						<track kind="captions" />
 					</video>
+				) : null}
+				{message?.url && message?.isAudio ? (
+					<audio
+						key={message.url}
+						src={message.url}
+						controls={false}
+						autoPlay
+						className="hidden"
+					>
+						<track kind="captions" />
+					</audio>
 				) : null}
 				{message?.text ? (
 					<p className="absolute bottom-0 w-full text-center p-2 text-6xl whitespace-normal break-words">
