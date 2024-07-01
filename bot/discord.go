@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -196,6 +197,10 @@ func messageCreate(discord *discordgo.Session, message *discordgo.MessageCreate)
 
 		content := message.Content
 		content = strings.TrimSpace(strings.TrimPrefix(content, "!send"))
+		
+		// Remove links from the content
+		re := regexp.MustCompile(`https?://[^\s]+`)
+		content = re.ReplaceAllString(content, "")
 
 		messageToSend := Message{
 			Text:       content,
