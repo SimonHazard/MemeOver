@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import useWebSocket from "react-use-websocket";
 
 const URL = import.meta.env.PROD
-	? "ws://bot.simonhazard.com/ws"
+	? "ws://bot.simonhazard.com:2082/ws"
 	: "ws://localhost:8080/ws";
 
 type Message = {
