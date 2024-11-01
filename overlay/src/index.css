@@ -2,13 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
+html,
+body,
+#root {
+	height: 100%;
+	width: 100%;
 }
 
 @layer utilities {
-  .text-stroke {
-      -webkit-text-stroke: 1px black;
-  }
+	.text-stroke {
+		-webkit-text-stroke: 1px black;
+	}
 }

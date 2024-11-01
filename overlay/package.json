@@ -11,13 +11,13 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@tauri-apps/api": "^2.0.3",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"react-use-websocket": "^4.10.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@tauri-apps/api": "^2.0.3",
 		"@tauri-apps/cli": "2.0.4",
 		"@types/node": "^22.8.2",
 		"@types/react": "^18.3.12",

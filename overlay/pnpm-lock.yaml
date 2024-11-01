@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.0.3
+        version: 2.0.3
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -21,9 +24,6 @@ importers:
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4
-      '@tauri-apps/api':
-        specifier: ^2.0.3
-        version: 2.0.3
       '@tauri-apps/cli':
         specifier: 2.0.4
         version: 2.0.4
