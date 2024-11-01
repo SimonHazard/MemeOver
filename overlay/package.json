@@ -1,7 +1,7 @@
 {
 	"name": "memeover",
 	"private": true,
-	"version": "0.4.4",
+	"version": "0.4.5",
 	"type": "module",
 	"license": "MIT",
 	"scripts": {
@@ -12,9 +12,14 @@
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.0.3",
+		"class-variance-authority": "^0.7.0",
+		"clsx": "^2.1.1",
+		"lucide-react": "^0.454.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"react-use-websocket": "^4.10.0"
+		"react-use-websocket": "^4.10.0",
+		"tailwind-merge": "^2.5.4",
+		"tailwindcss-animate": "^1.0.7"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

@@ -1,6 +1,6 @@
 {
 	"productName": "MemeOver",
-	"version": "0.4.4",
+	"version": "0.4.5",
 	"identifier": "memeover",
 	"build": {
 		"frontendDist": "../dist",
@@ -28,7 +28,8 @@
 		],
 		"security": {
 			"csp": null
-		}
+		},
+		"macOSPrivateApi": true
 	},
 	"bundle": {
 		"active": true,

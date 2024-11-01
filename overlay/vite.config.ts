@@ -1,5 +1,8 @@
+import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+
+const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -7,7 +10,11 @@ export default defineConfig({
 	clearScreen: false,
 	// Tauri expects a fixed port, fail if that port is not available
 	server: {
+		// Tauri expects a fixed port, fail if that port is not available
 		strictPort: true,
+		// if the host Tauri is expecting is set, use it
+		host: host || false,
+		port: 5173,
 	},
 	// to access the Tauri environment variables set by the CLI with information about the current target
 	envPrefix: [
@@ -28,4 +35,9 @@ export default defineConfig({
 		sourcemap: !!process.env.TAURI_DEBUG,
 	},
 	plugins: [react()],
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src"),
+		},
+	},
 });
