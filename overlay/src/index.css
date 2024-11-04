@@ -75,7 +75,7 @@ body,
 	* {
 		@apply border-border;
 	}
-	body {
+	/* body {
 		@apply bg-background text-foreground;
-	}
+	} */
 }
