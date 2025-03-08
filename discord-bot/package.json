@@ -1,0 +1,22 @@
+{
+	"name": "discord-bot",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"clean": "rm -rf dist && echo 'Done.'",
+		"dev": "bun --watch server.ts",
+		"lint": "bunx biome lint --write ./src"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"discord.js": "^14.18.0",
+		"ws": "^8.18.1"
+	}
+}
