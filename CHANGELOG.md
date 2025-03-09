@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [0.5.0]
+
+### Changed
+
+- Discord bot refacto in Bun
+
 ## [0.4.0]
 
 ### Changed

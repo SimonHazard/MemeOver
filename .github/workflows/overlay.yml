@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'overlay/**'
+      - 'memeover-app/**'
 
 jobs:
   lint:
@@ -19,7 +19,7 @@ jobs:
         with:
           version: latest
       - name: Run Biome
-        run: biome ci overlay
+        run: biome ci memeover-app
 
   publish:
     needs: ['lint']
@@ -64,11 +64,11 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-          cache-dependency-path: 'overlay'
+          cache-dependency-path: 'memeover-app'
 
       - name: install frontend dependencies
         run: |
-          cd overlay
+          cd memeover-app
           pnpm install
 
       - uses: tauri-apps/tauri-action@v0
@@ -81,4 +81,4 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-          projectPath: 'overlay'
+          projectPath: 'memeover-app'
