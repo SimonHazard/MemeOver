@@ -10,11 +10,9 @@ Follow these steps to get the project up and running on your local machine for d
 
 Make sure you have the following software installed:
 
-- [Node.js](https://nodejs.org/)
+- [Bun](https://bun.sh/)
 - [pnpm](https://pnpm.io/)
 - [Rust](https://www.rust-lang.org/)
-- [Air](https://github.com/cosmtrek/air) (for hot reloading in Go applications)
-- [Go](https://go.dev/)
 
 ### Overlay
 
@@ -34,18 +32,18 @@ The overlay [Tauri](https://v2.tauri.app/) is responsible for displaying the mes
 
 ### Bot
 
-The bot [Go](https://go.dev/) service listens to a Discord channel and sends the messages to the overlay.
+The bot [Bun](https://bun.sh/) service listens to a Discord channel and sends the messages to the overlay.
 
 1. **Install dependencies**:
 
     ```bash
-    go mod download
+    bun install
     ```
 
 1. **Start the bot**:
 
     ```bash
-    air
+    bun dev
     ```
 
 ### Deployment
