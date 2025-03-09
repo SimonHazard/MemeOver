@@ -71,7 +71,7 @@ const App = () => {
 	}, [lastJsonMessage]);
 
 	return (
-		<div className="h-full w-full p-2 flex justify-center items-center flex-col space-y-4 text-black text-stroke">
+		<div className="h-full w-full p-2 flex justify-center items-center flex-col space-y-4 text-white text-stroke">
 			<div className="relative h-full w-full">
 				{message?.url && !message?.isAnimated && !message?.isAudio ? (
 					<img src={message.url} alt={message.url} className="w-full h-full" />

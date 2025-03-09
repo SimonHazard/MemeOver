@@ -7,11 +7,17 @@
 	font-weight: 400;
 
 	color: #0f0f0f;
-	background-color: #f6f6f6;
+	background-color: transparent !important;
 
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-text-size-adjust: 100%;
+}
+
+@layer utilities {
+	.text-stroke {
+		-webkit-text-stroke: 1px black;
+	}
 }
