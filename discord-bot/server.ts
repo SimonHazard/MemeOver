@@ -1,5 +1,10 @@
 import "./src/bot";
 
+import { websocketConnectionsWithKey } from "./src/bot";
+import type { MessageCode } from "./types/message";
+import { getUniqueID } from "./utils/id";
+import { removeFromUsersByGuildId } from "./utils/users";
+
 const server = Bun.serve({
 	fetch(req, server) {
 		const success = server.upgrade(req);
@@ -14,7 +19,19 @@ const server = Bun.serve({
 	},
 	websocket: {
 		open(ws) {
-			console.log("WebSocket connection opened");
+			const uniqueID = getUniqueID();
+			websocketConnectionsWithKey.set(uniqueID, ws);
+
+			// Send unique code to client
+			const messageToSend: MessageCode = {
+				code: uniqueID,
+			};
+
+			console.log(
+				"WebSocket connection opened with key:",
+				JSON.stringify(messageToSend),
+			);
+			ws.send(JSON.stringify(messageToSend));
 		},
 		message(ws, message) {
 			// Keep alive the connection
@@ -24,6 +41,14 @@ const server = Bun.serve({
 		},
 		close(ws, code, message) {
 			console.log(`WebSocket closed: ${code} ${message}`);
+			for (const [key, wss] of websocketConnectionsWithKey.entries()) {
+				if (wss === ws) {
+					websocketConnectionsWithKey.delete(key);
+					removeFromUsersByGuildId(key);
+					console.log("WebSocket connection closed with key:", key);
+					break;
+				}
+			}
 		},
 	},
 });

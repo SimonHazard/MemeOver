@@ -24,12 +24,16 @@ const App = () => {
 		reconnectAttempts: RECONNECT_RETRIES,
 		reconnectInterval: RECONNECT_INTERVAL,
 		shouldReconnect: () => true,
+		onError(event) {
+			console.error("WebSocket error", event);
+		},
 	});
 
 	const handleMediaPlay = () => {
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
 		}
+
 		timeoutRef.current = setTimeout(() => {
 			setMessage(undefined);
 			setCode("");
