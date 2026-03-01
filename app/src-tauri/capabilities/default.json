@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for overlay and settings windows",
+  "windows": ["overlay", "settings"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "store:default",
+    "core:event:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus"
+  ]
+}

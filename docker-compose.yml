@@ -1,0 +1,36 @@
+# docker-compose.yml — déploiement du bot MemeOver
+# Usage    : docker-compose up -d --build
+# Prérequis: créer un fichier .env à la racine du repo (jamais commité)
+#
+# Variables requises :
+#   DISCORD_TOKEN      — token du bot Discord
+#   DISCORD_CLIENT_ID  — application ID Discord
+#
+# Variables optionnelles :
+#   WS_PORT            — port WebSocket (défaut : 3001)
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      WS_PORT: ${WS_PORT:-3001}
+    ports:
+      - "${WS_PORT:-3001}:${WS_PORT:-3001}"
+    volumes:
+      # Persistance du registre des guildes (data/guilds.json)
+      - bot-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:${WS_PORT:-3001}/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  bot-data:
+    driver: local

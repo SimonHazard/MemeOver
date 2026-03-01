@@ -1,0 +1,123 @@
+name: App Build
+
+# Déclenché sur PR et push quand des fichiers de l'app changent.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - ".github/workflows/app.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/app.yml"
+
+jobs:
+  build:
+    name: Tauri — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    strategy:
+      # Ne pas annuler Linux si Windows ou macOS échoue (builds longs et indépendants)
+      fail-fast: false
+      matrix:
+        include:
+          # ── Linux ────────────────────────────────────────────────────────────
+          - os: ubuntu-latest
+            tauri_args: ""
+            artifact_path: |
+              app/src-tauri/target/release/bundle/deb/*.deb
+              app/src-tauri/target/release/bundle/appimage/*.AppImage
+            artifact_name: memeover-linux
+
+          # ── macOS (universal binary : M1 + Intel dans un seul .dmg) ─────────
+          - os: macos-latest
+            tauri_args: "--target universal-apple-darwin"
+            artifact_path: |
+              app/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+              app/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
+            artifact_name: memeover-macos
+
+          # ── Windows ──────────────────────────────────────────────────────────
+          - os: windows-latest
+            tauri_args: ""
+            artifact_path: |
+              app/src-tauri/target/release/bundle/msi/*.msi
+              app/src-tauri/target/release/bundle/nsis/*.exe
+            artifact_name: memeover-windows
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Dépendances système (Linux uniquement) ────────────────────────────────
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev \
+            pkg-config
+
+      # ── Bun ──────────────────────────────────────────────────────────────────
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+          key: bun-app-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-app-${{ runner.os }}-
+
+      - name: Install JS dependencies
+        run: bun install --frozen-lockfile
+
+      # ── Rust ─────────────────────────────────────────────────────────────────
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # macOS : les deux cibles sont nécessaires pour le binaire universel
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust build artifacts
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./app/src-tauri -> target"
+
+      # ── Build Tauri ───────────────────────────────────────────────────────────
+      # L'action gère automatiquement beforeBuildCommand (bun run build = Vite)
+      # et détecte Bun via la présence de bun.lock.
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pour signer les bundles en production, ajouter ici :
+          # TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          # APPLE_CERTIFICATE, APPLE_ID, APPLE_TEAM_ID… (cf. documentation Tauri)
+        with:
+          projectPath: app
+          args: ${{ matrix.tauri_args }}
+          tagName: ${{ github.ref == 'refs/heads/main' && 'app-v__VERSION__' || '' }}
+          releaseName: ${{ github.ref == 'refs/heads/main' && 'App v__VERSION__' || '' }}
+          releaseDraft: true
+
+      # ── Upload des artifacts ──────────────────────────────────────────────────
+      # PR : 7 jours (pour review) — merge main : 30 jours (release candidates)
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-${{ github.sha }}
+          path: ${{ matrix.artifact_path }}
+          retention-days: ${{ github.ref == 'refs/heads/main' && 30 || 7 }}
+          if-no-files-found: error

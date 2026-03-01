@@ -1,0 +1,101 @@
+{
+	"app": {
+		"title": "MemeOver",
+		"subtitle": "Connect the overlay to your Discord bot."
+	},
+	"status": {
+		"connected": "Connected",
+		"connecting": "Connecting…",
+		"error": "Error",
+		"disconnected": "Disconnected"
+	},
+	"health": {
+		"alive": "Overlay: Online",
+		"closed": "Overlay: Offline"
+	},
+	"connection": {
+		"title": "Bot connection",
+		"error": "Connection to bot lost. Check the token, Server ID and make sure the bot is running.",
+		"wsUrl": "WebSocket server URL",
+		"guildId": "Server ID",
+		"guildId_hint": "Obtained with /memeover setup in Discord.",
+		"token": "Token",
+		"save": "Save & connect",
+		"saving": "Saving…"
+	},
+	"overlay": {
+		"controls": "Overlay controls",
+		"show": "Show",
+		"reload": "Reload",
+		"close": "Close"
+	},
+	"actions": {
+		"title": "Actions",
+		"clearQueue": "Clear queue",
+		"displaySettings": "Display settings",
+		"history": "History",
+		"queueSize": "{{count}} pending"
+	},
+	"display": {
+		"title": "Display",
+		"settings": "Display settings",
+		"size": "Media size",
+		"duration": "Display duration",
+		"duration_unit": "s",
+		"volume": "Volume (videos)",
+		"position": "Position",
+		"preview": "Preview",
+		"preview_media": "Media",
+		"save": "Save",
+		"saving": "Saving…",
+		"back": "Back",
+		"mediaTypes": "Media types authorized",
+		"mediaTypesCount": "{{count}} / {{total}} types enabled",
+		"type_image": "Images",
+		"type_gif": "GIFs",
+		"type_video": "Videos",
+		"type_audio": "Audio",
+		"type_text": "Text"
+	},
+	"onboarding": {
+		"step": "Step {{current}} of {{total}}",
+		"step1_title": "Welcome to MemeOver",
+		"step1_desc": "MemeOver displays media from your Discord server directly on your screen. Follow these steps to set up your overlay.",
+		"step2_title": "Configure the connection",
+		"step2_desc": "Start your Discord bot then enter the connection details below.",
+		"step3_title": "You're all set!",
+		"step3_desc": "The overlay is now configured. Send an image or GIF in Discord to test it!",
+		"next": "Next",
+		"prev": "Back",
+		"finish": "Get started",
+		"skip": "Skip"
+	},
+	"toast": {
+		"connectionSaved": "Connection saved!",
+		"displaySaved": "Settings saved!",
+		"wsError": "WebSocket connection lost",
+		"queueCleared": "Queue cleared",
+		"replayQueued": "Media added to queue"
+	},
+	"tray": {
+		"show": "Show settings",
+		"quit": "Quit"
+	},
+	"history": {
+		"title": "History",
+		"empty": "No media received yet.",
+		"replay": "Replay",
+		"back": "Back",
+		"from": "from {{name}}"
+	},
+	"updater": {
+		"title": "Updates",
+		"check": "Check for updates",
+		"checking": "Checking…",
+		"upToDate": "You have the latest version",
+		"available": "Update v{{version}} available",
+		"install": "Install and relaunch",
+		"installing": "Installing…",
+		"error": "Error while checking for updates"
+	}
+}
