@@ -1,0 +1,44 @@
+# Dockerfile.bot — build context : racine du repo
+# docker build -f Dockerfile.bot -t memeover-bot .
+
+# ── Stage 1 : install ──────────────────────────────────────────────────────────
+FROM oven/bun:1-alpine AS installer
+
+WORKDIR /app
+
+# Copier les manifests et le lockfile en premier (couches Docker cache-friendly)
+COPY package.json bun.lock ./
+COPY bot/package.json ./bot/
+# app/package.json est requis pour que Bun résolve le graphe de workspace entier
+COPY app/package.json ./app/
+
+RUN bun install --frozen-lockfile
+
+# ── Stage 2 : runtime ──────────────────────────────────────────────────────────
+FROM oven/bun:1-alpine AS runner
+
+WORKDIR /app
+
+# node_modules hoistés (racine) + dépendances propres au bot
+# Les node_modules de app/ (Vite, Tauri, React…) ne sont PAS copiés
+COPY --from=installer /app/node_modules ./node_modules
+COPY --from=installer /app/bot/node_modules ./bot/node_modules
+
+# Code source du bot uniquement
+COPY bot/src ./bot/src
+COPY bot/package.json ./bot/
+COPY bot/tsconfig.json ./bot/
+# package.json racine requis pour la résolution de workspace à l'exécution
+COPY package.json ./
+
+# Variables d'environnement injectées au lancement du conteneur (jamais dans l'image) :
+# DISCORD_TOKEN, DISCORD_CLIENT_ID, WS_PORT (optionnel, défaut 3001)
+ENV NODE_ENV=production
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3001/health || exit 1
+
+# Bun exécute TypeScript nativement — aucune étape de compilation nécessaire
+CMD ["bun", "run", "bot/src/index.ts"]

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+bot/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+bot/.env
+
+# Tauri build artifacts
+memeover/target/
+memeover/src-tauri/target/
+
+# Build outputs
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Bot runtime data (guild registry)
+data/
+
+# Logs
+*.log

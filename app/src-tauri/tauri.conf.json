@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "memeover",
+  "version": "0.6.0",
+  "identifier": "com.simonhazard.memeover",
+  "build": {
+    "beforeDevCommand": "bun --bun run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "bun --bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "label": "settings",
+        "title": "MemeOver Settings",
+        "width": 900,
+        "height": 620,
+        "minWidth": 700,
+        "minHeight": 500,
+        "decorations": true,
+        "resizable": true,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.discordapp.com https://media.discordapp.net https://tenor.com https://media.tenor.com https://i.giphy.com; media-src 'self' blob: https://cdn.discordapp.com https://media.discordapp.net https://tenor.com https://media.tenor.com https://i.giphy.com; connect-src 'self' ws: wss: ipc: https://ipc.localhost"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/simonhazard/MemeOver/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1MjE3RkU0QjIyRjgyQ0YKUldUUGdpK3k1SDhoaGIxU0dMbEtHM1VEd3krSXN5b2czMTJTNUdtTEtIVE05clM4SVZaL0pIVDIK"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

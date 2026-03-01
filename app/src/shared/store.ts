@@ -1,0 +1,118 @@
+import { emit, listen } from "@tauri-apps/api/event";
+import { Store } from "@tauri-apps/plugin-store";
+import { create } from "zustand";
+import type { DisplayQueueItem, OverlayHealth, Settings, WsStatus } from "./types";
+import { DEFAULT_SETTINGS } from "./types";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const MAX_QUEUE_SIZE = 50;
+
+// ─── State shape ──────────────────────────────────────────────────────────────
+
+interface AppStore {
+	// Settings (loaded from Tauri Store by initOverlayStore / initSettingsStore)
+	settings: Settings;
+	updateSettings: (partial: Partial<Settings>) => void;
+
+	// Display queue — accepts both MediaQueueItem and TextQueueItem
+	queue: DisplayQueueItem[];
+	enqueue: (item: DisplayQueueItem) => void;
+	dequeue: () => void;
+	clearQueue: () => void;
+
+	// Queue size mirror — updated via Tauri event "queue-size-changed" in the settings window
+	queueSize: number;
+	setQueueSize: (size: number) => void;
+
+	// WebSocket connection status
+	wsStatus: WsStatus;
+	setWsStatus: (status: WsStatus) => void;
+
+	// Overlay window health (alive = visible, closed = destroyed)
+	overlayHealth: OverlayHealth;
+	setOverlayHealth: (health: OverlayHealth) => void;
+}
+
+// ─── Store ────────────────────────────────────────────────────────────────────
+
+export const useAppStore = create<AppStore>((set) => ({
+	settings: DEFAULT_SETTINGS,
+	updateSettings: (partial) => set((state) => ({ settings: { ...state.settings, ...partial } })),
+
+	queue: [],
+	enqueue: (item) =>
+		set((state) => {
+			if (state.queue.length >= MAX_QUEUE_SIZE) return state;
+			return { queue: [...state.queue, item] };
+		}),
+	dequeue: () => set((state) => ({ queue: state.queue.slice(1) })),
+	clearQueue: () => set({ queue: [] }),
+
+	queueSize: 0,
+	setQueueSize: (size) => set({ queueSize: size }),
+
+	wsStatus: "disconnected",
+	setWsStatus: (status) => set({ wsStatus: status }),
+
+	overlayHealth: "alive",
+	setOverlayHealth: (health) => set({ overlayHealth: health }),
+}));
+
+// ─── Side-effect init (called from main.tsx, outside React) ───────────────────
+
+/**
+ * Overlay window init:
+ * - Loads persisted settings from disk into Zustand
+ * - Subscribes to "settings-changed" Tauri events emitted by the settings window
+ * - Emits "queue-size-changed" whenever the queue length changes (consumed by settings window)
+ * - Listens for "replay-item" to re-enqueue a history item from the settings window
+ */
+export async function initOverlayStore(): Promise<void> {
+	try {
+		const store = await Store.load("settings.json");
+		const saved = await store.get<Settings>("settings");
+		if (saved) useAppStore.getState().updateSettings(saved);
+	} catch (err) {
+		console.warn("[Store] Could not load settings:", err);
+	}
+
+	await listen<Settings>("settings-changed", (event) => {
+		useAppStore.getState().updateSettings(event.payload);
+	});
+
+	await listen("clear-queue", () => {
+		useAppStore.getState().clearQueue();
+	});
+
+	await listen<DisplayQueueItem>("replay-item", (event) => {
+		useAppStore.getState().enqueue(event.payload);
+	});
+
+	// Broadcast queue length to settings window whenever it changes
+	useAppStore.subscribe((state, prevState) => {
+		if (state.queue.length !== prevState.queue.length) {
+			void emit("queue-size-changed", state.queue.length);
+		}
+	});
+}
+
+/**
+ * Settings window init:
+ * - Subscribes to "ws-status-changed" Tauri events emitted by the overlay window
+ * - Subscribes to "overlay-health-changed" Tauri events emitted by Rust
+ * - Subscribes to "queue-size-changed" Tauri events emitted by the overlay window
+ */
+export async function initSettingsStore(): Promise<void> {
+	await listen<WsStatus>("ws-status-changed", (event) => {
+		useAppStore.getState().setWsStatus(event.payload);
+	});
+
+	await listen<OverlayHealth>("overlay-health-changed", (event) => {
+		useAppStore.getState().setOverlayHealth(event.payload);
+	});
+
+	await listen<number>("queue-size-changed", (event) => {
+		useAppStore.getState().setQueueSize(event.payload);
+	});
+}

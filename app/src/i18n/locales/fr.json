@@ -1,0 +1,101 @@
+{
+	"app": {
+		"title": "MemeOver",
+		"subtitle": "Connectez l'overlay à votre bot Discord."
+	},
+	"status": {
+		"connected": "Connecté",
+		"connecting": "Connexion…",
+		"error": "Erreur",
+		"disconnected": "Déconnecté"
+	},
+	"health": {
+		"alive": "Overlay : En ligne",
+		"closed": "Overlay : Hors ligne"
+	},
+	"connection": {
+		"title": "Connexion au bot",
+		"error": "Connexion au bot perdue. Vérifiez le token, le Server ID et que le bot est lancé.",
+		"wsUrl": "URL du serveur WebSocket",
+		"guildId": "Server ID",
+		"guildId_hint": "Obtenu avec /memeover setup dans Discord.",
+		"token": "Token",
+		"save": "Sauvegarder et connecter",
+		"saving": "Sauvegarde…"
+	},
+	"overlay": {
+		"controls": "Contrôles de l'overlay",
+		"show": "Afficher",
+		"reload": "Recharger",
+		"close": "Fermer"
+	},
+	"actions": {
+		"title": "Actions",
+		"clearQueue": "Vider la file",
+		"displaySettings": "Paramètres d'affichage",
+		"history": "Historique",
+		"queueSize": "{{count}} en attente"
+	},
+	"display": {
+		"title": "Affichage",
+		"settings": "Paramètres d'affichage",
+		"size": "Taille du média",
+		"duration": "Durée d'affichage",
+		"duration_unit": "s",
+		"volume": "Volume (vidéos)",
+		"position": "Position",
+		"preview": "Aperçu",
+		"preview_media": "Média",
+		"save": "Sauvegarder",
+		"saving": "Sauvegarde…",
+		"back": "Retour",
+		"mediaTypes": "Types de médias autorisés",
+		"mediaTypesCount": "{{count}} / {{total}} types activés",
+		"type_image": "Images",
+		"type_gif": "GIFs",
+		"type_video": "Vidéos",
+		"type_audio": "Audio",
+		"type_text": "Textes"
+	},
+	"onboarding": {
+		"step": "Étape {{current}} sur {{total}}",
+		"step1_title": "Bienvenue sur MemeOver",
+		"step1_desc": "MemeOver affiche les médias de votre Discord directement sur votre écran. Suivez ces étapes pour configurer votre overlay.",
+		"step2_title": "Configurez la connexion",
+		"step2_desc": "Lancez votre bot Discord puis entrez les informations de connexion ci-dessous.",
+		"step3_title": "Tout est prêt !",
+		"step3_desc": "L'overlay est maintenant configuré. Envoyez une image ou un GIF dans Discord pour tester !",
+		"next": "Suivant",
+		"prev": "Précédent",
+		"finish": "Commencer",
+		"skip": "Passer"
+	},
+	"toast": {
+		"connectionSaved": "Connexion sauvegardée !",
+		"displaySaved": "Paramètres sauvegardés !",
+		"wsError": "Connexion WebSocket perdue",
+		"queueCleared": "File d'attente vidée",
+		"replayQueued": "Média remis en file"
+	},
+	"tray": {
+		"show": "Afficher les paramètres",
+		"quit": "Quitter"
+	},
+	"history": {
+		"title": "Historique",
+		"empty": "Aucun média reçu pour l'instant.",
+		"replay": "Rejouer",
+		"back": "Retour",
+		"from": "de {{name}}"
+	},
+	"updater": {
+		"title": "Mises à jour",
+		"check": "Vérifier les mises à jour",
+		"checking": "Vérification…",
+		"upToDate": "Vous avez la dernière version",
+		"available": "Mise à jour v{{version}} disponible",
+		"install": "Installer et relancer",
+		"installing": "Installation…",
+		"error": "Erreur lors de la vérification"
+	}
+}

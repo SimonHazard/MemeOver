@@ -11,7 +11,6 @@ Follow these steps to get the project up and running on your local machine for d
 Make sure you have the following software installed:
 
 - [Bun](https://bun.sh/)
-- [pnpm](https://pnpm.io/)
 - [Rust](https://www.rust-lang.org/)
 
 ### Overlay
@@ -21,13 +20,13 @@ The overlay [Tauri](https://v2.tauri.app/) is responsible for displaying the mes
 1. **Install dependencies**:
 
     ```bash
-    pnpm install
+    bun install
     ```
 
 2. **Start the development**:
 
     ```bash
-    pnpm tauri dev
+    bun tauri dev
     ```
 
 ### Bot
@@ -52,18 +51,18 @@ If you wanna see a deploy example, please check the [overlay](.github/workflows/
 
 ### Configuration
 
-Make sure to configure your container discord bot with correct env :
+Copy `bot/.env.example` to `.env` at the repo root and fill in your values:
 
 #### Local
 
 ```env
-BOT_TOKEN=my_bot_token
-APPLICATION_ID=my_discord_application_id
+DISCORD_TOKEN=my_bot_token
+DISCORD_CLIENT_ID=my_discord_application_id
 ```
 
 #### Docker
 
-`docker run -e BOT_TOKEN=my-bot-token -e APPLICATION_ID=my-application-id -d --name memeover-container -p <port>:<port> <my-image>`
+`docker run -e DISCORD_TOKEN=my-bot-token -e DISCORD_CLIENT_ID=my-application-id -d --name memeover-container -p <port>:<port> <my-image>`
 
 ## Discord
 
