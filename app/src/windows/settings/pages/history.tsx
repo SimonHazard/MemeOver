@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,15 +9,9 @@ import type { HistoryItem } from "@/shared/history";
 import { clearHistory, loadHistory, replayHistoryItem } from "@/shared/history";
 import { HistoryItemCard } from "@/windows/settings/components/history-item";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface HistoryPageProps {
-	onBack: () => void;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function HistoryPage({ onBack }: HistoryPageProps) {
+export function HistoryPage() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 
@@ -42,40 +36,35 @@ export function HistoryPage({ onBack }: HistoryPageProps) {
 	});
 
 	return (
-		<div className="p-6">
-			<div className="mx-auto max-w-2xl space-y-6">
-				{/* Header */}
+		<div className="p-5">
+			<div className="mx-auto max-w-xl space-y-5">
+				{/* ── Header ── */}
 				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5">
-							<ArrowLeft className="h-4 w-4" />
-							{t("history.back")}
-						</Button>
-						<h1 className="text-2xl font-bold tracking-tight">{t("history.title")}</h1>
-					</div>
+					<h1 className="font-display text-xl tracking-wide">{t("history.title")}</h1>
 					{items.length > 0 && (
 						<Button
-							variant="ghost"
+							variant="outline"
 							size="sm"
-							className="text-destructive hover:text-destructive"
+							className="border-2 border-foreground text-destructive hover:text-destructive shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display text-xs tracking-wide gap-1"
 							onClick={() => doClear()}
 						>
-							<Trash2 className="h-4 w-4 mr-1" />
+							<Trash2 className="h-3.5 w-3.5" />
+							{t("history.clearAll")}
 						</Button>
 					)}
 				</div>
 
 				<Separator />
 
-				{/* Content */}
+				{/* ── Content ── */}
 				{isLoading ? (
-					<div className="space-y-3">
+					<div className="space-y-2">
 						{[1, 2, 3, 4, 5].map((i) => (
 							<Skeleton key={i} className="h-16 w-full rounded-lg" />
 						))}
 					</div>
 				) : items.length === 0 ? (
-					<p className="text-center text-muted-foreground py-12">{t("history.empty")}</p>
+					<p className="text-center text-muted-foreground py-12 font-text">{t("history.empty")}</p>
 				) : (
 					<div className="space-y-2">
 						{items.map((item) => (

@@ -81,11 +81,23 @@
 		"show": "Afficher les paramètres",
 		"quit": "Quitter"
 	},
+	"tabs": {
+		"dashboard": "Dashboard",
+		"overlay": "Overlay",
+		"history": "Historique",
+		"about": "À propos"
+	},
+	"about": {
+		"preferences": "Préférences",
+		"language": "Langue",
+		"theme": "Thème"
+	},
 	"history": {
 		"title": "Historique",
 		"empty": "Aucun média reçu pour l'instant.",
 		"replay": "Rejouer",
 		"back": "Retour",
+		"clearAll": "Tout effacer",
 		"from": "de {{name}}"
 	},
 	"updater": {

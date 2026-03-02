@@ -109,6 +109,7 @@
 	--display-weight: 400;
 	--text-family: "Poppins", "sans-serif";
 	--text-weight: 400;
+	--nb-shadow: rgb(0, 0, 0);
 
 	--base-50: oklch(0.9873 0.004 106.47);
 	--base-100: oklch(0.9695 0.0044 107.48);
@@ -184,6 +185,7 @@
 }
 
 .dark {
+	--nb-shadow: rgb(255, 255, 255);
 	--background: var(--base-950);
 	--foreground: var(--base-200);
 	--card: var(--base-900);

@@ -1,9 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { SetupSettings } from "@/windows/settings/pages/setup-settings";
+import { createFileRoute } from "@tanstack/react-router";
+import { SetupPage } from "@/windows/settings/pages/setup";
 
-export const Route = createFileRoute("/")({ component: SetupPage });
-
-function SetupPage() {
-	const navigate = useNavigate();
-	return <SetupSettings onOpenDisplay={() => void navigate({ to: "/settings" })} />;
-}
+export const Route = createFileRoute("/")({
+	component: SetupPage,
+});

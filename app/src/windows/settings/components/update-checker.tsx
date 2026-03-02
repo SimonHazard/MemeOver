@@ -3,7 +3,7 @@ import { check, type Update } from "@tauri-apps/plugin-updater";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { NbCard } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 type UpdateState =
@@ -51,16 +51,16 @@ export function UpdateChecker() {
 	const isBusy = state.status === "checking" || state.status === "installing";
 
 	return (
-		<Card className="p-6">
+		<NbCard>
 			<div className="space-y-4">
-				<h2 className="text-lg font-semibold">{t("updater.title")}</h2>
+				<h2 className="font-display text-base tracking-wide">{t("updater.title")}</h2>
 
 				<Separator />
 
 				<div className="flex items-center gap-3">
 					<Button
 						variant="outline"
-						className="flex-1"
+						className="flex-1 border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs disabled:opacity-40 disabled:shadow-none"
 						onClick={() => void handleCheck()}
 						disabled={isBusy}
 					>
@@ -69,7 +69,7 @@ export function UpdateChecker() {
 
 					{state.status === "available" && (
 						<Button
-							className="flex-1"
+							className="flex-1 border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs"
 							disabled={isBusy}
 							onClick={() => void handleInstall(state.update)}
 						>
@@ -78,24 +78,27 @@ export function UpdateChecker() {
 					)}
 
 					{state.status === "installing" && (
-						<Button className="flex-1" disabled>
+						<Button
+							className="flex-1 font-display tracking-wide text-xs disabled:opacity-40"
+							disabled
+						>
 							{t("updater.installing")}
 						</Button>
 					)}
 				</div>
 
 				{state.status === "available" && (
-					<p className="text-sm text-muted-foreground">
+					<p className="text-sm text-muted-foreground font-text">
 						{t("updater.available", { version: state.version })}
 					</p>
 				)}
 				{state.status === "up-to-date" && (
-					<p className="text-sm text-muted-foreground">{t("updater.upToDate")}</p>
+					<p className="text-sm text-muted-foreground font-text">{t("updater.upToDate")}</p>
 				)}
 				{state.status === "error" && (
-					<p className="text-sm text-destructive">{t("updater.error")}</p>
+					<p className="text-sm text-destructive font-text">{t("updater.error")}</p>
 				)}
 			</div>
-		</Card>
+		</NbCard>
 	);
 }

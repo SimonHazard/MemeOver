@@ -15,10 +15,10 @@
       {
         "label": "settings",
         "title": "MemeOver Settings",
-        "width": 900,
-        "height": 620,
-        "minWidth": 700,
-        "minHeight": 500,
+        "width": 960,
+        "height": 700,
+        "minWidth": 800,
+        "minHeight": 560,
         "decorations": true,
         "resizable": true,
         "visible": true
