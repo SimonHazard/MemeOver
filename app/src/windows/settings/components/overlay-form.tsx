@@ -30,7 +30,7 @@ import { PositionPreview } from "./position-preview";
 
 type MediaSettingsFields = Pick<
 	Settings,
-	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes" | "textSize"
+	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes" | "textSize" | "mediaOpacity"
 >;
 
 export interface OverlayFormProps {
@@ -52,7 +52,7 @@ const MEDIA_TYPE_ICONS: Record<
 	text: MessageSquare,
 };
 
-const TEXT_SIZE_KEYS: TextSize[] = ["sm", "base", "lg", "xl", "2xl"];
+const TEXT_SIZE_KEYS: TextSize[] = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -70,6 +70,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
+		mediaOpacity: initialData.mediaOpacity,
 	});
 
 	const snapshotRef = useRef<MediaSettingsFields>({
@@ -79,6 +80,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
+		mediaOpacity: initialData.mediaOpacity,
 	});
 
 	const isDirty = JSON.stringify(form) !== JSON.stringify(snapshotRef.current);
@@ -229,6 +231,21 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								step={1}
 								value={[form.volume]}
 								onValueChange={([v]) => update("volume", v ?? DEFAULT_SETTINGS.volume)}
+							/>
+						</div>
+
+						{/* Opacité */}
+						<div className="space-y-3">
+							<div className="flex justify-between">
+								<Label className="font-display tracking-wide text-xs">{t("display.opacity")}</Label>
+								<span className="text-sm text-muted-foreground">{form.mediaOpacity}%</span>
+							</div>
+							<Slider
+								min={0}
+								max={100}
+								step={1}
+								value={[form.mediaOpacity]}
+								onValueChange={([v]) => update("mediaOpacity", v ?? DEFAULT_SETTINGS.mediaOpacity)}
 							/>
 						</div>
 

@@ -26,7 +26,7 @@ export function MediaDisplay({
 }: MediaDisplayProps) {
 	const width = `${settings.mediaSize}vw`;
 
-	// TEXT branch — startTimer is handled by useMediaDisplay (delay=0 safety fallback)
+	// TEXT branch — opacity intentionally not applied: text must stay fully readable
 	if (item.type === "TEXT") {
 		return (
 			<div className="flex flex-col items-center gap-2">
@@ -41,14 +41,17 @@ export function MediaDisplay({
 	}
 
 	// MEDIA branch — item is narrowed to MediaQueueItem here
+	const opacity = settings.mediaOpacity / 100;
+
 	return (
 		<div className="flex flex-col items-center gap-2">
-			{/* ── Author badge ── */}
+			{/* ── Author badge — always fully opaque ── */}
 			<AuthorBadge
 				username={item.author_username}
 				displayName={item.author_display_name}
 				avatarUrl={item.author_avatar_url}
 			/>
+
 			{/* ── Video ── */}
 			{item.media_type === "video" && (
 				<video
@@ -62,8 +65,15 @@ export function MediaDisplay({
 					onPlay={startTimer}
 					onEnded={onVideoEnd}
 					onError={onMediaError}
-					style={{ width, maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain" }}
-					className="rounded-xl shadow-2xl block"
+					style={{
+						maxWidth: width,
+						maxHeight: "80vh",
+						width: "auto",
+						height: "auto",
+						background: "transparent",
+						opacity,
+					}}
+					className="rounded-xl shadow-2xl block transition-opacity duration-300"
 				/>
 			)}
 
@@ -74,8 +84,8 @@ export function MediaDisplay({
 					alt=""
 					onLoad={startTimer}
 					onError={onMediaError}
-					style={{ width, maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain" }}
-					className="rounded-xl shadow-2xl block"
+					style={{ maxWidth: width, maxHeight: "80vh", opacity }}
+					className="rounded-xl shadow-2xl block transition-opacity duration-300"
 					draggable={false}
 				/>
 			)}
@@ -83,8 +93,8 @@ export function MediaDisplay({
 			{/* ── Audio ── */}
 			{item.media_type === "audio" && (
 				<div
-					style={{ width, maxWidth: "90vw" }}
-					className="rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3 shadow-2xl"
+					style={{ maxWidth: width, opacity }}
+					className="rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3 shadow-2xl transition-opacity duration-300"
 				>
 					<AudioEqualizer />
 					{/* biome-ignore lint/a11y/useMediaCaption: overlay média */}
@@ -107,7 +117,7 @@ export function MediaDisplay({
 				</div>
 			)}
 
-			{/* ── Caption (image / gif / video) ── */}
+			{/* ── Caption (image / gif / video) — always fully opaque ── */}
 			{item.media_type !== "audio" && item.text && (
 				<p
 					style={{ maxWidth: width, textShadow: CAPTION_SHADOW }}

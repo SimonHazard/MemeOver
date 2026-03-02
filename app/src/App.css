@@ -133,6 +133,11 @@
 	-webkit-app-region: no-drag;
 }
 
+[data-window="overlay"] video,
+[data-window="overlay"] img {
+	background: transparent !important;
+}
+
 /* ─── Default theme ───────────────────────────────────────────────────────── */
 
 :root {
