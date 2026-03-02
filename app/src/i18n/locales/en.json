@@ -56,7 +56,8 @@
 		"type_video": "Videos",
 		"type_audio": "Audio",
 		"type_text": "Text",
-		"textSize": "Text size"
+		"textSize": "Text size",
+		"opacity": "Media opacity"
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",
