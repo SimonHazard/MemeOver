@@ -56,7 +56,7 @@ export function TextDisplay({ text, width, textSize }: TextDisplayProps) {
 		const observer = new ResizeObserver(recalculate);
 		observer.observe(container);
 		return () => observer.disconnect();
-	}, [text, textSize]);
+	}, [textSize]);
 
 	return (
 		<div ref={containerRef} style={{ width }} className="relative overflow-hidden">
