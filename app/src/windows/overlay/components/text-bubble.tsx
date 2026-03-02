@@ -45,10 +45,7 @@ export function TextDisplay({ text, width, textSize }: TextDisplayProps) {
 			if (naturalWidth <= containerWidth || containerWidth <= 0) {
 				setFontSize(basePx);
 			} else {
-				const scaled = Math.max(
-					MIN_FONT_PX,
-					Math.floor(basePx * (containerWidth / naturalWidth)),
-				);
+				const scaled = Math.max(MIN_FONT_PX, Math.floor(basePx * (containerWidth / naturalWidth)));
 				setFontSize(scaled);
 			}
 		}
