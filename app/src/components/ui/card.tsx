@@ -89,4 +89,13 @@ function NbCard({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent, NbCard };
+export {
+	Card,
+	CardHeader,
+	CardFooter,
+	CardTitle,
+	CardAction,
+	CardDescription,
+	CardContent,
+	NbCard,
+};
