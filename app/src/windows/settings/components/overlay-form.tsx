@@ -41,7 +41,10 @@ export interface OverlayFormProps {
 
 const MEDIA_TYPE_KEYS = ["image", "gif", "video", "audio", "text"] as const;
 
-const MEDIA_TYPE_ICONS: Record<(typeof MEDIA_TYPE_KEYS)[number], React.ComponentType<{ className?: string }>> = {
+const MEDIA_TYPE_ICONS: Record<
+	(typeof MEDIA_TYPE_KEYS)[number],
+	React.ComponentType<{ className?: string }>
+> = {
 	image: ImageIcon,
 	gif: Clapperboard,
 	video: Video,
