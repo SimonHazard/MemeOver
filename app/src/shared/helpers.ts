@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
-import type { OverlayHealth, WsStatus } from "@/shared/types";
+import type { EnabledTypes, OverlayHealth, WsStatus } from "@/shared/types";
 
 export function statusVariant(
 	status: WsStatus,
@@ -49,4 +49,24 @@ export function formatDate(timestamp: number): string {
 		day: "numeric",
 		month: "short",
 	});
+}
+
+// ─── Overlay helpers ──────────────────────────────────────────────────────────
+
+export function enabledTypesToList(et: EnabledTypes): string[] {
+	return (Object.keys(et) as Array<keyof EnabledTypes>).filter((k) => et[k]);
+}
+
+export function listToEnabledTypes(list: string[]): EnabledTypes {
+	const result: EnabledTypes = {
+		image: false,
+		gif: false,
+		video: false,
+		audio: false,
+		text: false,
+	};
+	for (const v of list) {
+		if (v in result) result[v as keyof EnabledTypes] = true;
+	}
+	return result;
 }

@@ -35,7 +35,7 @@ export function MediaDisplay({
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
 				/>
-				<TextDisplay text={item.text} width={width} />
+				<TextDisplay text={item.text} width={width} textSize={settings.textSize} />
 			</div>
 		);
 	}
@@ -62,7 +62,7 @@ export function MediaDisplay({
 					onPlay={startTimer}
 					onEnded={onVideoEnd}
 					onError={onMediaError}
-					style={{ width }}
+					style={{ width, maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain" }}
 					className="rounded-xl shadow-2xl block"
 				/>
 			)}
@@ -74,7 +74,7 @@ export function MediaDisplay({
 					alt=""
 					onLoad={startTimer}
 					onError={onMediaError}
-					style={{ width }}
+					style={{ width, maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain" }}
 					className="rounded-xl shadow-2xl block"
 					draggable={false}
 				/>
@@ -83,7 +83,7 @@ export function MediaDisplay({
 			{/* ── Audio ── */}
 			{item.media_type === "audio" && (
 				<div
-					style={{ width }}
+					style={{ width, maxWidth: "90vw" }}
 					className="rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3 shadow-2xl"
 				>
 					<AudioEqualizer />

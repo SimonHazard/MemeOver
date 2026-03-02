@@ -42,7 +42,7 @@
 		"size": "Taille du média",
 		"duration": "Durée d'affichage",
 		"duration_unit": "s",
-		"volume": "Volume (vidéos)",
+		"volume": "Volume (médias)",
 		"position": "Position",
 		"preview": "Aperçu",
 		"preview_media": "Média",
@@ -55,7 +55,8 @@
 		"type_gif": "GIFs",
 		"type_video": "Vidéos",
 		"type_audio": "Audio",
-		"type_text": "Textes"
+		"type_text": "Textes",
+		"textSize": "Taille du texte"
 	},
 	"onboarding": {
 		"step": "Étape {{current}} sur {{total}}",
@@ -106,8 +107,7 @@
 		"checking": "Vérification…",
 		"upToDate": "Vous avez la dernière version",
 		"available": "Mise à jour v{{version}} disponible",
-		"install": "Installer et relancer",
-		"installing": "Installation…",
+		"download": "Télécharger v{{version}}",
 		"error": "Erreur lors de la vérification"
 	}
 }

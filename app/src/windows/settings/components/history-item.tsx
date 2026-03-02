@@ -1,4 +1,5 @@
-import { FileAudio, MessageSquare, Play, Video } from "lucide-react";
+import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Play, Video } from "lucide-react";
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,89 +14,86 @@ interface HistoryItemCardProps {
 	onReplay: (item: HistoryItem) => void;
 }
 
+// ─── Media type config ────────────────────────────────────────────────────────
+
+type MediaIconConfig = {
+	icon: React.ComponentType<{ className?: string }>;
+	labelKey: string;
+};
+
+function getMediaConfig(item: HistoryItem): MediaIconConfig {
+	if (item.type === "TEXT") return { icon: MessageSquare, labelKey: "display.type_text" };
+	switch (item.media_type) {
+		case "gif":
+			return { icon: Clapperboard, labelKey: "display.type_gif" };
+		case "video":
+			return { icon: Video, labelKey: "display.type_video" };
+		case "audio":
+			return { icon: FileAudio, labelKey: "display.type_audio" };
+		default:
+			return { icon: ImageIcon, labelKey: "display.type_image" };
+	}
+}
+
+// ─── MediaTypeBadge ───────────────────────────────────────────────────────────
+
+function MediaTypeBadge({ item }: { item: HistoryItem }) {
+	const { t } = useTranslation();
+	const { icon: Icon, labelKey } = getMediaConfig(item);
+	return (
+		<span className="inline-flex items-center gap-1 border border-foreground/25 rounded px-1.5 py-0.5 text-[10px] font-display tracking-wide text-muted-foreground shrink-0">
+			<Icon className="h-2.5 w-2.5" />
+			{t(labelKey)}
+		</span>
+	);
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
 	const { t } = useTranslation();
 	const displayName = item.author_display_name ?? item.author_username;
+	const initials = displayName.charAt(0).toUpperCase();
 
 	return (
-		<Card className="p-3 flex items-center gap-3 border-2 border-foreground/20 hover:border-foreground/60 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all">
-			{/* Thumbnail / type icon */}
-			<MediaThumbnail item={item} />
+		<Card className="px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all">
+			<div className="flex items-center gap-3">
+				{/* ── Avatar ── */}
+				<Avatar className="w-8 h-8 shrink-0 border-2 border-foreground/20">
+					<AvatarImage src={item.author_avatar_url} alt={displayName} />
+					<AvatarFallback className="text-xs font-display">{initials}</AvatarFallback>
+				</Avatar>
 
-			{/* Author + content */}
-			<div className="flex-1 min-w-0 space-y-0.5">
-				<div className="flex items-center gap-1.5">
-					<Avatar className="w-4 h-4 shrink-0">
-						<AvatarImage src={item.author_avatar_url} alt="" />
-						<AvatarFallback className="text-[6px]">
-							{displayName.charAt(0).toUpperCase()}
-						</AvatarFallback>
-					</Avatar>
-					<span className="text-xs font-medium truncate">{displayName}</span>
-					<span className="text-xs text-muted-foreground shrink-0 ml-auto">
-						{formatDate(item.recordedAt)} {formatTime(item.recordedAt)}
-					</span>
+				{/* ── Info column ── */}
+				<div className="flex-1 min-w-0 space-y-1">
+					{/* Row 1 — Username */}
+					<p className="text-sm font-display tracking-wide truncate leading-none">{displayName}</p>
+
+					{/* Row 2 — Date · time · type badge */}
+					<div className="flex items-center gap-1.5 flex-wrap">
+						<span className="text-[11px] text-muted-foreground">
+							{formatDate(item.recordedAt)} · {formatTime(item.recordedAt)}
+						</span>
+						<MediaTypeBadge item={item} />
+					</div>
+
+					{/* Row 3 — Text preview (TEXT items only) */}
+					{item.type === "TEXT" && item.text && (
+						<p className="text-xs text-muted-foreground/70 truncate italic">{item.text}</p>
+					)}
 				</div>
 
-				{item.type === "TEXT" ? (
-					<p className="text-xs text-muted-foreground truncate">{item.text}</p>
-				) : (
-					<p className="text-xs text-muted-foreground truncate">
-						{t("history.from", { name: displayName })}
-					</p>
-				)}
+				{/* ── Replay button ── */}
+				<Button
+					variant="outline"
+					size="icon"
+					className="shrink-0 border-2 border-foreground/30 hover:border-foreground hover:bg-primary-400/10 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all"
+					title={t("history.replay")}
+					onClick={() => onReplay(item)}
+				>
+					<Play className="h-3.5 w-3.5" />
+				</Button>
 			</div>
-
-			{/* Replay button */}
-			<Button
-				variant="outline"
-				size="icon"
-				className="shrink-0 border-2 border-foreground/30 hover:border-foreground hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all"
-				title={t("history.replay")}
-				onClick={() => onReplay(item)}
-			>
-				<Play className="h-3.5 w-3.5" />
-			</Button>
 		</Card>
-	);
-}
-
-// ─── MediaThumbnail ───────────────────────────────────────────────────────────
-
-function MediaThumbnail({ item }: { item: HistoryItem }) {
-	if (item.type === "TEXT") {
-		return (
-			<div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-				<MessageSquare className="h-4 w-4 text-muted-foreground" />
-			</div>
-		);
-	}
-
-	if (item.media_type === "image" || item.media_type === "gif") {
-		return (
-			<img
-				src={item.media_url}
-				alt=""
-				className="w-10 h-10 object-cover rounded bg-muted shrink-0"
-				loading="lazy"
-			/>
-		);
-	}
-
-	if (item.media_type === "video") {
-		return (
-			<div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-				<Video className="h-4 w-4 text-muted-foreground" />
-			</div>
-		);
-	}
-
-	// audio
-	return (
-		<div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-			<FileAudio className="h-4 w-4 text-muted-foreground" />
-		</div>
 	);
 }

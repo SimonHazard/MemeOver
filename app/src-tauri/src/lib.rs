@@ -54,6 +54,8 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
         Some(win) => {
             win.show().map_err(|e| e.to_string())?;
             win.set_focus().map_err(|e| e.to_string())?;
+            #[cfg(not(debug_assertions))]
+            win.set_always_on_top(true).map_err(|e| e.to_string())?;
         }
         None => {
             create_overlay_window(&app).map_err(|e| e.to_string())?;
