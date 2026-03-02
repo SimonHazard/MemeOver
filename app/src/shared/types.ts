@@ -42,6 +42,8 @@ export type OverlayHealth = "alive" | "closed";
 
 export type OverlayPosition = "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
+export type TextSize = "sm" | "base" | "lg" | "xl" | "2xl";
+
 export interface EnabledTypes {
 	image: boolean;
 	gif: boolean;
@@ -64,6 +66,8 @@ export interface Settings {
 	position: OverlayPosition;
 	/** Which media types are allowed to be displayed */
 	enabledTypes: EnabledTypes;
+	/** Font size for text overlays */
+	textSize: TextSize;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -75,4 +79,5 @@ export const DEFAULT_SETTINGS: Settings = {
 	volume: 80,
 	position: "center",
 	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true },
+	textSize: "xl",
 };

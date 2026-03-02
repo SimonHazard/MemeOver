@@ -1,8 +1,38 @@
-@import url("https://fonts.googleapis.com/css2?family=Bungee&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+/* ─── Local fonts (bundled in app — no CDN dependency) ───────────────────── */
+@font-face {
+	font-family: "Bungee";
+	src: url("/fonts/Bungee.woff2") format("woff2");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Poppins";
+	src: url("/fonts/Poppins-Regular.woff2") format("woff2");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Poppins";
+	src: url("/fonts/Poppins-Medium.woff2") format("woff2");
+	font-weight: 500;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Poppins";
+	src: url("/fonts/Poppins-SemiBold.woff2") format("woff2");
+	font-weight: 600;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Poppins";
+	src: url("/fonts/Poppins-Bold.woff2") format("woff2");
+	font-weight: 700;
+	font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 

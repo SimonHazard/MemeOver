@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Save, Video } from "lucide-react";
+import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Save, Type, Video } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ import {
 } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
-import type { Settings } from "@/shared/types";
+import type { Settings, TextSize } from "@/shared/types";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { PositionGrid } from "./position-grid";
 import { PositionPreview } from "./position-preview";
@@ -30,7 +30,7 @@ import { PositionPreview } from "./position-preview";
 
 type MediaSettingsFields = Pick<
 	Settings,
-	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes"
+	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes" | "textSize"
 >;
 
 export interface OverlayFormProps {
@@ -49,6 +49,8 @@ const MEDIA_TYPE_ICONS: Record<(typeof MEDIA_TYPE_KEYS)[number], React.Component
 	text: MessageSquare,
 };
 
+const TEXT_SIZE_KEYS: TextSize[] = ["sm", "base", "lg", "xl", "2xl"];
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function OverlayForm({ initialData }: OverlayFormProps) {
@@ -64,6 +66,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		volume: initialData.volume,
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
+		textSize: initialData.textSize,
 	});
 
 	const snapshotRef = useRef<MediaSettingsFields>({
@@ -72,6 +75,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		volume: initialData.volume,
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
+		textSize: initialData.textSize,
 	});
 
 	const isDirty = JSON.stringify(form) !== JSON.stringify(snapshotRef.current);
@@ -223,6 +227,31 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								value={[form.volume]}
 								onValueChange={([v]) => update("volume", v ?? DEFAULT_SETTINGS.volume)}
 							/>
+						</div>
+
+						{/* Taille du texte */}
+						<div className="space-y-3">
+							<Label className="font-display tracking-wide text-xs">{t("display.textSize")}</Label>
+							<ToggleGroup
+								type="single"
+								value={form.textSize}
+								onValueChange={(v) => {
+									if (v) update("textSize", v as TextSize);
+								}}
+								className="flex flex-wrap gap-1.5 justify-start"
+							>
+								{TEXT_SIZE_KEYS.map((size) => (
+									<ToggleGroupItem
+										key={size}
+										value={size}
+										size="sm"
+										className="gap-1.5 border-2 border-foreground/30 data-[state=on]:border-foreground data-[state=on]:bg-primary-400 data-[state=on]:text-black data-[state=off]:opacity-50 data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all font-display text-xs tracking-wide"
+									>
+										<Type className="h-3.5 w-3.5" />
+										{size}
+									</ToggleGroupItem>
+								))}
+							</ToggleGroup>
 						</div>
 
 						{/* Position */}

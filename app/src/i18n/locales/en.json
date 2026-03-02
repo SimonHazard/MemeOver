@@ -55,7 +55,8 @@
 		"type_gif": "GIFs",
 		"type_video": "Videos",
 		"type_audio": "Audio",
-		"type_text": "Text"
+		"type_text": "Text",
+		"textSize": "Text size"
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",

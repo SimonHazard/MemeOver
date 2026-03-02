@@ -18,7 +18,6 @@ import { handleToken } from "./subcommands/token";
 const memeover = new SlashCommandBuilder()
 	.setName("memeover")
 	.setDescription("Manage MemeOver for this server")
-	.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
 	.addSubcommand((sub) =>
 		sub
 			.setName("setup")
@@ -65,6 +64,17 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 	}
 
 	const sub = interaction.options.getSubcommand();
+
+	// setup and remove require Manage Server permission; token is open to all members
+	if (sub === "setup" || sub === "remove") {
+		if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+			await interaction.reply({
+				content: "❌ You need the **Manage Server** permission to use this command.",
+				flags: MessageFlags.Ephemeral,
+			});
+			return;
+		}
+	}
 
 	if (sub === "setup") {
 		await handleSetup(interaction, guildId);

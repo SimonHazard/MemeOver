@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { NbCard } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -32,6 +33,9 @@ const slideVariants = {
 	center: { x: 0, opacity: 1 },
 	exit: (d: number) => ({ x: d * -40, opacity: 0 }),
 };
+
+const BTN_NB =
+	"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all font-display tracking-wide";
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 	const { t } = useTranslation();
@@ -80,7 +84,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
 	return (
 		<div className="p-6 min-h-screen flex flex-col items-center justify-center">
-			<div className="w-full max-w-md space-y-6">
+			<div className="w-full max-w-xl space-y-6">
 				{/* Progress header */}
 				<div className="space-y-2">
 					<div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -89,7 +93,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 							<button
 								type="button"
 								onClick={dismiss}
-								className="hover:text-foreground transition-colors"
+								className="font-display text-xs tracking-wide hover:text-foreground transition-colors"
 							>
 								{t("onboarding.skip")}
 							</button>
@@ -118,13 +122,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 				{/* Navigation */}
 				<div className="flex gap-3">
 					{step === 1 && (
-						<Button variant="outline" onClick={retreat} className="flex-1">
+						<Button variant="outline" onClick={retreat} className={`flex-1 ${BTN_NB}`}>
 							{t("onboarding.prev")}
 						</Button>
 					)}
 
 					{step === 0 && (
-						<Button onClick={advance} className="w-full">
+						<Button onClick={advance} className={`w-full ${BTN_NB}`}>
 							{t("onboarding.next")}
 						</Button>
 					)}
@@ -133,14 +137,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 						<Button
 							onClick={() => saveConnection()}
 							disabled={isPending || !canSaveStep1}
-							className="flex-1"
+							className={`flex-1 ${BTN_NB}`}
 						>
 							{t("onboarding.next")}
 						</Button>
 					)}
 
 					{step === 2 && (
-						<Button onClick={dismiss} className="w-full">
+						<Button onClick={dismiss} className={`w-full ${BTN_NB}`}>
 							{t("onboarding.finish")}
 						</Button>
 					)}
@@ -155,13 +159,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 function StepWelcome() {
 	const { t } = useTranslation();
 	return (
-		<Card className="p-8 text-center space-y-3">
-			<div className="text-4xl" aria-hidden="true">
-				🎉
+		<NbCard>
+			<div className="text-center space-y-3">
+				<Sparkles className="h-8 w-8 text-primary-400 mx-auto" aria-hidden="true" />
+				<h1 className="text-2xl font-display tracking-wide">{t("onboarding.step1_title")}</h1>
+				<p className="text-muted-foreground">{t("onboarding.step1_desc")}</p>
 			</div>
-			<h1 className="text-2xl font-bold">{t("onboarding.step1_title")}</h1>
-			<p className="text-muted-foreground">{t("onboarding.step1_desc")}</p>
-		</Card>
+		</NbCard>
 	);
 }
 
@@ -173,55 +177,63 @@ interface StepConnectionProps {
 function StepConnection({ form, setForm }: StepConnectionProps) {
 	const { t } = useTranslation();
 	return (
-		<Card className="p-6 space-y-5">
-			<div>
-				<h2 className="text-xl font-semibold">{t("onboarding.step2_title")}</h2>
-				<p className="text-sm text-muted-foreground mt-1">{t("onboarding.step2_desc")}</p>
+		<NbCard>
+			<div className="space-y-5">
+				<div>
+					<h2 className="text-xl font-display tracking-wide">{t("onboarding.step2_title")}</h2>
+					<p className="text-sm text-muted-foreground mt-1">{t("onboarding.step2_desc")}</p>
+				</div>
+				<div className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="ob-wsUrl" className="font-display tracking-wide text-xs">
+							{t("connection.wsUrl")}
+						</Label>
+						<Input
+							id="ob-wsUrl"
+							placeholder="ws://localhost:3001/ws"
+							value={form.wsUrl}
+							onChange={(e) => setForm((f) => ({ ...f, wsUrl: e.target.value }))}
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label htmlFor="ob-guildId" className="font-display tracking-wide text-xs">
+							{t("connection.guildId")}
+						</Label>
+						<Input
+							id="ob-guildId"
+							placeholder="123456789012345678"
+							value={form.guildId}
+							onChange={(e) => setForm((f) => ({ ...f, guildId: e.target.value }))}
+						/>
+						<p className="text-xs text-muted-foreground">{t("connection.guildId_hint")}</p>
+					</div>
+					<div className="space-y-2">
+						<Label htmlFor="ob-token" className="font-display tracking-wide text-xs">
+							{t("connection.token")}
+						</Label>
+						<Input
+							id="ob-token"
+							type="password"
+							placeholder="••••••••••••••••"
+							value={form.token}
+							onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
+						/>
+					</div>
+				</div>
 			</div>
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<Label htmlFor="ob-wsUrl">{t("connection.wsUrl")}</Label>
-					<Input
-						id="ob-wsUrl"
-						placeholder="ws://localhost:3001/ws"
-						value={form.wsUrl}
-						onChange={(e) => setForm((f) => ({ ...f, wsUrl: e.target.value }))}
-					/>
-				</div>
-				<div className="space-y-2">
-					<Label htmlFor="ob-guildId">{t("connection.guildId")}</Label>
-					<Input
-						id="ob-guildId"
-						placeholder="123456789012345678"
-						value={form.guildId}
-						onChange={(e) => setForm((f) => ({ ...f, guildId: e.target.value }))}
-					/>
-					<p className="text-xs text-muted-foreground">{t("connection.guildId_hint")}</p>
-				</div>
-				<div className="space-y-2">
-					<Label htmlFor="ob-token">{t("connection.token")}</Label>
-					<Input
-						id="ob-token"
-						type="password"
-						placeholder="••••••••••••••••"
-						value={form.token}
-						onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
-					/>
-				</div>
-			</div>
-		</Card>
+		</NbCard>
 	);
 }
 
 function StepDone() {
 	const { t } = useTranslation();
 	return (
-		<Card className="p-8 text-center space-y-3">
-			<div className="text-4xl" aria-hidden="true">
-				✅
+		<NbCard>
+			<div className="text-center space-y-3">
+				<CheckCircle className="h-8 w-8 text-primary-400 mx-auto" aria-hidden="true" />
+				<h2 className="text-xl font-display tracking-wide">{t("onboarding.step3_title")}</h2>
+				<p className="text-muted-foreground">{t("onboarding.step3_desc")}</p>
 			</div>
-			<h2 className="text-xl font-semibold">{t("onboarding.step3_title")}</h2>
-			<p className="text-muted-foreground">{t("onboarding.step3_desc")}</p>
-		</Card>
+		</NbCard>
 	);
 }
