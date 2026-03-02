@@ -7,8 +7,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-	--font-display: var(--display-family);
-	--font-text: var(--text-family);
+	--font-display: var(--display-family, "Bungee", system-ui);
+	--font-sans: var(--text-family, "Poppins", sans-serif);
+	--font-text: var(--text-family, "Poppins", sans-serif);
 
 	--color-base-50: var(--base-50);
 	--color-base-100: var(--base-100);
@@ -105,9 +106,7 @@
 /* ─── Default theme ───────────────────────────────────────────────────────── */
 
 :root {
-	--display-family: "Bungee", "sans-serif";
 	--display-weight: 400;
-	--text-family: "Poppins", "sans-serif";
 	--text-weight: 400;
 	--nb-shadow: rgb(0, 0, 0);
 

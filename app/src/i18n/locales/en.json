@@ -42,7 +42,7 @@
 		"size": "Media size",
 		"duration": "Display duration",
 		"duration_unit": "s",
-		"volume": "Volume (videos)",
+		"volume": "Volume (medias)",
 		"position": "Position",
 		"preview": "Preview",
 		"preview_media": "Media",
@@ -106,8 +106,7 @@
 		"checking": "Checking…",
 		"upToDate": "You have the latest version",
 		"available": "Update v{{version}} available",
-		"install": "Install and relaunch",
-		"installing": "Installing…",
+		"download": "Download v{{version}}",
 		"error": "Error while checking for updates"
 	}
 }
