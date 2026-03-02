@@ -1,8 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslation } from "react-i18next";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import i18n from "@/i18n";
 
 export function LangToggle() {
+	const { i18n } = useTranslation();
 	const currentLang = i18n.language.startsWith("fr") ? "fr" : "en";
 
 	function handleChange(value: string) {

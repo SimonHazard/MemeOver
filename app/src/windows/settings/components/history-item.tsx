@@ -1,8 +1,9 @@
-import { FileAudio, Play, Video } from "lucide-react";
+import { FileAudio, MessageSquare, Play, Video } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { formatDate, formatTime } from "@/shared/helpers";
 import type { HistoryItem } from "@/shared/history";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,22 +13,6 @@ interface HistoryItemCardProps {
 	onReplay: (item: HistoryItem) => void;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatTime(timestamp: number): string {
-	return new Date(timestamp).toLocaleTimeString(undefined, {
-		hour: "2-digit",
-		minute: "2-digit",
-	});
-}
-
-function formatDate(timestamp: number): string {
-	return new Date(timestamp).toLocaleDateString(undefined, {
-		day: "numeric",
-		month: "short",
-	});
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
@@ -35,7 +20,7 @@ export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
 	const displayName = item.author_display_name ?? item.author_username;
 
 	return (
-		<Card className="p-3 flex items-center gap-3">
+		<Card className="p-3 flex items-center gap-3 border-2 border-foreground/20 hover:border-foreground/60 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all">
 			{/* Thumbnail / type icon */}
 			<MediaThumbnail item={item} />
 
@@ -65,9 +50,9 @@ export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
 
 			{/* Replay button */}
 			<Button
-				variant="ghost"
+				variant="outline"
 				size="icon"
-				className="shrink-0"
+				className="shrink-0 border-2 border-foreground/30 hover:border-foreground hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all"
 				title={t("history.replay")}
 				onClick={() => onReplay(item)}
 			>
@@ -82,8 +67,8 @@ export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
 function MediaThumbnail({ item }: { item: HistoryItem }) {
 	if (item.type === "TEXT") {
 		return (
-			<div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-lg shrink-0">
-				💬
+			<div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+				<MessageSquare className="h-4 w-4 text-muted-foreground" />
 			</div>
 		);
 	}

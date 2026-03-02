@@ -36,3 +36,17 @@ export async function quitOverlay(): Promise<void> {
 export async function clearQueue(): Promise<void> {
 	await emit("clear-queue");
 }
+
+export function formatTime(timestamp: number): string {
+	return new Date(timestamp).toLocaleTimeString(undefined, {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+}
+
+export function formatDate(timestamp: number): string {
+	return new Date(timestamp).toLocaleDateString(undefined, {
+		day: "numeric",
+		month: "short",
+	});
+}

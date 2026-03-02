@@ -1,9 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { MediaSettings } from "@/windows/settings/pages/media-settings";
+// This route remains defined for backwards-compatibility with any internal references.
+// The canonical Overlay Config tab is at /overlay (overlay.tsx).
+import { createFileRoute } from "@tanstack/react-router";
+import { OverlayPage } from "@/windows/settings/pages/overlay";
 
-export const Route = createFileRoute("/settings")({ component: SettingsPage });
-
-function SettingsPage() {
-	const navigate = useNavigate();
-	return <MediaSettings onBack={() => void navigate({ to: "/" })} />;
-}
+export const Route = createFileRoute("/settings")({
+	component: OverlayPage,
+});

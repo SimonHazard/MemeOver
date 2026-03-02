@@ -81,11 +81,23 @@
 		"show": "Show settings",
 		"quit": "Quit"
 	},
+	"tabs": {
+		"dashboard": "Dashboard",
+		"overlay": "Overlay",
+		"history": "History",
+		"about": "About"
+	},
+	"about": {
+		"preferences": "Preferences",
+		"language": "Language",
+		"theme": "Theme"
+	},
 	"history": {
 		"title": "History",
 		"empty": "No media received yet.",
 		"replay": "Replay",
 		"back": "Back",
+		"clearAll": "Clear all",
 		"from": "from {{name}}"
 	},
 	"updater": {

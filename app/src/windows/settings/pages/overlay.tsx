@@ -1,27 +1,29 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-	ArrowLeft,
-	Clapperboard,
-	FileAudio,
-	ImageIcon,
-	MessageSquare,
-	Save,
-	Video,
-} from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Save, Video } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { NbCard } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+	clearQueue,
+	overlayHealthVariant,
+	quitOverlay,
+	reloadOverlay,
+	showOverlay,
+} from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
+import { useAppStore } from "@/shared/store";
 import type { EnabledTypes, Settings } from "@/shared/types";
 import { DEFAULT_SETTINGS } from "@/shared/types";
-import { PositionGrid } from "../position-grid";
-import { PositionPreview } from "../position-preview";
+import { PositionGrid } from "../components/position-grid";
+import { PositionPreview } from "../components/position-preview";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,11 +31,6 @@ type MediaSettingsFields = Pick<
 	Settings,
 	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes"
 >;
-
-interface MediaSettingsFormProps {
-	initialData: Settings;
-	onBack: () => void;
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -65,11 +62,36 @@ function listToEnabledTypes(list: string[]): EnabledTypes {
 	return result;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProps) {
-	const queryClient = useQueryClient();
+export function OverlayPage() {
+	const { data: saved, isLoading } = useQuery({
+		queryKey: ["settings"],
+		queryFn: loadSettings,
+	});
+
+	if (isLoading) {
+		return (
+			<div className="p-5">
+				<div className="mx-auto max-w-xl space-y-5">
+					<Skeleton className="h-36 w-full rounded-xl" />
+					<Skeleton className="h-96 w-full rounded-xl" />
+				</div>
+			</div>
+		);
+	}
+
+	return <OverlaySettingsContent initialData={saved ?? DEFAULT_SETTINGS} />;
+}
+
+// ─── Content (requires loaded data) ──────────────────────────────────────────
+
+function OverlaySettingsContent({ initialData }: { initialData: Settings }) {
 	const { t } = useTranslation();
+	const queryClient = useQueryClient();
+	const overlayHealth = useAppStore((s) => s.overlayHealth);
+	const queueSize = useAppStore((s) => s.queueSize);
+	const overlayAlive = overlayHealth === "alive";
 
 	const [form, setForm] = useState<MediaSettingsFields>({
 		mediaSize: initialData.mediaSize,
@@ -111,26 +133,88 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 	const enabledCount = enabledTypesToList(form.enabledTypes).length;
 
 	return (
-		<div className="p-6">
-			<div className="mx-auto max-w-2xl space-y-6">
-				<div className="flex items-center gap-3">
-					<Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5">
-						<ArrowLeft className="h-4 w-4" />
-						{t("display.back")}
-					</Button>
-					<h1 className="text-2xl font-bold tracking-tight">{t("display.title")}</h1>
-				</div>
+		<div className="p-5">
+			<div className="mx-auto max-w-xl space-y-5">
+				{/* ── Overlay Controls Card ── */}
+				<NbCard>
+					<div className="space-y-4">
+						<div className="flex items-center justify-between">
+							<h2 className="font-display text-base tracking-wide">{t("overlay.controls")}</h2>
+							<Badge
+								variant={overlayHealthVariant(overlayHealth)}
+								className="border-2 border-foreground rounded-md font-display text-xs tracking-wide px-2 py-0.5"
+							>
+								{t(`health.${overlayHealth}`)}
+							</Badge>
+						</div>
 
-				<Card className="p-6">
-					<div className="space-y-6">
-						<h2 className="text-lg font-semibold">{t("display.settings")}</h2>
+						<Separator />
+
+						<div className="grid grid-cols-3 gap-2">
+							<Button
+								variant="outline"
+								className="w-full border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs"
+								onClick={() => void showOverlay()}
+							>
+								{t("overlay.show")}
+							</Button>
+							<Button
+								variant="outline"
+								className="w-full border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs disabled:opacity-40 disabled:shadow-none"
+								disabled={!overlayAlive}
+								onClick={() => void reloadOverlay()}
+							>
+								{t("overlay.reload")}
+							</Button>
+							<Button
+								variant="destructive"
+								className="w-full border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs disabled:opacity-40 disabled:shadow-none"
+								disabled={!overlayAlive}
+								onClick={() => void quitOverlay()}
+							>
+								{t("overlay.close")}
+							</Button>
+						</div>
+
+						<Separator />
+
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<span className="font-display text-sm tracking-wide">
+									{t("actions.clearQueue")}
+								</span>
+								{queueSize > 0 && (
+									<Badge
+										variant="secondary"
+										className="border border-foreground rounded-md text-xs"
+									>
+										{t("actions.queueSize", { count: queueSize })}
+									</Badge>
+								)}
+							</div>
+							<Button
+								variant="outline"
+								size="sm"
+								className="border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs"
+								onClick={() => void clearQueue()}
+							>
+								{t("actions.clearQueue")}
+							</Button>
+						</div>
+					</div>
+				</NbCard>
+
+				{/* ── Media Display Settings Card ── */}
+				<NbCard>
+					<div className="space-y-5">
+						<h2 className="font-display text-base tracking-wide">{t("display.settings")}</h2>
 
 						<Separator />
 
 						{/* Taille */}
 						<div className="space-y-3">
 							<div className="flex justify-between">
-								<Label>{t("display.size")}</Label>
+								<Label className="font-display tracking-wide text-xs">{t("display.size")}</Label>
 								<span className="text-sm text-muted-foreground">{form.mediaSize}%</span>
 							</div>
 							<Slider
@@ -145,7 +229,9 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 						{/* Durée */}
 						<div className="space-y-3">
 							<div className="flex justify-between">
-								<Label>{t("display.duration")}</Label>
+								<Label className="font-display tracking-wide text-xs">
+									{t("display.duration")}
+								</Label>
 								<span className="text-sm text-muted-foreground">
 									{form.duration} {t("display.duration_unit")}
 								</span>
@@ -162,7 +248,7 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 						{/* Volume */}
 						<div className="space-y-3">
 							<div className="flex justify-between">
-								<Label>{t("display.volume")}</Label>
+								<Label className="font-display tracking-wide text-xs">{t("display.volume")}</Label>
 								<span className="text-sm text-muted-foreground">{form.volume}%</span>
 							</div>
 							<Slider
@@ -176,11 +262,11 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 
 						{/* Position */}
 						<div className="space-y-3">
-							<Label>{t("display.position")}</Label>
+							<Label className="font-display tracking-wide text-xs">{t("display.position")}</Label>
 							<PositionGrid value={form.position} onChange={(v) => update("position", v)} />
 						</div>
 
-						{/* Aperçu de position */}
+						{/* Aperçu */}
 						<div className="space-y-2">
 							<Label className="text-muted-foreground text-xs">{t("display.preview")}</Label>
 							<PositionPreview
@@ -192,9 +278,11 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 
 						<Separator />
 
-						{/* Types de médias (7.2 — UX améliorée) */}
+						{/* Types de médias */}
 						<div className="space-y-3">
-							<Label>{t("display.mediaTypes")}</Label>
+							<Label className="font-display tracking-wide text-xs">
+								{t("display.mediaTypes")}
+							</Label>
 							<ToggleGroup
 								type="multiple"
 								value={enabledTypesToList(form.enabledTypes)}
@@ -208,7 +296,7 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 											key={value}
 											value={value}
 											size="sm"
-											className="gap-1.5 data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=off]:opacity-40"
+											className="gap-1.5 border-2 border-foreground/30 data-[state=on]:border-foreground data-[state=on]:bg-primary-400 data-[state=on]:text-black data-[state=off]:opacity-50 data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all font-display text-xs tracking-wide"
 										>
 											<Icon className="h-3.5 w-3.5" />
 											{t(`display.type_${value}`)}
@@ -226,17 +314,17 @@ export function MediaSettingsForm({ initialData, onBack }: MediaSettingsFormProp
 
 						<Separator />
 
-						{/* Save explicite */}
+						{/* Save */}
 						<Button
 							onClick={() => save(form)}
 							disabled={!isDirty || isPending}
-							className="w-full gap-2"
+							className="w-full gap-2 border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all font-display tracking-wide disabled:opacity-40 disabled:shadow-none"
 						>
 							<Save className="h-4 w-4" />
 							{isPending ? t("display.saving") : t("display.save")}
 						</Button>
 					</div>
-				</Card>
+				</NbCard>
 			</div>
 		</div>
 	);
