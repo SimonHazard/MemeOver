@@ -36,6 +36,7 @@ import { loadSettings, persistSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import type { Settings, TextSize } from "@/shared/types";
 import { DEFAULT_SETTINGS } from "@/shared/types";
+import { ColorPicker } from "./color-picker";
 import { PositionGrid } from "./position-grid";
 import { PositionPreview } from "./position-preview";
 
@@ -51,6 +52,14 @@ type MediaSettingsFields = Pick<
 	| "enabledTypes"
 	| "textSize"
 	| "mediaOpacity"
+	| "bgEnabled"
+	| "bgColor"
+	| "bgOpacity"
+	| "bgBorderColor"
+	| "bgBorderOpacity"
+	| "bgBorderWidth"
+	| "bgBorderRadius"
+	| "bgPadding"
 >;
 
 export interface OverlayFormProps {
@@ -92,6 +101,14 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
 		mediaOpacity: initialData.mediaOpacity,
+		bgEnabled: initialData.bgEnabled,
+		bgColor: initialData.bgColor,
+		bgOpacity: initialData.bgOpacity,
+		bgBorderColor: initialData.bgBorderColor,
+		bgBorderOpacity: initialData.bgBorderOpacity,
+		bgBorderWidth: initialData.bgBorderWidth,
+		bgBorderRadius: initialData.bgBorderRadius,
+		bgPadding: initialData.bgPadding,
 	});
 
 	const snapshotRef = useRef<MediaSettingsFields>({
@@ -103,6 +120,14 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
 		mediaOpacity: initialData.mediaOpacity,
+		bgEnabled: initialData.bgEnabled,
+		bgColor: initialData.bgColor,
+		bgOpacity: initialData.bgOpacity,
+		bgBorderColor: initialData.bgBorderColor,
+		bgBorderOpacity: initialData.bgBorderOpacity,
+		bgBorderWidth: initialData.bgBorderWidth,
+		bgBorderRadius: initialData.bgBorderRadius,
+		bgPadding: initialData.bgPadding,
 	});
 
 	const isDirty = JSON.stringify(form) !== JSON.stringify(snapshotRef.current);
@@ -375,6 +400,139 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								mediaSize={form.mediaSize}
 								label={t("display.preview_media")}
 							/>
+						</div>
+
+						<Separator />
+
+						{/* ── Arrière-plan ── */}
+						<div className="space-y-4">
+							<div className="flex items-start justify-between gap-4">
+								<div className="space-y-0.5">
+									<Label className="font-display tracking-wide text-xs">
+										{t("display.bg_enabled")}
+									</Label>
+									<p className="text-xs text-muted-foreground">{t("display.bg_enabled_hint")}</p>
+								</div>
+								<Switch
+									checked={form.bgEnabled}
+									onCheckedChange={(v) => update("bgEnabled", v)}
+									className="shrink-0 mt-0.5"
+								/>
+							</div>
+
+							{form.bgEnabled && (
+								<div className="space-y-4">
+									{/* Couleur de fond */}
+									<div className="space-y-2">
+										<Label className="font-display tracking-wide text-xs">
+											{t("display.bg_color")}
+										</Label>
+										<ColorPicker value={form.bgColor} onChange={(v) => update("bgColor", v)} />
+									</div>
+
+									{/* Opacité du fond */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_opacity")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgOpacity}%</span>
+										</div>
+										<Slider
+											min={0}
+											max={100}
+											step={1}
+											value={[form.bgOpacity]}
+											onValueChange={([v]) => update("bgOpacity", v ?? DEFAULT_SETTINGS.bgOpacity)}
+										/>
+									</div>
+
+									{/* Padding */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_padding")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgPadding}px</span>
+										</div>
+										<Slider
+											min={0}
+											max={100}
+											step={1}
+											value={[form.bgPadding]}
+											onValueChange={([v]) => update("bgPadding", v ?? DEFAULT_SETTINGS.bgPadding)}
+										/>
+									</div>
+
+									{/* Arrondi */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_border_radius")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgBorderRadius}px</span>
+										</div>
+										<Slider
+											min={0}
+											max={30}
+											step={1}
+											value={[form.bgBorderRadius]}
+											onValueChange={([v]) =>
+												update("bgBorderRadius", v ?? DEFAULT_SETTINGS.bgBorderRadius)
+											}
+										/>
+									</div>
+
+									{/* Couleur de bordure */}
+									<div className="space-y-2">
+										<Label className="font-display tracking-wide text-xs">
+											{t("display.bg_border_color")}
+										</Label>
+										<ColorPicker
+											value={form.bgBorderColor}
+											onChange={(v) => update("bgBorderColor", v)}
+										/>
+									</div>
+
+									{/* Épaisseur de bordure */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_border_width")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgBorderWidth}px</span>
+										</div>
+										<Slider
+											min={0}
+											max={20}
+											step={1}
+											value={[form.bgBorderWidth]}
+											onValueChange={([v]) =>
+												update("bgBorderWidth", v ?? DEFAULT_SETTINGS.bgBorderWidth)
+											}
+										/>
+									</div>
+
+									{/* Opacité de bordure */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_border_opacity")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgBorderOpacity}%</span>
+										</div>
+										<Slider
+											min={0}
+											max={100}
+											step={1}
+											value={[form.bgBorderOpacity]}
+											onValueChange={([v]) =>
+												update("bgBorderOpacity", v ?? DEFAULT_SETTINGS.bgBorderOpacity)
+											}
+										/>
+									</div>
+								</div>
+							)}
 						</div>
 
 						<Separator />

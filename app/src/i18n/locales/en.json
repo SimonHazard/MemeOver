@@ -61,7 +61,17 @@
 		"type_text": "Text",
 		"textSize": "Text size",
 		"syncMediaDuration": "Sync with media duration (video/audio)",
-		"syncMediaDuration_hint": "Keeps the overlay open until the video or audio finishes, ignoring the duration timer."
+		"syncMediaDuration_hint": "Keeps the overlay open until the video or audio finishes, ignoring the duration timer.",
+		"opacity": "Media opacity",
+		"bg_enabled": "Global background",
+		"bg_enabled_hint": "Wraps the content (author badge + media + caption) in a customizable container.",
+		"bg_color": "Background color",
+		"bg_opacity": "Background opacity",
+		"bg_padding": "Inner padding",
+		"bg_border_color": "Border color",
+		"bg_border_width": "Border width",
+		"bg_border_opacity": "Border opacity",
+		"bg_border_radius": "Corner radius"
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",

@@ -61,7 +61,17 @@
 		"type_text": "Textes",
 		"textSize": "Taille du texte",
 		"syncMediaDuration": "Synchroniser avec la durée du média (vidéo/audio)",
-		"syncMediaDuration_hint": "Maintient l'overlay ouvert jusqu'à la fin de la vidéo ou de l'audio, sans tenir compte du timer de durée."
+		"syncMediaDuration_hint": "Maintient l'overlay ouvert jusqu'à la fin de la vidéo ou de l'audio, sans tenir compte du timer de durée.",
+		"opacity": "Opacité du média",
+		"bg_enabled": "Arrière-plan global",
+		"bg_enabled_hint": "Encadre le contenu (badge auteur + média + légende) dans un conteneur personnalisable.",
+		"bg_color": "Couleur de fond",
+		"bg_opacity": "Opacité du fond",
+		"bg_padding": "Espacement intérieur",
+		"bg_border_color": "Couleur de bordure",
+		"bg_border_width": "Épaisseur de bordure",
+		"bg_border_opacity": "Opacité de bordure",
+		"bg_border_radius": "Arrondi des angles"
 	},
 	"onboarding": {
 		"step": "Étape {{current}} sur {{total}}",

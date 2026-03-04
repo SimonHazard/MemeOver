@@ -12,7 +12,7 @@ export function AuthorBadge({ username, displayName, avatarUrl }: AuthorBadgePro
 		<div
 			className="flex items-center gap-1.5 self-start
 		                bg-black/65 backdrop-blur-md rounded-full
-		                px-2.5 py-1 shadow-lg ring-1 ring-white/10"
+		                px-2.5 py-1 ring-1 ring-white/10"
 		>
 			<Avatar className="w-5 h-5 shrink-0">
 				<AvatarImage src={avatarUrl} alt="" />

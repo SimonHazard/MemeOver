@@ -72,6 +72,22 @@ export interface Settings {
 	mediaOpacity: number;
 	/** When true, video/audio overlays stay visible until the media ends (ignores duration timer) */
 	syncMediaDuration: boolean;
+	/** Enable a background container wrapping the entire overlay (badge + media + caption) */
+	bgEnabled: boolean;
+	/** Background fill color (HEX) */
+	bgColor: string;
+	/** Background fill opacity (0–100) */
+	bgOpacity: number;
+	/** Background border color (HEX) */
+	bgBorderColor: string;
+	/** Background border opacity (0–100) */
+	bgBorderOpacity: number;
+	/** Background border width in px (0–20) */
+	bgBorderWidth: number;
+	/** Background border radius in px (0–50) */
+	bgBorderRadius: number;
+	/** Background inner padding in px (0–100) */
+	bgPadding: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -86,4 +102,12 @@ export const DEFAULT_SETTINGS: Settings = {
 	textSize: "xl",
 	mediaOpacity: 100,
 	syncMediaDuration: false,
+	bgEnabled: false,
+	bgColor: "#000000",
+	bgOpacity: 70,
+	bgBorderColor: "#000000",
+	bgBorderOpacity: 0,
+	bgBorderWidth: 0,
+	bgBorderRadius: 12,
+	bgPadding: 16,
 };
