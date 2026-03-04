@@ -27,7 +27,10 @@
 		"controls": "Overlay controls",
 		"show": "Show",
 		"reload": "Reload",
-		"close": "Close"
+		"close": "Close",
+		"dev_preview": "Production preview",
+		"dev_preview_enter": "Enter preview",
+		"dev_preview_exit": "Exit preview"
 	},
 	"actions": {
 		"title": "Actions",

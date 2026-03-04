@@ -1,17 +1,17 @@
 # Context: MemeOverlay (Tauri + Discord Bot)
 
 ## Vision
-Application de bureau "Always-on-top" qui affiche des médias (images/GIFs/vidéos) envoyés depuis un serveur Discord spécifique. Le but est de créer un effet de surprise (pop-up) sur l'écran des utilisateurs de manière fluide et transparente.
+Application de bureau "Always-on-top" qui affiche des médias (images/GIFs/vidéos et/ou texte) envoyés depuis un serveur Discord spécifique. Le but est de créer un effet de surprise (pop-up) sur l'écran des utilisateurs de manière fluide et transparente.
 
 ## Stack Technique
 - **Framework:** Tauri v2 (Rust + React)
-- **Frontend:** React, Tailwind CSS, Framer Motion (pour les animations de pop-up)
+- **Frontend:** React, Tailwind CSS, Framer Motion (pour les animations de pop-up), shadcn/ui (mcp), suite TanStack (cli)
 - **Bot Discord:** Bun runtime, Discord.js, Elysia
 - **Communication:** WebSockets (Elysia sur le bot, WebSocket API native côté React)
 
 ## Spécificités de l'Overlay & Windows
-- **Fenêtre:** Transparente (`transparent: true`), sans bordures (`decorations: false`), toujours au-dessus (`alwaysOnTop: true`).
-- **Interactivité:** Mode "Click-through" activé via Rust (`set_ignore_cursor_events(true)`). L'utilisateur ne doit pas pouvoir cliquer sur l'overlay, seulement voir le contenu.
+- **Fenêtre overlay:** Transparente, sans bordures, toujours au-dessus.
+- **Interactivité:** Mode "Click-through" toujours activé. L'utilisateur ne doit pas pouvoir cliquer sur l'overlay, seulement voir le contenu.
 - **Cycle de vie du média:** Apparition (Pop) -> Affichage (X sec) -> Disparition (Fade/Zoom out).
 
 ## Architecture des dossiers
@@ -21,7 +21,8 @@ Application de bureau "Always-on-top" qui affiche des médias (images/GIFs/vidé
 ## Règles de Développement
 - **Langage:** Toujours utiliser **TypeScript** (mode strict) et **Rust**. Privilégie Tailwind CSS pour le style.
 - **Gestionnaire de paquets:** Utiliser **Bun** exclusivement pour le JS (`bun add`, `bun run`).
-- **Composants:** Séparer la logique de la file d'attente (queue) de l'affichage visuel. Nomme les composants en kebab-case
+- **Thème:** Utiliser le thème de l'application pour les composants.
+- **Composants:** Utiliser les composants de l'application pour les composants et ceux de shadcn/ui. (utiliser mcp pour les composants de shadcn/ui). Nomme les composants en kebab-case
 - **Sécurité:** Ne jamais commiter le `.env` (Discord Token). Utiliser des variables d'environnement.
 
 ## Commandes de référence

@@ -1,5 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Save, Type, Video } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
+import {
+	Clapperboard,
+	Eye,
+	EyeOff,
+	FileAudio,
+	ImageIcon,
+	MessageSquare,
+	Save,
+	Type,
+	Video,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -10,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 import {
 	clearQueue,
 	enabledTypesToList,
@@ -104,6 +116,15 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		setForm((prev) => ({ ...prev, [key]: value }));
 	}
 
+	// Dev-only: track whether the overlay is in prod-preview mode
+	const [devPreviewActive, setDevPreviewActive] = useState(false);
+
+	async function handleToggleDevPreview() {
+		const next = !devPreviewActive;
+		await invoke("toggle_overlay_preview_mode", { enabled: next });
+		setDevPreviewActive(next);
+	}
+
 	const enabledCount = enabledTypesToList(form.enabledTypes).length;
 
 	return (
@@ -151,6 +172,44 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 						</div>
 
 						<Separator />
+
+						{/* ── Dev-only: prod preview toggle ── */}
+						{import.meta.env.DEV && (
+							<>
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<span className="font-display text-sm tracking-wide">
+											{t("overlay.dev_preview")}
+										</span>
+										<Badge
+											variant="secondary"
+											className="border border-foreground rounded-md text-xs font-mono"
+										>
+											DEV
+										</Badge>
+									</div>
+									<Button
+										variant={devPreviewActive ? "default" : "outline"}
+										size="sm"
+										className={cn(
+											"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs gap-1.5",
+											devPreviewActive && "bg-primary-400 text-black hover:bg-primary-500",
+										)}
+										onClick={() => void handleToggleDevPreview()}
+									>
+										{devPreviewActive ? (
+											<EyeOff className="h-3 w-3" />
+										) : (
+											<Eye className="h-3 w-3" />
+										)}
+										{devPreviewActive
+											? t("overlay.dev_preview_exit")
+											: t("overlay.dev_preview_enter")}
+									</Button>
+								</div>
+								<Separator />
+							</>
+						)}
 
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-2">

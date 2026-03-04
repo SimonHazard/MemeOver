@@ -27,7 +27,10 @@
 		"controls": "Contrôles de l'overlay",
 		"show": "Afficher",
 		"reload": "Recharger",
-		"close": "Fermer"
+		"close": "Fermer",
+		"dev_preview": "Aperçu production",
+		"dev_preview_enter": "Activer aperçu",
+		"dev_preview_exit": "Quitter aperçu"
 	},
 	"actions": {
 		"title": "Actions",

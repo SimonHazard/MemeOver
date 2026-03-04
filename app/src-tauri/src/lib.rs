@@ -79,6 +79,37 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Toggle the overlay between dev mode (decorated, windowed, opaque) and a
+/// prod-like preview (no decorations, always-on-top, maximized, transparent).
+/// Only meaningful in debug builds; the frontend gate (`import.meta.env.DEV`)
+/// ensures it is never called from a production bundle.
+#[tauri::command]
+fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    let win = app
+        .get_webview_window("overlay")
+        .ok_or_else(|| "Overlay window not found".to_string())?;
+
+    if enabled {
+        win.set_decorations(false).map_err(|e| e.to_string())?;
+        win.set_always_on_top(true).map_err(|e| e.to_string())?;
+        win.maximize().map_err(|e| e.to_string())?;
+        win.set_background_color(Some(tauri::utils::config::Color(0, 0, 0, 0)))
+            .map_err(|e| e.to_string())?;
+        win.set_ignore_cursor_events(true).map_err(|e| e.to_string())?;
+    } else {
+        win.set_ignore_cursor_events(false).map_err(|e| e.to_string())?;
+        win.set_background_color(None).map_err(|e| e.to_string())?;
+        win.unmaximize().map_err(|e| e.to_string())?;
+        win.set_always_on_top(false).map_err(|e| e.to_string())?;
+        win.set_decorations(true).map_err(|e| e.to_string())?;
+    }
+
+    app.emit("overlay-dev-preview", enabled)
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 /// Update the translatable labels of the tray context menu.
 /// Called from the frontend after every language change.
 #[tauri::command]
@@ -271,6 +302,7 @@ pub fn run() {
             reload_overlay,
             quit_overlay,
             update_tray_labels,
+            toggle_overlay_preview_mode,
         ])
         .setup(|app| {
             create_overlay_window(&app.handle().clone())?;
