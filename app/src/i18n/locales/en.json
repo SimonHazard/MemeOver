@@ -60,7 +60,8 @@
 		"type_audio": "Audio",
 		"type_text": "Text",
 		"textSize": "Text size",
-		"opacity": "Media opacity"
+		"syncMediaDuration": "Sync with media duration (video/audio)",
+		"syncMediaDuration_hint": "Keeps the overlay open until the video or audio finishes, ignoring the duration timer."
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",

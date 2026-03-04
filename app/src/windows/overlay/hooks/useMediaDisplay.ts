@@ -22,6 +22,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
 	const duration = useAppStore((s) => s.settings.duration);
+	const syncMediaDuration = useAppStore((s) => s.settings.syncMediaDuration);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 
 	const [current, setCurrent] = useState<DisplayQueueItem | null>(null);
@@ -32,9 +33,16 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Safety fallback timer (fires startTimer after a delay if onLoad/onPlay never fires)
 	const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	// Stable ref so startTimer can always read the current duration without being recreated
+	// Stable refs so startTimer can always read current values without being recreated
 	const durationRef = useRef(duration);
 	durationRef.current = duration;
+
+	const syncMediaDurationRef = useRef(syncMediaDuration);
+	syncMediaDurationRef.current = syncMediaDuration;
+
+	// Tracks the current item without triggering useCallback recreation
+	const currentRef = useRef(current);
+	currentRef.current = current;
 
 	const hide = useCallback(() => {
 		if (timerRef.current !== null) {
@@ -50,11 +58,22 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 
 	// Idempotent: if the timer is already running, this is a no-op.
 	// Cancels the safety timer the moment the real one starts.
+	// When syncMediaDuration is enabled for video/audio, skips the auto-hide timer —
+	// onVideoEnd will trigger hide() when the media finishes naturally.
 	const startTimer = useCallback(() => {
 		if (timerRef.current !== null) return; // already running
 		if (safetyTimerRef.current !== null) {
 			clearTimeout(safetyTimerRef.current);
 			safetyTimerRef.current = null;
+		}
+		const item = currentRef.current;
+		if (
+			syncMediaDurationRef.current &&
+			item !== null &&
+			item.type === "MEDIA" &&
+			(item.media_type === "video" || item.media_type === "audio")
+		) {
+			return; // let onVideoEnd handle closing
 		}
 		timerRef.current = setTimeout(hide, durationRef.current * 1_000);
 	}, [hide]);

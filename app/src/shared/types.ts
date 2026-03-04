@@ -70,6 +70,8 @@ export interface Settings {
 	textSize: TextSize;
 	/** Opacity of the media element (0 = invisible, 100 = fully opaque) */
 	mediaOpacity: number;
+	/** When true, video/audio overlays stay visible until the media ends (ignores duration timer) */
+	syncMediaDuration: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -83,4 +85,5 @@ export const DEFAULT_SETTINGS: Settings = {
 	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true },
 	textSize: "xl",
 	mediaOpacity: 100,
+	syncMediaDuration: false,
 };

@@ -20,6 +20,7 @@ import { NbCard } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import {
@@ -42,7 +43,14 @@ import { PositionPreview } from "./position-preview";
 
 type MediaSettingsFields = Pick<
 	Settings,
-	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes" | "textSize" | "mediaOpacity"
+	| "mediaSize"
+	| "duration"
+	| "syncMediaDuration"
+	| "volume"
+	| "position"
+	| "enabledTypes"
+	| "textSize"
+	| "mediaOpacity"
 >;
 
 export interface OverlayFormProps {
@@ -78,6 +86,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 	const [form, setForm] = useState<MediaSettingsFields>({
 		mediaSize: initialData.mediaSize,
 		duration: initialData.duration,
+		syncMediaDuration: initialData.syncMediaDuration,
 		volume: initialData.volume,
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
@@ -88,6 +97,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 	const snapshotRef = useRef<MediaSettingsFields>({
 		mediaSize: initialData.mediaSize,
 		duration: initialData.duration,
+		syncMediaDuration: initialData.syncMediaDuration,
 		volume: initialData.volume,
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
@@ -270,11 +280,29 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								</span>
 							</div>
 							<Slider
+								disabled={form.syncMediaDuration}
 								min={1}
 								max={30}
 								step={1}
 								value={[form.duration]}
 								onValueChange={([v]) => update("duration", v ?? DEFAULT_SETTINGS.duration)}
+							/>
+						</div>
+
+						{/* Sync with media duration */}
+						<div className="flex items-start justify-between gap-4">
+							<div className="space-y-0.5">
+								<Label className="font-display tracking-wide text-xs">
+									{t("display.syncMediaDuration")}
+								</Label>
+								<p className="text-xs text-muted-foreground">
+									{t("display.syncMediaDuration_hint")}
+								</p>
+							</div>
+							<Switch
+								checked={form.syncMediaDuration}
+								onCheckedChange={(v) => update("syncMediaDuration", v)}
+								className="shrink-0 mt-0.5"
 							/>
 						</div>
 
