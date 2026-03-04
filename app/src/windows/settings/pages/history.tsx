@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { HistoryItem } from "@/shared/history";
 import { clearHistory, loadHistory, replayHistoryItem } from "@/shared/history";
+import { useAppStore } from "@/shared/store";
 import { HistoryItemCard } from "@/windows/settings/components/history-item";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ import { HistoryItemCard } from "@/windows/settings/components/history-item";
 export function HistoryPage() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
+	const overlayAlive = useAppStore((s) => s.overlayHealth === "alive");
 
 	const { data: items = [], isLoading } = useQuery({
 		queryKey: ["history"],
@@ -71,6 +73,7 @@ export function HistoryPage() {
 							<HistoryItemCard
 								key={`${item.recordedAt}-${item.message_id}`}
 								item={item}
+								disabled={!overlayAlive}
 								onReplay={(i) => doReplay(i)}
 							/>
 						))}

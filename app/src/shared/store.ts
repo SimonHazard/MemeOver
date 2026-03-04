@@ -89,6 +89,16 @@ export async function initOverlayStore(): Promise<void> {
 		useAppStore.getState().enqueue(event.payload);
 	});
 
+	// Track overlay visibility so the WS hook can discard messages while hidden.
+	// Also flush the queue immediately on hide — items queued on an invisible
+	// window would be consumed pointlessly and wiped on the next reload anyway.
+	await listen<OverlayHealth>("overlay-health-changed", (event) => {
+		useAppStore.getState().setOverlayHealth(event.payload);
+		if (event.payload === "closed") {
+			useAppStore.getState().clearQueue();
+		}
+	});
+
 	// Broadcast queue length to settings window whenever it changes
 	useAppStore.subscribe((state, prevState) => {
 		if (state.queue.length !== prevState.queue.length) {

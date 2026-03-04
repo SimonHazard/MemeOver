@@ -36,32 +36,41 @@ fn reload_overlay(app: tauri::AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Close (destroy) the overlay window.
-/// The existing close handler will emit "overlay-health-changed: closed" automatically.
+/// Hide the overlay window without destroying it.
+/// Emits "overlay-health-changed: closed" manually since Destroyed won't fire.
 #[tauri::command]
 fn quit_overlay(app: tauri::AppHandle) -> Result<(), String> {
     app.get_webview_window("overlay")
         .ok_or_else(|| "Overlay window not found".to_string())?
-        .close()
-        .map_err(|e| e.to_string())
+        .hide()
+        .map_err(|e| e.to_string())?;
+    app.emit("overlay-health-changed", "closed")
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
-/// Show the overlay window, or recreate it if it was closed/destroyed.
+/// Show the overlay window (or recreate it if somehow destroyed).
+/// Always reloads the page so the overlay picks up any config changes
+/// (WebSocket URL, guild ID, token, etc.) that occurred while it was hidden.
 /// Emits "overlay-health-changed" with "alive" after success.
 #[tauri::command]
 fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
     match app.get_webview_window("overlay") {
         Some(win) => {
-            win.show().map_err(|e| e.to_string())?;
-            win.set_focus().map_err(|e| e.to_string())?;
+            win.unminimize().map_err(|e| e.to_string())?;
+            // Apply always-on-top before reload so the property is set when the
+            // page loads. main-overlay.tsx calls show() once the page is ready,
+            // avoiding the flash caused by show() → blank → content.
             #[cfg(not(debug_assertions))]
             win.set_always_on_top(true).map_err(|e| e.to_string())?;
+            win.eval("window.location.reload()").map_err(|e| e.to_string())?;
         }
         None => {
+            // Safety fallback: window was unexpectedly destroyed — recreate it.
             create_overlay_window(&app).map_err(|e| e.to_string())?;
-            // Re-attach close handler on the freshly created window
             if let Some(win) = app.get_webview_window("overlay") {
                 attach_overlay_close_handler(&win);
+                // main-overlay.tsx calls show() after the page loads; no show() here.
             }
         }
     }
@@ -113,7 +122,8 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
     let builder = WebviewWindowBuilder::new(app, "overlay", url)
         .title("MemeOver Overlay")
         .visible(false)
-        .skip_taskbar(true);
+        .skip_taskbar(true)
+        .accept_first_mouse(true);
 
     // Dev: normal 800×600 window — no fullscreen or always_on_top
     // to avoid blocking clicks on the settings window during development.
@@ -141,15 +151,24 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
 
 // ─── Overlay close notification ───────────────────────────────────────────────
 
-/// Attach a Destroyed listener to the overlay window.
-/// Must be called again if the window is recreated (listeners are not persistent).
+/// Attach event listeners to the overlay window.
+///
+/// - `CloseRequested` (e.g. Alt+F4 on Windows): prevented, window is hidden instead.
+/// - `Destroyed` (safety net, should not trigger in normal operation): emits closed signals.
 fn attach_overlay_close_handler(win: &tauri::WebviewWindow) {
     let handle = win.app_handle().clone();
-    win.on_window_event(move |event| {
-        if let tauri::WindowEvent::Destroyed = event {
+    let win_clone = win.clone();
+    win.on_window_event(move |event| match event {
+        tauri::WindowEvent::CloseRequested { api, .. } => {
+            api.prevent_close();
+            let _ = win_clone.hide();
+            let _ = handle.emit("overlay-health-changed", "closed");
+        }
+        tauri::WindowEvent::Destroyed => {
             let _ = handle.emit("overlay-health-changed", "closed");
             let _ = handle.emit("ws-status-changed", "disconnected");
         }
+        _ => {}
     });
 }
 

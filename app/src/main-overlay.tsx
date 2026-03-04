@@ -10,6 +10,8 @@ import "./App.css";
 // In dev, the overlay is a normal 800×600 window — click-through
 // would make it impossible to inspect / debug.
 if (import.meta.env.PROD) {
+	const win = getCurrentWebviewWindow();
+	void win.setAlwaysOnTop(true);
 	void invoke("set_overlay_click_through", { ignore: true });
 }
 

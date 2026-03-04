@@ -17,6 +17,7 @@ export function useOverlayWs(): void {
 	const guildId = useAppStore((s) => s.settings.guildId);
 	const token = useAppStore((s) => s.settings.token);
 	const enabledTypes = useAppStore((s) => s.settings.enabledTypes);
+	const overlayHealth = useAppStore((s) => s.overlayHealth);
 
 	// Keep credentials and filter settings in refs so WS callbacks always read
 	// the latest values without recreating the memoized handlers below.
@@ -25,6 +26,10 @@ export function useOverlayWs(): void {
 
 	const enabledTypesRef = useRef(enabledTypes);
 	enabledTypesRef.current = enabledTypes;
+
+	// Discard incoming media/text messages while the overlay is hidden.
+	const overlayHealthRef = useRef(overlayHealth);
+	overlayHealthRef.current = overlayHealth;
 
 	// sendMessage is returned by useWebSocket; capture it via ref so onOpen can
 	// call it even though the callback is defined before the return value is known.
@@ -75,6 +80,9 @@ export function useOverlayWs(): void {
 					break;
 
 				case "MEDIA": {
+					// Drop messages while the overlay is hidden — they would queue on an
+					// invisible window and be wiped on the next reload anyway.
+					if (overlayHealthRef.current === "closed") break;
 					// Apply media-type filter before enqueuing
 					const et = enabledTypesRef.current;
 					const allowed =
@@ -87,6 +95,7 @@ export function useOverlayWs(): void {
 				}
 
 				case "TEXT":
+					if (overlayHealthRef.current === "closed") break;
 					if (enabledTypesRef.current.text) enqueue(textEventToQueueItem(msg));
 					break;
 
