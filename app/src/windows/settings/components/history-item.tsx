@@ -12,6 +12,7 @@ import type { HistoryItem } from "@/shared/history";
 interface HistoryItemCardProps {
 	item: HistoryItem;
 	onReplay: (item: HistoryItem) => void;
+	disabled?: boolean;
 }
 
 // ─── Media type config ────────────────────────────────────────────────────────
@@ -50,7 +51,7 @@ function MediaTypeBadge({ item }: { item: HistoryItem }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
+export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryItemCardProps) {
 	const { t } = useTranslation();
 	const displayName = item.author_display_name ?? item.author_username;
 	const initials = displayName.charAt(0).toUpperCase();
@@ -87,8 +88,9 @@ export function HistoryItemCard({ item, onReplay }: HistoryItemCardProps) {
 				<Button
 					variant="outline"
 					size="icon"
-					className="shrink-0 border-2 border-foreground/30 hover:border-foreground hover:bg-primary-400/10 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all"
+					className="shrink-0 border-2 border-foreground/30 hover:border-foreground hover:bg-primary-400/10 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all disabled:opacity-40 disabled:shadow-none disabled:pointer-events-none"
 					title={t("history.replay")}
+					disabled={disabled}
 					onClick={() => onReplay(item)}
 				>
 					<Play className="h-3.5 w-3.5" />

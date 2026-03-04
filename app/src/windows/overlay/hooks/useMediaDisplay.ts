@@ -22,6 +22,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
 	const duration = useAppStore((s) => s.settings.duration);
+	const overlayHealth = useAppStore((s) => s.overlayHealth);
 
 	const [current, setCurrent] = useState<DisplayQueueItem | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
@@ -63,6 +64,17 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		console.warn("[MediaDisplay] Media failed to load, skipping item");
 		hide();
 	}, [hide]);
+
+	// ── Effect 0: Stop current item when overlay is hidden ────────────────────
+	useEffect(() => {
+		if (overlayHealth === "closed") {
+			document.querySelectorAll("video, audio").forEach((el) => {
+				(el as HTMLMediaElement).pause();
+			});
+			setCurrent(null);
+			hide();
+		}
+	}, [overlayHealth, hide]);
 
 	// ── Effect 1: Dequeue the next item ───────────────────────────────────────
 	useEffect(() => {
