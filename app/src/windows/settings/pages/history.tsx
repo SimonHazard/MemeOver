@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { listen } from "@tauri-apps/api/event";
+import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,15 @@ export function HistoryPage() {
 		queryKey: ["history"],
 		queryFn: loadHistory,
 	});
+
+	useEffect(() => {
+		const unlisten = listen("history-updated", () => {
+			void queryClient.invalidateQueries({ queryKey: ["history"] });
+		});
+		return () => {
+			void unlisten.then((fn) => fn());
+		};
+	}, [queryClient]);
 
 	const { mutate: doReplay } = useMutation({
 		mutationFn: (item: HistoryItem) => replayHistoryItem(item),
@@ -68,16 +80,26 @@ export function HistoryPage() {
 				) : items.length === 0 ? (
 					<p className="text-center text-muted-foreground py-12 font-text">{t("history.empty")}</p>
 				) : (
-					<div className="space-y-2">
-						{items.map((item) => (
-							<HistoryItemCard
-								key={`${item.recordedAt}-${item.message_id}`}
-								item={item}
-								disabled={!overlayAlive}
-								onReplay={(i) => doReplay(i)}
-							/>
-						))}
-					</div>
+					<motion.div className="space-y-2" layout>
+						<AnimatePresence initial={false}>
+							{items.map((item) => (
+								<motion.div
+									key={`${item.recordedAt}-${item.message_id}`}
+									layout
+									initial={{ opacity: 0, y: -10 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, scale: 0.95 }}
+									transition={{ duration: 0.2, ease: "easeOut" }}
+								>
+									<HistoryItemCard
+										item={item}
+										disabled={!overlayAlive}
+										onReplay={(i) => doReplay(i)}
+									/>
+								</motion.div>
+							))}
+						</AnimatePresence>
+					</motion.div>
 				)}
 			</div>
 		</div>
