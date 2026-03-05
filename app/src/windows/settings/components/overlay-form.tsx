@@ -392,10 +392,10 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 						<div className="space-y-2">
 							<Label className="font-display tracking-wide text-xs">{t("display.textColor")}</Label>
 							<ColorPicker
-							value={form.textColor}
-							onChange={(v) => update("textColor", v)}
-							onReset={() => update("textColor", DEFAULT_SETTINGS.textColor)}
-						/>
+								value={form.textColor}
+								onChange={(v) => update("textColor", v)}
+								onReset={() => update("textColor", DEFAULT_SETTINGS.textColor)}
+							/>
 						</div>
 
 						{/* Position */}

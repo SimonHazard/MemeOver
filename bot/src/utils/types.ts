@@ -23,11 +23,11 @@ export type {
 	LeaveMessage,
 	MediaEvent,
 	MediaType,
+	MemberCountUpdateMessage,
 	PingMessage,
 	PongMessage,
 	ServerMessage,
 	TextEvent,
-	MemberCountUpdateMessage,
 } from "@memeover/shared";
 
 // ─── Internal state ───────────────────────────────────────────────────────────
