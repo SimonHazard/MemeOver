@@ -1,14 +1,9 @@
-import { Check, Palette, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Check, Palette, RotateCcw } from "lucide-react";
 import { useRef } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const SWATCHES = [
 	// Grayscale (Zinc)
@@ -21,6 +16,7 @@ const SWATCHES = [
 	"#ef4444",
 	"#3b82f6",
 	"#a855f7",
+	"#FFFFFF",
 ] as const;
 
 type SwatchColor = (typeof SWATCHES)[number];
@@ -34,6 +30,7 @@ const SWATCH_LABELS: Record<SwatchColor, string> = {
 	"#ef4444": "Rouge",
 	"#3b82f6": "Bleu",
 	"#a855f7": "Violet",
+	"#FFFFFF": "Blanc",
 };
 
 function getContrastColor(hex: string): string {
