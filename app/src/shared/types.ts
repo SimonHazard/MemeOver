@@ -79,6 +79,8 @@ export interface Settings {
 	bgBorderRadius: number;
 	/** Background inner padding in px (0–100) */
 	bgPadding: number;
+	/** Text color for text overlays (HEX) */
+	textColor: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -101,4 +103,5 @@ export const DEFAULT_SETTINGS: Settings = {
 	bgBorderWidth: 0,
 	bgBorderRadius: 12,
 	bgPadding: 16,
+	textColor: "#FFFFFF",
 };

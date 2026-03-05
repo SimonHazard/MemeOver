@@ -51,6 +51,7 @@ type MediaSettingsFields = Pick<
 	| "position"
 	| "enabledTypes"
 	| "textSize"
+	| "textColor"
 	| "mediaOpacity"
 	| "bgEnabled"
 	| "bgColor"
@@ -100,6 +101,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
+		textColor: initialData.textColor,
 		mediaOpacity: initialData.mediaOpacity,
 		bgEnabled: initialData.bgEnabled,
 		bgColor: initialData.bgColor,
@@ -119,6 +121,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
+		textColor: initialData.textColor,
 		mediaOpacity: initialData.mediaOpacity,
 		bgEnabled: initialData.bgEnabled,
 		bgColor: initialData.bgColor,
@@ -383,6 +386,12 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 									</ToggleGroupItem>
 								))}
 							</ToggleGroup>
+						</div>
+
+						{/* Couleur du texte */}
+						<div className="space-y-2">
+							<Label className="font-display tracking-wide text-xs">{t("display.textColor")}</Label>
+							<ColorPicker value={form.textColor} onChange={(v) => update("textColor", v)} />
 						</div>
 
 						{/* Position */}
