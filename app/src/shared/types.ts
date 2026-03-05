@@ -1,22 +1,4 @@
-// ─── Protocol types (source of truth: @memeover/shared) ───────────────────────
-
-export type {
-	ClientMessage,
-	ErrorCode,
-	ErrorMessage,
-	JoinAckMessage,
-	JoinMessage,
-	LeaveMessage,
-	MediaEvent,
-	MediaType,
-	PingMessage,
-	PongMessage,
-	ServerMessage,
-	TextEvent,
-} from "@memeover/shared";
-
 // ─── App-level ────────────────────────────────────────────────────────────────
-
 import type { MediaEvent, TextEvent } from "@memeover/shared";
 
 /** MediaEvent enriched with a unique per-display ID for React keys / queue dedup */
@@ -40,7 +22,16 @@ export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
 /** Santé de la fenêtre overlay (alive = existe et visible, closed = détruite) */
 export type OverlayHealth = "alive" | "closed";
 
-export type OverlayPosition = "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type OverlayPosition =
+	| "center"
+	| "top-left"
+	| "top"
+	| "top-right"
+	| "left"
+	| "right"
+	| "bottom-left"
+	| "bottom"
+	| "bottom-right";
 
 export type TextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
@@ -70,6 +61,24 @@ export interface Settings {
 	textSize: TextSize;
 	/** Opacity of the media element (0 = invisible, 100 = fully opaque) */
 	mediaOpacity: number;
+	/** When true, video/audio overlays stay visible until the media ends (ignores duration timer) */
+	syncMediaDuration: boolean;
+	/** Enable a background container wrapping the entire overlay (badge + media + caption) */
+	bgEnabled: boolean;
+	/** Background fill color (HEX) */
+	bgColor: string;
+	/** Background fill opacity (0–100) */
+	bgOpacity: number;
+	/** Background border color (HEX) */
+	bgBorderColor: string;
+	/** Background border opacity (0–100) */
+	bgBorderOpacity: number;
+	/** Background border width in px (0–20) */
+	bgBorderWidth: number;
+	/** Background border radius in px (0–50) */
+	bgBorderRadius: number;
+	/** Background inner padding in px (0–100) */
+	bgPadding: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -83,4 +92,13 @@ export const DEFAULT_SETTINGS: Settings = {
 	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true },
 	textSize: "xl",
 	mediaOpacity: 100,
+	syncMediaDuration: false,
+	bgEnabled: false,
+	bgColor: "#000000",
+	bgOpacity: 70,
+	bgBorderColor: "#000000",
+	bgBorderOpacity: 0,
+	bgBorderWidth: 0,
+	bgBorderRadius: 12,
+	bgPadding: 16,
 };

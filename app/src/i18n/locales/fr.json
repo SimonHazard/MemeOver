@@ -27,7 +27,10 @@
 		"controls": "Contrôles de l'overlay",
 		"show": "Afficher",
 		"reload": "Recharger",
-		"close": "Fermer"
+		"close": "Fermer",
+		"dev_preview": "Aperçu production",
+		"dev_preview_enter": "Activer aperçu",
+		"dev_preview_exit": "Quitter aperçu"
 	},
 	"actions": {
 		"title": "Actions",
@@ -57,7 +60,18 @@
 		"type_audio": "Audio",
 		"type_text": "Textes",
 		"textSize": "Taille du texte",
-		"opacity": "Opacité du média"
+		"syncMediaDuration": "Synchroniser avec la durée du média (vidéo/audio)",
+		"syncMediaDuration_hint": "Maintient l'overlay ouvert jusqu'à la fin de la vidéo ou de l'audio, sans tenir compte du timer de durée.",
+		"opacity": "Opacité du média",
+		"bg_enabled": "Arrière-plan global",
+		"bg_enabled_hint": "Encadre le contenu (badge auteur + média + légende) dans un conteneur personnalisable.",
+		"bg_color": "Couleur de fond",
+		"bg_opacity": "Opacité du fond",
+		"bg_padding": "Espacement intérieur",
+		"bg_border_color": "Couleur de bordure",
+		"bg_border_width": "Épaisseur de bordure",
+		"bg_border_opacity": "Opacité de bordure",
+		"bg_border_radius": "Arrondi des angles"
 	},
 	"onboarding": {
 		"step": "Étape {{current}} sur {{total}}",
@@ -72,12 +86,22 @@
 		"finish": "Commencer",
 		"skip": "Passer"
 	},
+	"validation": {
+		"wsUrl_required": "L'URL WebSocket est requise",
+		"wsUrl_invalid": "Doit commencer par ws:// ou wss://",
+		"guildId_invalid": "Doit être un Server ID Discord valide (17–20 chiffres)",
+		"token_required": "Le token est requis"
+	},
 	"toast": {
 		"connectionSaved": "Connexion sauvegardée !",
 		"displaySaved": "Paramètres sauvegardés !",
 		"wsError": "Connexion WebSocket perdue",
+		"wsConnected": "Connecté au bot !",
+		"settingsError": "Échec de la sauvegarde",
 		"queueCleared": "File d'attente vidée",
-		"replayQueued": "Média remis en file"
+		"replayQueued": "Média remis en file",
+		"replayError": "Impossible de rejouer le média",
+		"clearError": "Impossible d'effacer l'historique"
 	},
 	"tray": {
 		"show": "Afficher les paramètres",

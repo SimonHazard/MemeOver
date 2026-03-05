@@ -1,9 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-
+import { ThemeProvider } from "@/components/theme";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/shared/theme";
 import { TabNav } from "@/windows/settings/components/tab-nav";
 import appCss from "../App.css?url";
 
@@ -24,18 +23,15 @@ function RootLayout() {
 		<ThemeProvider>
 			<QueryClientProvider client={queryClient}>
 				<Toaster richColors closeButton />
-				<main className="h-screen flex flex-col bg-background overflow-hidden">
+				<main className="h-screen flex flex-col bg-background">
 					<TabNav />
-					{/* initial={false} prevents exit animation conflict with TanStack Router:
-					    the router swaps <Outlet /> immediately, so we skip exit to avoid
-					    the "appears → disappears → reappears" flicker with mode="wait". */}
 					<AnimatePresence initial={false}>
 						<motion.div
 							key={location.pathname}
 							initial={{ opacity: 0, y: 4 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.12, ease: "easeOut" }}
-							className="flex-1 overflow-y-auto"
+							className="flex-1"
 						>
 							<Outlet />
 						</motion.div>

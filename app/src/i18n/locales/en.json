@@ -27,7 +27,10 @@
 		"controls": "Overlay controls",
 		"show": "Show",
 		"reload": "Reload",
-		"close": "Close"
+		"close": "Close",
+		"dev_preview": "Production preview",
+		"dev_preview_enter": "Enter preview",
+		"dev_preview_exit": "Exit preview"
 	},
 	"actions": {
 		"title": "Actions",
@@ -57,7 +60,18 @@
 		"type_audio": "Audio",
 		"type_text": "Text",
 		"textSize": "Text size",
-		"opacity": "Media opacity"
+		"syncMediaDuration": "Sync with media duration (video/audio)",
+		"syncMediaDuration_hint": "Keeps the overlay open until the video or audio finishes, ignoring the duration timer.",
+		"opacity": "Media opacity",
+		"bg_enabled": "Global background",
+		"bg_enabled_hint": "Wraps the content (author badge + media + caption) in a customizable container.",
+		"bg_color": "Background color",
+		"bg_opacity": "Background opacity",
+		"bg_padding": "Inner padding",
+		"bg_border_color": "Border color",
+		"bg_border_width": "Border width",
+		"bg_border_opacity": "Border opacity",
+		"bg_border_radius": "Corner radius"
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",
@@ -72,12 +86,22 @@
 		"finish": "Get started",
 		"skip": "Skip"
 	},
+	"validation": {
+		"wsUrl_required": "WebSocket URL is required",
+		"wsUrl_invalid": "Must start with ws:// or wss://",
+		"guildId_invalid": "Must be a valid Discord Server ID (17–20 digits)",
+		"token_required": "Token is required"
+	},
 	"toast": {
 		"connectionSaved": "Connection saved!",
 		"displaySaved": "Settings saved!",
 		"wsError": "WebSocket connection lost",
+		"wsConnected": "Connected to the bot!",
+		"settingsError": "Failed to save settings",
 		"queueCleared": "Queue cleared",
-		"replayQueued": "Media added to queue"
+		"replayQueued": "Media added to queue",
+		"replayError": "Failed to replay media",
+		"clearError": "Failed to clear history"
 	},
 	"tray": {
 		"show": "Show settings",

@@ -1,4 +1,5 @@
-import type { MediaEvent, MediaQueueItem, TextEvent, TextQueueItem } from "./types";
+import type { MediaEvent, TextEvent } from "@memeover/shared";
+import type { MediaQueueItem, TextQueueItem } from "./types";
 
 // ─── Factory functions ─────────────────────────────────────────────────────────
 

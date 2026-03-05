@@ -1,10 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTauriEventVersion } from "@/hooks/useTauriEvent";
 import type { HistoryItem } from "@/shared/history";
 import { clearHistory, loadHistory, replayHistoryItem } from "@/shared/history";
 import { useAppStore } from "@/shared/store";
@@ -17,15 +19,25 @@ export function HistoryPage() {
 	const queryClient = useQueryClient();
 	const overlayAlive = useAppStore((s) => s.overlayHealth === "alive");
 
+	// Increment on every "history-updated" Tauri event — used as a query key suffix
+	// to trigger automatic refetches without any useEffect or listen() subscription.
+	const historyVersion = useTauriEventVersion("history-updated");
+
 	const { data: items = [], isLoading } = useQuery({
-		queryKey: ["history"],
+		queryKey: ["history", historyVersion],
 		queryFn: loadHistory,
+		// Keep previous data visible while the new query is loading to avoid
+		// a skeleton flash on every history update.
+		placeholderData: keepPreviousData,
 	});
 
 	const { mutate: doReplay } = useMutation({
 		mutationFn: (item: HistoryItem) => replayHistoryItem(item),
 		onSuccess: () => {
 			toast.success(t("toast.replayQueued"));
+		},
+		onError: () => {
+			toast.error(t("toast.replayError"));
 		},
 	});
 
@@ -34,6 +46,9 @@ export function HistoryPage() {
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["history"] });
 			toast.success(t("toast.queueCleared"));
+		},
+		onError: () => {
+			toast.error(t("toast.clearError"));
 		},
 	});
 
@@ -68,16 +83,26 @@ export function HistoryPage() {
 				) : items.length === 0 ? (
 					<p className="text-center text-muted-foreground py-12 font-text">{t("history.empty")}</p>
 				) : (
-					<div className="space-y-2">
-						{items.map((item) => (
-							<HistoryItemCard
-								key={`${item.recordedAt}-${item.message_id}`}
-								item={item}
-								disabled={!overlayAlive}
-								onReplay={(i) => doReplay(i)}
-							/>
-						))}
-					</div>
+					<motion.div className="space-y-2" layout>
+						<AnimatePresence initial={false}>
+							{items.map((item) => (
+								<motion.div
+									key={`${item.recordedAt}-${item.message_id}`}
+									layout
+									initial={{ opacity: 0, y: -10 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, scale: 0.95 }}
+									transition={{ duration: 0.2, ease: "easeOut" }}
+								>
+									<HistoryItemCard
+										item={item}
+										disabled={!overlayAlive}
+										onReplay={(i) => doReplay(i)}
+									/>
+								</motion.div>
+							))}
+						</AnimatePresence>
+					</motion.div>
 				)}
 			</div>
 		</div>

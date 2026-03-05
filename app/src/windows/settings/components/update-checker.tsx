@@ -53,7 +53,7 @@ export function UpdateChecker() {
 			if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
 
 			const data = (await res.json()) as GitHubRelease;
-			// Tag format: "app-v0.6.1" → "0.6.1"
+			// Tag format: "app-vX.Y.Z" → "X.Y.Z"
 			const latestVersion = data.tag_name.replace(/^app-v/, "");
 
 			if (isNewerVersion(latestVersion, currentVersion)) {

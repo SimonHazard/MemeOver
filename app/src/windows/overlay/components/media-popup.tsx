@@ -7,8 +7,12 @@ import { MediaDisplay } from "./media-display";
 const POSITION_CLASSES: Record<OverlayPosition, string> = {
 	center: "inset-0 m-auto",
 	"top-left": "top-8 left-8",
+	top: "top-8 left-1/2 -translate-x-1/2",
 	"top-right": "top-8 right-8",
+	left: "top-1/2 left-8 -translate-y-1/2",
+	right: "top-1/2 right-8 -translate-y-1/2",
 	"bottom-left": "bottom-8 left-8",
+	bottom: "bottom-8 left-1/2 -translate-x-1/2",
 	"bottom-right": "bottom-8 right-8",
 };
 

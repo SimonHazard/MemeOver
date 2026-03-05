@@ -1,5 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Save, Type, Video } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
+import {
+	Clapperboard,
+	Eye,
+	EyeOff,
+	FileAudio,
+	ImageIcon,
+	MessageSquare,
+	Save,
+	Type,
+	Video,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -9,7 +20,9 @@ import { NbCard } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 import {
 	clearQueue,
 	enabledTypesToList,
@@ -23,6 +36,7 @@ import { loadSettings, persistSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import type { Settings, TextSize } from "@/shared/types";
 import { DEFAULT_SETTINGS } from "@/shared/types";
+import { ColorPicker } from "./color-picker";
 import { PositionGrid } from "./position-grid";
 import { PositionPreview } from "./position-preview";
 
@@ -30,7 +44,22 @@ import { PositionPreview } from "./position-preview";
 
 type MediaSettingsFields = Pick<
 	Settings,
-	"mediaSize" | "duration" | "volume" | "position" | "enabledTypes" | "textSize" | "mediaOpacity"
+	| "mediaSize"
+	| "duration"
+	| "syncMediaDuration"
+	| "volume"
+	| "position"
+	| "enabledTypes"
+	| "textSize"
+	| "mediaOpacity"
+	| "bgEnabled"
+	| "bgColor"
+	| "bgOpacity"
+	| "bgBorderColor"
+	| "bgBorderOpacity"
+	| "bgBorderWidth"
+	| "bgBorderRadius"
+	| "bgPadding"
 >;
 
 export interface OverlayFormProps {
@@ -66,21 +95,39 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 	const [form, setForm] = useState<MediaSettingsFields>({
 		mediaSize: initialData.mediaSize,
 		duration: initialData.duration,
+		syncMediaDuration: initialData.syncMediaDuration,
 		volume: initialData.volume,
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
 		mediaOpacity: initialData.mediaOpacity,
+		bgEnabled: initialData.bgEnabled,
+		bgColor: initialData.bgColor,
+		bgOpacity: initialData.bgOpacity,
+		bgBorderColor: initialData.bgBorderColor,
+		bgBorderOpacity: initialData.bgBorderOpacity,
+		bgBorderWidth: initialData.bgBorderWidth,
+		bgBorderRadius: initialData.bgBorderRadius,
+		bgPadding: initialData.bgPadding,
 	});
 
 	const snapshotRef = useRef<MediaSettingsFields>({
 		mediaSize: initialData.mediaSize,
 		duration: initialData.duration,
+		syncMediaDuration: initialData.syncMediaDuration,
 		volume: initialData.volume,
 		position: initialData.position,
 		enabledTypes: initialData.enabledTypes,
 		textSize: initialData.textSize,
 		mediaOpacity: initialData.mediaOpacity,
+		bgEnabled: initialData.bgEnabled,
+		bgColor: initialData.bgColor,
+		bgOpacity: initialData.bgOpacity,
+		bgBorderColor: initialData.bgBorderColor,
+		bgBorderOpacity: initialData.bgBorderOpacity,
+		bgBorderWidth: initialData.bgBorderWidth,
+		bgBorderRadius: initialData.bgBorderRadius,
+		bgPadding: initialData.bgPadding,
 	});
 
 	const isDirty = JSON.stringify(form) !== JSON.stringify(snapshotRef.current);
@@ -102,6 +149,15 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 
 	function update<K extends keyof MediaSettingsFields>(key: K, value: MediaSettingsFields[K]) {
 		setForm((prev) => ({ ...prev, [key]: value }));
+	}
+
+	// Dev-only: track whether the overlay is in prod-preview mode
+	const [devPreviewActive, setDevPreviewActive] = useState(false);
+
+	async function handleToggleDevPreview() {
+		const next = !devPreviewActive;
+		await invoke("toggle_overlay_preview_mode", { enabled: next });
+		setDevPreviewActive(next);
 	}
 
 	const enabledCount = enabledTypesToList(form.enabledTypes).length;
@@ -151,6 +207,44 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 						</div>
 
 						<Separator />
+
+						{/* ── Dev-only: prod preview toggle ── */}
+						{import.meta.env.DEV && (
+							<>
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<span className="font-display text-sm tracking-wide">
+											{t("overlay.dev_preview")}
+										</span>
+										<Badge
+											variant="secondary"
+											className="border border-foreground rounded-md text-xs font-mono"
+										>
+											DEV
+										</Badge>
+									</div>
+									<Button
+										variant={devPreviewActive ? "default" : "outline"}
+										size="sm"
+										className={cn(
+											"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs gap-1.5",
+											devPreviewActive && "bg-primary-400 text-black hover:bg-primary-500",
+										)}
+										onClick={() => void handleToggleDevPreview()}
+									>
+										{devPreviewActive ? (
+											<EyeOff className="h-3 w-3" />
+										) : (
+											<Eye className="h-3 w-3" />
+										)}
+										{devPreviewActive
+											? t("overlay.dev_preview_exit")
+											: t("overlay.dev_preview_enter")}
+									</Button>
+								</div>
+								<Separator />
+							</>
+						)}
 
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-2">
@@ -216,6 +310,23 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								step={1}
 								value={[form.duration]}
 								onValueChange={([v]) => update("duration", v ?? DEFAULT_SETTINGS.duration)}
+							/>
+						</div>
+
+						{/* Sync with media duration */}
+						<div className="flex items-start justify-between gap-4">
+							<div className="space-y-0.5">
+								<Label className="font-display tracking-wide text-xs">
+									{t("display.syncMediaDuration")}
+								</Label>
+								<p className="text-xs text-muted-foreground">
+									{t("display.syncMediaDuration_hint")}
+								</p>
+							</div>
+							<Switch
+								checked={form.syncMediaDuration}
+								onCheckedChange={(v) => update("syncMediaDuration", v)}
+								className="shrink-0 mt-0.5"
 							/>
 						</div>
 
@@ -288,6 +399,139 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								mediaSize={form.mediaSize}
 								label={t("display.preview_media")}
 							/>
+						</div>
+
+						<Separator />
+
+						{/* ── Arrière-plan ── */}
+						<div className="space-y-4">
+							<div className="flex items-start justify-between gap-4">
+								<div className="space-y-0.5">
+									<Label className="font-display tracking-wide text-xs">
+										{t("display.bg_enabled")}
+									</Label>
+									<p className="text-xs text-muted-foreground">{t("display.bg_enabled_hint")}</p>
+								</div>
+								<Switch
+									checked={form.bgEnabled}
+									onCheckedChange={(v) => update("bgEnabled", v)}
+									className="shrink-0 mt-0.5"
+								/>
+							</div>
+
+							{form.bgEnabled && (
+								<div className="space-y-4">
+									{/* Couleur de fond */}
+									<div className="space-y-2">
+										<Label className="font-display tracking-wide text-xs">
+											{t("display.bg_color")}
+										</Label>
+										<ColorPicker value={form.bgColor} onChange={(v) => update("bgColor", v)} />
+									</div>
+
+									{/* Opacité du fond */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_opacity")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgOpacity}%</span>
+										</div>
+										<Slider
+											min={0}
+											max={100}
+											step={1}
+											value={[form.bgOpacity]}
+											onValueChange={([v]) => update("bgOpacity", v ?? DEFAULT_SETTINGS.bgOpacity)}
+										/>
+									</div>
+
+									{/* Padding */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_padding")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgPadding}px</span>
+										</div>
+										<Slider
+											min={0}
+											max={100}
+											step={1}
+											value={[form.bgPadding]}
+											onValueChange={([v]) => update("bgPadding", v ?? DEFAULT_SETTINGS.bgPadding)}
+										/>
+									</div>
+
+									{/* Arrondi */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_border_radius")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgBorderRadius}px</span>
+										</div>
+										<Slider
+											min={0}
+											max={30}
+											step={1}
+											value={[form.bgBorderRadius]}
+											onValueChange={([v]) =>
+												update("bgBorderRadius", v ?? DEFAULT_SETTINGS.bgBorderRadius)
+											}
+										/>
+									</div>
+
+									{/* Couleur de bordure */}
+									<div className="space-y-2">
+										<Label className="font-display tracking-wide text-xs">
+											{t("display.bg_border_color")}
+										</Label>
+										<ColorPicker
+											value={form.bgBorderColor}
+											onChange={(v) => update("bgBorderColor", v)}
+										/>
+									</div>
+
+									{/* Épaisseur de bordure */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_border_width")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgBorderWidth}px</span>
+										</div>
+										<Slider
+											min={0}
+											max={20}
+											step={1}
+											value={[form.bgBorderWidth]}
+											onValueChange={([v]) =>
+												update("bgBorderWidth", v ?? DEFAULT_SETTINGS.bgBorderWidth)
+											}
+										/>
+									</div>
+
+									{/* Opacité de bordure */}
+									<div className="space-y-3">
+										<div className="flex justify-between">
+											<Label className="font-display tracking-wide text-xs">
+												{t("display.bg_border_opacity")}
+											</Label>
+											<span className="text-sm text-muted-foreground">{form.bgBorderOpacity}%</span>
+										</div>
+										<Slider
+											min={0}
+											max={100}
+											step={1}
+											value={[form.bgBorderOpacity]}
+											onValueChange={([v]) =>
+												update("bgBorderOpacity", v ?? DEFAULT_SETTINGS.bgBorderOpacity)
+											}
+										/>
+									</div>
+								</div>
+							)}
 						</div>
 
 						<Separator />
