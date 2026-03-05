@@ -15,6 +15,7 @@ import { useTauriEvent } from "@/hooks/useTauriEvent";
 import { statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import type { Settings, WsStatus } from "@/shared/types";
+import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
 import { SetupSchema, type SetupValues } from "./schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -79,9 +80,12 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 		<div className="p-5">
 			<div className="mx-auto max-w-xl space-y-5">
 				{/* ── Header ── */}
-				<div>
-					<h1 className="font-display text-2xl tracking-wide">{t("app.title")}</h1>
-					<p className="text-sm text-muted-foreground mt-0.5 font-text">{t("app.subtitle")}</p>
+				<div className="flex items-start justify-between gap-3">
+					<div>
+						<h1 className="font-display text-2xl tracking-wide">{t("app.title")}</h1>
+						<p className="text-sm text-muted-foreground mt-0.5 font-text">{t("app.subtitle")}</p>
+					</div>
+					<UserCountIndicator wsStatus={wsStatus} />
 				</div>
 
 				{/* ── WS error alert ── */}

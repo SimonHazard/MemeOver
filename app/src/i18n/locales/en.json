@@ -127,6 +127,14 @@
 		"clearAll": "Clear all",
 		"from": "from {{name}}"
 	},
+	"memberCount": {
+		"alone": "Solo",
+		"online": "online",
+		"offline": "offline",
+		"ariaAlone": "You are the only one connected to this server",
+		"ariaOnline": "{{count}} users connected to this server",
+		"ariaOffline": "Not connected to the bot"
+	},
 	"updater": {
 		"title": "Updates",
 		"check": "Check for updates",

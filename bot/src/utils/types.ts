@@ -27,6 +27,7 @@ export type {
 	PongMessage,
 	ServerMessage,
 	TextEvent,
+	MemberCountUpdateMessage,
 } from "@memeover/shared";
 
 // ─── Internal state ───────────────────────────────────────────────────────────

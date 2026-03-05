@@ -13,6 +13,27 @@ import type {
 
 // ─── Broadcast ────────────────────────────────────────────────────────────────
 
+/** Sends MEMBER_COUNT_UPDATE to every client in the guild with the current member count. */
+function broadcastMemberCount(guildId: string): void {
+	const memberIds = [...store.getGuildMembers(guildId)];
+	const count = memberIds.length;
+	const payload = JSON.stringify({
+		type: "MEMBER_COUNT_UPDATE",
+		guild_id: guildId,
+		count,
+	} satisfies ServerMessage);
+
+	for (const wsId of memberIds) {
+		const client = store.getClient(wsId);
+		if (!client) continue;
+		try {
+			client.ws_ref.send(payload);
+		} catch {
+			// Ignore — the close handler will clean up stale sockets
+		}
+	}
+}
+
 export function broadcastToGuild(guildId: string, event: MediaEvent | TextEvent): void {
 	// Snapshot the Set before iterating — removeClient() mutates the live Set
 	const memberIds = [...store.getGuildMembers(guildId)];
@@ -85,7 +106,12 @@ function startHeartbeat(ws: WSConnection): void {
 		state.pongTimeout = setTimeout(() => {
 			console.warn(`[WS] Client ${ws.id} missed PONG, closing connection`);
 			clearHeartbeat(ws.id);
+			// Capture guilds before removal so we can broadcast the updated count
+			const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
 			store.removeClient(ws.id);
+			for (const guildId of guilds) {
+				broadcastMemberCount(guildId);
+			}
 			try {
 				ws.close();
 			} catch {
@@ -153,11 +179,13 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 		} satisfies ServerMessage),
 	);
 	console.log(`[WS] Client ${ws.id} joined guild ${msg.guild_id}`);
+	broadcastMemberCount(msg.guild_id);
 }
 
 function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 	store.leaveGuild(ws.id, msg.guild_id);
 	console.log(`[WS] Client ${ws.id} left guild ${msg.guild_id}`);
+	broadcastMemberCount(msg.guild_id);
 }
 
 // ─── Server factory ───────────────────────────────────────────────────────────
@@ -247,8 +275,13 @@ export function createServer() {
 			close(ws: WSConnection) {
 				clearHeartbeat(ws.id);
 				rateLimiters.delete(ws.id);
+				// Capture guilds before removal so we can broadcast the updated count
+				const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
 				store.removeClient(ws.id);
 				console.log(`[WS] Client disconnected: ${ws.id}`);
+				for (const guildId of guilds) {
+					broadcastMemberCount(guildId);
+				}
 			},
 		});
 }

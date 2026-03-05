@@ -127,6 +127,14 @@
 		"clearAll": "Tout effacer",
 		"from": "de {{name}}"
 	},
+	"memberCount": {
+		"alone": "Seul",
+		"online": "en ligne",
+		"offline": "hors ligne",
+		"ariaAlone": "Vous êtes le seul connecté à ce serveur",
+		"ariaOnline": "{{count}} utilisateurs connectés à ce serveur",
+		"ariaOffline": "Non connecté au bot"
+	},
 	"updater": {
 		"title": "Mises à jour",
 		"check": "Vérifier les mises à jour",
