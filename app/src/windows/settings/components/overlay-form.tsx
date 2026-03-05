@@ -391,7 +391,11 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 						{/* Couleur du texte */}
 						<div className="space-y-2">
 							<Label className="font-display tracking-wide text-xs">{t("display.textColor")}</Label>
-							<ColorPicker value={form.textColor} onChange={(v) => update("textColor", v)} />
+							<ColorPicker
+							value={form.textColor}
+							onChange={(v) => update("textColor", v)}
+							onReset={() => update("textColor", DEFAULT_SETTINGS.textColor)}
+						/>
 						</div>
 
 						{/* Position */}
@@ -435,7 +439,11 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 										<Label className="font-display tracking-wide text-xs">
 											{t("display.bg_color")}
 										</Label>
-										<ColorPicker value={form.bgColor} onChange={(v) => update("bgColor", v)} />
+										<ColorPicker
+											value={form.bgColor}
+											onChange={(v) => update("bgColor", v)}
+											onReset={() => update("bgColor", DEFAULT_SETTINGS.bgColor)}
+										/>
 									</div>
 
 									{/* Opacité du fond */}
@@ -499,6 +507,7 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 										<ColorPicker
 											value={form.bgBorderColor}
 											onChange={(v) => update("bgBorderColor", v)}
+											onReset={() => update("bgBorderColor", DEFAULT_SETTINGS.bgBorderColor)}
 										/>
 									</div>
 
