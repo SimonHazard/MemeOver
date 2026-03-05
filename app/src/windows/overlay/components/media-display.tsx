@@ -67,7 +67,12 @@ export function MediaDisplay({
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
 				/>
-				<TextDisplay text={item.text} width={width} textSize={settings.textSize} textColor={settings.textColor} />
+				<TextDisplay
+					text={item.text}
+					width={width}
+					textSize={settings.textSize}
+					textColor={settings.textColor}
+				/>
 			</>
 		);
 
