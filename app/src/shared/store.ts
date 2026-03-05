@@ -32,6 +32,10 @@ interface AppStore {
 	// Overlay window health (alive = visible, closed = destroyed)
 	overlayHealth: OverlayHealth;
 	setOverlayHealth: (health: OverlayHealth) => void;
+
+	// Number of overlay clients connected to the same guild (broadcast by bot)
+	memberCount: number;
+	setMemberCount: (count: number) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -57,6 +61,9 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	overlayHealth: "alive",
 	setOverlayHealth: (health) => set({ overlayHealth: health }),
+
+	memberCount: 0,
+	setMemberCount: (count) => set({ memberCount: count }),
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────
@@ -112,6 +119,7 @@ export async function initOverlayStore(): Promise<void> {
  * - Subscribes to "ws-status-changed" Tauri events emitted by the overlay window
  * - Subscribes to "overlay-health-changed" Tauri events emitted by Rust
  * - Subscribes to "queue-size-changed" Tauri events emitted by the overlay window
+ * - Subscribes to "member-count-changed" Tauri events emitted by the overlay window
  */
 export async function initSettingsStore(): Promise<void> {
 	await listen<WsStatus>("ws-status-changed", (event) => {
@@ -124,5 +132,9 @@ export async function initSettingsStore(): Promise<void> {
 
 	await listen<number>("queue-size-changed", (event) => {
 		useAppStore.getState().setQueueSize(event.payload);
+	});
+
+	await listen<number>("member-count-changed", (event) => {
+		useAppStore.getState().setMemberCount(event.payload);
 	});
 }

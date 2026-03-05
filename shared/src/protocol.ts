@@ -52,12 +52,19 @@ const PingMessageSchema = z.object({
 	type: z.literal("PING"),
 });
 
+const MemberCountUpdateMessageSchema = z.object({
+	type: z.literal("MEMBER_COUNT_UPDATE"),
+	guild_id: z.string(),
+	count: z.number().int().nonnegative(),
+});
+
 export const ServerMessageSchema = z.discriminatedUnion("type", [
 	MediaEventSchema,
 	TextEventSchema,
 	JoinAckMessageSchema,
 	ErrorMessageSchema,
 	PingMessageSchema,
+	MemberCountUpdateMessageSchema,
 ]);
 
 export type MediaEvent = z.infer<typeof MediaEventSchema>;
@@ -65,6 +72,7 @@ export type TextEvent = z.infer<typeof TextEventSchema>;
 export type JoinAckMessage = z.infer<typeof JoinAckMessageSchema>;
 export type ErrorMessage = z.infer<typeof ErrorMessageSchema>;
 export type PingMessage = z.infer<typeof PingMessageSchema>;
+export type MemberCountUpdateMessage = z.infer<typeof MemberCountUpdateMessageSchema>;
 export type ServerMessage = z.infer<typeof ServerMessageSchema>;
 
 // ─── Error codes (stricter typing for known error values) ─────────────────────

@@ -13,6 +13,7 @@ export function useOverlayWs(): void {
 	// Zustand functions are stable references, never change.
 	const enqueue = useAppStore((s) => s.enqueue);
 	const setWsStatus = useAppStore((s) => s.setWsStatus);
+	const setMemberCount = useAppStore((s) => s.setMemberCount);
 	const wsUrl = useAppStore((s) => s.settings.wsUrl);
 	const guildId = useAppStore((s) => s.settings.guildId);
 	const token = useAppStore((s) => s.settings.token);
@@ -97,9 +98,15 @@ export function useOverlayWs(): void {
 					const pong: PongMessage = { type: "PONG" };
 					sendRef.current?.(JSON.stringify(pong));
 				})
+				.with({ type: "MEMBER_COUNT_UPDATE" }, (msg) => {
+					// Only forward counts that match our guild
+					if (msg.guild_id !== credentialsRef.current.guildId) return;
+					setMemberCount(msg.count);
+					void emit("member-count-changed", msg.count);
+				})
 				.exhaustive();
 		},
-		[enqueue, setWsStatus],
+		[enqueue, setWsStatus, setMemberCount],
 	);
 
 	const onClose = useCallback(() => {

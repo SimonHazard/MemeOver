@@ -23,9 +23,10 @@ interface TextDisplayProps {
 	text: string;
 	width: string;
 	textSize: TextSize;
+	textColor: string;
 }
 
-export function TextDisplay({ text, width, textSize }: TextDisplayProps) {
+export function TextDisplay({ text, width, textSize, textColor }: TextDisplayProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const measureRef = useRef<HTMLSpanElement>(null);
 	const [fontSize, setFontSize] = useState<number>(TEXT_SIZE_PX[textSize]);
@@ -70,8 +71,8 @@ export function TextDisplay({ text, width, textSize }: TextDisplayProps) {
 				{text}
 			</span>
 			<p
-				style={{ textShadow: TEXT_SHADOW, fontSize }}
-				className="text-white font-bold text-center leading-snug px-4 line-clamp-4 overflow-hidden"
+				style={{ textShadow: TEXT_SHADOW, fontSize, color: textColor }}
+				className="font-bold text-center leading-snug px-4 line-clamp-4 overflow-hidden"
 			>
 				{text}
 			</p>

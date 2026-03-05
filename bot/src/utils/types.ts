@@ -23,6 +23,7 @@ export type {
 	LeaveMessage,
 	MediaEvent,
 	MediaType,
+	MemberCountUpdateMessage,
 	PingMessage,
 	PongMessage,
 	ServerMessage,

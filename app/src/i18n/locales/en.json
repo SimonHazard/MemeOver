@@ -60,6 +60,7 @@
 		"type_audio": "Audio",
 		"type_text": "Text",
 		"textSize": "Text size",
+		"textColor": "Text color",
 		"syncMediaDuration": "Sync with media duration (video/audio)",
 		"syncMediaDuration_hint": "Keeps the overlay open until the video or audio finishes, ignoring the duration timer.",
 		"opacity": "Media opacity",
@@ -125,6 +126,14 @@
 		"back": "Back",
 		"clearAll": "Clear all",
 		"from": "from {{name}}"
+	},
+	"memberCount": {
+		"alone": "Solo",
+		"online": "online",
+		"offline": "offline",
+		"ariaAlone": "You are the only one connected to this server",
+		"ariaOnline": "{{count}} users connected to this server",
+		"ariaOffline": "Not connected to the bot"
 	},
 	"updater": {
 		"title": "Updates",
