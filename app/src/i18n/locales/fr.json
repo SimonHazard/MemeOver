@@ -86,12 +86,22 @@
 		"finish": "Commencer",
 		"skip": "Passer"
 	},
+	"validation": {
+		"wsUrl_required": "L'URL WebSocket est requise",
+		"wsUrl_invalid": "Doit commencer par ws:// ou wss://",
+		"guildId_invalid": "Doit être un Server ID Discord valide (17–20 chiffres)",
+		"token_required": "Le token est requis"
+	},
 	"toast": {
 		"connectionSaved": "Connexion sauvegardée !",
 		"displaySaved": "Paramètres sauvegardés !",
 		"wsError": "Connexion WebSocket perdue",
+		"wsConnected": "Connecté au bot !",
+		"settingsError": "Échec de la sauvegarde",
 		"queueCleared": "File d'attente vidée",
-		"replayQueued": "Média remis en file"
+		"replayQueued": "Média remis en file",
+		"replayError": "Impossible de rejouer le média",
+		"clearError": "Impossible d'effacer l'historique"
 	},
 	"tray": {
 		"show": "Afficher les paramètres",

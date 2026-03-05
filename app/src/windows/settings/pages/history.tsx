@@ -1,13 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { listen } from "@tauri-apps/api/event";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTauriEventVersion } from "@/hooks/useTauriEvent";
 import type { HistoryItem } from "@/shared/history";
 import { clearHistory, loadHistory, replayHistoryItem } from "@/shared/history";
 import { useAppStore } from "@/shared/store";
@@ -20,24 +19,25 @@ export function HistoryPage() {
 	const queryClient = useQueryClient();
 	const overlayAlive = useAppStore((s) => s.overlayHealth === "alive");
 
-	const { data: items = [], isLoading } = useQuery({
-		queryKey: ["history"],
-		queryFn: loadHistory,
-	});
+	// Increment on every "history-updated" Tauri event — used as a query key suffix
+	// to trigger automatic refetches without any useEffect or listen() subscription.
+	const historyVersion = useTauriEventVersion("history-updated");
 
-	useEffect(() => {
-		const unlisten = listen("history-updated", () => {
-			void queryClient.invalidateQueries({ queryKey: ["history"] });
-		});
-		return () => {
-			void unlisten.then((fn) => fn());
-		};
-	}, [queryClient]);
+	const { data: items = [], isLoading } = useQuery({
+		queryKey: ["history", historyVersion],
+		queryFn: loadHistory,
+		// Keep previous data visible while the new query is loading to avoid
+		// a skeleton flash on every history update.
+		placeholderData: keepPreviousData,
+	});
 
 	const { mutate: doReplay } = useMutation({
 		mutationFn: (item: HistoryItem) => replayHistoryItem(item),
 		onSuccess: () => {
 			toast.success(t("toast.replayQueued"));
+		},
+		onError: () => {
+			toast.error(t("toast.replayError"));
 		},
 	});
 
@@ -46,6 +46,9 @@ export function HistoryPage() {
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["history"] });
 			toast.success(t("toast.queueCleared"));
+		},
+		onError: () => {
+			toast.error(t("toast.clearError"));
 		},
 	});
 

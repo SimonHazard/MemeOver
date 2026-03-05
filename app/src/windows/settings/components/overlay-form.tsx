@@ -305,7 +305,6 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 								</span>
 							</div>
 							<Slider
-								disabled={form.syncMediaDuration}
 								min={1}
 								max={30}
 								step={1}

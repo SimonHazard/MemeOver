@@ -1,22 +1,4 @@
-// ─── Protocol types (source of truth: @memeover/shared) ───────────────────────
-
-export type {
-	ClientMessage,
-	ErrorCode,
-	ErrorMessage,
-	JoinAckMessage,
-	JoinMessage,
-	LeaveMessage,
-	MediaEvent,
-	MediaType,
-	PingMessage,
-	PongMessage,
-	ServerMessage,
-	TextEvent,
-} from "@memeover/shared";
-
 // ─── App-level ────────────────────────────────────────────────────────────────
-
 import type { MediaEvent, TextEvent } from "@memeover/shared";
 
 /** MediaEvent enriched with a unique per-display ID for React keys / queue dedup */
@@ -40,7 +22,16 @@ export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
 /** Santé de la fenêtre overlay (alive = existe et visible, closed = détruite) */
 export type OverlayHealth = "alive" | "closed";
 
-export type OverlayPosition = "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type OverlayPosition =
+	| "center"
+	| "top-left"
+	| "top"
+	| "top-right"
+	| "left"
+	| "right"
+	| "bottom-left"
+	| "bottom"
+	| "bottom-right";
 
 export type TextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 

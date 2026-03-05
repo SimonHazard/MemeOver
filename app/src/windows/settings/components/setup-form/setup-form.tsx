@@ -1,0 +1,229 @@
+import { useForm } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import type z from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { NbCard } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useTauriEvent } from "@/hooks/useTauriEvent";
+import { statusVariant } from "@/shared/helpers";
+import { loadSettings, persistSettings } from "@/shared/settings";
+import type { Settings, WsStatus } from "@/shared/types";
+import { SetupSchema, type SetupValues } from "./schema";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface SetupFormProps {
+	initialData: Settings;
+	wsStatus: WsStatus;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
+	const queryClient = useQueryClient();
+	const { t } = useTranslation();
+
+	// Subscribe to WS status Tauri events — fires only on transitions, no ref needed.
+	const wsStatusEvent = useTauriEvent<WsStatus>("ws-status-changed");
+	useEffect(() => {
+		if (wsStatusEvent === "error") toast.error(t("toast.wsError"));
+		if (wsStatusEvent === "connected") toast.success(t("toast.wsConnected"));
+	}, [wsStatusEvent, t]);
+
+	// ── Mutation ──────────────────────────────────────────────────────────────
+
+	const { mutateAsync: save } = useMutation({
+		mutationFn: async (values: SetupValues) => {
+			const current = await queryClient.fetchQuery({
+				queryKey: ["settings"],
+				queryFn: loadSettings,
+			});
+			await persistSettings({ ...current, ...values });
+		},
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ["settings"] });
+			toast.success(t("toast.connectionSaved"));
+		},
+		onError: () => {
+			toast.error(t("toast.settingsError"));
+		},
+	});
+
+	// ── Form ──────────────────────────────────────────────────────────────────
+
+	const form = useForm({
+		defaultValues: {
+			wsUrl: initialData.wsUrl,
+			guildId: initialData.guildId,
+			token: initialData.token,
+		} satisfies SetupValues,
+		onSubmit: async ({ value }) => {
+			await save(value);
+		},
+	});
+
+	/** Validates a single field value against its Zod sub-schema. Returns a translated error or undefined. */
+	const validateField = (schema: z.ZodType, value: string): string | undefined => {
+		const result = schema.safeParse(value);
+		return result.success ? undefined : t(result.error.issues[0]?.message ?? "");
+	};
+
+	return (
+		<div className="p-5">
+			<div className="mx-auto max-w-xl space-y-5">
+				{/* ── Header ── */}
+				<div>
+					<h1 className="font-display text-2xl tracking-wide">{t("app.title")}</h1>
+					<p className="text-sm text-muted-foreground mt-0.5 font-text">{t("app.subtitle")}</p>
+				</div>
+
+				{/* ── WS error alert ── */}
+				{wsStatus === "error" && (
+					<Alert variant="destructive">
+						<AlertDescription>{t("connection.error")}</AlertDescription>
+					</Alert>
+				)}
+
+				{/* ── Connection Card ── */}
+				<NbCard>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							void form.handleSubmit();
+						}}
+					>
+						<div className="space-y-5">
+							<div className="flex items-center justify-between">
+								<h2 className="font-display text-base tracking-wide">{t("connection.title")}</h2>
+								<Badge
+									variant={statusVariant(wsStatus)}
+									className="border-2 border-foreground rounded-md font-display text-xs tracking-wide px-2 py-0.5"
+								>
+									{t(`status.${wsStatus}`)}
+								</Badge>
+							</div>
+
+							<Separator />
+
+							<div className="space-y-4">
+								{/* ── WebSocket URL ── */}
+								<form.Field
+									name="wsUrl"
+									validators={{
+										onBlur: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
+										onSubmit: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
+									}}
+								>
+									{(field) => (
+										<div className="space-y-2">
+											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
+												{t("connection.wsUrl")}
+											</Label>
+											<Input
+												id={field.name}
+												placeholder="ws://localhost:3001/ws"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												className="border-2 border-foreground/40 focus:border-foreground"
+											/>
+											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+												<p className="text-xs text-destructive font-text">
+													{String(field.state.meta.errors[0])}
+												</p>
+											)}
+										</div>
+									)}
+								</form.Field>
+
+								{/* ── Guild ID ── */}
+								<form.Field
+									name="guildId"
+									validators={{
+										onBlur: ({ value }) => validateField(SetupSchema.shape.guildId, value),
+										onSubmit: ({ value }) => validateField(SetupSchema.shape.guildId, value),
+									}}
+								>
+									{(field) => (
+										<div className="space-y-2">
+											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
+												{t("connection.guildId")}
+											</Label>
+											<Input
+												id={field.name}
+												placeholder="123456789012345678"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												className="border-2 border-foreground/40 focus:border-foreground"
+											/>
+											<p className="text-xs text-muted-foreground">
+												{t("connection.guildId_hint")}
+											</p>
+											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+												<p className="text-xs text-destructive font-text">
+													{String(field.state.meta.errors[0])}
+												</p>
+											)}
+										</div>
+									)}
+								</form.Field>
+
+								{/* ── Token ── */}
+								<form.Field
+									name="token"
+									validators={{
+										onBlur: ({ value }) => validateField(SetupSchema.shape.token, value),
+										onSubmit: ({ value }) => validateField(SetupSchema.shape.token, value),
+									}}
+								>
+									{(field) => (
+										<div className="space-y-2">
+											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
+												{t("connection.token")}
+											</Label>
+											<Input
+												id={field.name}
+												type="password"
+												placeholder="••••••••••••••••"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												className="border-2 border-foreground/40 focus:border-foreground"
+											/>
+											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+												<p className="text-xs text-destructive font-text">
+													{String(field.state.meta.errors[0])}
+												</p>
+											)}
+										</div>
+									)}
+								</form.Field>
+							</div>
+
+							{/* ── Submit ── */}
+							<form.Subscribe selector={(s) => [s.isSubmitting, s.values] as const}>
+								{([isSubmitting, values]) => (
+									<Button
+										type="submit"
+										disabled={isSubmitting || !values.wsUrl || !values.guildId || !values.token}
+										className="w-full border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all font-display tracking-wide disabled:opacity-40 disabled:shadow-none"
+									>
+										{isSubmitting ? t("connection.saving") : t("connection.save")}
+									</Button>
+								)}
+							</form.Subscribe>
+						</div>
+					</form>
+				</NbCard>
+			</div>
+		</div>
+	);
+}

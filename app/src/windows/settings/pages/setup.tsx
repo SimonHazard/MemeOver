@@ -5,7 +5,7 @@ import { loadSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { OnboardingWizard } from "@/windows/settings/components/onboarding-wizard";
-import { SetupForm } from "@/windows/settings/components/setup-form";
+import { SetupForm } from "@/windows/settings/components/setup-form/setup-form";
 
 export function SetupPage() {
 	const { data: saved, isLoading } = useQuery({

@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@memeover/shared": "workspace:*",
 		"@tailwindcss/vite": "^4.2.0",
+		"@tanstack/react-form": "^1.28.4",
 		"@tanstack/react-query": "^5.90.21",
 		"@tanstack/react-router": "^1.162.4",
 		"@tauri-apps/api": "^2",
@@ -32,6 +33,7 @@
 		"sonner": "^2.0.7",
 		"tailwind-merge": "^3.5.0",
 		"tailwindcss": "^4.2.0",
+		"ts-pattern": "^5.9.0",
 		"zod": "^4.3.6",
 		"zustand": "^5.0.11"
 	},

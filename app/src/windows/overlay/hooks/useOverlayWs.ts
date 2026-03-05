@@ -1,10 +1,10 @@
+import { type JoinMessage, type PongMessage, ServerMessageSchema } from "@memeover/shared";
 import { emit } from "@tauri-apps/api/event";
 import { useCallback, useMemo, useRef } from "react";
 import useWebSocket from "react-use-websocket";
+import { match } from "ts-pattern";
 import { mediaEventToQueueItem, textEventToQueueItem } from "@/shared/media-factory";
-import { ServerMessageSchema } from "@/shared/schemas";
 import { useAppStore } from "@/shared/store";
-import type { JoinMessage, PongMessage } from "@/shared/types";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ export function useOverlayWs(): void {
 	// call it even though the callback is defined before the return value is known.
 	const sendRef = useRef<((msg: string) => void) | null>(null);
 
-	// ── Stable event handlers (deps are all stable Zustand functions) ──────────
+	// ── Stable event handlers ─────────────────────────────────────────────────
 
 	const onOpen = useCallback(() => {
 		setWsStatus("connecting");
@@ -65,51 +65,39 @@ export function useOverlayWs(): void {
 				return;
 			}
 
-			const msg = result.data;
-
-			switch (msg.type) {
-				case "JOIN_ACK":
-					if (msg.success) {
-						setWsStatus("connected");
-						void emit("ws-status-changed", "connected");
-					} else {
-						setWsStatus("error");
-						void emit("ws-status-changed", "error");
-						console.warn("[WS] JOIN_ACK error:", msg.error);
-					}
-					break;
-
-				case "MEDIA": {
-					// Drop messages while the overlay is hidden — they would queue on an
-					// invisible window and be wiped on the next reload anyway.
-					if (overlayHealthRef.current === "closed") break;
-					// Apply media-type filter before enqueuing
+			match(result.data)
+				.with({ type: "JOIN_ACK", success: true }, () => {
+					setWsStatus("connected");
+					void emit("ws-status-changed", "connected");
+				})
+				.with({ type: "JOIN_ACK", success: false }, (msg) => {
+					setWsStatus("error");
+					void emit("ws-status-changed", "error");
+					console.warn("[WS] JOIN_ACK error:", msg.error);
+				})
+				.with({ type: "MEDIA" }, (msg) => {
+					if (overlayHealthRef.current === "closed") return;
 					const et = enabledTypesRef.current;
-					const allowed =
-						(msg.media_type === "image" && et.image) ||
-						(msg.media_type === "gif" && et.gif) ||
-						(msg.media_type === "video" && et.video) ||
-						(msg.media_type === "audio" && et.audio);
+					const allowed = match(msg.media_type)
+						.with("image", () => et.image)
+						.with("gif", () => et.gif)
+						.with("video", () => et.video)
+						.with("audio", () => et.audio)
+						.exhaustive();
 					if (allowed) enqueue(mediaEventToQueueItem(msg));
-					break;
-				}
-
-				case "TEXT":
-					if (overlayHealthRef.current === "closed") break;
+				})
+				.with({ type: "TEXT" }, (msg) => {
+					if (overlayHealthRef.current === "closed") return;
 					if (enabledTypesRef.current.text) enqueue(textEventToQueueItem(msg));
-					break;
-
-				case "ERROR":
+				})
+				.with({ type: "ERROR" }, (msg) => {
 					console.warn("[WS] Server error:", msg);
-					break;
-
-				case "PING": {
-					// Respond immediately to keep the connection alive
+				})
+				.with({ type: "PING" }, () => {
 					const pong: PongMessage = { type: "PONG" };
 					sendRef.current?.(JSON.stringify(pong));
-					break;
-				}
-			}
+				})
+				.exhaustive();
 		},
 		[enqueue, setWsStatus],
 	);
