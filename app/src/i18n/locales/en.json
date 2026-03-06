@@ -102,7 +102,8 @@
 		"queueCleared": "Queue cleared",
 		"replayQueued": "Media added to queue",
 		"replayError": "Failed to replay media",
-		"clearError": "Failed to clear history"
+		"clearError": "Failed to clear history",
+		"autostartError": "Failed to change autostart setting"
 	},
 	"tray": {
 		"show": "Show settings",
@@ -118,6 +119,10 @@
 		"preferences": "Preferences",
 		"language": "Language",
 		"theme": "Theme"
+	},
+	"settings": {
+		"autostart": "Launch at startup",
+		"autostart_hint": "Automatically launch MemeOver when the system starts."
 	},
 	"history": {
 		"title": "History",

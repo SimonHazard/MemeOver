@@ -102,7 +102,8 @@
 		"queueCleared": "File d'attente vidée",
 		"replayQueued": "Média remis en file",
 		"replayError": "Impossible de rejouer le média",
-		"clearError": "Impossible d'effacer l'historique"
+		"clearError": "Impossible d'effacer l'historique",
+		"autostartError": "Impossible de modifier le démarrage automatique"
 	},
 	"tray": {
 		"show": "Afficher les paramètres",
@@ -118,6 +119,10 @@
 		"preferences": "Préférences",
 		"language": "Langue",
 		"theme": "Thème"
+	},
+	"settings": {
+		"autostart": "Lancer au démarrage",
+		"autostart_hint": "Lance MemeOver automatiquement au démarrage du système."
 	},
 	"history": {
 		"title": "Historique",

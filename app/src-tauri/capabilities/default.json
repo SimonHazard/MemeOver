@@ -10,6 +10,7 @@
     "core:event:default",
     "core:window:allow-show",
     "core:window:allow-hide",
-    "core:window:allow-set-focus"
+    "core:window:allow-set-focus",
+    "autostart:default"
   ]
 }
