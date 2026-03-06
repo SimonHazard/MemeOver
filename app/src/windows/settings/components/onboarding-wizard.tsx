@@ -369,17 +369,20 @@ function StepDone() {
 					>
 						<CheckCircle className="h-12 w-12 text-primary" aria-hidden="true" />
 					</motion.div>
-					{sparklePositions.map(({ style, delay }, i) => (
-						<motion.div
-							key={i}
-							style={style}
-							initial={{ opacity: 0, scale: 0 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ delay, duration: 0.2 }}
-						>
-							<Sparkles className="h-3 w-3 text-primary" />
-						</motion.div>
-					))}
+					{sparklePositions.map(({ style, delay }, i) => {
+						const key = `${delay}-${i}`;
+						return (
+							<motion.div
+								key={key}
+								style={style}
+								initial={{ opacity: 0, scale: 0 }}
+								animate={{ opacity: 1, scale: 1 }}
+								transition={{ delay, duration: 0.2 }}
+							>
+								<Sparkles className="h-3 w-3 text-primary" />
+							</motion.div>
+						);
+					})}
 				</div>
 
 				<motion.h2
