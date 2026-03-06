@@ -21,7 +21,7 @@ export function AboutPage() {
 
 	return (
 		<div className="p-5">
-			<div className="mx-auto max-w-xl space-y-5">
+			<div className="mx-auto max-w-2xl space-y-5">
 				{/* ── App identity card ── */}
 				<NbCard>
 					<div className="flex items-start justify-between">

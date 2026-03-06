@@ -78,7 +78,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 
 	return (
 		<div className="p-5">
-			<div className="mx-auto max-w-xl space-y-5">
+			<div className="mx-auto max-w-2xl space-y-5">
 				{/* ── Header ── */}
 				<div className="flex items-start justify-between gap-3">
 					<div>
