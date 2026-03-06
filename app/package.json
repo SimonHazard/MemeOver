@@ -30,6 +30,7 @@
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"react-i18next": "^16.5.4",
+		"react-markdown": "^10.1.0",
 		"react-use-websocket": "^4.13.0",
 		"sonner": "^2.0.7",
 		"tailwind-merge": "^3.5.0",

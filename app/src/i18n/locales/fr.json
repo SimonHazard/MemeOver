@@ -160,6 +160,19 @@
 		"upToDate": "Vous avez la dernière version",
 		"available": "Mise à jour v{{version}} disponible",
 		"download": "Télécharger v{{version}}",
-		"error": "Erreur lors de la vérification"
+		"error": "Erreur lors de la vérification",
+		"retry": "Réessayer",
+		"viewUpdate": "Voir la mise à jour",
+		"viewProgress": "Voir la progression",
+		"dialogTitle": "Mise à jour v{{version}} disponible",
+		"currentLabel": "Actuelle",
+		"newLabel": "Nouvelle",
+		"changelog": "Nouveautés",
+		"downloading": "Téléchargement… {{progress}}%",
+		"readyToInstall": "Prêt à installer",
+		"relaunch": "Relancer et installer",
+		"later": "Plus tard",
+		"downloadNow": "Télécharger et installer",
+		"foundToast": "Mise à jour v{{version}} disponible !"
 	}
 }
