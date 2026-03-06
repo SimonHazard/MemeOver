@@ -79,7 +79,7 @@ fn apply_windows_topmost(win: &tauri::WebviewWindow) {
     // Construct the typed HWND from the raw isize value.
     let hwnd = HWND(w32.hwnd.get() as *mut core::ffi::c_void);
     unsafe {
-        let _ = SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        let _ = SetWindowPos(hwnd, Some(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 }
 
