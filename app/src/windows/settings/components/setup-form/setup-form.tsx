@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
@@ -11,6 +12,7 @@ import { NbCard } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { useTauriEvent } from "@/hooks/useTauriEvent";
 import { statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
@@ -37,6 +39,26 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 		if (wsStatusEvent === "error") toast.error(t("toast.wsError"));
 		if (wsStatusEvent === "connected") toast.success(t("toast.wsConnected"));
 	}, [wsStatusEvent, t]);
+
+	// ── Autostart ─────────────────────────────────────────────────────────────
+
+	const [autostart, setAutostart] = useState<boolean>(false);
+	useEffect(() => {
+		void isEnabled().then(setAutostart);
+	}, []);
+
+	const handleAutostartChange = async (checked: boolean) => {
+		try {
+			if (checked) {
+				await enable();
+			} else {
+				await disable();
+			}
+			setAutostart(checked);
+		} catch {
+			toast.error(t("toast.autostartError"));
+		}
+	};
 
 	// ── Mutation ──────────────────────────────────────────────────────────────
 
@@ -78,7 +100,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 
 	return (
 		<div className="p-5">
-			<div className="mx-auto max-w-xl space-y-5">
+			<div className="mx-auto max-w-2xl space-y-5">
 				{/* ── Header ── */}
 				<div className="flex items-start justify-between gap-3">
 					<div>
@@ -226,6 +248,29 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 							</form.Subscribe>
 						</div>
 					</form>
+				</NbCard>
+				{/* ── Autostart Card ── */}
+				{/* Le toggle ne passe pas par le TanStack Form intentionnellement : l'autostart est une action système immédiate (write dans le registre/LaunchAgent), pas une valeur à valider et soumettre en batch avec d'autres champs — d'où le useState + useEffect direct.  */}
+				<NbCard>
+					<div className="flex items-center justify-between gap-4">
+						<div className="space-y-0.5">
+							<Label
+								className="font-display tracking-wide text-sm cursor-pointer"
+								htmlFor="autostart"
+							>
+								{t("settings.autostart")}
+							</Label>
+							<p className="text-xs text-muted-foreground font-text">
+								{t("settings.autostart_hint")}
+							</p>
+						</div>
+						<Switch
+							id="autostart"
+							checked={autostart}
+							onCheckedChange={(checked) => void handleAutostartChange(checked)}
+							className="border-2 border-foreground shrink-0"
+						/>
+					</div>
 				</NbCard>
 			</div>
 		</div>

@@ -54,7 +54,7 @@ export function HistoryPage() {
 
 	return (
 		<div className="p-5">
-			<div className="mx-auto max-w-xl space-y-5">
+			<div className="mx-auto max-w-2xl space-y-5">
 				{/* ── Header ── */}
 				<div className="flex items-center justify-between">
 					<h1 className="font-display text-xl tracking-wide">{t("history.title")}</h1>
