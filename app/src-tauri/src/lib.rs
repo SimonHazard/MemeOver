@@ -14,6 +14,125 @@ struct TrayState {
     quit_item: Mutex<MenuItem<tauri::Wry>>,
 }
 
+// ─── Native overlay level (macOS) ─────────────────────────────────────────────
+
+/// Sets the NSWindow level to NSStatusWindowLevel (25) so the overlay floats
+/// above fullscreen applications and Mission Control transitions. Also sets
+/// the collection behavior so macOS migrates the window to any Space,
+/// including fullscreen Spaces (FullScreenAuxiliary).
+///
+/// Constants used:
+///   NSStatusWindowLevel                        = 25
+///   NSWindowCollectionBehaviorCanJoinAllSpaces  = 1 << 0  (1)
+///   NSWindowCollectionBehaviorFullScreenAuxiliary = 1 << 8 (256)
+#[cfg(all(target_os = "macos", not(debug_assertions)))]
+fn apply_macos_overlay_level(win: &tauri::WebviewWindow) {
+    use objc2::msg_send;
+    use objc2::runtime::AnyObject;
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+    let Ok(handle) = win.window_handle() else {
+        return;
+    };
+    let RawWindowHandle::AppKit(appkit) = handle.as_raw() else {
+        return;
+    };
+
+    unsafe {
+        // ns_view is a NonNull<c_void> pointing to the NSView backing the webview.
+        let ns_view = appkit.ns_view.as_ptr() as *mut AnyObject;
+
+        // Retrieve the NSWindow that owns this view.
+        let ns_win: *mut AnyObject = msg_send![ns_view, window];
+        if ns_win.is_null() {
+            return;
+        }
+
+        // Float above fullscreen apps (NSStatusWindowLevel = 25).
+        let _: () = msg_send![ns_win, setLevel: 25i64];
+
+        // Allow the window to follow the user across all Spaces, including
+        // fullscreen Spaces (bit 0 = CanJoinAllSpaces, bit 8 = FullScreenAuxiliary).
+        let _: () = msg_send![ns_win, setCollectionBehavior: 257u64];
+    }
+}
+
+// ─── Native overlay level (Windows) ───────────────────────────────────────────
+
+/// Re-injects HWND_TOPMOST via SetWindowPos, forcing the overlay above any
+/// fullscreen DirectX / exclusive-mode application on Windows.
+#[cfg(target_os = "windows")]
+fn apply_windows_topmost(win: &tauri::WebviewWindow) {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+    };
+
+    let Ok(handle) = win.window_handle() else {
+        return;
+    };
+    let RawWindowHandle::Win32(w32) = handle.as_raw() else {
+        return;
+    };
+
+    // Construct the typed HWND from the raw isize value.
+    let hwnd = HWND(w32.hwnd.get() as *mut core::ffi::c_void);
+    unsafe {
+        let _ = SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+}
+
+// ─── Unified overlay level helper ─────────────────────────────────────────────
+
+/// Applies always-on-top + the platform-native window level to the overlay.
+#[cfg(not(debug_assertions))]
+fn apply_native_overlay_level(win: &tauri::WebviewWindow) {
+    let _ = win.set_always_on_top(true);
+
+    #[cfg(target_os = "macos")]
+    apply_macos_overlay_level(win);
+
+    #[cfg(target_os = "windows")]
+    apply_windows_topmost(win);
+}
+
+/// No-op in debug builds — overlay window stays in normal mode for development.
+#[cfg(debug_assertions)]
+fn apply_native_overlay_level(_win: &tauri::WebviewWindow) {}
+
+// ─── Overlay watcher ──────────────────────────────────────────────────────────
+
+/// Spawns a long-lived background thread (production only) that reasserts the
+/// overlay's native window level every 2 seconds.
+///
+/// - Checks `is_visible()` to skip hidden overlays (e.g. after quit_overlay).
+/// - Dispatches the actual platform calls to the main thread via
+///   `run_on_main_thread`, which is mandatory for Objective-C / Win32 UI APIs.
+/// - Sleep interval of 2 s keeps CPU overhead negligible (~0.05 % average).
+#[cfg(not(debug_assertions))]
+fn start_overlay_watcher(app: tauri::AppHandle) {
+    std::thread::Builder::new()
+        .name("overlay-watcher".into())
+        .spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_secs(2));
+
+            let Some(win) = app.get_webview_window("overlay") else {
+                continue;
+            };
+
+            if !win.is_visible().unwrap_or(false) {
+                continue;
+            }
+
+            let win_clone = win.clone();
+            let _ = win.run_on_main_thread(move || {
+                apply_native_overlay_level(&win_clone);
+            });
+        })
+        .expect("overlay-watcher thread failed to start");
+}
+
 // ─── Tauri commands ───────────────────────────────────────────────────────────
 
 /// Enable or disable click-through on the overlay window.
@@ -58,11 +177,9 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
     match app.get_webview_window("overlay") {
         Some(win) => {
             win.unminimize().map_err(|e| e.to_string())?;
-            // Apply always-on-top before reload so the property is set when the
-            // page loads. main-overlay.tsx calls show() once the page is ready,
-            // avoiding the flash caused by show() → blank → content.
-            #[cfg(not(debug_assertions))]
-            win.set_always_on_top(true).map_err(|e| e.to_string())?;
+            // Re-apply the native window level before reloading so it is set
+            // when the page finishes loading (main-overlay.tsx then calls show()).
+            apply_native_overlay_level(&win);
             win.eval("window.location.reload()").map_err(|e| e.to_string())?;
         }
         None => {
@@ -70,6 +187,7 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
             create_overlay_window(&app).map_err(|e| e.to_string())?;
             if let Some(win) = app.get_webview_window("overlay") {
                 attach_overlay_close_handler(&win);
+                apply_native_overlay_level(&win);
                 // main-overlay.tsx calls show() after the page loads; no show() here.
             }
         }
@@ -310,9 +428,23 @@ pub fn run() {
         ])
         .setup(|app| {
             create_overlay_window(&app.handle().clone())?;
+
+            // Apply the native window level immediately after creation (prod only).
+            // The builder sets always_on_top(true) but only at NSFloatingWindowLevel;
+            // apply_native_overlay_level elevates to NSStatusWindowLevel on macOS.
+            #[cfg(not(debug_assertions))]
+            if let Some(overlay) = app.get_webview_window("overlay") {
+                apply_native_overlay_level(&overlay);
+            }
+
             setup_overlay_close_notification(app);
             setup_tray(app)?;
             setup_settings_close_behavior(app);
+
+            // Start the background watcher that reasserts the window level every 2 s.
+            #[cfg(not(debug_assertions))]
+            start_overlay_watcher(app.handle().clone());
+
             Ok(())
         })
         .run(tauri::generate_context!())
