@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
-    "shadcn": "^3.8.5"
+    "shadcn": "^4.0.0"
   }
 }
