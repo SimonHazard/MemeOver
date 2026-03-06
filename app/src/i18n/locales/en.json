@@ -118,7 +118,12 @@
 	"about": {
 		"preferences": "Preferences",
 		"language": "Language",
-		"theme": "Theme"
+		"theme": "Theme",
+		"betaTag": "Beta",
+		"betaDisclaimer": "You may encounter bugs as updates roll out. Thank you for your understanding.",
+		"bugReportTitle": "Having an issue?",
+		"bugReportDesc": "If you run into unexpected behaviour, don't hesitate to let us know.",
+		"bugReportButton": "Report a bug"
 	},
 	"settings": {
 		"autostart": "Launch at startup",
@@ -139,6 +144,14 @@
 		"ariaAlone": "You are the only one connected to this server",
 		"ariaOnline": "{{count}} users connected to this server",
 		"ariaOffline": "Not connected to the bot"
+	},
+	"notice": {
+		"fullscreen_title": "Heads up for gamers",
+		"fullscreen_body": "MemeOver appears on top of most apps — but some games running in full-screen exclusive mode (common on Windows) can block the overlay completely. Your friends' memes might not show up while you're playing.",
+		"fullscreen_fix": "Easy fix: in your game's display settings, switch to \"Windowed (Fullscreen)\" or \"Borderless\" mode. Memes will appear perfectly without impacting performance.",
+		"fullscreen_dismiss": "Got it, dismiss",
+		"gaming_compat": "Gaming compatibility",
+		"show_info": "Learn more"
 	},
 	"updater": {
 		"title": "Updates",

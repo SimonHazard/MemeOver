@@ -1,5 +1,6 @@
 import { NbCard } from "@/components/ui/card";
 import type { Settings } from "@/shared/types";
+import { FullscreenCompatibilityNotice } from "./fullscreen-compatibility-notice";
 import { BackgroundSettingsSection } from "./sections/background-settings-section";
 import { DisplaySettingsSection } from "./sections/display-settings-section";
 import { FormActions } from "./sections/form-actions";
@@ -17,6 +18,9 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 	return (
 		<div className="p-5">
 			<div className="mx-auto max-w-2xl space-y-5">
+				{/* ── Fullscreen compatibility notice ── */}
+				<FullscreenCompatibilityNotice />
+
 				{/* ── Overlay Controls ── */}
 				<NbCard>
 					<OverlayControls />
