@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@memeover/ui/lib/utils";
 import type { OverlayPosition } from "@/shared/types";
 
 const PREVIEW_POSITION_CLASSES: Record<OverlayPosition, string> = {

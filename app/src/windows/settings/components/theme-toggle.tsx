@@ -1,7 +1,7 @@
 import { Toggle } from "@memeover/ui/components/ui/toggle";
+import { cn } from "@memeover/ui/lib/utils";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme";
-import { cn } from "@/lib/utils";
 
 const TOGGLE_CLASS = cn(
 	"border-2 border-foreground/30",

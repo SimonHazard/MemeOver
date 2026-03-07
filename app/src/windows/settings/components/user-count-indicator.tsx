@@ -1,7 +1,7 @@
+import { cn } from "@memeover/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
 import { useAppStore } from "@/shared/store";
 import type { WsStatus } from "@/shared/types";
 

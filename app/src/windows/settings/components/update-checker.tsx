@@ -11,6 +11,7 @@ import {
 import { Progress } from "@memeover/ui/components/ui/progress";
 import { ScrollArea } from "@memeover/ui/components/ui/scroll-area";
 import { Separator } from "@memeover/ui/components/ui/separator";
+import { cn } from "@memeover/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowRight,
@@ -26,7 +27,6 @@ import { useTranslation } from "react-i18next";
 import type { Components } from "react-markdown";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { type UpdateMeta, useUpdater } from "@/windows/settings/hooks/useUpdater";
 
 // ─── Constants ────────────────────────────────────────────────────────────────

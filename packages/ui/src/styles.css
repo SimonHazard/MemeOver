@@ -1,5 +1,5 @@
 /* This file is intentionally empty.
-   The theme and CSS variables live in app/src/App.css.
-   The shadcn CLI targets that file directly via the relative path in
-   packages/ui/components.json → "css": "../../app/src/App.css".
+   All shared design tokens live in packages/ui/src/theme.css.
+   The shadcn CLI targets theme.css via packages/ui/components.json → "css": "src/theme.css".
+   App-specific styles (fonts, overlay rules) stay in app/src/App.css.
    Do NOT add styles here. */
