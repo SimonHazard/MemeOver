@@ -1,6 +1,6 @@
+import { Skeleton } from "@memeover/ui/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { loadSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { DEFAULT_SETTINGS } from "@/shared/types";

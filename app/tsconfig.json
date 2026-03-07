@@ -21,7 +21,8 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@memeover/ui/*": ["../packages/ui/src/*"]
     }
   },
   "include": ["src"],

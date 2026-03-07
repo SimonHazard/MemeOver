@@ -1,0 +1,23 @@
+{
+	"name": "@memeover/ui",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"dependencies": {
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"lucide-react": "^0.575.0",
+		"radix-ui": "^1.4.3",
+		"sonner": "^2.0.7",
+		"tailwind-merge": "^3.5.0"
+	},
+	"peerDependencies": {
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"devDependencies": {
+		"@types/react": "^19.1.8",
+		"@types/react-dom": "^19.1.6",
+		"typescript": "~5.8.3"
+	}
+}

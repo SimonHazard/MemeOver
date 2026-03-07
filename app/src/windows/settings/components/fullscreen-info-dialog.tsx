@@ -1,6 +1,4 @@
-import { Gamepad2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
+import { Button } from "@memeover/ui/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -10,7 +8,9 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@memeover/ui/components/ui/dialog";
+import { Gamepad2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const NB_BTN =
 	"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs";

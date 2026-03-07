@@ -1,7 +1,7 @@
+import { Button } from "@memeover/ui/components/ui/button";
+import { Separator } from "@memeover/ui/components/ui/separator";
 import { Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useOverlayFormContext } from "../form-hook";
 
 interface FormActionsProps {

@@ -1,10 +1,10 @@
+import { Badge } from "@memeover/ui/components/ui/badge";
+import { Button } from "@memeover/ui/components/ui/button";
+import { Separator } from "@memeover/ui/components/ui/separator";
 import { invoke } from "@tauri-apps/api/core";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
 	clearQueue,

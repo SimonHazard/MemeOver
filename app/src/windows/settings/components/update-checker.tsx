@@ -1,3 +1,16 @@
+import { Button } from "@memeover/ui/components/ui/button";
+import { NbCard } from "@memeover/ui/components/ui/card";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@memeover/ui/components/ui/dialog";
+import { Progress } from "@memeover/ui/components/ui/progress";
+import { ScrollArea } from "@memeover/ui/components/ui/scroll-area";
+import { Separator } from "@memeover/ui/components/ui/separator";
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowRight,
@@ -13,19 +26,6 @@ import { useTranslation } from "react-i18next";
 import type { Components } from "react-markdown";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { NbCard } from "@/components/ui/card";
-import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { type UpdateMeta, useUpdater } from "@/windows/settings/hooks/useUpdater";
 

@@ -1,13 +1,18 @@
+import { Badge } from "@memeover/ui/components/ui/badge";
+import { Button } from "@memeover/ui/components/ui/button";
+import { NbCard } from "@memeover/ui/components/ui/card";
+import { Separator } from "@memeover/ui/components/ui/separator";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@memeover/ui/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Bug, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { NbCard } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FullscreenInfoDialog } from "@/windows/settings/components/fullscreen-info-dialog";
 import { LangToggle } from "@/windows/settings/components/lang-toggle";
 import { ThemeToggle } from "@/windows/settings/components/theme-toggle";

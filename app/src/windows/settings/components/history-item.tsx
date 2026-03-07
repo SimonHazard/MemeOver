@@ -1,9 +1,9 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@memeover/ui/components/ui/avatar";
+import { Button } from "@memeover/ui/components/ui/button";
+import { Card } from "@memeover/ui/components/ui/card";
 import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Play, Video } from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { formatDate, formatTime } from "@/shared/helpers";
 import type { HistoryItem } from "@/shared/history";
 

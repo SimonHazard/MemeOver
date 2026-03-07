@@ -40,16 +40,6 @@
 	},
 	"overrides": [
 		{
-			"includes": ["app/src/components/ui/**"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noArrayIndexKey": "off"
-					}
-				}
-			}
-		},
-		{
 			"includes": ["app/src/App.css"],
 			"linter": {
 				"rules": {

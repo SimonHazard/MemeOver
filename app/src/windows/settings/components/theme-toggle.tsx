@@ -1,6 +1,6 @@
+import { Toggle } from "@memeover/ui/components/ui/toggle";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme";
-import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 
 const TOGGLE_CLASS = cn(

@@ -1,3 +1,4 @@
+import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import {
 	ArrowDown,
 	ArrowDownLeft,
@@ -10,7 +11,6 @@ import {
 	Crosshair,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import type { OverlayPosition } from "@/shared/types";
 

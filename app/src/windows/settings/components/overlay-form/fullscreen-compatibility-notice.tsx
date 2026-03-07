@@ -1,9 +1,9 @@
+import { Alert, AlertDescription, AlertTitle } from "@memeover/ui/components/ui/alert";
+import { Button } from "@memeover/ui/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Gamepad2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "memeover_fullscreen_notice_dismissed";
 

@@ -1,10 +1,17 @@
+import { Toaster, type ToasterProps } from "@memeover/ui/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { ThemeProvider } from "@/components/theme";
-import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider, useTheme } from "@/components/theme";
 import { TabNav } from "@/windows/settings/components/tab-nav";
 import appCss from "../App.css?url";
+
+// ─── Themed toaster — must live inside ThemeProvider ──────────────────────────
+
+function ThemedToaster(props: Omit<ToasterProps, "theme">) {
+	const { theme } = useTheme();
+	return <Toaster theme={theme} {...props} />;
+}
 
 // ─── Query client ─────────────────────────────────────────────────────────────
 
@@ -22,7 +29,7 @@ function RootLayout() {
 	return (
 		<ThemeProvider>
 			<QueryClientProvider client={queryClient}>
-				<Toaster richColors closeButton />
+				<ThemedToaster richColors closeButton />
 				<main className="h-screen flex flex-col bg-background">
 					<TabNav />
 					<AnimatePresence initial={false}>

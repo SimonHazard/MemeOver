@@ -1,6 +1,6 @@
+import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const ITEM_CLASS = [
 	"border-2 border-foreground/30",

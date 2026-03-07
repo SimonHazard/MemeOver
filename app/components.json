@@ -13,11 +13,11 @@
   "iconLibrary": "lucide",
   "rtl": false,
   "aliases": {
-    "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
+    "components": "@memeover/ui/components",
+    "utils": "@memeover/ui/lib/utils",
+    "ui": "@memeover/ui/components/ui",
+    "lib": "@memeover/ui/lib",
+    "hooks": "@memeover/ui/hooks"
   },
   "registries": {}
 }

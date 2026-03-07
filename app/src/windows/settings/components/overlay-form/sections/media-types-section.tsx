@@ -1,9 +1,9 @@
+import { Label } from "@memeover/ui/components/ui/label";
+import { Separator } from "@memeover/ui/components/ui/separator";
+import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Video } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { enabledTypesToList, listToEnabledTypes } from "@/shared/helpers";
 import { useOverlayFormContext } from "../form-hook";
 
