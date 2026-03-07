@@ -160,6 +160,19 @@
 		"upToDate": "You have the latest version",
 		"available": "Update v{{version}} available",
 		"download": "Download v{{version}}",
-		"error": "Error while checking for updates"
+		"error": "Error while checking for updates",
+		"retry": "Retry",
+		"viewUpdate": "View update",
+		"viewProgress": "View progress",
+		"dialogTitle": "Update v{{version}} available",
+		"currentLabel": "Current",
+		"newLabel": "New",
+		"changelog": "What's new",
+		"downloading": "Downloading… {{progress}}%",
+		"readyToInstall": "Ready to install",
+		"relaunch": "Relaunch & Install",
+		"later": "Later",
+		"downloadNow": "Download & Install",
+		"foundToast": "Update v{{version}} is available!"
 	}
 }
