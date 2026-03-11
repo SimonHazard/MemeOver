@@ -8,6 +8,7 @@ import { Separator } from "@memeover/ui/components/ui/separator";
 import { Switch } from "@memeover/ui/components/ui/switch";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -70,8 +71,9 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 			});
 			await persistSettings({ ...current, ...values });
 		},
-		onSuccess: () => {
+		onSuccess: async () => {
 			void queryClient.invalidateQueries({ queryKey: ["settings"] });
+			await invoke<void>("reload_overlay");
 			toast.success(t("toast.connectionSaved"));
 		},
 		onError: () => {
@@ -158,7 +160,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground"
+												className="border-2 border-input focus:border-foreground"
 											/>
 											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
 												<p className="text-xs text-destructive font-text">
@@ -188,7 +190,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground"
+												className="border-2 border-input focus:border-foreground"
 											/>
 											<p className="text-xs text-muted-foreground">
 												{t("connection.guildId_hint")}
@@ -222,7 +224,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground"
+												className="border-2 border-input focus:border-foreground"
 											/>
 											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
 												<p className="text-xs text-destructive font-text">

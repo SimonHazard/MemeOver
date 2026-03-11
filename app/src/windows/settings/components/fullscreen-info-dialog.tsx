@@ -38,7 +38,7 @@ export function FullscreenInfoDialog() {
 			>
 				<DialogHeader>
 					<div className="flex items-center gap-3">
-						<div className="size-9 rounded-lg bg-amber-400 border-2 border-foreground flex items-center justify-center shadow-[2px_2px_0px_0px_var(--nb-shadow)] shrink-0">
+						<div className="size-9 rounded-lg bg-primary border-2 border-foreground flex items-center justify-center shadow-[2px_2px_0px_0px_var(--nb-shadow)] shrink-0">
 							<Gamepad2 className="size-4 text-foreground" />
 						</div>
 						<DialogTitle className="font-display tracking-wide text-base">

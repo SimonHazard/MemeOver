@@ -35,10 +35,10 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 				"inline-flex items-center gap-2 px-3 py-1.5 rounded-lg",
 				// Neo-brutalist borders & shadow
 				"border-2 border-foreground",
-				"shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+				"shadow-[3px_3px_0px_0px_var(--nb-shadow)]",
 				// Hover micro-interaction — badge lifts and shadow extends
 				"transition-all duration-100 ease-out",
-				"hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
+				"hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)]",
 				// State-driven background
 				liveState === "active" && "bg-emerald-400 text-black",
 				liveState === "alone" && "bg-amber-300 text-black",

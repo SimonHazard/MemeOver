@@ -46,7 +46,7 @@ export function AboutPage() {
 							<TooltipProvider>
 								<Tooltip>
 									<TooltipTrigger asChild>
-										<Badge className="border-2 border-foreground rounded-md font-display text-xs tracking-wide bg-amber-400 text-foreground px-2 py-0.5 cursor-default select-none">
+										<Badge className="border-2 border-foreground rounded-md font-display text-xs tracking-wide bg-primary text-primary-foreground px-2 py-0.5 cursor-default select-none">
 											{t("about.betaTag")}
 										</Badge>
 									</TooltipTrigger>

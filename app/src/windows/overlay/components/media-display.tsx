@@ -159,8 +159,8 @@ export function MediaDisplay({
 					/>
 					{item.text && (
 						<p
-							style={{ textShadow: CAPTION_SHADOW }}
-							className="text-white text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
+							style={{ textShadow: CAPTION_SHADOW, color: settings.textColor }}
+							className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
 						>
 							{item.text}
 						</p>
@@ -171,8 +171,8 @@ export function MediaDisplay({
 			{/* ── Caption (image / gif / video) — always fully opaque ── */}
 			{item.media_type !== "audio" && item.text && (
 				<p
-					style={{ maxWidth: width, textShadow: CAPTION_SHADOW }}
-					className="text-white text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
+					style={{ maxWidth: width, textShadow: CAPTION_SHADOW, color: settings.textColor }}
+					className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
 				>
 					{item.text}
 				</p>

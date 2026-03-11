@@ -5,7 +5,7 @@ import { useTheme } from "@/components/theme";
 
 const TOGGLE_CLASS = cn(
 	"border-2 border-foreground/30",
-	"data-[state=on]:bg-primary-400 data-[state=on]:text-black",
+	"data-[state=on]:bg-primary-400 data-[state=on]:text-primary-foreground",
 	"data-[state=on]:border-foreground data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 	"hover:bg-primary-400/15 hover:border-foreground/60",
 	"transition-all",

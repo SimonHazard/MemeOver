@@ -46,8 +46,8 @@ export function TabNav() {
 							className={cn(
 								"h-8 gap-1.5 rounded-lg text-sm font-display tracking-wide border-2 transition-all cursor-pointer",
 								isActive
-									? "bg-primary-400 text-black border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] hover:bg-primary-400 hover:text-black dark:hover:bg-primary-400 -translate-x-px -translate-y-px"
-									: "bg-transparent text-muted-foreground border-transparent hover:text-foreground",
+									? "bg-primary-400 text-primary-foreground border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] hover:bg-primary-400 hover:text-primary-foreground dark:hover:bg-primary-400 -translate-x-px -translate-y-px"
+									: "bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:bg-accent",
 							)}
 						>
 							<Icon className="h-3.5 w-3.5" />

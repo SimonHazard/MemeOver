@@ -90,7 +90,7 @@ export function OverlayControls() {
 							className={cn(
 								NB_BTN_BASE,
 								"gap-1.5",
-								devPreviewActive && "bg-primary-400 text-black hover:bg-primary-500",
+								devPreviewActive && "bg-primary-400 text-primary-foreground hover:bg-primary-500",
 							)}
 							onClick={() => void handleToggleDevPreview()}
 						>
