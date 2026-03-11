@@ -2036,7 +2036,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "memeover"
-version = "0.9.2"
+version = "0.9.3"
 dependencies = [
  "objc2",
  "raw-window-handle",
