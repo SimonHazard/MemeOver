@@ -1,8 +1,8 @@
+import { Label } from "@memeover/ui/components/ui/label";
+import { Separator } from "@memeover/ui/components/ui/separator";
+import { Slider } from "@memeover/ui/components/ui/slider";
+import { Switch } from "@memeover/ui/components/ui/switch";
 import { useTranslation } from "react-i18next";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { ColorPicker } from "../../color-picker";
 import { useOverlayFormContext } from "../form-hook";

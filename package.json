@@ -1,7 +1,7 @@
 {
   "name": "memeover",
   "private": true,
-  "workspaces": ["bot", "app", "shared"],
+  "workspaces": ["bot", "app", "shared", "packages/ui"],
   "scripts": {
     "lint": "biome lint",
     "lint:fix": "biome lint --write",

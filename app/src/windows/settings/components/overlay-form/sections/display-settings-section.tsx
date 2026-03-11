@@ -1,10 +1,11 @@
+import { Label } from "@memeover/ui/components/ui/label";
+import { Separator } from "@memeover/ui/components/ui/separator";
+import { Slider } from "@memeover/ui/components/ui/slider";
+import { Switch } from "@memeover/ui/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
+import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
 import { Type } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { TextSize } from "@/shared/types";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { ColorPicker } from "../../color-picker";
@@ -13,9 +14,6 @@ import { PositionPreview } from "../../position-preview";
 import { useOverlayFormContext } from "../form-hook";
 
 const TEXT_SIZE_KEYS: TextSize[] = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"];
-
-const TOGGLE_ITEM_CLASS =
-	"gap-1.5 border-2 border-foreground/30 data-[state=on]:border-foreground data-[state=on]:bg-primary-400 data-[state=on]:text-black data-[state=off]:opacity-50 data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all font-display text-xs tracking-wide";
 
 export function DisplaySettingsSection() {
 	const form = useOverlayFormContext();
@@ -138,7 +136,7 @@ export function DisplaySettingsSection() {
 							className="flex flex-wrap gap-1.5 justify-start"
 						>
 							{TEXT_SIZE_KEYS.map((size) => (
-								<ToggleGroupItem key={size} value={size} size="sm" className={TOGGLE_ITEM_CLASS}>
+								<ToggleGroupItem key={size} value={size} size="sm" className={NB_TOGGLE_ITEM}>
 									<Type className="h-3.5 w-3.5" />
 									{size}
 								</ToggleGroupItem>

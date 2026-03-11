@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@memeover/ui/lib/utils";
 import type { OverlayPosition } from "@/shared/types";
 
 const PREVIEW_POSITION_CLASSES: Record<OverlayPosition, string> = {
@@ -21,7 +21,7 @@ interface PositionPreviewProps {
 
 export function PositionPreview({ position, mediaSize, label }: PositionPreviewProps) {
 	return (
-		<div className="relative w-full aspect-video bg-white dark:bg-zinc-950 rounded-lg border border-border overflow-hidden">
+		<div className="relative w-full aspect-video bg-background rounded-lg border border-border overflow-hidden">
 			<div
 				className={cn(
 					PREVIEW_POSITION_CLASSES[position],

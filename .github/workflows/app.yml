@@ -7,10 +7,12 @@ on:
       - main
     paths:
       - "app/**"
+      - "packages/ui/**"
       - ".github/workflows/app.yml"
   pull_request:
     paths:
       - "app/**"
+      - "packages/ui/**"
       - ".github/workflows/app.yml"
 
 jobs:

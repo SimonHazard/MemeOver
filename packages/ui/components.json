@@ -1,0 +1,23 @@
+{
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "new-york",
+	"rsc": false,
+	"tsx": true,
+	"tailwind": {
+		"config": "",
+		"css": "src/theme.css",
+		"baseColor": "neutral",
+		"cssVariables": true,
+		"prefix": ""
+	},
+	"iconLibrary": "lucide",
+	"rtl": false,
+	"aliases": {
+		"components": "@memeover/ui/components",
+		"utils": "@memeover/ui/lib/utils",
+		"ui": "@memeover/ui/components/ui",
+		"lib": "@memeover/ui/lib",
+		"hooks": "@memeover/ui/hooks"
+	},
+	"registries": {}
+}

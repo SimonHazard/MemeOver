@@ -1,5 +1,5 @@
+import { Skeleton } from "@memeover/ui/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@/components/ui/skeleton";
 import { loadSettings } from "@/shared/settings";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { OverlayForm } from "../components/overlay-form/overlay-form";

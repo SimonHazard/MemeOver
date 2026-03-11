@@ -1,9 +1,11 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@memeover/ui/components/ui/avatar";
+import { Button } from "@memeover/ui/components/ui/button";
+import { Card } from "@memeover/ui/components/ui/card";
+import { NB_BTN_DISABLED, NB_HOVER_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
+import { cn } from "@memeover/ui/lib/utils";
 import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Play, Video } from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { formatDate, formatTime } from "@/shared/helpers";
 import type { HistoryItem } from "@/shared/history";
 
@@ -57,7 +59,12 @@ export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryIte
 	const initials = displayName.charAt(0).toUpperCase();
 
 	return (
-		<Card className="px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-all">
+		<Card
+			className={cn(
+				"px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 transition-all",
+				NB_HOVER_SHADOW_SM,
+			)}
+		>
 			<div className="flex items-center gap-3">
 				{/* ── Avatar ── */}
 				<Avatar className="w-8 h-8 shrink-0 border-2 border-foreground/20">
@@ -88,7 +95,12 @@ export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryIte
 				<Button
 					variant="outline"
 					size="icon"
-					className="shrink-0 border-2 border-foreground/30 hover:border-foreground hover:bg-primary-400/10 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all disabled:opacity-40 disabled:shadow-none disabled:pointer-events-none"
+					className={cn(
+						"shrink-0 border-2 border-foreground/30",
+						cn("hover:border-foreground hover:bg-primary-400/10", NB_HOVER_SHADOW_SM),
+						"active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all",
+						NB_BTN_DISABLED,
+					)}
 					title={t("history.replay")}
 					disabled={disabled}
 					onClick={() => onReplay(item)}

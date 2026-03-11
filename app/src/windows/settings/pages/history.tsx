@@ -1,11 +1,11 @@
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
+import { Separator } from "@memeover/ui/components/ui/separator";
+import { Skeleton } from "@memeover/ui/components/ui/skeleton";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useTauriEventVersion } from "@/hooks/useTauriEvent";
 import type { HistoryItem } from "@/shared/history";
 import { clearHistory, loadHistory, replayHistoryItem } from "@/shared/history";
@@ -59,15 +59,15 @@ export function HistoryPage() {
 				<div className="flex items-center justify-between">
 					<h1 className="font-display text-xl tracking-wide">{t("history.title")}</h1>
 					{items.length > 0 && (
-						<Button
+						<NbButton
 							variant="outline"
 							size="sm"
-							className="border-2 border-foreground text-destructive hover:text-destructive shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display text-xs tracking-wide gap-1"
+							className="text-destructive hover:text-destructive gap-1"
 							onClick={() => doClear()}
 						>
 							<Trash2 className="h-3.5 w-3.5" />
 							{t("history.clearAll")}
-						</Button>
+						</NbButton>
 					)}
 				</div>
 

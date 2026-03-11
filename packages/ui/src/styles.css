@@ -1,0 +1,5 @@
+/* This file is intentionally empty.
+   All shared design tokens live in packages/ui/src/theme.css.
+   The shadcn CLI targets theme.css via packages/ui/components.json → "css": "src/theme.css".
+   App-specific styles (fonts, overlay rules) stay in app/src/App.css.
+   Do NOT add styles here. */

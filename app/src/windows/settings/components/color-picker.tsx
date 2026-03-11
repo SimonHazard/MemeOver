@@ -1,9 +1,14 @@
+import { Button } from "@memeover/ui/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@memeover/ui/components/ui/tooltip";
+import { cn } from "@memeover/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Palette, RotateCcw } from "lucide-react";
 import { useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 const SWATCHES = [
 	// Grayscale (Zinc)

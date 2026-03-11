@@ -1,3 +1,13 @@
+import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
+import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { Alert, AlertDescription } from "@memeover/ui/components/ui/alert";
+import { Button } from "@memeover/ui/components/ui/button";
+import { Input } from "@memeover/ui/components/ui/input";
+import { Label } from "@memeover/ui/components/ui/label";
+import { Separator } from "@memeover/ui/components/ui/separator";
+import { Switch } from "@memeover/ui/components/ui/switch";
+import { NB_BTN_DISABLED, NB_BTN_LG } from "@memeover/ui/lib/nb-classes";
+import { cn } from "@memeover/ui/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
@@ -5,16 +15,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { NbCard } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { useTauriEvent } from "@/hooks/useTauriEvent";
-import { statusVariant } from "@/shared/helpers";
+import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import type { Settings, WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
@@ -70,8 +72,11 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 			});
 			await persistSettings({ ...current, ...values });
 		},
-		onSuccess: () => {
+		onSuccess: async () => {
 			void queryClient.invalidateQueries({ queryKey: ["settings"] });
+			try {
+				await reloadOverlay();
+			} catch {} // best-effort: overlay may not be open yet
 			toast.success(t("toast.connectionSaved"));
 		},
 		onError: () => {
@@ -128,12 +133,9 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 						<div className="space-y-5">
 							<div className="flex items-center justify-between">
 								<h2 className="font-display text-base tracking-wide">{t("connection.title")}</h2>
-								<Badge
-									variant={statusVariant(wsStatus)}
-									className="border-2 border-foreground rounded-md font-display text-xs tracking-wide px-2 py-0.5"
-								>
+								<NbBadge variant={statusVariant(wsStatus)} className="px-2 py-0.5">
 									{t(`status.${wsStatus}`)}
-								</Badge>
+								</NbBadge>
 							</div>
 
 							<Separator />
@@ -158,7 +160,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground"
+												className="border-2 border-input focus:border-foreground"
 											/>
 											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
 												<p className="text-xs text-destructive font-text">
@@ -188,7 +190,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground"
+												className="border-2 border-input focus:border-foreground"
 											/>
 											<p className="text-xs text-muted-foreground">
 												{t("connection.guildId_hint")}
@@ -222,7 +224,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground"
+												className="border-2 border-input focus:border-foreground"
 											/>
 											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
 												<p className="text-xs text-destructive font-text">
@@ -240,7 +242,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 									<Button
 										type="submit"
 										disabled={isSubmitting || !values.wsUrl || !values.guildId || !values.token}
-										className="w-full border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all font-display tracking-wide disabled:opacity-40 disabled:shadow-none"
+										className={cn(NB_BTN_LG, NB_BTN_DISABLED, "w-full")}
 									>
 										{isSubmitting ? t("connection.saving") : t("connection.save")}
 									</Button>
