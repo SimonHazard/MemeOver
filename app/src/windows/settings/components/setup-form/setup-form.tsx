@@ -8,14 +8,13 @@ import { Separator } from "@memeover/ui/components/ui/separator";
 import { Switch } from "@memeover/ui/components/ui/switch";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
 import { useTauriEvent } from "@/hooks/useTauriEvent";
-import { statusVariant } from "@/shared/helpers";
+import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import type { Settings, WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
@@ -73,7 +72,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 		},
 		onSuccess: async () => {
 			void queryClient.invalidateQueries({ queryKey: ["settings"] });
-			await invoke<void>("reload_overlay");
+			try { await reloadOverlay(); } catch {} // best-effort: overlay may not be open yet
 			toast.success(t("toast.connectionSaved"));
 		},
 		onError: () => {
