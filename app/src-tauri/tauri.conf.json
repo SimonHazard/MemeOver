@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "memeover",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "identifier": "com.simonhazard.memeover",
   "build": {
     "beforeDevCommand": "bun --bun run dev",
@@ -34,7 +34,7 @@
         "https://github.com/simonhazard/MemeOver/releases/latest/download/latest.json"
       ],
       "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1MjE3RkU0QjIyRjgyQ0YKUldUUGdpK3k1SDhoaGIxU0dMbEtHM1VEd3krSXN5b2czMTJTNUdtTEtIVE05clM4SVZaL0pIVDIK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENBN0M3QkI3RkYwRTQ1ODAKUldTQVJRNy90M3Q4eWk2Yy93d1V2eXdJTk5wTEJFeUpObFg5WEJQL3NKSW5LYXZ1cEVybFVwSU8K"
     }
   },
   "bundle": {
