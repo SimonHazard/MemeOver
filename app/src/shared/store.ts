@@ -1,6 +1,8 @@
 import { emit, listen } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";
+import { toast } from "sonner";
 import { create } from "zustand";
+import i18n from "@/i18n";
 import type { DisplayQueueItem, OverlayHealth, Settings, WsStatus } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 
@@ -122,8 +124,19 @@ export async function initOverlayStore(): Promise<void> {
  * - Subscribes to "member-count-changed" Tauri events emitted by the overlay window
  */
 export async function initSettingsStore(): Promise<void> {
+	// Track previous status to fire toasts only on genuine transitions.
+	// This runs entirely outside React — toast() and i18n.t() are both safe here.
+	let prevWsStatus: WsStatus = "disconnected";
+
 	await listen<WsStatus>("ws-status-changed", (event) => {
-		useAppStore.getState().setWsStatus(event.payload);
+		const status = event.payload;
+		if (status === "connected" && prevWsStatus !== "connected") {
+			toast.success(i18n.t("toast.wsConnected"));
+		} else if (status === "error" && prevWsStatus !== "error") {
+			toast.error(i18n.t("toast.wsError"));
+		}
+		prevWsStatus = status;
+		useAppStore.getState().setWsStatus(status);
 	});
 
 	await listen<OverlayHealth>("overlay-health-changed", (event) => {
