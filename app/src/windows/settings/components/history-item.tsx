@@ -60,7 +60,10 @@ export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryIte
 
 	return (
 		<Card
-			className={cn("px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 transition-all", NB_HOVER_SHADOW_SM)}
+			className={cn(
+				"px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 transition-all",
+				NB_HOVER_SHADOW_SM,
+			)}
 		>
 			<div className="flex items-center gap-3">
 				{/* ── Avatar ── */}

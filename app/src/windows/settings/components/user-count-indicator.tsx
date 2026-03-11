@@ -40,7 +40,7 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 				// Hover micro-interaction — badge lifts and shadow extends
 				"transition-all duration-100 ease-out",
 				"hover:-translate-x-px hover:-translate-y-px",
-			NB_HOVER_SHADOW_LG,
+				NB_HOVER_SHADOW_LG,
 				// State-driven background
 				liveState === "active" && "bg-emerald-400 text-black",
 				liveState === "alone" && "bg-amber-300 text-black",
