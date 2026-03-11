@@ -1,15 +1,7 @@
 import { Toggle } from "@memeover/ui/components/ui/toggle";
-import { cn } from "@memeover/ui/lib/utils";
+import { NB_TOGGLE } from "@memeover/ui/lib/nb-classes";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme";
-
-const TOGGLE_CLASS = cn(
-	"border-2 border-foreground/30",
-	"data-[state=on]:bg-primary-400 data-[state=on]:text-primary-foreground",
-	"data-[state=on]:border-foreground data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
-	"hover:bg-primary-400/15 hover:border-foreground/60",
-	"transition-all",
-);
 
 export function ThemeToggle() {
 	const { theme, toggleTheme } = useTheme();
@@ -18,7 +10,7 @@ export function ThemeToggle() {
 			pressed={theme === "dark"}
 			onPressedChange={toggleTheme}
 			aria-label="Toggle theme"
-			className={TOGGLE_CLASS}
+			className={NB_TOGGLE}
 		>
 			{theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
 		</Toggle>

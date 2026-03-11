@@ -1,11 +1,11 @@
 import { Label } from "@memeover/ui/components/ui/label";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
+import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
 import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Video } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { enabledTypesToList, listToEnabledTypes } from "@/shared/helpers";
-import { TOGGLE_ITEM_CLASS } from "../constants";
 import { useOverlayFormContext } from "../form-hook";
 
 const MEDIA_TYPE_KEYS = ["image", "gif", "video", "audio", "text"] as const;
@@ -46,12 +46,7 @@ export function MediaTypesSection() {
 								{MEDIA_TYPE_KEYS.map((value) => {
 									const Icon = MEDIA_TYPE_ICONS[value];
 									return (
-										<ToggleGroupItem
-											key={value}
-											value={value}
-											size="sm"
-											className={TOGGLE_ITEM_CLASS}
-										>
+										<ToggleGroupItem key={value} value={value} size="sm" className={NB_TOGGLE_ITEM}>
 											<Icon className="h-3.5 w-3.5" />
 											{t(`display.type_${value}`)}
 										</ToggleGroupItem>

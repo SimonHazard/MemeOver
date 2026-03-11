@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		// allowImportingTsExtensions requires noEmit:true — remove both for build output
+		"allowImportingTsExtensions": false,
+		"noEmit": false,
+		"declaration": true,
+		"declarationDir": "dist",
+		"emitDeclarationOnly": false
+	}
+}

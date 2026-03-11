@@ -1,4 +1,4 @@
-import { NbCard } from "@memeover/ui/components/ui/card";
+import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import type { Settings } from "@/shared/types";
 import { FullscreenCompatibilityNotice } from "./fullscreen-compatibility-notice";
 import { BackgroundSettingsSection } from "./sections/background-settings-section";

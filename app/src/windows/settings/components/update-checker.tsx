@@ -1,5 +1,6 @@
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
+import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Button } from "@memeover/ui/components/ui/button";
-import { NbCard } from "@memeover/ui/components/ui/card";
 import {
 	Dialog,
 	DialogClose,
@@ -11,6 +12,7 @@ import {
 import { Progress } from "@memeover/ui/components/ui/progress";
 import { ScrollArea } from "@memeover/ui/components/ui/scroll-area";
 import { Separator } from "@memeover/ui/components/ui/separator";
+import { NB_SHADOW_LG, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -28,11 +30,6 @@ import type { Components } from "react-markdown";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
 import { type UpdateMeta, useUpdater } from "@/windows/settings/hooks/useUpdater";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const NB_BTN =
-	"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none";
 
 // ─── Markdown components (styled to match the NB design) ─────────────────────
 
@@ -76,7 +73,7 @@ function VersionChip({
 			transition={{ delay, duration: 0.25, ease: "easeOut" }}
 			className={cn(
 				"flex-1 border-2 border-foreground p-3 text-center",
-				highlight && "bg-primary/5 shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
+				highlight && `bg-primary/5 ${NB_SHADOW_SM}`,
 			)}
 		>
 			<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-display mb-1">
@@ -176,27 +173,27 @@ function UpdateDialogContent({
 				{/* Close (later) — always available unless ready to install */}
 				{!isReady && (
 					<DialogClose asChild>
-						<Button variant="outline" size="sm" className={NB_BTN} disabled={isDownloading}>
+						<NbButton variant="outline" size="sm" disabled={isDownloading}>
 							{t("updater.later")}
-						</Button>
+						</NbButton>
 					</DialogClose>
 				)}
 
 				{/* Primary action */}
 				{isReady ? (
-					<Button size="sm" className={NB_BTN} onClick={onInstall}>
+					<NbButton size="sm" onClick={onInstall}>
 						<Rocket className="size-3.5" aria-hidden="true" />
 						{t("updater.relaunch")}
-					</Button>
+					</NbButton>
 				) : (
-					<Button size="sm" className={NB_BTN} onClick={onDownload} disabled={isDownloading}>
+					<NbButton size="sm" onClick={onDownload} disabled={isDownloading}>
 						{isDownloading ? (
 							<Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
 						) : (
 							<Download className="size-3.5" aria-hidden="true" />
 						)}
 						{isDownloading ? t("updater.downloading", { progress }) : t("updater.downloadNow")}
-					</Button>
+					</NbButton>
 				)}
 			</DialogFooter>
 		</>
@@ -258,22 +255,18 @@ export function UpdateChecker() {
 					<div className="flex items-center gap-3 min-h-8">
 						{/* idle */}
 						{state.status === "idle" && (
-							<Button
-								variant="outline"
-								className={cn(NB_BTN, "flex-1")}
-								onClick={() => void handleCheck()}
-							>
+							<NbButton variant="outline" className="flex-1" onClick={() => void handleCheck()}>
 								<RefreshCw className="size-3.5" aria-hidden="true" />
 								{t("updater.check")}
-							</Button>
+							</NbButton>
 						)}
 
 						{/* checking */}
 						{state.status === "checking" && (
-							<Button variant="outline" className={cn(NB_BTN, "flex-1")} disabled>
+							<NbButton variant="outline" className="flex-1" disabled>
 								<Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
 								{t("updater.checking")}
-							</Button>
+							</NbButton>
 						)}
 
 						{/* up-to-date */}
@@ -301,10 +294,10 @@ export function UpdateChecker() {
 								<span className="text-sm font-text">
 									{t("updater.available", { version: state.version })}
 								</span>
-								<Button size="sm" className={NB_BTN} onClick={() => setDialogOpen(true)}>
+								<NbButton size="sm" onClick={() => setDialogOpen(true)}>
 									<Download className="size-3.5" aria-hidden="true" />
 									{t("updater.viewUpdate")}
-								</Button>
+								</NbButton>
 							</div>
 						)}
 
@@ -338,10 +331,10 @@ export function UpdateChecker() {
 									<CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
 									{t("updater.readyToInstall")}
 								</span>
-								<Button size="sm" className={NB_BTN} onClick={() => setDialogOpen(true)}>
+								<NbButton size="sm" onClick={() => setDialogOpen(true)}>
 									<Rocket className="size-3.5" aria-hidden="true" />
 									{t("updater.relaunch")}
-								</Button>
+								</NbButton>
 							</div>
 						)}
 
@@ -352,10 +345,9 @@ export function UpdateChecker() {
 									<TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
 									{t("updater.error")}
 								</span>
-								<Button
+								<NbButton
 									variant="outline"
 									size="sm"
-									className={NB_BTN}
 									onClick={() => {
 										reset();
 										void handleCheck();
@@ -363,7 +355,7 @@ export function UpdateChecker() {
 								>
 									<RefreshCw className="size-3.5" aria-hidden="true" />
 									{t("updater.retry")}
-								</Button>
+								</NbButton>
 							</div>
 						)}
 					</div>
@@ -381,7 +373,7 @@ export function UpdateChecker() {
 			>
 				<DialogContent
 					showCloseButton={state.status !== "downloading"}
-					className="border-2 border-foreground shadow-[4px_4px_0px_0px_var(--nb-shadow)] sm:max-w-xl gap-5"
+					className={`border-2 border-foreground ${NB_SHADOW_LG} sm:max-w-xl gap-5`}
 				>
 					{dialogMeta && (
 						<UpdateDialogContent

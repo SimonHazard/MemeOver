@@ -72,23 +72,6 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-// ─── NbCard — Neubrutaliste variant of Card ───────────────────────────────────
-// Overrides the default shadcn Card with thick border + solid offset shadow.
-// Use this for all primary content cards in the settings window.
-// Pass additional className to further customise (e.g. NbCard className="my-8").
-
-function NbCard({ className, ...props }: React.ComponentProps<"div">) {
-	return (
-		<Card
-			className={cn(
-				"border-2 border-foreground p-5 gap-0 shadow-[4px_4px_0px_0px_var(--nb-shadow)]",
-				className,
-			)}
-			{...props}
-		/>
-	);
-}
-
 export {
 	Card,
 	CardHeader,
@@ -97,5 +80,4 @@ export {
 	CardAction,
 	CardDescription,
 	CardContent,
-	NbCard,
 };

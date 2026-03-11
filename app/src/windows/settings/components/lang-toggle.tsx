@@ -1,14 +1,7 @@
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
+import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-
-const ITEM_CLASS = [
-	"border-2 border-foreground/30",
-	"data-[state=on]:bg-primary-400 data-[state=on]:text-primary-foreground",
-	"data-[state=on]:border-foreground data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
-	"hover:bg-primary-400/15 hover:border-foreground/60",
-	"transition-all font-display text-xs tracking-wide",
-].join(" ");
 
 export function LangToggle() {
 	const { i18n } = useTranslation();
@@ -27,10 +20,10 @@ export function LangToggle() {
 
 	return (
 		<ToggleGroup type="single" value={currentLang} onValueChange={handleChange} aria-label="Langue">
-			<ToggleGroupItem value="fr" aria-label="Français" className={ITEM_CLASS}>
+			<ToggleGroupItem value="fr" aria-label="Français" className={NB_TOGGLE_ITEM}>
 				FR
 			</ToggleGroupItem>
-			<ToggleGroupItem value="en" aria-label="English" className={ITEM_CLASS}>
+			<ToggleGroupItem value="en" aria-label="English" className={NB_TOGGLE_ITEM}>
 				EN
 			</ToggleGroupItem>
 		</ToggleGroup>

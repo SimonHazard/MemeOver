@@ -1,6 +1,6 @@
-import { Badge } from "@memeover/ui/components/ui/badge";
-import { Button } from "@memeover/ui/components/ui/button";
-import { NbCard } from "@memeover/ui/components/ui/card";
+import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
+import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import {
 	Tooltip,
@@ -8,6 +8,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@memeover/ui/components/ui/tooltip";
+import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -40,15 +41,15 @@ export function AboutPage() {
 							<p className="text-xs text-muted-foreground mt-1 font-text">{t("app.subtitle")}</p>
 						</div>
 						<div className="flex items-center gap-2 mt-0.5 shrink-0">
-							<Badge className="border-2 border-foreground rounded-md font-display text-xs tracking-wide bg-secondary-500 text-white px-2 py-0.5">
+							<NbBadge className="bg-secondary-500 text-white px-2 py-0.5">
 								{appVersion ? `v${appVersion}` : "v—"}
-							</Badge>
+							</NbBadge>
 							<TooltipProvider>
 								<Tooltip>
 									<TooltipTrigger asChild>
-										<Badge className="border-2 border-foreground rounded-md font-display text-xs tracking-wide bg-primary text-primary-foreground px-2 py-0.5 cursor-default select-none">
+										<NbBadge className="bg-primary text-primary-foreground px-2 py-0.5 cursor-default select-none">
 											{t("about.betaTag")}
-										</Badge>
+										</NbBadge>
 									</TooltipTrigger>
 									<TooltipContent
 										side="bottom"
@@ -85,7 +86,7 @@ export function AboutPage() {
 				{/* ── Bug report card ── */}
 				<NbCard>
 					<div className="flex items-start gap-4">
-						<div className="p-2.5 border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] shrink-0">
+						<div className={`p-2.5 border-2 border-foreground ${NB_SHADOW_SM} shrink-0`}>
 							<Bug className="size-5" aria-hidden="true" />
 						</div>
 						<div className="flex-1 min-w-0 space-y-3">
@@ -97,14 +98,13 @@ export function AboutPage() {
 									{t("about.bugReportDesc")}
 								</p>
 							</div>
-							<Button
+							<NbButton
 								size="sm"
-								className="border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] font-display"
 								onClick={() => openUrl("https://github.com/SimonHazard/MemeOver/issues")}
 							>
 								<ExternalLink className="size-3.5" aria-hidden="true" />
 								{t("about.bugReportButton")}
-							</Button>
+							</NbButton>
 						</div>
 					</div>
 				</NbCard>

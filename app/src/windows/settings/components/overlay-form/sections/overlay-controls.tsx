@@ -1,5 +1,6 @@
+import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { Badge } from "@memeover/ui/components/ui/badge";
-import { Button } from "@memeover/ui/components/ui/button";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { cn } from "@memeover/ui/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
@@ -14,11 +15,6 @@ import {
 	showOverlay,
 } from "@/shared/helpers";
 import { useAppStore } from "@/shared/store";
-
-const NB_BTN_BASE =
-	"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all font-display tracking-wide text-xs";
-const NB_BTN = `w-full ${NB_BTN_BASE}`;
-const NB_BTN_DISABLED = "disabled:opacity-40 disabled:shadow-none";
 
 export function OverlayControls() {
 	const { t } = useTranslation();
@@ -38,36 +34,33 @@ export function OverlayControls() {
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<h2 className="font-display text-base tracking-wide">{t("overlay.controls")}</h2>
-				<Badge
-					variant={overlayHealthVariant(overlayHealth)}
-					className="border-2 border-foreground rounded-md font-display text-xs tracking-wide px-2 py-0.5"
-				>
+				<NbBadge variant={overlayHealthVariant(overlayHealth)} className="px-2 py-0.5">
 					{t(`health.${overlayHealth}`)}
-				</Badge>
+				</NbBadge>
 			</div>
 
 			<Separator />
 
 			<div className="grid grid-cols-3 gap-2">
-				<Button variant="outline" className={NB_BTN} onClick={() => void showOverlay()}>
+				<NbButton variant="outline" className="w-full" onClick={() => void showOverlay()}>
 					{t("overlay.show")}
-				</Button>
-				<Button
+				</NbButton>
+				<NbButton
 					variant="outline"
-					className={cn(NB_BTN, NB_BTN_DISABLED)}
+					className="w-full"
 					disabled={!overlayAlive}
 					onClick={() => void reloadOverlay()}
 				>
 					{t("overlay.reload")}
-				</Button>
-				<Button
+				</NbButton>
+				<NbButton
 					variant="destructive"
-					className={cn(NB_BTN, NB_BTN_DISABLED)}
+					className="w-full"
 					disabled={!overlayAlive}
 					onClick={() => void quitOverlay()}
 				>
 					{t("overlay.close")}
-				</Button>
+				</NbButton>
 			</div>
 
 			<Separator />
@@ -84,11 +77,10 @@ export function OverlayControls() {
 								DEV
 							</Badge>
 						</div>
-						<Button
+						<NbButton
 							variant={devPreviewActive ? "default" : "outline"}
 							size="sm"
 							className={cn(
-								NB_BTN_BASE,
 								"gap-1.5",
 								devPreviewActive && "bg-primary-400 text-primary-foreground hover:bg-primary-500",
 							)}
@@ -96,7 +88,7 @@ export function OverlayControls() {
 						>
 							{devPreviewActive ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
 							{devPreviewActive ? t("overlay.dev_preview_exit") : t("overlay.dev_preview_enter")}
-						</Button>
+						</NbButton>
 					</div>
 					<Separator />
 				</>
@@ -111,14 +103,9 @@ export function OverlayControls() {
 						</Badge>
 					)}
 				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					className={NB_BTN_BASE}
-					onClick={() => void clearQueue()}
-				>
+				<NbButton variant="outline" size="sm" onClick={() => void clearQueue()}>
 					{t("actions.clearQueue")}
-				</Button>
+				</NbButton>
 			</div>
 		</div>
 	);

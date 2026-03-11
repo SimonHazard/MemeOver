@@ -1,5 +1,5 @@
-import { Button } from "@memeover/ui/components/ui/button";
-import { NbCard } from "@memeover/ui/components/ui/card";
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
+import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Progress } from "@memeover/ui/components/ui/progress";
@@ -41,9 +41,6 @@ const fieldVariants: Variants = {
 	hidden: { opacity: 0, y: 8 },
 	visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
 };
-
-const BTN_NB =
-	"border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-[box-shadow,transform,opacity] font-display tracking-wide";
 
 // ─── Wizard ───────────────────────────────────────────────────────────────────
 
@@ -240,35 +237,35 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 				{/* Navigation */}
 				<div className="flex gap-3">
 					{step === 1 && (
-						<Button variant="outline" onClick={retreat} className={`flex-1 ${BTN_NB}`}>
+						<NbButton variant="outline" className="flex-1" onClick={retreat}>
 							{t("onboarding.prev")}
-						</Button>
+						</NbButton>
 					)}
 
 					{step === 0 && (
-						<Button onClick={advance} className={`w-full ${BTN_NB}`}>
+						<NbButton className="w-full" onClick={advance}>
 							{t("onboarding.next")}
-						</Button>
+						</NbButton>
 					)}
 
 					{step === 1 && (
 						<form.Subscribe selector={(s) => [s.isSubmitting, s.canSubmit] as const}>
 							{([isSubmitting, canSubmit]) => (
-								<Button
+								<NbButton
+									className="flex-1"
 									onClick={() => void form.handleSubmit()}
 									disabled={isSubmitting || !canSubmit}
-									className={`flex-1 ${BTN_NB}`}
 								>
 									{isPending ? t("connection.saving") : t("onboarding.next")}
-								</Button>
+								</NbButton>
 							)}
 						</form.Subscribe>
 					)}
 
 					{step === 2 && (
-						<Button onClick={dismiss} className={`w-full ${BTN_NB}`}>
+						<NbButton className="w-full" onClick={dismiss}>
 							{t("onboarding.finish")}
-						</Button>
+						</NbButton>
 					)}
 				</div>
 			</div>

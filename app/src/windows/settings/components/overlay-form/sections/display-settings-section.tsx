@@ -3,6 +3,7 @@ import { Separator } from "@memeover/ui/components/ui/separator";
 import { Slider } from "@memeover/ui/components/ui/slider";
 import { Switch } from "@memeover/ui/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
+import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
 import { Type } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TextSize } from "@/shared/types";
@@ -10,7 +11,6 @@ import { DEFAULT_SETTINGS } from "@/shared/types";
 import { ColorPicker } from "../../color-picker";
 import { PositionGrid } from "../../position-grid";
 import { PositionPreview } from "../../position-preview";
-import { TOGGLE_ITEM_CLASS } from "../constants";
 import { useOverlayFormContext } from "../form-hook";
 
 const TEXT_SIZE_KEYS: TextSize[] = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"];
@@ -136,7 +136,7 @@ export function DisplaySettingsSection() {
 							className="flex flex-wrap gap-1.5 justify-start"
 						>
 							{TEXT_SIZE_KEYS.map((size) => (
-								<ToggleGroupItem key={size} value={size} size="sm" className={TOGGLE_ITEM_CLASS}>
+								<ToggleGroupItem key={size} value={size} size="sm" className={NB_TOGGLE_ITEM}>
 									<Type className="h-3.5 w-3.5" />
 									{size}
 								</ToggleGroupItem>

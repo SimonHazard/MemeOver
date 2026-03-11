@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@memeover/ui/components/ui/alert";
 import { Button } from "@memeover/ui/components/ui/button";
+import { NB_SHADOW_LG } from "@memeover/ui/lib/nb-classes";
 import { AnimatePresence, motion } from "framer-motion";
 import { Gamepad2, X } from "lucide-react";
 import { useState } from "react";
@@ -34,7 +35,9 @@ export function FullscreenCompatibilityNotice() {
 					exit={{ opacity: 0, y: -6 }}
 					transition={{ duration: 0.18, ease: "easeOut" }}
 				>
-					<Alert className="relative border-2 border-foreground bg-amber-50 dark:bg-amber-950/25 shadow-[4px_4px_0px_0px_var(--nb-shadow)] pr-10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400">
+					<Alert
+						className={`relative border-2 border-foreground bg-amber-50 dark:bg-amber-950/25 ${NB_SHADOW_LG} pr-10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400`}
+					>
 						<Gamepad2 />
 
 						<AlertTitle className="font-display tracking-wide">
