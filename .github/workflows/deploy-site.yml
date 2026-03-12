@@ -94,20 +94,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # On récupère le dist/ pré-compilé — pas besoin de réinstaller les deps.
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Installe les deps (dont wrangler) depuis le lockfile exact.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # On récupère le dist/ pré-compilé — pas besoin de rebuilder.
       - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
           name: site-dist
           path: site/dist
 
+      # wranglerVersion: "" → l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: site
-          packageManager: bun
+          wranglerVersion: ""
           command: deploy
 
   # ── 3. Deploy — Preview (pull requests) ──────────────────────────────────────
@@ -132,12 +142,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Installe les deps (dont wrangler) depuis le lockfile exact.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
       - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
           name: site-dist
           path: site/dist
 
+      # wranglerVersion: "" → l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
       - name: Deploy to Cloudflare Workers (preview)
         id: deploy
         uses: cloudflare/wrangler-action@v3
@@ -145,7 +165,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: site
-          packageManager: bun
+          wranglerVersion: ""
           command: deploy --env preview
 
       # Poste ou met à jour un seul commentaire par PR (cherche le tag 🌐 Site preview).
