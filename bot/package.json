@@ -8,7 +8,7 @@
 	"dependencies": {
 		"@memeover/shared": "workspace:*",
 		"discord.js": "^14.25.1",
-		"elysia": "1.4.25",
+		"elysia": "^1.4.25",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {

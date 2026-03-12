@@ -105,9 +105,8 @@ export const guildRegistry = {
 	verifyToken(guildId: string, token: string): boolean {
 		const stored = registry[guildId]?.token;
 		if (!stored) return false;
-		const a = Buffer.from(stored.padEnd(64));
-		const b = Buffer.from(token.padEnd(64));
-		return timingSafeEqual(a, b);
+		if (stored.length !== token.length) return false;
+		return timingSafeEqual(Buffer.from(stored), Buffer.from(token));
 	},
 
 	isChannelAllowed(guildId: string, channelId: string): boolean {

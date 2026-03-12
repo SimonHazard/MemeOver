@@ -22,7 +22,12 @@ const ALLOWED_MEDIA_HOSTS = new Set([
 	"i.imgur.com",
 ]);
 
-/** Returns true if the Discord CDN URL has an `ex=` expiry param that is in the past. */
+/**
+ * Returns true if the Discord CDN URL has an `ex=` expiry param that is in the past.
+ * Discord attachment URLs carry three query params: `ex` (expiry, hex Unix seconds),
+ * `is` (issued-at, hex Unix seconds), and `hm` (HMAC signature).
+ * Ref: https://discord.com/developers/docs/reference#cdn-formatting
+ */
 function isCdnUrlExpired(url: string): boolean {
 	try {
 		const ex = new URL(url).searchParams.get("ex");
@@ -142,7 +147,10 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 
 /** Extract caption text from a message, stripping out URLs. Truncated to 140 chars. */
 export function extractText(message: Message | PartialMessage): string | undefined {
-	const raw = (message.content ?? "").replace(/https?:\/\/\S+/g, "").trim();
+	const stripped = (message.content ?? "").replace(/https?:\/\/\S+/g, "").trim();
+	// Strip Unicode control characters (Cc + Cn categories) that could cause
+	// visual spoofing via RTL-override, zero-width joiners, etc.
+	const raw = stripped.replace(/[\p{Cc}\p{Cn}]/gu, "").trim();
 	if (raw.length === 0) return undefined;
 	return raw.length > 140 ? `${raw.slice(0, 140).trimEnd()}…` : raw;
 }
