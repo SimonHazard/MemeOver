@@ -38,6 +38,14 @@ interface AppStore {
 	// Number of overlay clients connected to the same guild (broadcast by bot)
 	memberCount: number;
 	setMemberCount: (count: number) => void;
+
+	// Incremented each time the settings window requests a skip of the current item
+	skipVersion: number;
+	bumpSkip: () => void;
+
+	// True while the overlay is actively displaying an item (current !== null)
+	isDisplaying: boolean;
+	setIsDisplaying: (v: boolean) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -66,6 +74,12 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	memberCount: 0,
 	setMemberCount: (count) => set({ memberCount: count }),
+
+	skipVersion: 0,
+	bumpSkip: () => set((state) => ({ skipVersion: state.skipVersion + 1 })),
+
+	isDisplaying: false,
+	setIsDisplaying: (v) => set({ isDisplaying: v }),
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────
@@ -94,6 +108,10 @@ export async function initOverlayStore(): Promise<void> {
 		useAppStore.getState().clearQueue();
 	});
 
+	await listen("skip-current", () => {
+		useAppStore.getState().bumpSkip();
+	});
+
 	await listen<DisplayQueueItem>("replay-item", (event) => {
 		useAppStore.getState().enqueue(event.payload);
 	});
@@ -108,10 +126,13 @@ export async function initOverlayStore(): Promise<void> {
 		}
 	});
 
-	// Broadcast queue length to settings window whenever it changes
+	// Broadcast queue length and display state to the settings window whenever they change
 	useAppStore.subscribe((state, prevState) => {
 		if (state.queue.length !== prevState.queue.length) {
 			void emit("queue-size-changed", state.queue.length);
+		}
+		if (state.isDisplaying !== prevState.isDisplaying) {
+			void emit("overlay-displaying-changed", state.isDisplaying);
 		}
 	});
 }
@@ -149,5 +170,9 @@ export async function initSettingsStore(): Promise<void> {
 
 	await listen<number>("member-count-changed", (event) => {
 		useAppStore.getState().setMemberCount(event.payload);
+	});
+
+	await listen<boolean>("overlay-displaying-changed", (event) => {
+		useAppStore.getState().setIsDisplaying(event.payload);
 	});
 }

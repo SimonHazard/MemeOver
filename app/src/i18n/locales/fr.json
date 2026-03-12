@@ -35,6 +35,7 @@
 	"actions": {
 		"title": "Actions",
 		"clearQueue": "Vider la file",
+		"skipCurrent": "Passer",
 		"displaySettings": "Paramètres d'affichage",
 		"history": "Historique",
 		"queueSize": "{{count}} en attente"

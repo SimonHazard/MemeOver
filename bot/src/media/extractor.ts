@@ -1,6 +1,51 @@
 import type { Message, PartialMessage } from "discord.js";
 import type { ExtractedMedia, MediaType } from "./types";
 
+// ─── Security helpers ─────────────────────────────────────────────────────────
+
+const ALLOWED_MEDIA_HOSTS = new Set([
+	"cdn.discordapp.com",
+	"media.discordapp.net",
+	// Tenor (Google) — media1 subdomain also active
+	"tenor.com",
+	"media.tenor.com",
+	"media1.tenor.com",
+	"c.tenor.com",
+	// Giphy (Shutterstock) — numbered subdomains media0–media4 for load balancing
+	"giphy.com",
+	"media.giphy.com",
+	"media0.giphy.com",
+	"media1.giphy.com",
+	"media2.giphy.com",
+	"media3.giphy.com",
+	"media4.giphy.com",
+	"i.imgur.com",
+]);
+
+/** Returns true if the Discord CDN URL has an `ex=` expiry param that is in the past. */
+function isCdnUrlExpired(url: string): boolean {
+	try {
+		const ex = new URL(url).searchParams.get("ex");
+		if (!ex) return false; // No expiry param → not a time-limited CDN URL
+		return parseInt(ex, 16) * 1_000 < Date.now();
+	} catch {
+		return false;
+	}
+}
+
+/** Parse once and check both host allowlist and CDN expiry in a single URL parse. */
+function isAllowedAndFresh(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		if (!ALLOWED_MEDIA_HOSTS.has(parsed.hostname)) return false;
+		const ex = parsed.searchParams.get("ex");
+		if (ex && parseInt(ex, 16) * 1_000 < Date.now()) return false;
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 // ─── URL patterns ─────────────────────────────────────────────────────────────
 
 const GIF_PATTERN = /\.(gif)(\?.*)?$/i;
@@ -43,6 +88,7 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 
 	// 1. File attachments
 	for (const attachment of message.attachments.values()) {
+		if (isCdnUrlExpired(attachment.url)) continue;
 		const ct = attachment.contentType ?? "";
 		let media_type: MediaType | null = null;
 
@@ -60,13 +106,18 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 	// 2. Embeds (Tenor, Giphy, direct image embeds)
 	for (const embed of message.embeds) {
 		if (embed.video?.url) {
-			results.push({ url: embed.video.url, media_type: "video" });
+			if (!isCdnUrlExpired(embed.video.url))
+				results.push({ url: embed.video.url, media_type: "video" });
 		} else if (embed.image?.url) {
-			const mt = detectMediaType(embed.image.url) ?? "image";
-			results.push({ url: embed.image.url, media_type: mt });
+			if (!isCdnUrlExpired(embed.image.url)) {
+				const mt = detectMediaType(embed.image.url) ?? "image";
+				results.push({ url: embed.image.url, media_type: mt });
+			}
 		} else if (embed.thumbnail?.url) {
-			const mt = detectMediaType(embed.thumbnail.url);
-			if (mt) results.push({ url: embed.thumbnail.url, media_type: mt });
+			if (!isCdnUrlExpired(embed.thumbnail.url)) {
+				const mt = detectMediaType(embed.thumbnail.url);
+				if (mt) results.push({ url: embed.thumbnail.url, media_type: mt });
+			}
 		}
 	}
 
@@ -77,7 +128,7 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 	const urlMatches = content.match(/https?:\/\/\S+/g) ?? [];
 	for (const url of urlMatches) {
 		const mt = detectMediaType(url);
-		if (mt) {
+		if (mt && isAllowedAndFresh(url)) {
 			const normalizedPath = urlPathname(url);
 			const alreadyCaptured = results.some((r) => urlPathname(r.url) === normalizedPath);
 			if (!alreadyCaptured) {

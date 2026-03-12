@@ -10,6 +10,7 @@ import {
 import { config } from "../utils/config";
 
 import { handleRemove } from "./subcommands/remove";
+import { handleRotate } from "./subcommands/rotate";
 import { handleSetup } from "./subcommands/setup";
 import { handleToken } from "./subcommands/token";
 
@@ -33,6 +34,11 @@ const memeover = new SlashCommandBuilder()
 	)
 	.addSubcommand((sub) =>
 		sub.setName("token").setDescription("Show your connection credentials (only visible to you)"),
+	)
+	.addSubcommand((sub) =>
+		sub
+			.setName("rotate")
+			.setDescription("Generate a new connection token, invalidating the current one"),
 	)
 	.addSubcommand((sub) =>
 		sub.setName("remove").setDescription("Unregister this server from MemeOver"),
@@ -65,8 +71,8 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 
 	const sub = interaction.options.getSubcommand();
 
-	// setup and remove require Manage Server permission; token is open to all members
-	if (sub === "setup" || sub === "remove") {
+	// setup, remove, and rotate require Manage Server permission; token is open to all members
+	if (sub === "setup" || sub === "remove" || sub === "rotate") {
 		if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
 			await interaction.reply({
 				content: "❌ You need the **Manage Server** permission to use this command.",
@@ -80,6 +86,8 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		await handleSetup(interaction, guildId);
 	} else if (sub === "token") {
 		await handleToken(interaction, guildId);
+	} else if (sub === "rotate") {
+		await handleRotate(interaction, guildId);
 	} else if (sub === "remove") {
 		await handleRemove(interaction, guildId);
 	}

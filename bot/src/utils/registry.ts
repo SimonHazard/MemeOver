@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -19,6 +19,10 @@ const REGISTRY_FILE = path.join(DATA_DIR, "guilds.json");
 const REGISTRY_TMP = path.join(DATA_DIR, "guilds.json.tmp");
 
 let registry: Registry = {};
+
+function generateToken(): string {
+	return randomUUID().replace(/-/g, "");
+}
 
 function load(): void {
 	try {
@@ -51,7 +55,7 @@ export const guildRegistry = {
 	 */
 	register(guildId: string, channelId: string | null): string {
 		const existing = registry[guildId];
-		const token = existing?.token ?? randomUUID().replace(/-/g, "");
+		const token = existing?.token ?? generateToken();
 
 		let channel_ids: string[];
 		if (channelId === null) {
@@ -74,6 +78,21 @@ export const guildRegistry = {
 		save();
 	},
 
+	/**
+	 * Generate a new token for an existing guild, invalidating the previous one.
+	 * All currently connected WebSocket clients will fail their next auth check
+	 * and must reconnect with the new token.
+	 * Returns the new token, or null if the guild is not registered.
+	 */
+	rotateToken(guildId: string): string | null {
+		const existing = registry[guildId];
+		if (!existing) return null;
+		const token = generateToken();
+		registry[guildId] = { ...existing, token };
+		save();
+		return token;
+	},
+
 	unregister(guildId: string): void {
 		delete registry[guildId];
 		save();
@@ -84,7 +103,11 @@ export const guildRegistry = {
 	},
 
 	verifyToken(guildId: string, token: string): boolean {
-		return registry[guildId]?.token === token;
+		const stored = registry[guildId]?.token;
+		if (!stored) return false;
+		const a = Buffer.from(stored.padEnd(64));
+		const b = Buffer.from(token.padEnd(64));
+		return timingSafeEqual(a, b);
 	},
 
 	isChannelAllowed(guildId: string, channelId: string): boolean {

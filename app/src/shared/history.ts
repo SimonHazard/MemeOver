@@ -9,7 +9,7 @@ export type HistoryItem = DisplayQueueItem & { recordedAt: number };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MAX_HISTORY = 10;
+const MAX_HISTORY = 50;
 
 // ─── Store helpers ────────────────────────────────────────────────────────────
 

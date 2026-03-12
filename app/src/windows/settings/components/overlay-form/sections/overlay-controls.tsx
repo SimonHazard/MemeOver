@@ -13,6 +13,7 @@ import {
 	quitOverlay,
 	reloadOverlay,
 	showOverlay,
+	skipCurrentItem,
 } from "@/shared/helpers";
 import { useAppStore } from "@/shared/store";
 
@@ -20,6 +21,7 @@ export function OverlayControls() {
 	const { t } = useTranslation();
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 	const queueSize = useAppStore((s) => s.queueSize);
+	const isDisplaying = useAppStore((s) => s.isDisplaying);
 	const overlayAlive = overlayHealth === "alive";
 
 	const [devPreviewActive, setDevPreviewActive] = useState(false);
@@ -103,9 +105,19 @@ export function OverlayControls() {
 						</Badge>
 					)}
 				</div>
-				<NbButton variant="outline" size="sm" onClick={() => void clearQueue()}>
-					{t("actions.clearQueue")}
-				</NbButton>
+				<div className="flex items-center gap-2">
+					<NbButton
+						variant="outline"
+						size="sm"
+						disabled={!overlayAlive || (!isDisplaying && queueSize === 0)}
+						onClick={() => void skipCurrentItem()}
+					>
+						{t("actions.skipCurrent")}
+					</NbButton>
+					<NbButton variant="outline" size="sm" onClick={() => void clearQueue()}>
+						{t("actions.clearQueue")}
+					</NbButton>
+				</div>
 			</div>
 		</div>
 	);

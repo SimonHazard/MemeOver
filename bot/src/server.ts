@@ -198,6 +198,7 @@ export function createServer() {
 			guilds: store.getAllGuildIds().length,
 		}))
 		.ws("/ws", {
+			maxPayloadLength: 4 * 1024, // 4 KB — JOIN/LEAVE/PONG never exceed ~500 bytes
 			open(ws: WSConnection) {
 				store.addClient(ws.id, ws);
 				startHeartbeat(ws);
