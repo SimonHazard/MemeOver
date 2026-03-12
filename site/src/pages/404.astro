@@ -1,0 +1,33 @@
+---
+import { getLangFromUrl, getLocalizedPath, getTranslations } from "@/i18n";
+import BaseLayout from "@/layouts/base-layout.astro";
+
+const lang = getLangFromUrl(Astro.url);
+const dict = getTranslations(lang);
+---
+
+<BaseLayout title={`${dict.notFound.title} — MemeOver`} description={dict.notFound.description}>
+	<section class="min-h-[80vh] flex items-center justify-center px-4">
+		<div class="text-center flex flex-col items-center gap-6">
+			<h1 class="font-display text-8xl sm:text-9xl tracking-wide text-primary-400">
+				{dict.notFound.title}
+			</h1>
+			<img
+				src="/icon.png"
+				alt="MemeOver"
+				width={80}
+				height={80}
+				class="rounded-xl border-2 border-foreground shadow-[4px_4px_0px_0px_var(--nb-shadow)] rotate-12"
+			/>
+			<p class="text-lg text-muted-foreground max-w-md">
+				{dict.notFound.description}
+			</p>
+			<a
+				href={getLocalizedPath(lang, "/")}
+				class="inline-flex items-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)]"
+			>
+				{dict.notFound.backHome}
+			</a>
+		</div>
+	</section>
+</BaseLayout>

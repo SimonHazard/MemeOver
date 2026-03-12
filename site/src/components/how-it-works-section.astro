@@ -1,0 +1,51 @@
+---
+import { Bot, Download, Send, Sparkles } from "lucide-react";
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+
+const iconMap: Record<string, typeof Bot> = {
+	bot: Bot,
+	download: Download,
+	send: Send,
+	sparkles: Sparkles,
+};
+---
+
+<section id="how-it-works" class="py-20 px-4">
+	<div class="max-w-6xl mx-auto">
+		<h2 class="font-display text-3xl sm:text-4xl text-center tracking-wide mb-16">
+			{dict.howItWorks.title}
+		</h2>
+
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+			{dict.howItWorks.steps.map((step, i) => {
+				const Icon = iconMap[step.icon] ?? Sparkles;
+				return (
+					<div class="relative flex flex-col items-center text-center gap-4 p-6 rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_0px_var(--nb-shadow)] hover:shadow-[6px_6px_0px_0px_var(--nb-shadow)] hover:-translate-y-1 transition-all">
+						{/* Step number */}
+						<span class="absolute -top-3 -left-3 size-8 flex items-center justify-center rounded-lg bg-primary text-primary-foreground font-display text-sm border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)]">
+							{i + 1}
+						</span>
+
+						{/* Icon */}
+						<div class="size-14 flex items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-900/40 border-2 border-foreground/20">
+							<Icon className="size-7 text-primary-600 dark:text-primary-300" />
+						</div>
+
+						<h3 class="font-display text-lg tracking-wide">{step.title}</h3>
+						<p class="text-sm text-muted-foreground leading-relaxed">
+							{step.description}
+						</p>
+					</div>
+				);
+			})}
+		</div>
+	</div>
+</section>

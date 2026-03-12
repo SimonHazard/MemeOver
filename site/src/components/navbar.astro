@@ -1,0 +1,76 @@
+---
+import type { Locale } from "@/i18n";
+import { getLocalizedPath, t } from "@/i18n";
+import MobileMenu from "./mobile-menu.tsx";
+import ThemeToggle from "./theme-toggle.tsx";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const otherLang: Locale = lang === "en" ? "fr" : "en";
+const otherLangPath = lang === "en" ? "/fr/" : "/";
+
+const links = [
+	{ href: "#features", label: t(lang, "nav.features") },
+	{ href: "#download", label: t(lang, "nav.download") },
+	{ href: "https://github.com/SimonHazard/MemeOver", label: t(lang, "nav.github") },
+];
+---
+
+<header class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b-2 border-foreground">
+	<div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+		<!-- Logo -->
+		<a
+			href={getLocalizedPath(lang, "/")}
+			class="flex items-center gap-2 font-display text-xl tracking-wide hover:text-primary-600 transition-colors"
+		>
+			<img src="/icon.png" alt="MemeOver" width={32} height={32} class="rounded-md" />
+			MemeOver
+		</a>
+
+		<!-- Desktop nav -->
+		<nav class="hidden md:flex items-center gap-6" aria-label="Main navigation">
+			{links.map((link) => (
+				<a
+					href={link.href}
+					class="font-display text-sm tracking-wide hover:text-primary-600 transition-colors"
+					{...(link.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+				>
+					{link.label}
+				</a>
+			))}
+		</nav>
+
+		<!-- Actions -->
+		<div class="flex items-center gap-3">
+			<!-- Language switch -->
+			<a
+				href={otherLangPath}
+				class="inline-flex items-center justify-center size-10 rounded-lg border-2 border-foreground bg-background shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all hover:bg-accent font-display text-xs tracking-wide uppercase"
+				aria-label={`Switch to ${otherLang === "fr" ? "Français" : "English"}`}
+			>
+				{otherLang.toUpperCase()}
+			</a>
+
+			<ThemeToggle client:load />
+
+			<!-- Desktop download CTA -->
+			<a
+				href="#download"
+				class="hidden md:inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground font-display text-sm tracking-wide border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all hover:shadow-[3px_3px_0px_0px_var(--nb-shadow)]"
+			>
+				{t(lang, "nav.download")}
+			</a>
+
+			<!-- Mobile menu -->
+			<MobileMenu
+				client:load
+				links={links}
+				downloadHref="#download"
+				downloadLabel={t(lang, "nav.download")}
+			/>
+		</div>
+	</div>
+</header>

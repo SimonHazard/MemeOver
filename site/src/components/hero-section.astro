@@ -1,0 +1,40 @@
+---
+import type { Locale } from "@/i18n";
+import { t } from "@/i18n";
+import HeroAnimation from "./hero-animation.tsx";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+
+const botClientId = import.meta.env.PUBLIC_BOT_CLIENT_ID;
+const inviteHref = botClientId
+	? `https://discord.com/oauth2/authorize?client_id=${botClientId}&permissions=2147486720&integration_type=0&scope=bot+applications.commands`
+	: null;
+---
+
+<section class="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-4 overflow-hidden">
+	<!-- Background decorative elements -->
+	<div class="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+		<!-- Primary blob -->
+		<div class="absolute top-1/4 -left-32 size-96 rounded-full bg-primary-200/30 dark:bg-primary-800/20 blur-3xl"></div>
+		<!-- Secondary blob -->
+		<div class="absolute bottom-1/4 -right-32 size-80 rounded-full bg-secondary-200/30 dark:bg-secondary-800/20 blur-3xl"></div>
+		<!-- Grid pattern -->
+		<div class="absolute inset-0 bg-[linear-gradient(to_right,var(--base-200)_1px,transparent_1px),linear-gradient(to_bottom,var(--base-200)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,var(--base-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--base-800)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-40"></div>
+	</div>
+
+	<HeroAnimation
+		client:load
+		badge={t(lang, "hero.badge")}
+		title={t(lang, "hero.title")}
+		tagline={t(lang, "hero.tagline")}
+		description={t(lang, "hero.description")}
+		ctaDownload={t(lang, "hero.cta_download")}
+		ctaInvite={t(lang, "hero.cta_invite")}
+		downloadHref="https://github.com/SimonHazard/MemeOver/releases/latest"
+		inviteHref={inviteHref}
+	/>
+</section>

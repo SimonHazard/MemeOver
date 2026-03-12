@@ -1,0 +1,65 @@
+---
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+
+const botClientId = import.meta.env.PUBLIC_BOT_CLIENT_ID;
+const inviteHref = botClientId
+	? `https://discord.com/oauth2/authorize?client_id=${botClientId}&permissions=2147486720&integration_type=0&scope=bot+applications.commands`
+	: null;
+---
+
+<footer class="border-t-2 border-foreground bg-card py-10 px-4">
+	<div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+		<div class="flex items-center gap-2">
+			<img src="/icon.png" alt="MemeOver" width={24} height={24} class="rounded" />
+			<span class="font-display text-sm tracking-wide">MemeOver</span>
+		</div>
+
+		<nav class="flex flex-wrap items-center justify-center gap-4 text-sm" aria-label="Footer navigation">
+			<a
+				href="https://github.com/SimonHazard/MemeOver"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="hover:text-primary-600 transition-colors"
+			>
+				GitHub
+			</a>
+			<span class="text-foreground/20">·</span>
+			<a
+				href="https://github.com/SimonHazard/MemeOver/releases/latest"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="hover:text-primary-600 transition-colors"
+			>
+				{dict.nav.download}
+			</a>
+			{inviteHref && (
+				<>
+					<span class="text-foreground/20">·</span>
+					<a
+						href={inviteHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="hover:text-primary-600 transition-colors"
+					>
+						Discord Bot
+					</a>
+				</>
+			)}
+		</nav>
+
+		<div class="flex flex-col items-center sm:items-end gap-1 text-xs text-muted-foreground">
+			<span>
+				{dict.footer.madeWith} <a href="https://github.com/SimonHazard" target="_blank" rel="noopener noreferrer" class="hover:text-foreground transition-colors font-medium">{dict.footer.author}</a>
+			</span>
+			<span>{dict.footer.license}</span>
+		</div>
+	</div>
+</footer>

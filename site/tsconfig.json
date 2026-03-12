@@ -1,0 +1,11 @@
+{
+	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"paths": {
+			"@/*": ["./src/*"],
+			"@memeover/ui/*": ["../packages/ui/src/*"]
+		}
+	},
+	"include": ["src/**/*", "astro.config.mjs", ".astro/**/*"]
+}

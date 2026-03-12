@@ -1,0 +1,76 @@
+---
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+
+const releaseUrl = "https://github.com/SimonHazard/MemeOver/releases/latest";
+
+const platforms = [
+	{
+		name: dict.download.windows,
+		formats: dict.download.windowsFormats,
+		icon: "windows",
+		color: "bg-[#0078D4]",
+	},
+	{
+		name: dict.download.macos,
+		formats: dict.download.macosFormats,
+		icon: "apple",
+		color: "bg-base-800 dark:bg-base-200",
+	},
+	{
+		name: dict.download.linux,
+		formats: dict.download.linuxFormats,
+		icon: "linux",
+		color: "bg-[#FCC624]",
+	},
+];
+---
+
+<section id="download" class="py-20 px-4">
+	<div class="max-w-4xl mx-auto text-center">
+		<h2 class="font-display text-3xl sm:text-4xl tracking-wide mb-4">
+			{dict.download.title}
+		</h2>
+		<p class="text-muted-foreground text-lg mb-12 max-w-xl mx-auto">
+			{dict.download.description}
+		</p>
+
+		<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+			{platforms.map((platform) => (
+				<a
+					href={releaseUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_0px_var(--nb-shadow)] hover:shadow-[6px_6px_0px_0px_var(--nb-shadow)] hover:-translate-y-1 active:shadow-none active:translate-x-1 active:translate-y-1 transition-all group"
+				>
+					{/* Platform icon placeholder */}
+					<div class="size-16 flex items-center justify-center rounded-xl border-2 border-foreground/20 bg-muted">
+						<span class="font-display text-2xl">{platform.icon === "windows" ? "🪟" : platform.icon === "apple" ? "🍎" : "🐧"}</span>
+					</div>
+					<span class="font-display text-lg tracking-wide group-hover:text-primary-600 transition-colors">
+						{platform.name}
+					</span>
+					<span class="text-xs text-muted-foreground font-display tracking-wide">
+						{platform.formats}
+					</span>
+				</a>
+			))}
+		</div>
+
+		<a
+			href="https://github.com/SimonHazard/MemeOver/releases"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="inline-block text-sm text-muted-foreground hover:text-foreground font-display tracking-wide transition-colors underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground"
+		>
+			{dict.download.allReleases}
+		</a>
+	</div>
+</section>

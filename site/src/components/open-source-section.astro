@@ -1,0 +1,47 @@
+---
+import { Bug, Github } from "lucide-react";
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+---
+
+<section id="open-source" class="py-20 px-4 bg-muted/50">
+	<div class="max-w-4xl mx-auto text-center">
+		<h2 class="font-display text-3xl sm:text-4xl tracking-wide mb-4">
+			{dict.openSource.title}
+		</h2>
+		<p class="text-muted-foreground text-lg mb-6 max-w-xl mx-auto">
+			{dict.openSource.description}
+		</p>
+		<p class="text-muted-foreground text-sm mb-10 max-w-lg mx-auto leading-relaxed">
+			{dict.openSource.contribute}
+		</p>
+
+		<div class="flex flex-wrap items-center justify-center gap-4">
+			<a
+				href="https://github.com/SimonHazard/MemeOver"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all"
+			>
+				<Github className="size-5" />
+				{dict.openSource.viewOnGithub}
+			</a>
+			<a
+				href="https://github.com/SimonHazard/MemeOver/issues"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-card text-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all"
+			>
+				<Bug className="size-5" />
+				{dict.openSource.reportBug}
+			</a>
+		</div>
+	</div>
+</section>
