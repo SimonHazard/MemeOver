@@ -21,6 +21,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Granular selectors — avoids re-rendering on unrelated store changes
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
+	const setIsDisplaying = useAppStore((s) => s.setIsDisplaying);
 	const duration = useAppStore((s) => s.settings.duration);
 	const syncMediaDuration = useAppStore((s) => s.settings.syncMediaDuration);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
@@ -84,7 +85,15 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		hide();
 	}, [hide]);
 
-	// ── Effect 0: Stop current item when overlay is hidden ────────────────────
+	const skipVersion = useAppStore((s) => s.skipVersion);
+
+	// ── Effect 0: Skip current item on demand from settings window ────────────
+	useEffect(() => {
+		if (skipVersion === 0) return; // initial mount — not a real skip
+		hide();
+	}, [skipVersion, hide]);
+
+	// ── Effect 1: Stop current item when overlay is hidden ────────────────────
 	useEffect(() => {
 		if (overlayHealth === "closed") {
 			document.querySelectorAll("video, audio").forEach((el) => {
@@ -95,7 +104,13 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		}
 	}, [overlayHealth, hide]);
 
-	// ── Effect 1: Dequeue the next item ───────────────────────────────────────
+	// ── Effect 2: Sync isDisplaying to the store so settings window can read it ─
+	// biome-ignore lint/correctness/useExhaustiveDependencies: setIsDisplaying is a stable Zustand setter — omitted from deps intentionally
+	useEffect(() => {
+		setIsDisplaying(current !== null);
+	}, [current]);
+
+	// ── Effect 3: Dequeue the next item ───────────────────────────────────────
 	useEffect(() => {
 		if (current !== null || queue.length === 0) return;
 
@@ -105,7 +120,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		setIsVisible(true);
 	}, [queue, current, dequeue]);
 
-	// ── Effect 2: Safety fallback ──────────────────────────────────────────────
+	// ── Effect 4: Safety fallback ─────────────────────────────────────────────
 	// TEXT items have no DOM event to call startTimer → fire immediately (delay=0).
 	// Media items get 2s to fire onLoad/onPlay before we force-start the timer.
 	useEffect(() => {
@@ -125,7 +140,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		};
 	}, [current, startTimer]);
 
-	// ── Effect 3: Queue-stuck recovery ────────────────────────────────────────
+	// ── Effect 5: Queue-stuck recovery ────────────────────────────────────────
 	// If isVisible becomes false but current is still set (exit animation in
 	// progress), Framer Motion should call onExitComplete to clear current.
 	// If it never does (animation bug or edge case), force-clear after 1s to

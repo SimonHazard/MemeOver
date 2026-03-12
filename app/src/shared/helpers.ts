@@ -37,6 +37,10 @@ export async function clearQueue(): Promise<void> {
 	await emit("clear-queue");
 }
 
+export async function skipCurrentItem(): Promise<void> {
+	await emit("skip-current");
+}
+
 export function formatTime(timestamp: number): string {
 	return new Date(timestamp).toLocaleTimeString(undefined, {
 		hour: "2-digit",

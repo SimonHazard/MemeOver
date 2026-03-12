@@ -1,6 +1,8 @@
 import { emit, listen } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";
+import { toast } from "sonner";
 import { create } from "zustand";
+import i18n from "@/i18n";
 import type { DisplayQueueItem, OverlayHealth, Settings, WsStatus } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 
@@ -36,6 +38,14 @@ interface AppStore {
 	// Number of overlay clients connected to the same guild (broadcast by bot)
 	memberCount: number;
 	setMemberCount: (count: number) => void;
+
+	// Incremented each time the settings window requests a skip of the current item
+	skipVersion: number;
+	bumpSkip: () => void;
+
+	// True while the overlay is actively displaying an item (current !== null)
+	isDisplaying: boolean;
+	setIsDisplaying: (v: boolean) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -64,6 +74,12 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	memberCount: 0,
 	setMemberCount: (count) => set({ memberCount: count }),
+
+	skipVersion: 0,
+	bumpSkip: () => set((state) => ({ skipVersion: state.skipVersion + 1 })),
+
+	isDisplaying: false,
+	setIsDisplaying: (v) => set({ isDisplaying: v }),
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────
@@ -92,6 +108,10 @@ export async function initOverlayStore(): Promise<void> {
 		useAppStore.getState().clearQueue();
 	});
 
+	await listen("skip-current", () => {
+		useAppStore.getState().bumpSkip();
+	});
+
 	await listen<DisplayQueueItem>("replay-item", (event) => {
 		useAppStore.getState().enqueue(event.payload);
 	});
@@ -106,10 +126,13 @@ export async function initOverlayStore(): Promise<void> {
 		}
 	});
 
-	// Broadcast queue length to settings window whenever it changes
+	// Broadcast queue length and display state to the settings window whenever they change
 	useAppStore.subscribe((state, prevState) => {
 		if (state.queue.length !== prevState.queue.length) {
 			void emit("queue-size-changed", state.queue.length);
+		}
+		if (state.isDisplaying !== prevState.isDisplaying) {
+			void emit("overlay-displaying-changed", state.isDisplaying);
 		}
 	});
 }
@@ -122,8 +145,19 @@ export async function initOverlayStore(): Promise<void> {
  * - Subscribes to "member-count-changed" Tauri events emitted by the overlay window
  */
 export async function initSettingsStore(): Promise<void> {
+	// Track previous status to fire toasts only on genuine transitions.
+	// This runs entirely outside React — toast() and i18n.t() are both safe here.
+	let prevWsStatus: WsStatus = "disconnected";
+
 	await listen<WsStatus>("ws-status-changed", (event) => {
-		useAppStore.getState().setWsStatus(event.payload);
+		const status = event.payload;
+		if (status === "connected" && prevWsStatus !== "connected") {
+			toast.success(i18n.t("toast.wsConnected"));
+		} else if (status === "error" && prevWsStatus !== "error") {
+			toast.error(i18n.t("toast.wsError"));
+		}
+		prevWsStatus = status;
+		useAppStore.getState().setWsStatus(status);
 	});
 
 	await listen<OverlayHealth>("overlay-health-changed", (event) => {
@@ -136,5 +170,9 @@ export async function initSettingsStore(): Promise<void> {
 
 	await listen<number>("member-count-changed", (event) => {
 		useAppStore.getState().setMemberCount(event.payload);
+	});
+
+	await listen<boolean>("overlay-displaying-changed", (event) => {
+		useAppStore.getState().setIsDisplaying(event.payload);
 	});
 }

@@ -16,9 +16,13 @@ export function OverlayApp() {
 
 	useEffect(() => {
 		if (!import.meta.env.DEV) return;
-		const unlisten = listen<boolean>("overlay-dev-preview", (e) => setDevPreview(e.payload));
+		// Store the unlisten fn once the promise resolves so cleanup is synchronous.
+		let unlistenFn: (() => void) | undefined;
+		void listen<boolean>("overlay-dev-preview", (e) => setDevPreview(e.payload)).then((fn) => {
+			unlistenFn = fn;
+		});
 		return () => {
-			void unlisten.then((fn) => fn());
+			unlistenFn?.();
 		};
 	}, []);
 

@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
-import { useTauriEvent } from "@/hooks/useTauriEvent";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import type { Settings, WsStatus } from "@/shared/types";
@@ -34,13 +33,6 @@ interface SetupFormProps {
 export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 	const queryClient = useQueryClient();
 	const { t } = useTranslation();
-
-	// Subscribe to WS status Tauri events — fires only on transitions, no ref needed.
-	const wsStatusEvent = useTauriEvent<WsStatus>("ws-status-changed");
-	useEffect(() => {
-		if (wsStatusEvent === "error") toast.error(t("toast.wsError"));
-		if (wsStatusEvent === "connected") toast.success(t("toast.wsConnected"));
-	}, [wsStatusEvent, t]);
 
 	// ── Autostart ─────────────────────────────────────────────────────────────
 
