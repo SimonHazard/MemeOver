@@ -1,5 +1,10 @@
 name: Site — Deploy
 
+# Permissions minimales par défaut sur le GITHUB_TOKEN pour tous les jobs.
+# Le job deploy-preview surcharge avec pull-requests: write pour poster le commentaire.
+permissions:
+  contents: read
+
 # Déclenché sur push main et PR quand le site ou l'UI partagée change.
 on:
   push:
@@ -102,6 +107,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: site
+          packageManager: bun
           command: deploy
 
   # ── 3. Deploy — Preview (pull requests) ──────────────────────────────────────
@@ -116,7 +122,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write  # Pour poster le commentaire de preview
+      contents: read         # Héritage explicite (job-level override remplace le top-level)
+      pull-requests: write   # Pour poster le commentaire de preview
     environment:
       name: preview
       url: ${{ steps.deploy.outputs.deployment-url }}
@@ -138,6 +145,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: site
+          packageManager: bun
           command: deploy --env preview
 
       # Poste ou met à jour un seul commentaire par PR (cherche le tag 🌐 Site preview).
