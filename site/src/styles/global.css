@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "@memeover/ui/theme.css";
+
+@source "../../packages/ui/src/**/*.{ts,tsx}";
+
+/* ─── Shadow utility tokens (mirrors app/src/App.css pattern) ──────────── */
+
+:root {
+	--shadow-nb-xs: 1px 1px 0px 0px var(--nb-shadow);
+	--shadow-nb-sm: 2px 2px 0px 0px var(--nb-shadow);
+	--shadow-nb-md: 3px 3px 0px 0px var(--nb-shadow);
+	--shadow-nb-lg: 4px 4px 0px 0px var(--nb-shadow);
+}

@@ -1,0 +1,26 @@
+# Cloudflare Workers — MemeOver Site
+# Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+#
+# PUBLIC_BOT_CLIENT_ID est une variable de BUILD TIME injectée par Astro
+# via import.meta.env.PUBLIC_BOT_CLIENT_ID. Elle est inlinée dans le HTML
+# statique à la compilation — elle ne doit PAS être déclarée ici.
+# Déclare-la comme GitHub Actions variable (vars.PUBLIC_BOT_CLIENT_ID).
+
+name             = "memeover-site"
+compatibility_date = "2025-03-12"
+
+[assets]
+directory             = "./dist"
+# Sert notre 404.html custom au lieu de l'erreur générique Cloudflare
+not_found_handling    = "404-page"
+
+# ── Environment de preview (pull requests) ────────────────────────────────────
+# Déployé sur un worker distinct pour ne pas polluer la production.
+# URL : memeover-site-preview.<account>.workers.dev
+
+[env.preview]
+name = "memeover-site-preview"
+
+[env.preview.assets]
+directory          = "./dist"
+not_found_handling = "404-page"

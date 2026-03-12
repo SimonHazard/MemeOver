@@ -1,0 +1,211 @@
+name: Site — Deploy
+
+# Permissions minimales par défaut sur le GITHUB_TOKEN pour tous les jobs.
+# Le job deploy-preview surcharge avec pull-requests: write pour poster le commentaire.
+permissions:
+  contents: read
+
+# Déclenché sur push main et PR quand le site ou l'UI partagée change.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "site/**"
+      - "packages/ui/**"
+      - ".github/workflows/deploy-site.yml"
+  pull_request:
+    paths:
+      - "site/**"
+      - "packages/ui/**"
+      - ".github/workflows/deploy-site.yml"
+
+# Annule le déploiement en cours si un nouveau commit arrive sur la même ref.
+# Évite les race conditions lors de plusieurs pushs rapides sur main.
+concurrency:
+  group: site-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. Build ─────────────────────────────────────────────────────────────────
+  # Compile le site et uploade l'artefact dist/ pour les jobs suivants.
+  # Séparer build / deploy permet de ne pas reconstruire si seul le deploy échoue.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Astro 6 requiert Node >=22.12.0 — ubuntu-latest embarque Node 20 par défaut.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-site-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-site-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # PUBLIC_BOT_CLIENT_ID est une variable Astro inlinée au build time.
+      # Elle doit être déclarée dans Settings → Variables (pas Secrets) du repo
+      # car elle n'est pas sensible (préfixe PUBLIC_ = exposée côté client).
+      - name: Build site
+        working-directory: site
+        env:
+          PUBLIC_BOT_CLIENT_ID: ${{ vars.PUBLIC_BOT_CLIENT_ID }}
+        run: bun run build
+
+      # Conservé 1 jour : juste le temps que les jobs deploy s'en servent.
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist
+          path: site/dist
+          retention-days: 1
+
+  # ── 2. Deploy — Production (push sur main uniquement) ────────────────────────
+  # Protégé par l'environment GitHub "production" : requiert une approbation
+  # manuelle si des required reviewers sont configurés.
+  deploy-production:
+    name: Deploy → Production
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://memeover.simonhazard.com
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Installe les deps (dont wrangler) depuis le lockfile exact.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # On récupère le dist/ pré-compilé — pas besoin de rebuilder.
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site-dist
+          path: site/dist
+
+      # wranglerVersion: "" → l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: site
+          wranglerVersion: ""
+          command: deploy
+
+  # ── 3. Deploy — Preview (pull requests) ──────────────────────────────────────
+  # Déployé sur le worker "memeover-site-preview" (env.preview dans wrangler.toml).
+  # Un commentaire est posté/mis à jour sur la PR avec l'URL de preview.
+  #
+  # Limitation : les PRs depuis un fork n'ont pas accès aux secrets (sécurité GitHub).
+  # Ce workflow est conçu pour des PRs depuis le même repo.
+  deploy-preview:
+    name: Deploy → Preview
+    needs: build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read         # Héritage explicite (job-level override remplace le top-level)
+      pull-requests: write   # Pour poster le commentaire de preview
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.deployment-url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Installe les deps (dont wrangler) depuis le lockfile exact.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site-dist
+          path: site/dist
+
+      # wranglerVersion: "" → l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
+      - name: Deploy to Cloudflare Workers (preview)
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: site
+          wranglerVersion: ""
+          command: deploy --env preview
+
+      # Poste ou met à jour un seul commentaire par PR (cherche le tag 🌐 Site preview).
+      - name: Comment PR with preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentUrl = '${{ steps.deploy.outputs.deployment-url }}';
+            const sha = context.sha.slice(0, 7);
+            const body = [
+              '### 🌐 Site preview',
+              '',
+              `**URL :** ${deploymentUrl}`,
+              '',
+              `Commit : \`${sha}\` — mis à jour automatiquement à chaque push sur cette PR.`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user?.login === 'github-actions[bot]' &&
+              c.body?.includes('🌐 Site preview')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

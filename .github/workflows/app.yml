@@ -112,6 +112,7 @@ jobs:
           tagName: ${{ github.ref == 'refs/heads/main' && 'app-v__VERSION__' || '' }}
           releaseName: ${{ github.ref == 'refs/heads/main' && 'App v__VERSION__' || '' }}
           releaseDraft: true
+          includeUpdaterJson: true
           updaterJsonPreferNsis: true
 
       # ── Upload des artifacts ──────────────────────────────────────────────────

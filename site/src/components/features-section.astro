@@ -1,0 +1,59 @@
+---
+import { Code, Image, Monitor, Moon, Move, RefreshCw, Timer } from "lucide-react";
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+
+const iconMap: Record<string, typeof Image> = {
+	image: Image,
+	move: Move,
+	timer: Timer,
+	moon: Moon,
+	refresh: RefreshCw,
+	code: Code,
+	monitor: Monitor,
+};
+
+const accentColors = [
+	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
+	"bg-secondary-100 dark:bg-secondary-900/40 text-secondary-600 dark:text-secondary-300",
+	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
+	"bg-secondary-100 dark:bg-secondary-900/40 text-secondary-600 dark:text-secondary-300",
+	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
+	"bg-secondary-100 dark:bg-secondary-900/40 text-secondary-600 dark:text-secondary-300",
+	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
+];
+---
+
+<section id="features" class="py-20 px-4 bg-muted/50">
+	<div class="max-w-6xl mx-auto">
+		<h2 class="font-display text-3xl sm:text-4xl text-center tracking-wide mb-16">
+			{dict.features.title}
+		</h2>
+
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+			{dict.features.items.map((feature, i) => {
+				const Icon = iconMap[feature.icon] ?? Code;
+				return (
+					<div class="flex items-start gap-4 p-5 rounded-2xl border-2 border-foreground bg-card shadow-[3px_3px_0px_0px_var(--nb-shadow)] hover:shadow-[5px_5px_0px_0px_var(--nb-shadow)] hover:-translate-y-0.5 transition-all">
+						<div class={`shrink-0 size-11 flex items-center justify-center rounded-xl border-2 border-foreground/20 ${accentColors[i % accentColors.length]}`}>
+							<Icon className="size-5" />
+						</div>
+						<div class="flex flex-col gap-1">
+							<h3 class="font-display text-base tracking-wide">{feature.title}</h3>
+							<p class="text-sm text-muted-foreground leading-relaxed">
+								{feature.description}
+							</p>
+						</div>
+					</div>
+				);
+			})}
+		</div>
+	</div>
+</section>

@@ -51,14 +51,14 @@ export function OverlayApp() {
 			{/* ── DEV badge (always visible in dev, not only in preview) ── */}
 			{import.meta.env.DEV && (
 				<div
-					className="absolute top-3 left-3 pointer-events-none select-none"
+					className="absolute top-3 right-3 pointer-events-none select-none"
 					style={{
 						fontFamily: "monospace",
 						fontSize: "10px",
 						fontWeight: 700,
 						letterSpacing: "0.1em",
 						color: devPreview ? "#4ade80" : "#facc15",
-						background: devPreview ? "rgba(0,40,10,0.75)" : "rgba(40,30,0,0.75)",
+						background: devPreview ? "rgba(0,40,10,0.50)" : "rgba(40,30,0,0.50)",
 						border: `1px solid ${devPreview ? "#4ade80" : "#facc15"}`,
 						borderRadius: "4px",
 						padding: "2px 6px",

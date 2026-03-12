@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["bot/src/**", "app/src/**", "shared/src/**", "!**/routeTree.gen.ts"]
+		"includes": ["bot/src/**", "app/src/**", "shared/src/**", "site/src/**", "!**/routeTree.gen.ts"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -39,6 +39,17 @@
 		}
 	},
 	"overrides": [
+		{
+			"includes": ["site/src/**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off"
+					}
+				}
+			}
+		},
 		{
 			"includes": ["app/src/App.css"],
 			"linter": {
