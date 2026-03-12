@@ -33,6 +33,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Astro 6 requiert Node >=22.12.0 — ubuntu-latest embarque Node 20 par défaut.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -77,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://memeover.app
+      url: https://memeover.simonhazard.com
 
     steps:
       - name: Checkout
