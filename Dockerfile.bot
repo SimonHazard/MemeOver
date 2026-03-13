@@ -11,6 +11,7 @@ COPY bot/package.json ./bot/
 COPY app/package.json ./app/
 COPY shared/package.json ./shared/
 COPY packages/ui/package.json ./packages/ui/
+COPY site/package.json ./site/
 
 RUN bun install --frozen-lockfile
 
