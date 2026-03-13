@@ -8,11 +8,13 @@ on:
     paths:
       - "app/**"
       - "packages/ui/**"
+      - "shared/**"
       - ".github/workflows/app.yml"
   pull_request:
     paths:
       - "app/**"
       - "packages/ui/**"
+      - "shared/**"
       - ".github/workflows/app.yml"
 
 jobs:

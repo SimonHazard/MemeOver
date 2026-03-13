@@ -7,11 +7,13 @@ on:
       - main
     paths:
       - "bot/**"
+      - "shared/**"
       - "Dockerfile.bot"
       - ".github/workflows/bot.yml"
   pull_request:
     paths:
       - "bot/**"
+      - "shared/**"
       - "Dockerfile.bot"
       - ".github/workflows/bot.yml"
 
