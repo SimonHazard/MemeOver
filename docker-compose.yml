@@ -8,6 +8,8 @@
 #
 # Variables optionnelles :
 #   WS_PORT            — port WebSocket (défaut : 3001)
+#   LOGTAIL_TOKEN      — token Logtail pour les logs structurés
+#   METRICS_TOKEN      — bearer token pour protéger GET /metrics
 
 services:
   bot:
@@ -18,6 +20,8 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
       WS_PORT: ${WS_PORT:-3001}
+      LOGTAIL_TOKEN: ${LOGTAIL_TOKEN}
+      METRICS_TOKEN: ${METRICS_TOKEN}
     ports:
       - "${WS_PORT:-3001}:${WS_PORT:-3001}"
     volumes:
