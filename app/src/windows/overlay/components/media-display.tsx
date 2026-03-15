@@ -2,9 +2,11 @@ import type React from "react";
 import type { DisplayQueueItem, Settings } from "@/shared/types";
 import { AudioEqualizer } from "./audio-equalizer";
 import { AuthorBadge } from "./author-badge";
-import { TextDisplay } from "./text-bubble";
+import { InlineText, TextDisplay } from "./text-bubble";
 
 const CAPTION_SHADOW = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000";
+// Discord stickers are fixed-size transparent assets — not scaled by mediaSize
+const STICKER_MAX_SIZE = "256px";
 
 function hexToRgba(hex: string, opacity: number): string {
 	const r = parseInt(hex.slice(1, 3), 16);
@@ -162,19 +164,32 @@ export function MediaDisplay({
 							style={{ textShadow: CAPTION_SHADOW, color: settings.textColor }}
 							className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
 						>
-							{item.text}
+							<InlineText text={item.text} />
 						</p>
 					)}
 				</div>
 			)}
 
-			{/* ── Caption (image / gif / video) — always fully opaque ── */}
+			{/* ── Sticker ── */}
+			{item.media_type === "sticker" && (
+				<img
+					src={item.media_url}
+					alt=""
+					onLoad={startTimer}
+					onError={onMediaError}
+					style={{ maxWidth: STICKER_MAX_SIZE, maxHeight: STICKER_MAX_SIZE, opacity }}
+					className="block transition-opacity duration-300"
+					draggable={false}
+				/>
+			)}
+
+			{/* ── Caption (image / gif / video / sticker) — always fully opaque ── */}
 			{item.media_type !== "audio" && item.text && (
 				<p
 					style={{ maxWidth: width, textShadow: CAPTION_SHADOW, color: settings.textColor }}
 					className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
 				>
-					{item.text}
+					<InlineText text={item.text} />
 				</p>
 			)}
 		</>

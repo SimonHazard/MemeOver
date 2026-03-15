@@ -10,6 +10,7 @@ export interface WSConnection {
 // ─── Media ────────────────────────────────────────────────────────────────────
 
 import type { ExtractedMedia } from "../media/types";
+
 export type { ExtractedMedia };
 
 // ─── Protocol types (source of truth: @memeover/shared) ───────────────────────

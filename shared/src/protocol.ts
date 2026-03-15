@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ─── Media type ───────────────────────────────────────────────────────────────
 
-export const MediaTypeSchema = z.enum(["image", "gif", "video", "audio"]);
+export const MediaTypeSchema = z.enum(["image", "gif", "video", "audio", "sticker"]);
 export type MediaType = z.infer<typeof MediaTypeSchema>;
 
 // ─── Server → Client schemas (messages sent by the bot to app clients) ────────
@@ -86,15 +86,17 @@ export type ErrorCode =
 
 // ─── Client → Server schemas (messages sent by app clients to the bot) ────────
 
+const discordSnowflakeSchema = z.string().regex(/^\d{17,19}$/);
+
 const JoinMessageSchema = z.object({
 	type: z.literal("JOIN"),
-	guild_id: z.string().min(1),
+	guild_id: discordSnowflakeSchema,
 	token: z.string().min(1),
 });
 
 const LeaveMessageSchema = z.object({
 	type: z.literal("LEAVE"),
-	guild_id: z.string().min(1),
+	guild_id: discordSnowflakeSchema,
 });
 
 const PongMessageSchema = z.object({

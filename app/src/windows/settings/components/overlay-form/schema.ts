@@ -26,6 +26,7 @@ export const OverlaySettingsSchema = z.object({
 		video: z.boolean(),
 		audio: z.boolean(),
 		text: z.boolean(),
+		sticker: z.boolean(),
 	}),
 	textSize: z.enum(TEXT_SIZES),
 	textColor: z.string(),

@@ -197,6 +197,61 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Move the overlay window to the monitor at the given index (from `available_monitors()`).
+///
+/// If the overlay is currently visible (e.g. a media item is playing), it is hidden
+/// before the move and restored afterwards. This prevents the intermediate states
+/// (unmaximized → repositioned → resized) from being visible to the user.
+/// `win.hide()` does not trigger the CloseRequested handler, so no
+/// `overlay-health-changed` event is emitted and the webview keeps running.
+///
+/// Sequence: hide (if visible) → unmaximize → set_position → set_size →
+/// maximize → re-apply native level → show (if was visible).
+#[tauri::command]
+fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Result<(), String> {
+    let win = app
+        .get_webview_window("overlay")
+        .ok_or_else(|| "Overlay window not found".to_string())?;
+
+    let monitors = app.available_monitors().map_err(|e| e.to_string())?;
+    let monitor = monitors
+        .get(monitor_index)
+        .ok_or_else(|| format!("Monitor index {} out of range (found {})", monitor_index, monitors.len()))?;
+
+    let pos = *monitor.position();
+
+    // Remember visibility so we can restore it after the move.
+    let was_visible = win.is_visible().unwrap_or(false);
+    if was_visible {
+        win.hide().map_err(|e| e.to_string())?;
+    }
+
+    // Run the repositioning steps in a closure so we can guarantee show() is
+    // called even if any intermediate step fails — the overlay must never stay
+    // permanently hidden due to a positioning error.
+    //
+    // Note: set_size is intentionally omitted. set_position alone is sufficient
+    // to place the window on the target monitor. Calling set_size before
+    // maximize() causes [NSWindow zoom:] to see the window as "already at
+    // maximum size" and toggle back to the user size — breaking the move.
+    let move_result = (|| -> Result<(), String> {
+        win.unmaximize().map_err(|e| e.to_string())?;
+        win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y))
+            .map_err(|e| e.to_string())?;
+        win.maximize().map_err(|e| e.to_string())?;
+        apply_native_overlay_level(&win);
+        Ok(())
+    })();
+
+    // Best-effort restore — ignore any show() error to keep propagating the
+    // original move_result if it failed.
+    if was_visible {
+        let _ = win.show();
+    }
+
+    move_result
+}
+
 /// Toggle the overlay between dev mode (decorated, windowed, opaque) and a
 /// prod-like preview (no decorations, always-on-top, maximized, transparent).
 /// Only meaningful in debug builds; the frontend gate (`import.meta.env.DEV`)
@@ -425,6 +480,7 @@ pub fn run() {
             quit_overlay,
             update_tray_labels,
             toggle_overlay_preview_mode,
+            move_overlay_to_monitor,
         ])
         .setup(|app| {
             create_overlay_window(&app.handle().clone())?;

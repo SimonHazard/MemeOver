@@ -2,9 +2,12 @@ import { startBot } from "./bot";
 import { registerCommands } from "./commands/commands";
 import { createServer } from "./server";
 import { config } from "./utils/config";
+import { logger } from "./utils/logger";
 import { guildRegistry } from "./utils/registry";
 import { store } from "./utils/store";
 import type { ServerMessage } from "./utils/types";
+
+const log = logger.child({ module: "index" });
 
 // 1. Config is loaded and validated on import (throws at startup if invalid)
 
@@ -13,24 +16,26 @@ const app = createServer();
 
 // 3. Start listening
 app.listen(config.wsPort, () => {
-	console.log(`[Server] WebSocket server running at ws://localhost:${config.wsPort}/ws`);
+	log.info(
+		{ event: "listening", port: config.wsPort },
+		`WebSocket server running at ws://localhost:${config.wsPort}/ws`,
+	);
 });
 
 // 4. Start the Discord bot, then register slash commands
 startBot()
 	.then(async () => {
-		console.log("[Bot] Discord bot ready");
 		await registerCommands();
 	})
 	.catch((err: unknown) => {
-		console.error("[Bot] Failed to start Discord bot:", err);
+		log.error({ event: "bot_start_failed", err }, "Failed to start Discord bot");
 		process.exit(1);
 	});
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 
 async function shutdown(signal: string): Promise<void> {
-	console.log(`[Server] Received ${signal}, shutting down gracefully...`);
+	log.info({ event: "shutdown", signal }, `Received ${signal}, shutting down gracefully...`);
 
 	// Notify all connected clients and close their connections
 	const shutdownPayload = JSON.stringify({
@@ -49,11 +54,32 @@ async function shutdown(signal: string): Promise<void> {
 	}
 
 	// Persist registry one last time
-	guildRegistry.flush();
+	try {
+		guildRegistry.flush();
+	} catch (err) {
+		log.error({ event: "shutdown_flush_failed", err }, "Failed to flush registry during shutdown");
+	}
 
-	await app.stop();
+	try {
+		await app.stop();
+	} catch (err) {
+		log.error({ event: "shutdown_stop_failed", err }, "Failed to stop server during shutdown");
+	}
+
 	process.exit(0);
 }
 
 process.on("SIGTERM", () => void shutdown("SIGTERM"));
 process.on("SIGINT", () => void shutdown("SIGINT"));
+
+// ─── Unhandled errors ─────────────────────────────────────────────────────────
+
+process.on("unhandledRejection", (reason) => {
+	log.error({ event: "unhandled_rejection", err: reason }, "Unhandled promise rejection");
+	process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+	log.error({ event: "uncaught_exception", err }, "Uncaught exception");
+	process.exit(1);
+});

@@ -1,6 +1,10 @@
+import { timingSafeEqual } from "node:crypto";
 import { Elysia } from "elysia";
+import { config } from "./utils/config";
+import { logger } from "./utils/logger";
 import { guildRegistry } from "./utils/registry";
 import { ClientMessageSchema } from "./utils/schemas";
+import { stats } from "./utils/stats";
 import { store } from "./utils/store";
 import type {
 	JoinMessage,
@@ -10,6 +14,11 @@ import type {
 	TextEvent,
 	WSConnection,
 } from "./utils/types";
+
+const log = logger.child({ module: "server" });
+
+// Pre-compute once at startup to avoid per-request allocation
+const metricsTokenBuf = config.metricsToken ? Buffer.from(config.metricsToken) : null;
 
 // ─── Broadcast ────────────────────────────────────────────────────────────────
 
@@ -47,10 +56,13 @@ export function broadcastToGuild(guildId: string, event: MediaEvent | TextEvent)
 			client.ws_ref.send(payload);
 		} catch (err) {
 			// Socket closed between check and send — clean up
-			console.warn(`[WS] Failed to send to ${wsId}, removing:`, err);
+			log.warn({ wsId, event: "send_failed", err }, "Failed to send to client, removing");
 			store.removeClient(wsId);
 		}
 	}
+
+	// Counts broadcast events (one per Discord message), not per-recipient sends
+	stats.messageBroadcast();
 }
 
 // ─── Rate limiting ─────────────────────────────────────────────────────────────
@@ -104,8 +116,13 @@ function startHeartbeat(ws: WSConnection): void {
 		if (!state) return;
 
 		state.pongTimeout = setTimeout(() => {
-			console.warn(`[WS] Client ${ws.id} missed PONG, closing connection`);
+			log.warn(
+				{ wsId: ws.id, event: "heartbeat_timeout" },
+				"Client missed PONG, closing connection",
+			);
+			stats.errorHeartbeatTimeout();
 			clearHeartbeat(ws.id);
+			rateLimiters.delete(ws.id);
 			// Capture guilds before removal so we can broadcast the updated count
 			const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
 			store.removeClient(ws.id);
@@ -134,6 +151,8 @@ function clearHeartbeat(wsId: string): void {
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
 function handleJoin(ws: WSConnection, msg: JoinMessage): void {
+	const wsLog = log.child({ wsId: ws.id, guildId: msg.guild_id });
+
 	if (!guildRegistry.isRegistered(msg.guild_id)) {
 		ws.send(
 			JSON.stringify({
@@ -143,6 +162,8 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 				error: "Unknown guild — run /memeover setup in your Discord server first",
 			} satisfies ServerMessage),
 		);
+		wsLog.warn({ event: "join_rejected", reason: "unknown_guild" }, "Join rejected: unknown guild");
+		stats.joinRejected();
 		return;
 	}
 
@@ -155,6 +176,8 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 				error: "Invalid token",
 			} satisfies ServerMessage),
 		);
+		wsLog.warn({ event: "join_rejected", reason: "invalid_token" }, "Join rejected: invalid token");
+		stats.joinRejected();
 		return;
 	}
 
@@ -178,13 +201,14 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 			success: true,
 		} satisfies ServerMessage),
 	);
-	console.log(`[WS] Client ${ws.id} joined guild ${msg.guild_id}`);
+	wsLog.info({ event: "join_success" }, "Client joined guild");
+	stats.joinSuccess();
 	broadcastMemberCount(msg.guild_id);
 }
 
 function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 	store.leaveGuild(ws.id, msg.guild_id);
-	console.log(`[WS] Client ${ws.id} left guild ${msg.guild_id}`);
+	log.child({ wsId: ws.id, guildId: msg.guild_id }).info({ event: "leave" }, "Client left guild");
 	broadcastMemberCount(msg.guild_id);
 }
 
@@ -192,17 +216,39 @@ function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 
 export function createServer() {
 	return new Elysia()
-		.get("/health", () => ({
-			status: "ok" as const,
-			uptime: process.uptime(),
-			guilds: store.getAllGuildIds().length,
-		}))
+		.get("/health", () => {
+			const snapshot = stats.snapshot();
+			return {
+				status: "ok" as const,
+				uptime: process.uptime(),
+				connections: { active: snapshot.connections.active },
+				guilds: { active: snapshot.guilds.active },
+			};
+		})
+		.get("/metrics", (ctx) => {
+			if (!metricsTokenBuf) {
+				ctx.set.status = 403;
+				return { error: "Forbidden" };
+			}
+			const auth = ctx.headers.authorization as string | undefined;
+			const token = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
+			const valid =
+				token !== undefined &&
+				token.length === metricsTokenBuf.length &&
+				timingSafeEqual(Buffer.from(token), metricsTokenBuf);
+			if (!valid) {
+				ctx.set.status = 401;
+				return { error: "Unauthorized" };
+			}
+			return stats.snapshot();
+		})
 		.ws("/ws", {
 			maxPayloadLength: 4 * 1024, // 4 KB — JOIN/LEAVE/PONG never exceed ~500 bytes
 			open(ws: WSConnection) {
 				store.addClient(ws.id, ws);
 				startHeartbeat(ws);
-				console.log(`[WS] Client connected: ${ws.id}`);
+				stats.connectionOpened();
+				log.info({ wsId: ws.id, event: "connected" }, "Client connected");
 			},
 
 			message(ws: WSConnection, raw: unknown) {
@@ -215,6 +261,8 @@ export function createServer() {
 							message: "Too many messages — max 5 per second",
 						} satisfies ServerMessage),
 					);
+					stats.errorRateLimit();
+					log.warn({ wsId: ws.id, event: "rate_limited" }, "Client rate limited");
 					return;
 				}
 
@@ -231,6 +279,8 @@ export function createServer() {
 							message: "Invalid JSON",
 						} satisfies ServerMessage),
 					);
+					stats.errorParse();
+					log.warn({ wsId: ws.id, event: "parse_error" }, "Invalid JSON from client");
 					return;
 				}
 
@@ -243,6 +293,11 @@ export function createServer() {
 							code: "VALIDATION_ERROR",
 							message: "Invalid message format",
 						} satisfies ServerMessage),
+					);
+					stats.errorValidation();
+					log.warn(
+						{ wsId: ws.id, event: "validation_error" },
+						"Invalid message format from client",
 					);
 					return;
 				}
@@ -279,7 +334,8 @@ export function createServer() {
 				// Capture guilds before removal so we can broadcast the updated count
 				const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
 				store.removeClient(ws.id);
-				console.log(`[WS] Client disconnected: ${ws.id}`);
+				stats.connectionClosed();
+				log.info({ wsId: ws.id, event: "disconnected" }, "Client disconnected");
 				for (const guildId of guilds) {
 					broadcastMemberCount(guildId);
 				}

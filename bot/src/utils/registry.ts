@@ -1,6 +1,9 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { logger } from "./logger";
+
+const log = logger.child({ module: "registry" });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +30,8 @@ function generateToken(): string {
 function load(): void {
 	try {
 		registry = JSON.parse(readFileSync(REGISTRY_FILE, "utf-8")) as Registry;
-	} catch {
+	} catch (err) {
+		log.error({ event: "registry_load_failed", err }, "Failed to load registry, starting fresh");
 		// File not found (first run) or unparseable — start fresh
 		registry = {};
 	}

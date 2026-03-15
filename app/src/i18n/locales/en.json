@@ -60,6 +60,7 @@
 		"type_video": "Videos",
 		"type_audio": "Audio",
 		"type_text": "Text",
+		"type_sticker": "Stickers",
 		"textSize": "Text size",
 		"textColor": "Text color",
 		"syncMediaDuration": "Sync with media duration (video/audio)",
@@ -73,7 +74,14 @@
 		"bg_border_color": "Border color",
 		"bg_border_width": "Border width",
 		"bg_border_opacity": "Border opacity",
-		"bg_border_radius": "Corner radius"
+		"bg_border_radius": "Corner radius",
+		"monitor": "Overlay screen",
+		"monitor_hint": "Select which screen the overlay appears on.",
+		"monitor_primary": "Primary",
+		"monitor_single": "Only one screen detected.",
+		"monitor_disconnected": "Previously selected screen is no longer connected — overlay moved to primary.",
+		"monitor_screen": "Screen {{number}}",
+		"monitor_beta": "Screen switching is still in analysis phase — you may experience unexpected behaviour on some setups."
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",
@@ -104,7 +112,9 @@
 		"replayQueued": "Media added to queue",
 		"replayError": "Failed to replay media",
 		"clearError": "Failed to clear history",
-		"autostartError": "Failed to change autostart setting"
+		"autostartError": "Failed to change autostart setting",
+		"monitorSwitched": "Overlay moved to {{name}}",
+		"monitorError": "Failed to move overlay to this screen"
 	},
 	"tray": {
 		"show": "Show settings",

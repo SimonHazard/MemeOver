@@ -1,7 +1,17 @@
-import { Client, Events, GatewayIntentBits, type Message, type PartialMessage } from "discord.js";
+import {
+	Client,
+	Events,
+	GatewayIntentBits,
+	type Message,
+	MessageFlags,
+	type PartialMessage,
+} from "discord.js";
 import { handleInteraction } from "./commands/commands";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { config } from "./utils/config";
+import { logger } from "./utils/logger";
+
+const log = logger.child({ module: "bot" });
 
 // ─── Discord client ───────────────────────────────────────────────────────────
 
@@ -14,7 +24,7 @@ const discordClient = new Client({
 });
 
 discordClient.on(Events.ClientReady, (c) => {
-	console.log(`[Bot] Logged in as ${c.user.tag}`);
+	log.info({ event: "ready", tag: c.user.tag }, `Logged in as ${c.user.tag}`);
 });
 
 // New messages — include text caption
@@ -37,8 +47,15 @@ discordClient.on(
 
 // Slash commands
 discordClient.on(Events.InteractionCreate, (interaction) => {
-	handleInteraction(interaction).catch((err: unknown) => {
-		console.error("[Bot] Interaction handler error:", err);
+	handleInteraction(interaction).catch(async (err: unknown) => {
+		log.error({ event: "interaction_error", err }, "Interaction handler error");
+		if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+			try {
+				await interaction.reply({ content: "An error occurred.", flags: MessageFlags.Ephemeral });
+			} catch {
+				// Interaction may have expired — ignore
+			}
+		}
 	});
 });
 

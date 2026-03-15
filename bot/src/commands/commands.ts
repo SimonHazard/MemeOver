@@ -8,11 +8,14 @@ import {
 } from "discord.js";
 
 import { config } from "../utils/config";
+import { logger } from "../utils/logger";
 
 import { handleRemove } from "./subcommands/remove";
 import { handleRotate } from "./subcommands/rotate";
 import { handleSetup } from "./subcommands/setup";
 import { handleToken } from "./subcommands/token";
+
+const log = logger.child({ module: "commands" });
 
 // ─── Command definitions ──────────────────────────────────────────────────────
 
@@ -51,7 +54,7 @@ export async function registerCommands(): Promise<void> {
 	await rest.put(Routes.applicationCommands(config.discordClientId), {
 		body: [memeover.toJSON()],
 	});
-	console.log("[Commands] Slash commands registered globally");
+	log.info({ event: "commands_registered" }, "Slash commands registered globally");
 }
 
 // ─── Interaction handler ──────────────────────────────────────────────────────

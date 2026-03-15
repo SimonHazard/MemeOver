@@ -74,6 +74,10 @@ export const store = {
 		return clients.get(wsId)?.joined_guilds.has(guildId) ?? false;
 	},
 
+	getGuildCount(): number {
+		return guildRooms.size;
+	},
+
 	getAllGuildIds(): string[] {
 		return Array.from(guildRooms.keys());
 	},
