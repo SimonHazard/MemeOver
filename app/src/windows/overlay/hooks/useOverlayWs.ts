@@ -84,6 +84,7 @@ export function useOverlayWs(): void {
 						.with("gif", () => et.gif)
 						.with("video", () => et.video)
 						.with("audio", () => et.audio)
+						.with("sticker", () => et.sticker)
 						.exhaustive();
 					if (allowed) enqueue(mediaEventToQueueItem(msg));
 				})

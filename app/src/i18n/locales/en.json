@@ -60,6 +60,7 @@
 		"type_video": "Videos",
 		"type_audio": "Audio",
 		"type_text": "Text",
+		"type_sticker": "Stickers",
 		"textSize": "Text size",
 		"textColor": "Text color",
 		"syncMediaDuration": "Sync with media duration (video/audio)",

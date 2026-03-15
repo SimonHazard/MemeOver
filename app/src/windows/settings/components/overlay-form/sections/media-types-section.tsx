@@ -2,13 +2,13 @@ import { Label } from "@memeover/ui/components/ui/label";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
-import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Video } from "lucide-react";
+import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Sticker, Video } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { enabledTypesToList, listToEnabledTypes } from "@/shared/helpers";
 import { useOverlayFormContext } from "../form-hook";
 
-const MEDIA_TYPE_KEYS = ["image", "gif", "video", "audio", "text"] as const;
+const MEDIA_TYPE_KEYS = ["image", "gif", "video", "audio", "text", "sticker"] as const;
 
 type MediaTypeKey = (typeof MEDIA_TYPE_KEYS)[number];
 
@@ -18,6 +18,7 @@ const MEDIA_TYPE_ICONS: Record<MediaTypeKey, ComponentType<{ className?: string 
 	video: Video,
 	audio: FileAudio,
 	text: MessageSquare,
+	sticker: Sticker,
 };
 
 export function MediaTypesSection() {

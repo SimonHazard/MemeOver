@@ -1,4 +1,5 @@
 import type { Message, PartialMessage } from "discord.js";
+import { StickerFormatType } from "discord.js";
 import type { ExtractedMedia, MediaType } from "./types";
 
 // ─── Security helpers ─────────────────────────────────────────────────────────
@@ -142,6 +143,19 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 		}
 	}
 
+	return results;
+}
+
+/**
+ * Extract stickers from a Discord message.
+ * Lottie stickers (format type 3) are skipped — unsupported format.
+ */
+export function extractStickers(message: Message | PartialMessage): ExtractedMedia[] {
+	const results: ExtractedMedia[] = [];
+	for (const sticker of message.stickers.values()) {
+		if (sticker.format === StickerFormatType.Lottie) continue;
+		results.push({ url: sticker.url, media_type: "sticker" });
+	}
 	return results;
 }
 

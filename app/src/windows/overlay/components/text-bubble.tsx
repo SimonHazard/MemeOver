@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { emojiUrl, parseInlineEmojis } from "@/shared/helpers";
 import type { TextSize } from "@/shared/types";
 
 // Shadow values: 4 directional black outlines + a soft drop shadow for depth
@@ -59,6 +60,22 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 		return () => observer.disconnect();
 	}, [textSize]);
 
+	const segments = parseInlineEmojis(text);
+
+	const renderSegments = (size: number) =>
+		segments.map((seg) =>
+			seg.kind === "text" ? (
+				<span key={seg.offset}>{seg.value}</span>
+			) : (
+				<img
+					key={seg.offset}
+					src={emojiUrl(seg.id, seg.animated)}
+					alt={seg.name}
+					style={{ height: `${size * 1.2}px`, display: "inline", verticalAlign: "middle" }}
+				/>
+			),
+		);
+
 	return (
 		<div ref={containerRef} style={{ width }} className="relative overflow-hidden">
 			{/* Hidden single-line span used to measure the text's natural width at base size */}
@@ -68,13 +85,13 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 				className="absolute invisible pointer-events-none whitespace-nowrap font-bold"
 				style={{ fontSize: TEXT_SIZE_PX[textSize] }}
 			>
-				{text}
+				{renderSegments(TEXT_SIZE_PX[textSize])}
 			</span>
 			<p
 				style={{ textShadow: TEXT_SHADOW, fontSize, color: textColor }}
 				className="font-bold text-center leading-snug px-4 line-clamp-4 overflow-hidden"
 			>
-				{text}
+				{renderSegments(fontSize)}
 			</p>
 		</div>
 	);

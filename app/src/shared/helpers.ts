@@ -104,6 +104,47 @@ export function formatDate(timestamp: number): string {
 	});
 }
 
+// ─── Inline emoji parsing ─────────────────────────────────────────────────────
+
+export type TextSegment =
+	| { kind: "text"; value: string; offset: number }
+	| { kind: "emoji"; id: string; name: string; animated: boolean; offset: number };
+
+const INLINE_EMOJI_RE = /<(a?):(\w+):(\d+)>/g;
+
+/** Build a Discord CDN URL for a custom emoji. No expiry — emoji assets are permanent. */
+export function emojiUrl(id: string, animated: boolean): string {
+	return animated
+		? `https://cdn.discordapp.com/emojis/${id}.gif`
+		: `https://cdn.discordapp.com/emojis/${id}.webp`;
+}
+
+export function parseInlineEmojis(text: string): TextSegment[] {
+	const segments: TextSegment[] = [];
+	let lastIndex = 0;
+
+	for (const match of text.matchAll(INLINE_EMOJI_RE)) {
+		const matchStart = match.index;
+		if (matchStart > lastIndex) {
+			segments.push({ kind: "text", value: text.slice(lastIndex, matchStart), offset: lastIndex });
+		}
+		segments.push({
+			kind: "emoji",
+			id: match[3],
+			name: match[2],
+			animated: match[1] === "a",
+			offset: matchStart,
+		});
+		lastIndex = matchStart + match[0].length;
+	}
+
+	if (lastIndex < text.length) {
+		segments.push({ kind: "text", value: text.slice(lastIndex), offset: lastIndex });
+	}
+
+	return segments;
+}
+
 // ─── Overlay helpers ──────────────────────────────────────────────────────────
 
 export function enabledTypesToList(et: EnabledTypes): string[] {
@@ -117,6 +158,7 @@ export function listToEnabledTypes(list: string[]): EnabledTypes {
 		video: false,
 		audio: false,
 		text: false,
+		sticker: false,
 	};
 	for (const v of list) {
 		if (v in result) result[v as keyof EnabledTypes] = true;

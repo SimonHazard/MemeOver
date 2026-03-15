@@ -2,7 +2,7 @@ import type { Message, PartialMessage } from "discord.js";
 import { broadcastToGuild } from "../server";
 import { guildRegistry } from "../utils/registry";
 import type { MediaEvent, TextEvent } from "../utils/types";
-import { extractMedia, extractText, urlPathname } from "./extractor";
+import { extractMedia, extractStickers, extractText, urlPathname } from "./extractor";
 
 // ─── Message dispatch ─────────────────────────────────────────────────────────
 
@@ -39,12 +39,13 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 		member?.displayAvatarURL({ size: 64 }) ?? author.displayAvatarURL({ size: 64 });
 
 	const mediaItems = extractMedia(message);
+	const activeItems = mediaItems.length > 0 ? mediaItems : extractStickers(message);
 
-	if (mediaItems.length === 0 && !includeText) return;
+	if (activeItems.length === 0 && !includeText) return;
 
 	const text = includeText ? extractText(message) : undefined;
 
-	if (mediaItems.length === 0) {
+	if (activeItems.length === 0) {
 		if (!text) return; // No media and no text → ignore
 		// No media, but text is allowed — send a text-only event
 		const event: TextEvent = {
@@ -64,7 +65,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 		return;
 	}
 
-	for (const item of mediaItems) {
+	for (const item of activeItems) {
 		const event: MediaEvent = {
 			type: "MEDIA",
 			guild_id: guildId,

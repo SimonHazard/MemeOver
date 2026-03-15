@@ -47,6 +47,7 @@ export interface EnabledTypes {
 	video: boolean;
 	audio: boolean;
 	text: boolean;
+	sticker: boolean;
 }
 
 export interface Settings {
@@ -99,7 +100,7 @@ export const DEFAULT_SETTINGS: Settings = {
 	duration: 6,
 	volume: 80,
 	position: "center",
-	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true },
+	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true, sticker: true },
 	textSize: "xl",
 	mediaOpacity: 100,
 	syncMediaDuration: false,

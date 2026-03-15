@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ─── Media type ───────────────────────────────────────────────────────────────
 
-export const MediaTypeSchema = z.enum(["image", "gif", "video", "audio"]);
+export const MediaTypeSchema = z.enum(["image", "gif", "video", "audio", "sticker"]);
 export type MediaType = z.infer<typeof MediaTypeSchema>;
 
 // ─── Server → Client schemas (messages sent by the bot to app clients) ────────
