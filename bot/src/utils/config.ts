@@ -2,6 +2,8 @@ export interface Config {
 	discordToken: string;
 	discordClientId: string;
 	wsPort: number;
+	logtailToken: string | undefined;
+	metricsToken: string | undefined;
 }
 
 function requireEnv(key: string): string {
@@ -22,7 +24,10 @@ function loadConfig(): Config {
 		throw new Error(`[Config] WS_PORT must be a valid port number (1-65535)`);
 	}
 
-	return { discordToken, discordClientId, wsPort };
+	const logtailToken = process.env.LOGTAIL_TOKEN || undefined;
+	const metricsToken = process.env.METRICS_TOKEN || undefined;
+
+	return { discordToken, discordClientId, wsPort, logtailToken, metricsToken };
 }
 
 export const config: Config = loadConfig();

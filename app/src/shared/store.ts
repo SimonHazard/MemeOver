@@ -1,9 +1,9 @@
 import { emit, listen } from "@tauri-apps/api/event";
-import { Store } from "@tauri-apps/plugin-store";
 import { toast } from "sonner";
 import { create } from "zustand";
 import i18n from "@/i18n";
 import { restoreOverlayMonitor } from "./helpers";
+import { loadSettings } from "./settings";
 import type { DisplayQueueItem, OverlayHealth, Settings, WsStatus } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 
@@ -94,15 +94,12 @@ export const useAppStore = create<AppStore>((set) => ({
  */
 export async function initOverlayStore(): Promise<void> {
 	try {
-		const store = await Store.load("settings.json");
-		const saved = await store.get<Settings>("settings");
-		if (saved) {
-			useAppStore.getState().updateSettings(saved);
-			// Restore overlay to the saved monitor before show() is called.
-			// Must be awaited so the window is on the correct monitor when it becomes visible.
-			if (saved.overlayMonitor) {
-				await restoreOverlayMonitor(saved.overlayMonitor);
-			}
+		const settings = await loadSettings();
+		useAppStore.getState().updateSettings(settings);
+		// Restore overlay to the saved monitor before show() is called.
+		// Must be awaited so the window is on the correct monitor when it becomes visible.
+		if (settings.overlayMonitor) {
+			await restoreOverlayMonitor(settings.overlayMonitor);
 		}
 	} catch (err) {
 		console.warn("[Store] Could not load settings:", err);

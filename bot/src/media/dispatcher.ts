@@ -1,8 +1,11 @@
 import type { Message, PartialMessage } from "discord.js";
 import { broadcastToGuild } from "../server";
+import { logger } from "../utils/logger";
 import { guildRegistry } from "../utils/registry";
 import type { MediaEvent, TextEvent } from "../utils/types";
 import { extractMedia, extractStickers, extractText, urlPathname } from "./extractor";
+
+const log = logger.child({ module: "dispatcher" });
 
 // ─── Message dispatch ─────────────────────────────────────────────────────────
 
@@ -22,9 +25,8 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
 
-	console.log(
-		`[Bot] Processing message in guild ${guildId}, channel ${channelId} (includeText=${includeText})`,
-	);
+	const msgLog = log.child({ guildId, channelId });
+	msgLog.debug({ event: "processing", includeText }, "Processing message");
 
 	// ── Author info ───────────────────────────────────────────────────────────
 	const author = message.author;
@@ -61,7 +63,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 			timestamp: Date.now(),
 		};
 		broadcastToGuild(guildId, event);
-		console.log(`[Bot] Broadcast text-only message to guild ${guildId}: "${text}"`);
+		msgLog.info({ event: "broadcast_text", text }, "Broadcast text-only message");
 		return;
 	}
 
@@ -81,8 +83,9 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 			timestamp: Date.now(),
 		};
 		broadcastToGuild(guildId, event);
-		console.log(
-			`[Bot] Broadcast ${item.media_type} to guild ${guildId}: ${item.url}${text ? ` (text: "${text}")` : ""}`,
+		msgLog.info(
+			{ event: "broadcast_media", media_type: item.media_type, media_url: item.url },
+			"Broadcast media event",
 		);
 	}
 }

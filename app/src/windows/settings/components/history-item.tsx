@@ -16,6 +16,7 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatTime } from "@/shared/helpers";
 import type { HistoryItem } from "@/shared/history";
+import { InlineText } from "@/windows/overlay/components/text-bubble";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -97,7 +98,9 @@ export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryIte
 
 					{/* Row 3 — Text preview (TEXT items only) */}
 					{item.type === "TEXT" && item.text && (
-						<p className="text-xs text-muted-foreground/70 truncate italic">{item.text}</p>
+						<p className="text-xs text-muted-foreground/70 truncate italic">
+							<InlineText text={item.text} />
+						</p>
 					)}
 				</div>
 
