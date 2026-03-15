@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { emojiUrl, parseInlineEmojis } from "@/shared/helpers";
 import type { TextSize } from "@/shared/types";
 
@@ -19,6 +19,41 @@ const TEXT_SIZE_PX: Record<TextSize, number> = {
 };
 
 const MIN_FONT_PX = 12;
+
+// ─── InlineText ───────────────────────────────────────────────────────────────
+
+/**
+ * Renders a text string with inline Discord custom emojis as <img> elements.
+ * `emojiHeight` controls the emoji size — defaults to "1.1em" (scales with
+ * the surrounding font), or pass a px value for pixel-precise sizing.
+ */
+export function InlineText({
+	text,
+	emojiHeight = "1.1em",
+}: {
+	text: string;
+	emojiHeight?: string;
+}) {
+	const segments = useMemo(() => parseInlineEmojis(text), [text]);
+	return (
+		<>
+			{segments.map((seg) =>
+				seg.kind === "text" ? (
+					<span key={seg.offset}>{seg.value}</span>
+				) : (
+					<img
+						key={seg.offset}
+						src={emojiUrl(seg.id, seg.animated)}
+						alt={seg.name}
+						style={{ height: emojiHeight, display: "inline", verticalAlign: "middle" }}
+					/>
+				),
+			)}
+		</>
+	);
+}
+
+// ─── TextDisplay ──────────────────────────────────────────────────────────────
 
 interface TextDisplayProps {
 	text: string;
@@ -60,22 +95,6 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 		return () => observer.disconnect();
 	}, [textSize]);
 
-	const segments = parseInlineEmojis(text);
-
-	const renderSegments = (size: number) =>
-		segments.map((seg) =>
-			seg.kind === "text" ? (
-				<span key={seg.offset}>{seg.value}</span>
-			) : (
-				<img
-					key={seg.offset}
-					src={emojiUrl(seg.id, seg.animated)}
-					alt={seg.name}
-					style={{ height: `${size * 1.2}px`, display: "inline", verticalAlign: "middle" }}
-				/>
-			),
-		);
-
 	return (
 		<div ref={containerRef} style={{ width }} className="relative overflow-hidden">
 			{/* Hidden single-line span used to measure the text's natural width at base size */}
@@ -85,13 +104,13 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 				className="absolute invisible pointer-events-none whitespace-nowrap font-bold"
 				style={{ fontSize: TEXT_SIZE_PX[textSize] }}
 			>
-				{renderSegments(TEXT_SIZE_PX[textSize])}
+				<InlineText text={text} emojiHeight={`${TEXT_SIZE_PX[textSize] * 1.2}px`} />
 			</span>
 			<p
 				style={{ textShadow: TEXT_SHADOW, fontSize, color: textColor }}
 				className="font-bold text-center leading-snug px-4 line-clamp-4 overflow-hidden"
 			>
-				{renderSegments(fontSize)}
+				<InlineText text={text} emojiHeight={`${fontSize * 1.2}px`} />
 			</p>
 		</div>
 	);

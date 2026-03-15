@@ -2,7 +2,7 @@ import type React from "react";
 import type { DisplayQueueItem, Settings } from "@/shared/types";
 import { AudioEqualizer } from "./audio-equalizer";
 import { AuthorBadge } from "./author-badge";
-import { TextDisplay } from "./text-bubble";
+import { InlineText, TextDisplay } from "./text-bubble";
 
 const CAPTION_SHADOW = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000";
 // Discord stickers are fixed-size transparent assets — not scaled by mediaSize
@@ -164,7 +164,7 @@ export function MediaDisplay({
 							style={{ textShadow: CAPTION_SHADOW, color: settings.textColor }}
 							className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
 						>
-							{item.text}
+							<InlineText text={item.text} />
 						</p>
 					)}
 				</div>
@@ -189,7 +189,7 @@ export function MediaDisplay({
 					style={{ maxWidth: width, textShadow: CAPTION_SHADOW, color: settings.textColor }}
 					className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
 				>
-					{item.text}
+					<InlineText text={item.text} />
 				</p>
 			)}
 		</>

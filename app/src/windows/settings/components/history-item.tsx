@@ -3,7 +3,15 @@ import { Button } from "@memeover/ui/components/ui/button";
 import { Card } from "@memeover/ui/components/ui/card";
 import { NB_BTN_DISABLED, NB_HOVER_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
-import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Play, Video } from "lucide-react";
+import {
+	Clapperboard,
+	FileAudio,
+	ImageIcon,
+	MessageSquare,
+	Play,
+	Sticker,
+	Video,
+} from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatTime } from "@/shared/helpers";
@@ -33,6 +41,8 @@ function getMediaConfig(item: HistoryItem): MediaIconConfig {
 			return { icon: Video, labelKey: "display.type_video" };
 		case "audio":
 			return { icon: FileAudio, labelKey: "display.type_audio" };
+		case "sticker":
+			return { icon: Sticker, labelKey: "display.type_sticker" };
 		default:
 			return { icon: ImageIcon, labelKey: "display.type_image" };
 	}
