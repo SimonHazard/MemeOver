@@ -17,6 +17,9 @@ import type {
 
 const log = logger.child({ module: "server" });
 
+// Pre-compute once at startup to avoid per-request allocation
+const metricsTokenBuf = config.metricsToken ? Buffer.from(config.metricsToken) : null;
+
 // ─── Broadcast ────────────────────────────────────────────────────────────────
 
 /** Sends MEMBER_COUNT_UPDATE to every client in the guild with the current member count. */
@@ -119,6 +122,7 @@ function startHeartbeat(ws: WSConnection): void {
 			);
 			stats.errorHeartbeatTimeout();
 			clearHeartbeat(ws.id);
+			rateLimiters.delete(ws.id);
 			// Capture guilds before removal so we can broadcast the updated count
 			const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
 			store.removeClient(ws.id);
@@ -222,17 +226,19 @@ export function createServer() {
 			};
 		})
 		.get("/metrics", (ctx) => {
-			if (config.metricsToken) {
-				const auth = ctx.headers.authorization as string | undefined;
-				const token = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
-				const valid =
-					token !== undefined &&
-					token.length === config.metricsToken.length &&
-					timingSafeEqual(Buffer.from(token), Buffer.from(config.metricsToken));
-				if (!valid) {
-					ctx.set.status = 401;
-					return { error: "Unauthorized" };
-				}
+			if (!metricsTokenBuf) {
+				ctx.set.status = 403;
+				return { error: "Forbidden" };
+			}
+			const auth = ctx.headers.authorization as string | undefined;
+			const token = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
+			const valid =
+				token !== undefined &&
+				token.length === metricsTokenBuf.length &&
+				timingSafeEqual(Buffer.from(token), metricsTokenBuf);
+			if (!valid) {
+				ctx.set.status = 401;
+				return { error: "Unauthorized" };
 			}
 			return stats.snapshot();
 		})

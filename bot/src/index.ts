@@ -54,9 +54,18 @@ async function shutdown(signal: string): Promise<void> {
 	}
 
 	// Persist registry one last time
-	guildRegistry.flush();
+	try {
+		guildRegistry.flush();
+	} catch (err) {
+		log.error({ event: "shutdown_flush_failed", err }, "Failed to flush registry during shutdown");
+	}
 
-	await app.stop();
+	try {
+		await app.stop();
+	} catch (err) {
+		log.error({ event: "shutdown_stop_failed", err }, "Failed to stop server during shutdown");
+	}
+
 	process.exit(0);
 }
 
