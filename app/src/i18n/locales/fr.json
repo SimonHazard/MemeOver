@@ -73,7 +73,14 @@
 		"bg_border_color": "Couleur de bordure",
 		"bg_border_width": "Épaisseur de bordure",
 		"bg_border_opacity": "Opacité de bordure",
-		"bg_border_radius": "Arrondi des angles"
+		"bg_border_radius": "Arrondi des angles",
+		"monitor": "Écran de l'overlay",
+		"monitor_hint": "Choisissez sur quel écran l'overlay s'affiche.",
+		"monitor_primary": "Principal",
+		"monitor_single": "Un seul écran détecté.",
+		"monitor_disconnected": "L'écran sélectionné n'est plus connecté — l'overlay a été déplacé sur le principal.",
+		"monitor_screen": "Écran {{number}}",
+		"monitor_beta": "Le changement d'écran est encore en phase d'analyse — des comportements inattendus sont possibles sur certaines configurations."
 	},
 	"onboarding": {
 		"step": "Étape {{current}} sur {{total}}",
@@ -104,7 +111,9 @@
 		"replayQueued": "Média remis en file",
 		"replayError": "Impossible de rejouer le média",
 		"clearError": "Impossible d'effacer l'historique",
-		"autostartError": "Impossible de modifier le démarrage automatique"
+		"autostartError": "Impossible de modifier le démarrage automatique",
+		"monitorSwitched": "Overlay déplacé vers {{name}}",
+		"monitorError": "Impossible de déplacer l'overlay vers cet écran"
 	},
 	"tray": {
 		"show": "Afficher les paramètres",

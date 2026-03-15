@@ -22,6 +22,12 @@ export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
 /** Santé de la fenêtre overlay (alive = existe et visible, closed = détruite) */
 export type OverlayHealth = "alive" | "closed";
 
+/** Physical coordinates of a monitor's top-left corner — used as a stable identifier across sessions */
+export interface OverlayMonitor {
+	x: number;
+	y: number;
+}
+
 export type OverlayPosition =
 	| "center"
 	| "top-left"
@@ -81,6 +87,8 @@ export interface Settings {
 	bgPadding: number;
 	/** Text color for text overlays (HEX) */
 	textColor: string;
+	/** Physical origin (x, y) of the monitor where the overlay should appear; null = primary monitor */
+	overlayMonitor: OverlayMonitor | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -104,4 +112,5 @@ export const DEFAULT_SETTINGS: Settings = {
 	bgBorderRadius: 12,
 	bgPadding: 16,
 	textColor: "#FFFFFF",
+	overlayMonitor: null,
 };

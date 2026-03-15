@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import type { TextSize } from "@/shared/types";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { ColorPicker } from "../../color-picker";
+import { MonitorSelector } from "../../monitor-selector";
 import { PositionGrid } from "../../position-grid";
 import { PositionPreview } from "../../position-preview";
 import { useOverlayFormContext } from "../form-hook";
@@ -159,6 +160,9 @@ export function DisplaySettingsSection() {
 					</div>
 				)}
 			</form.Field>
+
+			{/* Monitor selector — immediate action, outside form state */}
+			<MonitorSelector />
 
 			{/* Position */}
 			<form.Field name="position">
