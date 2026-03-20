@@ -2036,7 +2036,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "memeover"
-version = "0.11.1"
+version = "0.11.2"
 dependencies = [
  "objc2",
  "raw-window-handle",
@@ -2047,6 +2047,7 @@ dependencies = [
  "tauri-plugin-autostart",
  "tauri-plugin-opener",
  "tauri-plugin-process",
+ "tauri-plugin-single-instance",
  "tauri-plugin-store",
  "tauri-plugin-updater",
  "windows",
@@ -3954,6 +3955,21 @@ checksum = "d55511a7bf6cd70c8767b02c97bf8134fa434daf3926cfc1be0a0f94132d165a"
 dependencies = [
  "tauri",
  "tauri-plugin",
+]
+
+[[package]]
+name = "tauri-plugin-single-instance"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc61e4822b8f74d68278e09161d3e3fdd1b14b9eb781e24edccaabf10c420e8c"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "thiserror 2.0.18",
+ "tracing",
+ "windows-sys 0.60.2",
+ "zbus",
 ]
 
 [[package]]
