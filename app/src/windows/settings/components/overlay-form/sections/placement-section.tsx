@@ -14,7 +14,10 @@ export function PlacementSection() {
 
 	return (
 		<div className="space-y-5">
-			<SectionHeader title={t("display.group_placement")} hint={t("display.group_placement_hint")} />
+			<SectionHeader
+				title={t("display.group_placement")}
+				hint={t("display.group_placement_hint")}
+			/>
 
 			{/* Monitor */}
 			<MonitorSelector />
