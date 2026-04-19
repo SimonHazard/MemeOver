@@ -1,8 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { initSettingsStore } from "./shared/store";
-import { SettingsApp } from "./windows/settings/SettingsApp";
 import { checkForUpdatesInBackground } from "./windows/settings/hooks/useUpdater";
+import { SettingsApp } from "./windows/settings/SettingsApp";
 import "./App.css";
 import "./i18n";
 
