@@ -1,22 +1,9 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { emojiUrl, parseInlineEmojis } from "@/shared/helpers";
-import type { TextSize } from "@/shared/types";
 
 // Shadow values: 4 directional black outlines + a soft drop shadow for depth
 const TEXT_SHADOW =
 	"-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 8px rgba(0,0,0,0.9)";
-
-/** Base font sizes in pixels, one per TextSize step */
-const TEXT_SIZE_PX: Record<TextSize, number> = {
-	xs: 11,
-	sm: 13,
-	base: 16,
-	lg: 18,
-	xl: 20,
-	"2xl": 24,
-	"3xl": 30,
-	"4xl": 36,
-};
 
 const MIN_FONT_PX = 12;
 
@@ -58,14 +45,15 @@ export function InlineText({
 interface TextDisplayProps {
 	text: string;
 	width: string;
-	textSize: TextSize;
+	/** Desired font size in pixels. May be auto-reduced if the text doesn't fit. */
+	textSize: number;
 	textColor: string;
 }
 
 export function TextDisplay({ text, width, textSize, textColor }: TextDisplayProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const measureRef = useRef<HTMLSpanElement>(null);
-	const [fontSize, setFontSize] = useState<number>(TEXT_SIZE_PX[textSize]);
+	const [fontSize, setFontSize] = useState<number>(textSize);
 
 	useLayoutEffect(() => {
 		const container = containerRef.current;
@@ -74,15 +62,17 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 
 		function recalculate() {
 			if (!container || !measure) return;
-			const basePx = TEXT_SIZE_PX[textSize];
 			// Subtract px-4 (1rem = 16px) on each side
 			const containerWidth = container.clientWidth - 32;
 			const naturalWidth = measure.scrollWidth;
 
 			if (naturalWidth <= containerWidth || containerWidth <= 0) {
-				setFontSize(basePx);
+				setFontSize(textSize);
 			} else {
-				const scaled = Math.max(MIN_FONT_PX, Math.floor(basePx * (containerWidth / naturalWidth)));
+				const scaled = Math.max(
+					MIN_FONT_PX,
+					Math.floor(textSize * (containerWidth / naturalWidth)),
+				);
 				setFontSize(scaled);
 			}
 		}
@@ -102,9 +92,9 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 				ref={measureRef}
 				aria-hidden
 				className="absolute invisible pointer-events-none whitespace-nowrap font-bold"
-				style={{ fontSize: TEXT_SIZE_PX[textSize] }}
+				style={{ fontSize: textSize }}
 			>
-				<InlineText text={text} emojiHeight={`${TEXT_SIZE_PX[textSize] * 1.2}px`} />
+				<InlineText text={text} emojiHeight={`${textSize * 1.2}px`} />
 			</span>
 			<p
 				style={{ textShadow: TEXT_SHADOW, fontSize, color: textColor }}

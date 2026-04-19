@@ -47,6 +47,10 @@ interface AppStore {
 	// True while the overlay is actively displaying an item (current !== null)
 	isDisplaying: boolean;
 	setIsDisplaying: (v: boolean) => void;
+
+	// True when the Tauri updater has detected a newer release on GitHub
+	updateAvailable: boolean;
+	setUpdateAvailable: (v: boolean) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -81,6 +85,9 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	isDisplaying: false,
 	setIsDisplaying: (v) => set({ isDisplaying: v }),
+
+	updateAvailable: false,
+	setUpdateAvailable: (v) => set({ updateAvailable: v }),
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────

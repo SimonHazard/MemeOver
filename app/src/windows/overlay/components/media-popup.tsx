@@ -57,13 +57,21 @@ export function MediaPopup({
 						transition: { duration: 0.18, ease: "easeIn" },
 					}}
 				>
-					<MediaDisplay
-						item={current}
-						settings={settings}
-						onVideoEnd={onVideoEnd}
-						startTimer={startTimer}
-						onMediaError={onMediaError}
-					/>
+					{/* Inner wrapper applies the user offset without fighting the anchor's
+					    Tailwind -translate-x-1/2 on top/bottom/center positions. */}
+					<div
+						style={{
+							transform: `translate(${settings.positionOffsetX}vw, ${settings.positionOffsetY}vh)`,
+						}}
+					>
+						<MediaDisplay
+							item={current}
+							settings={settings}
+							onVideoEnd={onVideoEnd}
+							startTimer={startTimer}
+							onMediaError={onMediaError}
+						/>
+					</div>
 				</motion.div>
 			)}
 		</AnimatePresence>

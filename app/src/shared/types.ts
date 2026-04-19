@@ -39,7 +39,10 @@ export type OverlayPosition =
 	| "bottom"
 	| "bottom-right";
 
+/** @deprecated Legacy enum — kept only for settings migration. Use numeric pixels instead. */
 export type TextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+
+export type TextPosition = "above" | "below" | "overlay-top" | "overlay-middle" | "overlay-bottom";
 
 export interface EnabledTypes {
 	image: boolean;
@@ -55,17 +58,27 @@ export interface Settings {
 	token: string;
 	/** WebSocket URL of the bot server, e.g. ws://localhost:3001/ws */
 	wsUrl: string;
-	/** Media width as a % of the viewport width (10–90) */
+	/** Maximum size of the media's largest dimension as a % of vmin (10–90).
+	 *  With the fit-box renderer, the media fits a `mediaSize × mediaSize` vmin
+	 *  square while preserving its aspect ratio. */
 	mediaSize: number;
 	/** Seconds to display each media item (1–30) */
 	duration: number;
 	/** Volume for video media (0–100) */
 	volume: number;
 	position: OverlayPosition;
+	/** Fine-tune X offset from the anchor, in % of viewport width (-20 to +20) */
+	positionOffsetX: number;
+	/** Fine-tune Y offset from the anchor, in % of viewport height (-20 to +20) */
+	positionOffsetY: number;
 	/** Which media types are allowed to be displayed */
 	enabledTypes: EnabledTypes;
-	/** Font size for text overlays */
-	textSize: TextSize;
+	/** Monotonic schema version; bumped when a load-time migration of persisted fields is required */
+	schemaVersion: number;
+	/** Font size for text overlays, in pixels (12–96) */
+	textSize: number;
+	/** Where the caption / text sits relative to the media */
+	textPosition: TextPosition;
 	/** Opacity of the media element (0 = invisible, 100 = fully opaque) */
 	mediaOpacity: number;
 	/** When true, video/audio overlays stay visible until the media ends (ignores duration timer) */
@@ -92,16 +105,23 @@ export interface Settings {
 	overlayMonitor: OverlayMonitor | null;
 }
 
+/** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
+export const CURRENT_SCHEMA_VERSION = 1;
+
 export const DEFAULT_SETTINGS: Settings = {
 	guildId: "",
 	token: "",
 	wsUrl: "ws://localhost:3001/ws",
-	mediaSize: 40,
+	mediaSize: 60,
 	duration: 6,
 	volume: 80,
 	position: "center",
+	positionOffsetX: 0,
+	positionOffsetY: 0,
 	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true, sticker: true },
-	textSize: "xl",
+	schemaVersion: CURRENT_SCHEMA_VERSION,
+	textSize: 20,
+	textPosition: "overlay-bottom",
 	mediaOpacity: 100,
 	syncMediaDuration: false,
 	bgEnabled: false,
