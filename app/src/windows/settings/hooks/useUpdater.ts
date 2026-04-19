@@ -1,6 +1,7 @@
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { useCallback, useRef, useState } from "react";
+import { useAppStore } from "@/shared/store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export function useUpdater() {
 			const update = await check();
 			if (update) {
 				updateRef.current = update;
+				useAppStore.getState().setUpdateAvailable(true);
 				setState({
 					status: "available",
 					version: update.version,
@@ -47,6 +49,7 @@ export function useUpdater() {
 				});
 				return { found: true, version: update.version };
 			}
+			useAppStore.getState().setUpdateAvailable(false);
 			setState({ status: "up-to-date" });
 			return { found: false };
 		} catch (err) {
@@ -120,4 +123,21 @@ export function useUpdater() {
 	}, []);
 
 	return { state, checkForUpdates, startDownload, installAndRelaunch, reset };
+}
+
+// ─── Background check ────────────────────────────────────────────────────────
+
+/**
+ * Runs a one-shot update check outside of any React component (called from
+ * main-settings.tsx on app launch). Flips the shared `updateAvailable` flag
+ * in the Zustand store so the TabNav badge can render a pulsing dot on the
+ * "À propos" tab without the About page ever being mounted.
+ */
+export async function checkForUpdatesInBackground(): Promise<void> {
+	try {
+		const update = await check();
+		useAppStore.getState().setUpdateAvailable(update !== null);
+	} catch (err) {
+		console.warn("[Updater] Background check failed:", err);
+	}
 }
