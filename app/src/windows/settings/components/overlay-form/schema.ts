@@ -12,7 +12,13 @@ const OVERLAY_POSITIONS = [
 	"bottom-right",
 ] as const;
 
-const TEXT_SIZES = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"] as const;
+const TEXT_POSITIONS = [
+	"above",
+	"below",
+	"overlay-top",
+	"overlay-middle",
+	"overlay-bottom",
+] as const;
 
 export const OverlaySettingsSchema = z.object({
 	mediaSize: z.number().min(10).max(90),
@@ -20,6 +26,8 @@ export const OverlaySettingsSchema = z.object({
 	syncMediaDuration: z.boolean(),
 	volume: z.number().min(0).max(100),
 	position: z.enum(OVERLAY_POSITIONS),
+	positionOffsetX: z.number().min(-20).max(20),
+	positionOffsetY: z.number().min(-20).max(20),
 	enabledTypes: z.object({
 		image: z.boolean(),
 		gif: z.boolean(),
@@ -28,7 +36,8 @@ export const OverlaySettingsSchema = z.object({
 		text: z.boolean(),
 		sticker: z.boolean(),
 	}),
-	textSize: z.enum(TEXT_SIZES),
+	textSize: z.number().min(12).max(96),
+	textPosition: z.enum(TEXT_POSITIONS),
 	textColor: z.string(),
 	mediaOpacity: z.number().min(0).max(100),
 	bgEnabled: z.boolean(),

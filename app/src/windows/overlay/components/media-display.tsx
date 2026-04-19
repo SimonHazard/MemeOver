@@ -1,10 +1,13 @@
 import type React from "react";
-import type { DisplayQueueItem, Settings } from "@/shared/types";
+import type { DisplayQueueItem, Settings, TextPosition } from "@/shared/types";
 import { AudioEqualizer } from "./audio-equalizer";
 import { AuthorBadge } from "./author-badge";
 import { InlineText, TextDisplay } from "./text-bubble";
 
 const CAPTION_SHADOW = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000";
+// Impact-style stroke — a denser 4-directional outline for overlay captions
+const OVERLAY_CAPTION_SHADOW =
+	"-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000";
 // Discord stickers are fixed-size transparent assets — not scaled by mediaSize
 const STICKER_MAX_SIZE = "256px";
 
@@ -13,6 +16,64 @@ function hexToRgba(hex: string, opacity: number): string {
 	const g = parseInt(hex.slice(3, 5), 16);
 	const b = parseInt(hex.slice(5, 7), 16);
 	return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+}
+
+function isOverlayMode(pos: TextPosition): boolean {
+	return pos === "overlay-top" || pos === "overlay-middle" || pos === "overlay-bottom";
+}
+
+function overlayAnchorClass(pos: TextPosition): string {
+	if (pos === "overlay-top") return "top-2 left-1/2 -translate-x-1/2";
+	if (pos === "overlay-middle") return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
+	return "bottom-2 left-1/2 -translate-x-1/2"; // overlay-bottom
+}
+
+// ─── Caption variants ─────────────────────────────────────────────────────────
+
+function InlineCaption({
+	text,
+	width,
+	color,
+	fontSize,
+}: {
+	text: string;
+	width: string;
+	color: string;
+	fontSize: number;
+}) {
+	return (
+		<p
+			style={{ maxWidth: width, textShadow: CAPTION_SHADOW, color, fontSize }}
+			className="font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
+		>
+			<InlineText text={text} />
+		</p>
+	);
+}
+
+function OverlayCaption({
+	text,
+	color,
+	fontSize,
+	anchorClass,
+}: {
+	text: string;
+	color: string;
+	fontSize: number;
+	anchorClass: string;
+}) {
+	return (
+		<p
+			style={{
+				textShadow: OVERLAY_CAPTION_SHADOW,
+				color,
+				fontSize,
+			}}
+			className={`absolute ${anchorClass} w-[92%] font-black uppercase text-center leading-tight tracking-wide line-clamp-3 overflow-hidden pointer-events-none`}
+		>
+			<InlineText text={text} emojiHeight={`${fontSize * 1.1}px`} />
+		</p>
+	);
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -44,6 +105,9 @@ export function MediaDisplay({
 		bgBorderWidth,
 		bgBorderRadius,
 		bgPadding,
+		textPosition,
+		textSize,
+		textColor,
 	} = settings;
 
 	const bgWrapperStyle: React.CSSProperties = bgEnabled
@@ -69,12 +133,7 @@ export function MediaDisplay({
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
 				/>
-				<TextDisplay
-					text={item.text}
-					width={width}
-					textSize={settings.textSize}
-					textColor={settings.textColor}
-				/>
+				<TextDisplay text={item.text} width={width} textSize={textSize} textColor={textColor} />
 			</>
 		);
 
@@ -91,18 +150,15 @@ export function MediaDisplay({
 
 	// MEDIA branch — item is narrowed to MediaQueueItem here
 	const opacity = settings.mediaOpacity / 100;
+	const caption = item.text ?? "";
+	// Audio has its own layout with an integrated caption — external caption modes don't apply.
+	const hasCaption = item.media_type !== "audio" && caption.length > 0;
+	const useOverlay = hasCaption && isOverlayMode(textPosition);
+	const useInlineCaption = hasCaption && !useOverlay;
 
-	const mediaContent = (
-		<>
-			{/* ── Author badge — always fully opaque ── */}
-			<AuthorBadge
-				username={item.author_username}
-				displayName={item.author_display_name}
-				avatarUrl={item.author_avatar_url}
-			/>
-
-			{/* ── Video ── */}
-			{item.media_type === "video" && (
+	const mediaNode = (() => {
+		if (item.media_type === "video") {
+			return (
 				<video
 					src={item.media_url}
 					autoPlay
@@ -124,10 +180,10 @@ export function MediaDisplay({
 					}}
 					className="rounded-xl block transition-opacity duration-300"
 				/>
-			)}
-
-			{/* ── Image / GIF ── */}
-			{(item.media_type === "image" || item.media_type === "gif") && (
+			);
+		}
+		if (item.media_type === "image" || item.media_type === "gif") {
+			return (
 				<img
 					src={item.media_url}
 					alt=""
@@ -137,10 +193,10 @@ export function MediaDisplay({
 					className="rounded-xl block transition-opacity duration-300"
 					draggable={false}
 				/>
-			)}
-
-			{/* ── Audio ── */}
-			{item.media_type === "audio" && (
+			);
+		}
+		if (item.media_type === "audio") {
+			return (
 				<div
 					style={{ maxWidth: width, opacity }}
 					className={
@@ -159,39 +215,61 @@ export function MediaDisplay({
 						onEnded={onVideoEnd}
 						onError={onMediaError}
 					/>
-					{item.text && (
+					{caption && (
 						<p
-							style={{ textShadow: CAPTION_SHADOW, color: settings.textColor }}
-							className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
+							style={{ textShadow: CAPTION_SHADOW, color: textColor, fontSize: textSize }}
+							className="font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
 						>
-							<InlineText text={item.text} />
+							<InlineText text={caption} />
 						</p>
 					)}
 				</div>
-			)}
+			);
+		}
+		// Sticker
+		return (
+			<img
+				src={item.media_url}
+				alt=""
+				onLoad={startTimer}
+				onError={onMediaError}
+				style={{ maxWidth: STICKER_MAX_SIZE, maxHeight: STICKER_MAX_SIZE, opacity }}
+				className="block transition-opacity duration-300"
+				draggable={false}
+			/>
+		);
+	})();
 
-			{/* ── Sticker ── */}
-			{item.media_type === "sticker" && (
-				<img
-					src={item.media_url}
-					alt=""
-					onLoad={startTimer}
-					onError={onMediaError}
-					style={{ maxWidth: STICKER_MAX_SIZE, maxHeight: STICKER_MAX_SIZE, opacity }}
-					className="block transition-opacity duration-300"
-					draggable={false}
-				/>
-			)}
+	// When using an overlay caption, wrap the media in a tight relative box so the
+	// absolute caption is bounded by the rendered media (not by the wider bg container).
+	const mediaWithOverlayCaption = useOverlay ? (
+		<div className="relative inline-block">
+			{mediaNode}
+			<OverlayCaption
+				text={caption}
+				color={textColor}
+				fontSize={textSize}
+				anchorClass={overlayAnchorClass(textPosition)}
+			/>
+		</div>
+	) : (
+		mediaNode
+	);
 
-			{/* ── Caption (image / gif / video / sticker) — always fully opaque ── */}
-			{item.media_type !== "audio" && item.text && (
-				<p
-					style={{ maxWidth: width, textShadow: CAPTION_SHADOW, color: settings.textColor }}
-					className="text-sm font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
-				>
-					<InlineText text={item.text} />
-				</p>
-			)}
+	const inlineCaptionNode = useInlineCaption ? (
+		<InlineCaption text={caption} width={width} color={textColor} fontSize={textSize} />
+	) : null;
+
+	const mediaContent = (
+		<>
+			<AuthorBadge
+				username={item.author_username}
+				displayName={item.author_display_name}
+				avatarUrl={item.author_avatar_url}
+			/>
+			{textPosition === "above" && inlineCaptionNode}
+			{mediaWithOverlayCaption}
+			{textPosition === "below" && inlineCaptionNode}
 		</>
 	);
 

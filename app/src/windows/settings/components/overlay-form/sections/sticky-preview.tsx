@@ -14,14 +14,23 @@ export function StickyPreview() {
 
 			<form.Subscribe
 				selector={(s) =>
-					[s.values.position, s.values.mediaSize, s.values.duration, s.values.mediaOpacity] as const
+					[
+						s.values.position,
+						s.values.mediaSize,
+						s.values.duration,
+						s.values.mediaOpacity,
+						s.values.positionOffsetX,
+						s.values.positionOffsetY,
+					] as const
 				}
 			>
-				{([position, mediaSize, duration, opacity]) => (
+				{([position, mediaSize, duration, opacity, offsetX, offsetY]) => (
 					<div className="space-y-3">
 						<PositionPreview
 							position={position}
 							mediaSize={mediaSize}
+							offsetX={offsetX}
+							offsetY={offsetY}
 							label={t("display.preview_media")}
 						/>
 						<p className="text-[11px] font-mono text-muted-foreground leading-relaxed break-words">
