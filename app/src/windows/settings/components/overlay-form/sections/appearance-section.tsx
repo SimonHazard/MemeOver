@@ -1,10 +1,15 @@
+import {
+	NbAccordion,
+	NbAccordionContent,
+	NbAccordionItem,
+	NbAccordionTrigger,
+} from "@memeover/ui/components/branded/nb-accordion";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Slider } from "@memeover/ui/components/ui/slider";
 import { Switch } from "@memeover/ui/components/ui/switch";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { ColorPicker } from "../../color-picker";
-import { CollapsibleGroup } from "../components/collapsible-group";
 import { SectionHeader } from "../components/section-header";
 import { useOverlayFormContext } from "../form-hook";
 
@@ -61,149 +66,169 @@ export function AppearanceSection() {
 			<form.Subscribe selector={(s) => s.values.bgEnabled}>
 				{(bgEnabled) =>
 					bgEnabled ? (
-						<div className="space-y-3">
-							{/* Background collapsible — fill, shape, padding */}
-							<CollapsibleGroup label={t("display.customize_background")}>
-								<form.Field name="bgColor">
-									{(field) => (
-										<div className="space-y-2">
-											<Label className="font-display tracking-wide text-xs">
-												{t("display.bg_color")}
-											</Label>
-											<ColorPicker
-												value={field.state.value}
-												onChange={field.handleChange}
-												onReset={() => field.handleChange(DEFAULT_SETTINGS.bgColor)}
-											/>
-										</div>
-									)}
-								</form.Field>
-
-								<form.Field name="bgOpacity">
-									{(field) => (
-										<div className="space-y-3">
-											<div className="flex justify-between">
+						<NbAccordion type="multiple">
+							{/* Background item — fill, shape, padding */}
+							<NbAccordionItem value="background">
+								<NbAccordionTrigger>{t("display.customize_background")}</NbAccordionTrigger>
+								<NbAccordionContent>
+									<form.Field name="bgColor">
+										{(field) => (
+											<div className="space-y-2">
 												<Label className="font-display tracking-wide text-xs">
-													{t("display.bg_opacity")}
+													{t("display.bg_color")}
 												</Label>
-												<span className="text-sm text-muted-foreground">{field.state.value}%</span>
+												<ColorPicker
+													value={field.state.value}
+													onChange={field.handleChange}
+													onReset={() => field.handleChange(DEFAULT_SETTINGS.bgColor)}
+												/>
 											</div>
-											<Slider
-												min={0}
-												max={100}
-												step={1}
-												value={[field.state.value]}
-												onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.bgOpacity)}
-											/>
-										</div>
-									)}
-								</form.Field>
+										)}
+									</form.Field>
 
-								<form.Field name="bgPadding">
-									{(field) => (
-										<div className="space-y-3">
-											<div className="flex justify-between">
+									<form.Field name="bgOpacity">
+										{(field) => (
+											<div className="space-y-3">
+												<div className="flex justify-between">
+													<Label className="font-display tracking-wide text-xs">
+														{t("display.bg_opacity")}
+													</Label>
+													<span className="text-sm text-muted-foreground">
+														{field.state.value}%
+													</span>
+												</div>
+												<Slider
+													min={0}
+													max={100}
+													step={1}
+													value={[field.state.value]}
+													onValueChange={([v]) =>
+														field.handleChange(v ?? DEFAULT_SETTINGS.bgOpacity)
+													}
+												/>
+											</div>
+										)}
+									</form.Field>
+
+									<form.Field name="bgPadding">
+										{(field) => (
+											<div className="space-y-3">
+												<div className="flex justify-between">
+													<Label className="font-display tracking-wide text-xs">
+														{t("display.bg_padding")}
+													</Label>
+													<span className="text-sm text-muted-foreground">
+														{field.state.value}px
+													</span>
+												</div>
+												<Slider
+													min={0}
+													max={100}
+													step={1}
+													value={[field.state.value]}
+													onValueChange={([v]) =>
+														field.handleChange(v ?? DEFAULT_SETTINGS.bgPadding)
+													}
+												/>
+											</div>
+										)}
+									</form.Field>
+
+									<form.Field name="bgBorderRadius">
+										{(field) => (
+											<div className="space-y-3">
+												<div className="flex justify-between">
+													<Label className="font-display tracking-wide text-xs">
+														{t("display.bg_border_radius")}
+													</Label>
+													<span className="text-sm text-muted-foreground">
+														{field.state.value}px
+													</span>
+												</div>
+												<Slider
+													min={0}
+													max={30}
+													step={1}
+													value={[field.state.value]}
+													onValueChange={([v]) =>
+														field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderRadius)
+													}
+												/>
+											</div>
+										)}
+									</form.Field>
+								</NbAccordionContent>
+							</NbAccordionItem>
+
+							{/* Border item — stroke color/width/opacity */}
+							<NbAccordionItem value="border">
+								<NbAccordionTrigger>{t("display.customize_border")}</NbAccordionTrigger>
+								<NbAccordionContent>
+									<form.Field name="bgBorderColor">
+										{(field) => (
+											<div className="space-y-2">
 												<Label className="font-display tracking-wide text-xs">
-													{t("display.bg_padding")}
+													{t("display.bg_border_color")}
 												</Label>
-												<span className="text-sm text-muted-foreground">{field.state.value}px</span>
+												<ColorPicker
+													value={field.state.value}
+													onChange={field.handleChange}
+													onReset={() => field.handleChange(DEFAULT_SETTINGS.bgBorderColor)}
+												/>
 											</div>
-											<Slider
-												min={0}
-												max={100}
-												step={1}
-												value={[field.state.value]}
-												onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.bgPadding)}
-											/>
-										</div>
-									)}
-								</form.Field>
+										)}
+									</form.Field>
 
-								<form.Field name="bgBorderRadius">
-									{(field) => (
-										<div className="space-y-3">
-											<div className="flex justify-between">
-												<Label className="font-display tracking-wide text-xs">
-													{t("display.bg_border_radius")}
-												</Label>
-												<span className="text-sm text-muted-foreground">{field.state.value}px</span>
+									<form.Field name="bgBorderWidth">
+										{(field) => (
+											<div className="space-y-3">
+												<div className="flex justify-between">
+													<Label className="font-display tracking-wide text-xs">
+														{t("display.bg_border_width")}
+													</Label>
+													<span className="text-sm text-muted-foreground">
+														{field.state.value}px
+													</span>
+												</div>
+												<Slider
+													min={0}
+													max={20}
+													step={1}
+													value={[field.state.value]}
+													onValueChange={([v]) =>
+														field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderWidth)
+													}
+												/>
 											</div>
-											<Slider
-												min={0}
-												max={30}
-												step={1}
-												value={[field.state.value]}
-												onValueChange={([v]) =>
-													field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderRadius)
-												}
-											/>
-										</div>
-									)}
-								</form.Field>
-							</CollapsibleGroup>
+										)}
+									</form.Field>
 
-							{/* Border collapsible — stroke color/width/opacity */}
-							<CollapsibleGroup label={t("display.customize_border")}>
-								<form.Field name="bgBorderColor">
-									{(field) => (
-										<div className="space-y-2">
-											<Label className="font-display tracking-wide text-xs">
-												{t("display.bg_border_color")}
-											</Label>
-											<ColorPicker
-												value={field.state.value}
-												onChange={field.handleChange}
-												onReset={() => field.handleChange(DEFAULT_SETTINGS.bgBorderColor)}
-											/>
-										</div>
-									)}
-								</form.Field>
-
-								<form.Field name="bgBorderWidth">
-									{(field) => (
-										<div className="space-y-3">
-											<div className="flex justify-between">
-												<Label className="font-display tracking-wide text-xs">
-													{t("display.bg_border_width")}
-												</Label>
-												<span className="text-sm text-muted-foreground">{field.state.value}px</span>
+									<form.Field name="bgBorderOpacity">
+										{(field) => (
+											<div className="space-y-3">
+												<div className="flex justify-between">
+													<Label className="font-display tracking-wide text-xs">
+														{t("display.bg_border_opacity")}
+													</Label>
+													<span className="text-sm text-muted-foreground">
+														{field.state.value}%
+													</span>
+												</div>
+												<Slider
+													min={0}
+													max={100}
+													step={1}
+													value={[field.state.value]}
+													onValueChange={([v]) =>
+														field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderOpacity)
+													}
+												/>
 											</div>
-											<Slider
-												min={0}
-												max={20}
-												step={1}
-												value={[field.state.value]}
-												onValueChange={([v]) =>
-													field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderWidth)
-												}
-											/>
-										</div>
-									)}
-								</form.Field>
-
-								<form.Field name="bgBorderOpacity">
-									{(field) => (
-										<div className="space-y-3">
-											<div className="flex justify-between">
-												<Label className="font-display tracking-wide text-xs">
-													{t("display.bg_border_opacity")}
-												</Label>
-												<span className="text-sm text-muted-foreground">{field.state.value}%</span>
-											</div>
-											<Slider
-												min={0}
-												max={100}
-												step={1}
-												value={[field.state.value]}
-												onValueChange={([v]) =>
-													field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderOpacity)
-												}
-											/>
-										</div>
-									)}
-								</form.Field>
-							</CollapsibleGroup>
-						</div>
+										)}
+									</form.Field>
+								</NbAccordionContent>
+							</NbAccordionItem>
+						</NbAccordion>
 					) : null
 				}
 			</form.Subscribe>

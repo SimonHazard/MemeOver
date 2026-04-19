@@ -11,7 +11,7 @@
     },
     "app": {
       "name": "@memeover/app",
-      "version": "0.11.0",
+      "version": "0.11.2",
       "dependencies": {
         "@memeover/shared": "workspace:*",
         "@memeover/ui": "workspace:*",
