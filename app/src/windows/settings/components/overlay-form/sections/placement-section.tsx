@@ -12,15 +12,29 @@ import { cn } from "@memeover/ui/lib/utils";
 import { RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SETTINGS } from "@/shared/types";
+import { useMonitor } from "@/windows/overlay/hooks/useMonitor";
+import { AspectToggle } from "../../aspect-toggle";
 import { MonitorSelector } from "../../monitor-selector";
 import { PositionGrid } from "../../position-grid";
+import type { PreviewAspect } from "../../position-preview";
 import { PositionPreview } from "../../position-preview";
 import { SectionHeader } from "../components/section-header";
 import { useOverlayFormContext } from "../form-hook";
 
-export function PlacementSection() {
+interface PlacementSectionProps {
+	previewAspect: PreviewAspect;
+	onPreviewAspectChange: (v: PreviewAspect) => void;
+}
+
+// Fallback monitor size used for the pixel readout when Tauri hasn't resolved
+// the current monitor yet. 1920×1080 is the most common consumer resolution.
+const FALLBACK_MONITOR = { width: 1920, height: 1080 };
+
+export function PlacementSection({ previewAspect, onPreviewAspectChange }: PlacementSectionProps) {
 	const form = useOverlayFormContext();
 	const { t } = useTranslation();
+	const monitor = useMonitor() ?? FALLBACK_MONITOR;
+	const minSide = Math.min(monitor.width, monitor.height);
 
 	return (
 		<div className="space-y-5">
@@ -42,23 +56,33 @@ export function PlacementSection() {
 				)}
 			</form.Field>
 
-			{/* Media size — placed directly next to position so the coupling is obvious */}
+			{/* Media size — slider + pixel readout grounded in the current monitor */}
 			<form.Field name="mediaSize">
-				{(field) => (
-					<div className="space-y-3">
-						<div className="flex justify-between">
-							<Label className="font-display tracking-wide text-xs">{t("display.size")}</Label>
-							<span className="text-sm text-muted-foreground">{field.state.value}%</span>
+				{(field) => {
+					const boxPx = Math.round((field.state.value * minSide) / 100);
+					return (
+						<div className="space-y-3">
+							<div className="flex justify-between">
+								<Label className="font-display tracking-wide text-xs">{t("display.size")}</Label>
+								<span className="text-sm text-muted-foreground">{field.state.value}%</span>
+							</div>
+							<Slider
+								min={10}
+								max={90}
+								step={1}
+								value={[field.state.value]}
+								onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.mediaSize)}
+							/>
+							<p className="text-[11px] font-mono text-muted-foreground" aria-live="polite">
+								{t("display.size_readout", {
+									px: boxPx,
+									width: monitor.width,
+									height: monitor.height,
+								})}
+							</p>
 						</div>
-						<Slider
-							min={10}
-							max={90}
-							step={1}
-							value={[field.state.value]}
-							onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.mediaSize)}
-						/>
-					</div>
-				)}
+					);
+				}}
 			</form.Field>
 
 			{/* Fine-tune offsets — collapsed by default to keep the section clean */}
@@ -160,12 +184,16 @@ export function PlacementSection() {
 			>
 				{([position, mediaSize, offsetX, offsetY]) => (
 					<div className="space-y-2 md:hidden">
-						<Label className="text-muted-foreground text-xs">{t("display.preview")}</Label>
+						<div className="flex items-center justify-between">
+							<Label className="text-muted-foreground text-xs">{t("display.preview")}</Label>
+							<AspectToggle value={previewAspect} onChange={onPreviewAspectChange} />
+						</div>
 						<PositionPreview
 							position={position}
 							mediaSize={mediaSize}
 							offsetX={offsetX}
 							offsetY={offsetY}
+							previewAspect={previewAspect}
 							label={t("display.preview_media")}
 						/>
 					</div>

@@ -8,8 +8,8 @@ const CAPTION_SHADOW = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 
 // Impact-style stroke — a denser 4-directional outline for overlay captions
 const OVERLAY_CAPTION_SHADOW =
 	"-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000";
-// Discord stickers are fixed-size transparent assets — not scaled by mediaSize
-const STICKER_MAX_SIZE = "256px";
+// Stickers use fit-box too but capped smaller — Discord sticker assets lose fidelity past ~25vmin.
+const STICKER_MAX_VMIN = 25;
 
 function hexToRgba(hex: string, opacity: number): string {
 	const r = parseInt(hex.slice(1, 3), 16);
@@ -95,7 +95,16 @@ export function MediaDisplay({
 	startTimer,
 	onMediaError,
 }: MediaDisplayProps) {
-	const width = `${settings.mediaSize}vw`;
+	// Fit-box model: the media fits a `mediaSize × mediaSize` vmin square,
+	// preserving its aspect ratio. vmin (vs vw) keeps the visual size consistent
+	// across monitor orientations and caps height automatically for portrait content.
+	const boxSize = `${settings.mediaSize}vmin`;
+	const fitBoxStyle: React.CSSProperties = {
+		maxWidth: boxSize,
+		maxHeight: boxSize,
+		width: "auto",
+		height: "auto",
+	};
 	const {
 		bgEnabled,
 		bgColor,
@@ -133,7 +142,7 @@ export function MediaDisplay({
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
 				/>
-				<TextDisplay text={item.text} width={width} textSize={textSize} textColor={textColor} />
+				<TextDisplay text={item.text} width={boxSize} textSize={textSize} textColor={textColor} />
 			</>
 		);
 
@@ -170,14 +179,7 @@ export function MediaDisplay({
 					onPlay={startTimer}
 					onEnded={onVideoEnd}
 					onError={onMediaError}
-					style={{
-						maxWidth: width,
-						maxHeight: "80vh",
-						width: "auto",
-						height: "auto",
-						background: "transparent",
-						opacity,
-					}}
+					style={{ ...fitBoxStyle, background: "transparent", opacity }}
 					className="rounded-xl block transition-opacity duration-300"
 				/>
 			);
@@ -189,7 +191,7 @@ export function MediaDisplay({
 					alt=""
 					onLoad={startTimer}
 					onError={onMediaError}
-					style={{ maxWidth: width, maxHeight: "80vh", opacity }}
+					style={{ ...fitBoxStyle, opacity }}
 					className="rounded-xl block transition-opacity duration-300"
 					draggable={false}
 				/>
@@ -198,7 +200,7 @@ export function MediaDisplay({
 		if (item.media_type === "audio") {
 			return (
 				<div
-					style={{ maxWidth: width, opacity }}
+					style={{ maxWidth: boxSize, opacity }}
 					className={
 						bgEnabled
 							? "rounded-xl flex flex-col items-center gap-3 transition-opacity duration-300"
@@ -226,14 +228,21 @@ export function MediaDisplay({
 				</div>
 			);
 		}
-		// Sticker
+		// Sticker — fit-box with a tighter cap to preserve Discord sticker fidelity
+		const stickerBox = `${Math.min(settings.mediaSize, STICKER_MAX_VMIN)}vmin`;
 		return (
 			<img
 				src={item.media_url}
 				alt=""
 				onLoad={startTimer}
 				onError={onMediaError}
-				style={{ maxWidth: STICKER_MAX_SIZE, maxHeight: STICKER_MAX_SIZE, opacity }}
+				style={{
+					maxWidth: stickerBox,
+					maxHeight: stickerBox,
+					width: "auto",
+					height: "auto",
+					opacity,
+				}}
 				className="block transition-opacity duration-300"
 				draggable={false}
 			/>
@@ -257,7 +266,7 @@ export function MediaDisplay({
 	);
 
 	const inlineCaptionNode = useInlineCaption ? (
-		<InlineCaption text={caption} width={width} color={textColor} fontSize={textSize} />
+		<InlineCaption text={caption} width={boxSize} color={textColor} fontSize={textSize} />
 	) : null;
 
 	const mediaContent = (

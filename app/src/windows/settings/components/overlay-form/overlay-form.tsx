@@ -1,5 +1,7 @@
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { useState } from "react";
 import type { Settings } from "@/shared/types";
+import type { PreviewAspect } from "../position-preview";
 import { FullscreenCompatibilityNotice } from "./fullscreen-compatibility-notice";
 import { AppearanceSection } from "./sections/appearance-section";
 import { FormActions } from "./sections/form-actions";
@@ -17,6 +19,8 @@ export interface OverlayFormProps {
 
 export function OverlayForm({ initialData }: OverlayFormProps) {
 	const { form, isPending } = useOverlayForm(initialData);
+	// Default to portrait — the project's primary audience shares TikTok/Reels content.
+	const [previewAspect, setPreviewAspect] = useState<PreviewAspect>("9:16");
 
 	return (
 		<div className="p-5">
@@ -41,7 +45,10 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 							{/* Main column — sections grouped by user intent */}
 							<div className="space-y-5 min-w-0">
 								<NbCard>
-									<PlacementSection />
+									<PlacementSection
+										previewAspect={previewAspect}
+										onPreviewAspectChange={setPreviewAspect}
+									/>
 								</NbCard>
 
 								<NbCard>
@@ -66,7 +73,10 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 							{/* Sticky preview sidebar — desktop only */}
 							<aside className="hidden md:block md:sticky md:top-5 md:self-start">
 								<NbCard>
-									<StickyPreview />
+									<StickyPreview
+										previewAspect={previewAspect}
+										onPreviewAspectChange={setPreviewAspect}
+									/>
 								</NbCard>
 							</aside>
 						</div>

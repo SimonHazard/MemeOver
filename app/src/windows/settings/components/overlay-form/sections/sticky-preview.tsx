@@ -1,15 +1,25 @@
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { useTranslation } from "react-i18next";
+import { AspectToggle } from "../../aspect-toggle";
+import type { PreviewAspect } from "../../position-preview";
 import { PositionPreview } from "../../position-preview";
 import { useOverlayFormContext } from "../form-hook";
 
-export function StickyPreview() {
+interface StickyPreviewProps {
+	previewAspect: PreviewAspect;
+	onPreviewAspectChange: (v: PreviewAspect) => void;
+}
+
+export function StickyPreview({ previewAspect, onPreviewAspectChange }: StickyPreviewProps) {
 	const form = useOverlayFormContext();
 	const { t } = useTranslation();
 
 	return (
 		<div className="space-y-3">
-			<h2 className="font-display text-base tracking-wide">{t("display.preview")}</h2>
+			<div className="flex items-center justify-between">
+				<h2 className="font-display text-base tracking-wide">{t("display.preview")}</h2>
+				<AspectToggle value={previewAspect} onChange={onPreviewAspectChange} />
+			</div>
 			<Separator />
 
 			<form.Subscribe
@@ -31,6 +41,7 @@ export function StickyPreview() {
 							mediaSize={mediaSize}
 							offsetX={offsetX}
 							offsetY={offsetY}
+							previewAspect={previewAspect}
 							label={t("display.preview_media")}
 						/>
 						<p className="text-[11px] font-mono text-muted-foreground leading-relaxed break-words">

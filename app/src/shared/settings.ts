@@ -1,6 +1,6 @@
 import { emit } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";
-import { DEFAULT_SETTINGS, type Settings } from "../shared/types";
+import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, type Settings } from "../shared/types";
 
 // Pre-v2 releases stored textSize as a Tailwind-style key. This table maps those
 // legacy values to their pixel equivalents so users keep a visually identical size
@@ -39,6 +39,19 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	if (typeof out.positionOffsetY === "number") {
 		out.positionOffsetY = Math.max(-20, Math.min(20, out.positionOffsetY));
 	}
+
+	// v0 → v1: legacy mediaSize was `%` of viewport width (vw). The new fit-box
+	// renderer expresses it as `%` of viewport min (vmin). On a 16:9 monitor
+	// 100vw ≈ 1.78 × 100vmin, so an old value of 40 looks ~44% smaller in the new
+	// model. Bumping by ~1.5 pulls the visual size back into the same ballpark
+	// while staying under the 90 cap for reasonable pre-migration values.
+	const savedVersion = typeof out.schemaVersion === "number" ? out.schemaVersion : 0;
+	if (savedVersion < 1) {
+		if (typeof out.mediaSize === "number") {
+			out.mediaSize = Math.max(10, Math.min(90, Math.round(out.mediaSize * 1.5)));
+		}
+	}
+	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;
 }

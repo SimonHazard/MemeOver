@@ -58,7 +58,9 @@ export interface Settings {
 	token: string;
 	/** WebSocket URL of the bot server, e.g. ws://localhost:3001/ws */
 	wsUrl: string;
-	/** Media width as a % of the viewport width (10–90) */
+	/** Maximum size of the media's largest dimension as a % of vmin (10–90).
+	 *  With the fit-box renderer, the media fits a `mediaSize × mediaSize` vmin
+	 *  square while preserving its aspect ratio. */
 	mediaSize: number;
 	/** Seconds to display each media item (1–30) */
 	duration: number;
@@ -71,6 +73,8 @@ export interface Settings {
 	positionOffsetY: number;
 	/** Which media types are allowed to be displayed */
 	enabledTypes: EnabledTypes;
+	/** Monotonic schema version; bumped when a load-time migration of persisted fields is required */
+	schemaVersion: number;
 	/** Font size for text overlays, in pixels (12–96) */
 	textSize: number;
 	/** Where the caption / text sits relative to the media */
@@ -101,19 +105,23 @@ export interface Settings {
 	overlayMonitor: OverlayMonitor | null;
 }
 
+/** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
+export const CURRENT_SCHEMA_VERSION = 1;
+
 export const DEFAULT_SETTINGS: Settings = {
 	guildId: "",
 	token: "",
 	wsUrl: "ws://localhost:3001/ws",
-	mediaSize: 40,
+	mediaSize: 60,
 	duration: 6,
 	volume: 80,
 	position: "center",
 	positionOffsetX: 0,
 	positionOffsetY: 0,
 	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true, sticker: true },
+	schemaVersion: CURRENT_SCHEMA_VERSION,
 	textSize: 20,
-	textPosition: "below",
+	textPosition: "overlay-bottom",
 	mediaOpacity: 100,
 	syncMediaDuration: false,
 	bgEnabled: false,

@@ -3,6 +3,14 @@ import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { OverlayPosition } from "@/shared/types";
 
+export type PreviewAspect = "9:16" | "16:9" | "1:1";
+
+const ASPECT_CSS: Record<PreviewAspect, string> = {
+	"9:16": "9 / 16",
+	"16:9": "16 / 9",
+	"1:1": "1 / 1",
+};
+
 const PREVIEW_POSITION_CLASSES: Record<OverlayPosition, string> = {
 	center: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
 	"top-left": "absolute top-2 left-2",
@@ -20,6 +28,12 @@ const PREVIEW_POSITION_CLASSES: Record<OverlayPosition, string> = {
 // enough for the off-screen detection heuristic below.
 const EDGE_INSET_PCT = 2;
 
+// The preview frame simulates a 16:9 monitor. In fit-box, the media occupies a
+// `mediaSize × mediaSize` vmin square. Converted to the preview frame, that's
+// `mediaSize%` of the frame height on BOTH axes — which means the horizontal
+// footprint in the preview is (mediaSize * 9/16)% of the frame width.
+const PREVIEW_ASPECT_H_W_RATIO = 9 / 16;
+
 interface Bbox {
 	x: number;
 	y: number;
@@ -28,9 +42,9 @@ interface Bbox {
 }
 
 function anchorBbox(position: OverlayPosition, mediaSize: number): Bbox {
-	// Media rect is 16:9 inside a 16:9 preview, so %-of-container is the same on
-	// both axes — see layout note in placement-section.tsx.
-	const w = mediaSize;
+	// Box width in the preview = mediaSize * (height/width) of the preview frame
+	// (preview frame is 16:9 → h/w = 9/16). Box height = mediaSize% of frame height.
+	const w = mediaSize * PREVIEW_ASPECT_H_W_RATIO;
 	const h = mediaSize;
 
 	const left = position === "top-left" || position === "left" || position === "bottom-left";
@@ -54,6 +68,8 @@ interface PositionPreviewProps {
 	offsetX?: number;
 	offsetY?: number;
 	label: string;
+	/** Which aspect the simulated media content takes inside the fit-box. Defaults to portrait (TikTok/Reels). */
+	previewAspect?: PreviewAspect;
 }
 
 export function PositionPreview({
@@ -62,6 +78,7 @@ export function PositionPreview({
 	offsetX = 0,
 	offsetY = 0,
 	label,
+	previewAspect = "9:16",
 }: PositionPreviewProps) {
 	const { t } = useTranslation();
 
@@ -83,32 +100,48 @@ export function PositionPreview({
 					offscreen ? "border-destructive" : "border-border",
 				)}
 			>
-				{/* Full-size layer carrying the offset translate. Because `translate(%, %)`
-				    resolves to % of this layer's own size — and the layer fills the preview
-				    frame — the offset ends up being % of the preview, matching the overlay
-				    semantics (% of viewport). */}
+				{/* Full-size layer carrying the offset translate. `translate(%,%)` resolves
+				    to % of this layer's own size — which equals the preview frame, mirroring
+				    the overlay's % of viewport semantics. */}
 				<div
 					className="absolute inset-0"
 					style={{ transform: `translate(${offsetX}%, ${offsetY}%)` }}
 				>
+					{/* The fit-box — a dashed square sized from `mediaSize` as % of frame
+					    height on both axes. Represents the hard bounds inside which media fits. */}
 					<div
 						className={cn(
 							PREVIEW_POSITION_CLASSES[position],
-							"rounded flex items-center justify-center border transition-colors",
-							offscreen
-								? "bg-destructive/20 border-destructive"
-								: "bg-primary/20 border-primary/50",
+							"flex items-center justify-center border border-dashed rounded transition-colors",
+							offscreen ? "border-destructive/70" : "border-primary/40",
 						)}
-						style={{ width: `${mediaSize}%`, aspectRatio: "16/9" }}
+						style={{ height: `${mediaSize}%`, aspectRatio: "1 / 1" }}
 					>
-						<span
+						{/* Simulated media — adopts the toggled aspect, fills the box diagonally. */}
+						<div
 							className={cn(
-								"text-xs font-medium select-none",
-								offscreen ? "text-destructive" : "text-primary/70",
+								"flex items-center justify-center rounded border transition-colors",
+								offscreen
+									? "bg-destructive/20 border-destructive"
+									: "bg-primary/20 border-primary/50",
 							)}
+							style={{
+								maxWidth: "100%",
+								maxHeight: "100%",
+								aspectRatio: ASPECT_CSS[previewAspect],
+								width: previewAspect === "9:16" ? "auto" : "100%",
+								height: previewAspect === "9:16" ? "100%" : "auto",
+							}}
 						>
-							{label}
-						</span>
+							<span
+								className={cn(
+									"text-xs font-medium select-none truncate px-1",
+									offscreen ? "text-destructive" : "text-primary/70",
+								)}
+							>
+								{label}
+							</span>
+						</div>
 					</div>
 				</div>
 
