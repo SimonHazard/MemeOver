@@ -1,11 +1,10 @@
-import { Label } from "@memeover/ui/components/ui/label";
-import { Separator } from "@memeover/ui/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
 import { Clapperboard, FileAudio, ImageIcon, MessageSquare, Sticker, Video } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { enabledTypesToList, listToEnabledTypes } from "@/shared/helpers";
+import { SectionHeader } from "../components/section-header";
 import { useOverlayFormContext } from "../form-hook";
 
 const MEDIA_TYPE_KEYS = ["image", "gif", "video", "audio", "text", "sticker"] as const;
@@ -26,8 +25,8 @@ export function MediaTypesSection() {
 	const { t } = useTranslation();
 
 	return (
-		<div className="space-y-3">
-			<Separator />
+		<div className="space-y-5">
+			<SectionHeader title={t("display.group_types")} hint={t("display.group_types_hint")} />
 
 			<form.Field name="enabledTypes">
 				{(field) => {
@@ -35,9 +34,6 @@ export function MediaTypesSection() {
 
 					return (
 						<div className="space-y-3">
-							<Label className="font-display tracking-wide text-xs">
-								{t("display.mediaTypes")}
-							</Label>
 							<ToggleGroup
 								type="multiple"
 								value={enabledTypesToList(field.state.value)}
