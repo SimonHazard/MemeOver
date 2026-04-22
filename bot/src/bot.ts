@@ -54,9 +54,8 @@ discordClient.on(
 	},
 );
 
-// Reactions — floated on the overlay when the user toggle is enabled.
 discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
-	// Partial reactions (from before bot startup) need a fetch for .message / .emoji
+	// Partials fire for messages older than the bot's uptime; fetch hydrates `.message` / `.emoji`.
 	if (reaction.partial) {
 		try {
 			await reaction.fetch();
@@ -72,9 +71,6 @@ discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
 	if (!canBroadcastReaction(guildId)) return;
 
-	// Unicode emojis have no `id`; custom Discord emojis do. For custom emojis we
-	// ship a CDN URL so the overlay can render the actual image (animated `.gif`
-	// for animated emojis, static `.png` otherwise).
 	const emojiId = reaction.emoji.id;
 	const emojiName = reaction.emoji.name;
 	if (!emojiName && !emojiId) return;
@@ -89,8 +85,6 @@ discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
 		guild_id: guildId,
 		channel_id: channelId,
 		message_id: messageId,
-		// For unicode, `name` is the character itself. For custom, it's the emoji
-		// name (e.g. "kappa") — surfaced for logs/a11y but the overlay renders the image.
 		emoji: emojiName ?? "",
 		emoji_url,
 		user_id: user.id,

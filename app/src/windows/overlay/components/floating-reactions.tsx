@@ -1,14 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppStore } from "@/shared/store";
 
-/**
- * Translucent emojis that drift from the bottom of the overlay to the top when
- * a watched Discord channel receives a reaction. Independent of the media
- * queue — always rendered above the media popup but beneath the DEV badge.
- *
- * `leftPct` and `durationMs` are stamped once at spawn-time (store action), so
- * each reaction has a stable trajectory even across React re-renders.
- */
+/** `leftPct` and `durationMs` are stamped at spawn-time (not render-time) so each
+ *  reaction keeps a stable trajectory across re-renders / strict-mode double invokes. */
 export function FloatingReactions() {
 	const reactions = useAppStore((s) => s.reactions);
 	const removeReaction = useAppStore((s) => s.removeReaction);
@@ -25,7 +19,6 @@ export function FloatingReactions() {
 							bottom: 0,
 							fontSize: "6vmin",
 							lineHeight: 1,
-							// Center the glyph on the randomized x position
 							translateX: "-50%",
 						}}
 						initial={{ y: "20vh", opacity: 0, scale: 0.6 }}
@@ -46,7 +39,6 @@ export function FloatingReactions() {
 								src={r.emojiUrl}
 								alt={r.emoji}
 								draggable={false}
-								// Match the unicode glyph height — `1em` syncs to the container's fontSize
 								style={{ height: "1em", width: "auto", display: "block" }}
 							/>
 						) : (

@@ -1,14 +1,6 @@
-/**
- * In-memory LRU dedup for media broadcasts. Prevents the same `(message_id, url)`
- * pair being dispatched twice when both `messageCreate` AND `messageUpdate` fire
- * for the same Tenor/Giphy link (the embed populates after initial send). The
- * existing `hasNewEmbedMedia` filter catches most cases, but this layer guarantees
- * zero duplicates end-to-end, including on manual edits.
- *
- * Implementation note: `Map` iteration order is insertion order, so the first
- * entry yielded is always the oldest — we rely on that for O(1) eviction without
- * a dedicated LRU package.
- */
+/** Guards against duplicate broadcasts when messageCreate + messageUpdate both
+ *  fire for the same Tenor/Giphy link. Relies on `Map`'s insertion-order
+ *  iteration: the first yielded entry is always the oldest, giving O(1) eviction. */
 
 const TTL_MS = 60_000;
 const MAX_ENTRIES = 500;
@@ -30,10 +22,7 @@ function evictOverflow(): void {
 	}
 }
 
-/**
- * Returns `true` the first time a key is seen within the TTL window, `false`
- * thereafter. Call before broadcasting; skip broadcast when `false`.
- */
+/** `true` if the key has not been seen in the TTL window; caller must skip broadcast on `false`. */
 export function shouldDispatch(key: string): boolean {
 	const now = Date.now();
 	evictExpired(now);
@@ -43,7 +32,6 @@ export function shouldDispatch(key: string): boolean {
 	return true;
 }
 
-/** Introspection hook for stats / tests. */
 export function dedupSize(): number {
 	return seen.size;
 }

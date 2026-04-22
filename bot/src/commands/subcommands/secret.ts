@@ -10,6 +10,9 @@ import { errorEmbed, successEmbed } from "../embeds";
 
 const log = logger.child({ module: "secret" });
 
+/** Sentinel author_id for anonymous memes — surfaced in logs, ignored by the overlay (which checks `anonymous`). */
+const ANONYMOUS_AUTHOR_ID = "secret";
+
 export async function handleSecret(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
@@ -63,13 +66,24 @@ export async function handleSecret(
 		return;
 	}
 
+	// URL-only dedup key: each interaction has a unique id, so pairing id+url would
+	// never collide. Keying on the URL alone is what gates anti-spam when the same
+	// meme is resubmitted within the TTL window.
+	if (!shouldDispatch(`secret:${urlPathname(rawUrl)}`)) {
+		const embed = errorEmbed(
+			"Already sent",
+			"This exact URL was just pushed. Wait a moment before resending.",
+		);
+		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+		return;
+	}
+
 	const event: MediaEvent = {
 		type: "MEDIA",
 		guild_id: guildId,
 		channel_id: channelId,
 		message_id: interaction.id,
-		// Author fields zeroed-out; the overlay hides the badge entirely when `anonymous` is true.
-		author_id: "secret",
+		author_id: ANONYMOUS_AUTHOR_ID,
 		author_username: "",
 		author_avatar_url: "",
 		media_url: rawUrl,
@@ -77,10 +91,6 @@ export async function handleSecret(
 		timestamp: Date.now(),
 		anonymous: true,
 	};
-
-	// Run through the same dedup gate as organic messages, so replaying a URL
-	// within the TTL window doesn't spam the overlay.
-	shouldDispatch(`${event.message_id}:${urlPathname(rawUrl)}`);
 
 	broadcastToGuild(guildId, event);
 	log.info(
