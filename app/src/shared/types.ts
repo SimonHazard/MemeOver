@@ -56,8 +56,10 @@ export interface EnabledTypes {
 export interface Settings {
 	guildId: string;
 	token: string;
-	/** WebSocket URL of the bot server, e.g. ws://localhost:3001/ws */
+	/** WebSocket URL of the bot server. Hidden from UI unless `expertMode` is on. */
 	wsUrl: string;
+	/** When true, reveals advanced fields (custom wsUrl). Off by default to streamline onboarding. */
+	expertMode: boolean;
 	/** Maximum size of the media's largest dimension as a % of vmin (10–90).
 	 *  With the fit-box renderer, the media fits a `mediaSize × mediaSize` vmin
 	 *  square while preserving its aspect ratio. */
@@ -106,12 +108,18 @@ export interface Settings {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
+
+/** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
+export const DEFAULT_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
+/** Pre-v2 default. Migration treats anything matching this as "never touched" and upgrades it silently. */
+export const LEGACY_DEFAULT_WS_URL = "ws://localhost:3001/ws";
 
 export const DEFAULT_SETTINGS: Settings = {
 	guildId: "",
 	token: "",
-	wsUrl: "ws://localhost:3001/ws",
+	wsUrl: DEFAULT_WS_URL,
+	expertMode: false,
 	mediaSize: 60,
 	duration: 6,
 	volume: 80,

@@ -1,6 +1,12 @@
 import { emit } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";
-import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, type Settings } from "../shared/types";
+import {
+	CURRENT_SCHEMA_VERSION,
+	DEFAULT_SETTINGS,
+	DEFAULT_WS_URL,
+	LEGACY_DEFAULT_WS_URL,
+	type Settings,
+} from "../shared/types";
 
 // Pre-v2 releases stored textSize as a Tailwind-style key. This table maps those
 // legacy values to their pixel equivalents so users keep a visually identical size
@@ -49,6 +55,20 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	if (savedVersion < 1) {
 		if (typeof out.mediaSize === "number") {
 			out.mediaSize = Math.max(10, Math.min(90, Math.round(out.mediaSize * 1.5)));
+		}
+	}
+	// v1 → v2: introduce `expertMode` + swap the legacy localhost default for the
+	// hosted URL. Users who kept the default didn't "choose" localhost, so we
+	// silently upgrade them. Users who set a custom URL get expertMode=true so
+	// their value stays visible and editable in the UI.
+	if (savedVersion < 2) {
+		if (out.wsUrl === LEGACY_DEFAULT_WS_URL) {
+			out.wsUrl = DEFAULT_WS_URL;
+			out.expertMode = false;
+		} else if (typeof out.wsUrl === "string" && out.wsUrl.length > 0) {
+			out.expertMode = true;
+		} else {
+			out.expertMode = false;
 		}
 	}
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;

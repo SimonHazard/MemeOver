@@ -17,6 +17,8 @@
 		"title": "Bot connection",
 		"error": "Connection to bot lost. Check the token, Server ID and make sure the bot is running.",
 		"wsUrl": "WebSocket server URL",
+		"expertMode": "Expert mode",
+		"expertMode_hint": "Lets you set a custom WebSocket URL (self-hosted).",
 		"guildId": "Server ID",
 		"guildId_hint": "Obtained with /memeover setup in Discord.",
 		"token": "Token",

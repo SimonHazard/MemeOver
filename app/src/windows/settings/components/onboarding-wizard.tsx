@@ -84,6 +84,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 	const form = useForm({
 		defaultValues: {
 			wsUrl: DEFAULT_SETTINGS.wsUrl,
+			expertMode: DEFAULT_SETTINGS.expertMode,
 			guildId: "",
 			token: "",
 		} satisfies SetupValues,

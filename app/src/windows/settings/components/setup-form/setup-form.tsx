@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import type z from "zod";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
-import type { Settings, WsStatus } from "@/shared/types";
+import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
 import { SetupSchema, type SetupValues } from "./schema";
 
@@ -81,6 +81,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 	const form = useForm({
 		defaultValues: {
 			wsUrl: initialData.wsUrl,
+			expertMode: initialData.expertMode,
 			guildId: initialData.guildId,
 			token: initialData.token,
 		} satisfies SetupValues,
@@ -133,35 +134,79 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 							<Separator />
 
 							<div className="space-y-4">
-								{/* ── WebSocket URL ── */}
-								<form.Field
-									name="wsUrl"
-									validators={{
-										onBlur: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
-										onSubmit: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
-									}}
-								>
+								{/* ── Expert Mode toggle — gates the advanced wsUrl field ── */}
+								<form.Field name="expertMode">
 									{(field) => (
-										<div className="space-y-2">
-											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
-												{t("connection.wsUrl")}
-											</Label>
-											<Input
-												id={field.name}
-												placeholder="ws://localhost:3001/ws"
-												value={field.state.value}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-input focus:border-foreground"
-											/>
-											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive font-text">
-													{String(field.state.meta.errors[0])}
+										<div className="flex items-center justify-between gap-4">
+											<div className="space-y-0.5">
+												<Label
+													htmlFor={field.name}
+													className="font-display tracking-wide text-xs cursor-pointer"
+												>
+													{t("connection.expertMode")}
+												</Label>
+												<p className="text-xs text-muted-foreground font-text">
+													{t("connection.expertMode_hint")}
 												</p>
-											)}
+											</div>
+											<Switch
+												id={field.name}
+												checked={field.state.value}
+												onCheckedChange={(checked) => {
+													field.handleChange(checked);
+													if (!checked) {
+														// Reset wsUrl to the shipped default so turning expert mode off
+														// never leaves a stale custom URL silently persisted.
+														form.setFieldValue("wsUrl", DEFAULT_WS_URL);
+													}
+												}}
+												className="border-2 border-foreground shrink-0"
+											/>
 										</div>
 									)}
 								</form.Field>
+
+								{/* ── WebSocket URL (expert mode only) ── */}
+								<form.Subscribe selector={(s) => s.values.expertMode}>
+									{(expertMode) =>
+										expertMode ? (
+											<form.Field
+												name="wsUrl"
+												validators={{
+													onBlur: ({ value }) =>
+														validateField(SetupSchema.shape.wsUrl, value),
+													onSubmit: ({ value }) =>
+														validateField(SetupSchema.shape.wsUrl, value),
+												}}
+											>
+												{(field) => (
+													<div className="space-y-2">
+														<Label
+															htmlFor={field.name}
+															className="font-display tracking-wide text-xs"
+														>
+															{t("connection.wsUrl")}
+														</Label>
+														<Input
+															id={field.name}
+															placeholder={DEFAULT_WS_URL}
+															value={field.state.value}
+															onBlur={field.handleBlur}
+															onChange={(e) => field.handleChange(e.target.value)}
+															className="border-2 border-input focus:border-foreground"
+														/>
+														{field.state.meta.isTouched &&
+															field.state.meta.errors.length > 0 && (
+																<p className="text-xs text-destructive font-text">
+																	{String(field.state.meta.errors[0])}
+																</p>
+															)}
+													</div>
+												)}
+											</form.Field>
+										) : null
+									}
+								</form.Subscribe>
 
 								{/* ── Guild ID ── */}
 								<form.Field
