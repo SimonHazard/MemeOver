@@ -22,6 +22,23 @@ export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
 /** Santé de la fenêtre overlay (alive = existe et visible, closed = détruite) */
 export type OverlayHealth = "alive" | "closed";
 
+/**
+ * One in-flight floating emoji. `leftPct` and `durationMs` are randomised at
+ * spawn time (not render time) so the overlay renders deterministically even
+ * across React re-renders / strict mode double invocations.
+ */
+export interface FloatingReaction {
+	id: string;
+	/** Unicode char sequence for unicode emojis, or the custom emoji name (used as alt text when `emojiUrl` is set). */
+	emoji: string;
+	/** CDN URL for Discord custom emojis (PNG or animated GIF). Absent for unicode — overlay renders the `emoji` glyph directly. */
+	emojiUrl?: string;
+	/** Horizontal position as a % of viewport width (0–100). */
+	leftPct: number;
+	/** Total animation duration in milliseconds (typically 4000–6000). */
+	durationMs: number;
+}
+
 /** Physical coordinates of a monitor's top-left corner — used as a stable identifier across sessions */
 export interface OverlayMonitor {
 	x: number;
@@ -105,10 +122,12 @@ export interface Settings {
 	textColor: string;
 	/** Physical origin (x, y) of the monitor where the overlay should appear; null = primary monitor */
 	overlayMonitor: OverlayMonitor | null;
+	/** When true, reactions added in a watched channel float as translucent emojis across the overlay. */
+	floatingReactionsEnabled: boolean;
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
@@ -142,4 +161,5 @@ export const DEFAULT_SETTINGS: Settings = {
 	bgPadding: 16,
 	textColor: "#FFFFFF",
 	overlayMonitor: null,
+	floatingReactionsEnabled: true,
 };

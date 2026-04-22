@@ -9,9 +9,7 @@ import { store } from "./utils/store";
 import type {
 	JoinMessage,
 	LeaveMessage,
-	MediaEvent,
 	ServerMessage,
-	TextEvent,
 	WSConnection,
 } from "./utils/types";
 
@@ -43,7 +41,7 @@ function broadcastMemberCount(guildId: string): void {
 	}
 }
 
-export function broadcastToGuild(guildId: string, event: MediaEvent | TextEvent): void {
+export function broadcastToGuild(guildId: string, event: ServerMessage): void {
 	// Snapshot the Set before iterating — removeClient() mutates the live Set
 	const memberIds = [...store.getGuildMembers(guildId)];
 	const payload = JSON.stringify(event satisfies ServerMessage);

@@ -71,6 +71,14 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 			out.expertMode = false;
 		}
 	}
+	// v2 → v3: introduce `floatingReactionsEnabled`. On by default — the feature
+	// is visually passive until a Discord reaction lands, so enabling-by-default
+	// surfaces it without opt-in friction.
+	if (savedVersion < 3) {
+		if (typeof out.floatingReactionsEnabled !== "boolean") {
+			out.floatingReactionsEnabled = true;
+		}
+	}
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

@@ -27,6 +27,7 @@ export type {
 	MemberCountUpdateMessage,
 	PingMessage,
 	PongMessage,
+	ReactionEvent,
 	ServerMessage,
 	TextEvent,
 } from "@memeover/shared";

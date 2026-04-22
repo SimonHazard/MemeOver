@@ -12,12 +12,14 @@ export function useOverlayWs(): void {
 	// Granular selectors — only re-render when these specific values change.
 	// Zustand functions are stable references, never change.
 	const enqueue = useAppStore((s) => s.enqueue);
+	const spawnReaction = useAppStore((s) => s.spawnReaction);
 	const setWsStatus = useAppStore((s) => s.setWsStatus);
 	const setMemberCount = useAppStore((s) => s.setMemberCount);
 	const wsUrl = useAppStore((s) => s.settings.wsUrl);
 	const guildId = useAppStore((s) => s.settings.guildId);
 	const token = useAppStore((s) => s.settings.token);
 	const enabledTypes = useAppStore((s) => s.settings.enabledTypes);
+	const floatingReactionsEnabled = useAppStore((s) => s.settings.floatingReactionsEnabled);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 
 	// Keep credentials and filter settings in refs so WS callbacks always read
@@ -27,6 +29,9 @@ export function useOverlayWs(): void {
 
 	const enabledTypesRef = useRef(enabledTypes);
 	enabledTypesRef.current = enabledTypes;
+
+	const reactionsEnabledRef = useRef(floatingReactionsEnabled);
+	reactionsEnabledRef.current = floatingReactionsEnabled;
 
 	// Discard incoming media/text messages while the overlay is hidden.
 	const overlayHealthRef = useRef(overlayHealth);
@@ -92,6 +97,11 @@ export function useOverlayWs(): void {
 					if (overlayHealthRef.current === "closed") return;
 					if (enabledTypesRef.current.text) enqueue(textEventToQueueItem(msg));
 				})
+				.with({ type: "REACTION" }, (msg) => {
+					if (overlayHealthRef.current === "closed") return;
+					if (!reactionsEnabledRef.current) return;
+					spawnReaction({ emoji: msg.emoji, emojiUrl: msg.emoji_url });
+				})
 				.with({ type: "ERROR" }, (msg) => {
 					console.warn("[WS] Server error:", msg);
 				})
@@ -107,7 +117,7 @@ export function useOverlayWs(): void {
 				})
 				.exhaustive();
 		},
-		[enqueue, setWsStatus, setMemberCount],
+		[enqueue, spawnReaction, setWsStatus, setMemberCount],
 	);
 
 	const onClose = useCallback(() => {

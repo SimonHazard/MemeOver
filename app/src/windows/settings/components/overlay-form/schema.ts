@@ -48,6 +48,7 @@ export const OverlaySettingsSchema = z.object({
 	bgBorderWidth: z.number().min(0).max(20),
 	bgBorderRadius: z.number().min(0).max(30),
 	bgPadding: z.number().min(0).max(100),
+	floatingReactionsEnabled: z.boolean(),
 });
 
 export type OverlaySettingsValues = z.infer<typeof OverlaySettingsSchema>;

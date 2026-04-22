@@ -29,6 +29,7 @@ function extractDefaults(s: Settings): OverlaySettingsValues {
 		bgBorderWidth: s.bgBorderWidth,
 		bgBorderRadius: s.bgBorderRadius,
 		bgPadding: s.bgPadding,
+		floatingReactionsEnabled: s.floatingReactionsEnabled,
 	};
 }
 
