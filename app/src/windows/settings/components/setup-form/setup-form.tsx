@@ -173,10 +173,8 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 											<form.Field
 												name="wsUrl"
 												validators={{
-													onBlur: ({ value }) =>
-														validateField(SetupSchema.shape.wsUrl, value),
-													onSubmit: ({ value }) =>
-														validateField(SetupSchema.shape.wsUrl, value),
+													onBlur: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
+													onSubmit: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
 												}}
 											>
 												{(field) => (
@@ -195,12 +193,11 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 															onChange={(e) => field.handleChange(e.target.value)}
 															className="border-2 border-input focus:border-foreground"
 														/>
-														{field.state.meta.isTouched &&
-															field.state.meta.errors.length > 0 && (
-																<p className="text-xs text-destructive font-text">
-																	{String(field.state.meta.errors[0])}
-																</p>
-															)}
+														{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+															<p className="text-xs text-destructive font-text">
+																{String(field.state.meta.errors[0])}
+															</p>
+														)}
 													</div>
 												)}
 											</form.Field>

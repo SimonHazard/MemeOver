@@ -6,12 +6,7 @@ import { guildRegistry } from "./utils/registry";
 import { ClientMessageSchema } from "./utils/schemas";
 import { stats } from "./utils/stats";
 import { store } from "./utils/store";
-import type {
-	JoinMessage,
-	LeaveMessage,
-	ServerMessage,
-	WSConnection,
-} from "./utils/types";
+import type { JoinMessage, LeaveMessage, ServerMessage, WSConnection } from "./utils/types";
 
 const log = logger.child({ module: "server" });
 

@@ -22,9 +22,7 @@ export function ReactionsSection() {
 							<Label className="font-display tracking-wide text-xs">
 								{t("display.reactions_enabled")}
 							</Label>
-							<p className="text-xs text-muted-foreground">
-								{t("display.reactions_enabled_hint")}
-							</p>
+							<p className="text-xs text-muted-foreground">{t("display.reactions_enabled_hint")}</p>
 						</div>
 						<Switch
 							checked={field.state.value}

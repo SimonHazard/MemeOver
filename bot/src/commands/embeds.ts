@@ -15,10 +15,7 @@ function build(
 	description?: string,
 	fields?: APIEmbedField[],
 ): EmbedBuilder {
-	const embed = new EmbedBuilder()
-		.setColor(color)
-		.setTitle(title)
-		.setFooter({ text: FOOTER_TEXT });
+	const embed = new EmbedBuilder().setColor(color).setTitle(title).setFooter({ text: FOOTER_TEXT });
 	if (description !== undefined) embed.setDescription(description);
 	if (fields && fields.length > 0) embed.addFields(fields);
 	return embed;
