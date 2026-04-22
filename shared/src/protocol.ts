@@ -20,6 +20,8 @@ const MediaEventSchema = z.object({
 	media_type: MediaTypeSchema,
 	text: z.string().optional(),
 	timestamp: z.number(),
+	/** When true, the overlay should hide all author metadata — used by /memeover secret. */
+	anonymous: z.boolean().optional(),
 });
 
 const TextEventSchema = z.object({

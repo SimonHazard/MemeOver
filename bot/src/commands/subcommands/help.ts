@@ -18,6 +18,12 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
 				inline: false,
 			},
 			{
+				name: "/memeover secret url:<link>",
+				value:
+					"Send an anonymous meme to every connected overlay. Your name never appears — URL only (Discord CDN, Tenor, Giphy, Imgur).",
+				inline: false,
+			},
+			{
 				name: "/memeover rotate",
 				value:
 					"Generate a new connection token. Any connected overlay will disconnect. Requires **Manage Server**.",

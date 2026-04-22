@@ -14,6 +14,7 @@ import { errorEmbed } from "./embeds";
 import { handleHelp } from "./subcommands/help";
 import { handleRemove } from "./subcommands/remove";
 import { handleRotate } from "./subcommands/rotate";
+import { handleSecret } from "./subcommands/secret";
 import { handleSetup } from "./subcommands/setup";
 import { handleStatus } from "./subcommands/status";
 import { handleToken } from "./subcommands/token";
@@ -48,6 +49,19 @@ const memeover = new SlashCommandBuilder()
 	)
 	.addSubcommand((sub) =>
 		sub.setName("remove").setDescription("Unregister this server from MemeOver"),
+	)
+	.addSubcommand((sub) =>
+		sub
+			.setName("secret")
+			.setDescription("Send an anonymous meme by URL — your name won't appear on the overlay")
+			.addStringOption((opt) =>
+				opt
+					.setName("url")
+					.setDescription(
+						"Direct link to an image, GIF, video or audio file (Discord CDN, Tenor, Giphy, Imgur)",
+					)
+					.setRequired(true),
+			),
 	)
 	.addSubcommand((sub) =>
 		sub.setName("status").setDescription("Show bot configuration, watched channels, and uptime"),
@@ -110,6 +124,8 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		await handleRotate(interaction, guildId);
 	} else if (sub === "remove") {
 		await handleRemove(interaction, guildId);
+	} else if (sub === "secret") {
+		await handleSecret(interaction, guildId);
 	} else if (sub === "status") {
 		await handleStatus(interaction, guildId);
 	} else if (sub === "help") {

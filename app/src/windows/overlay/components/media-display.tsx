@@ -271,11 +271,13 @@ export function MediaDisplay({
 
 	const mediaContent = (
 		<>
-			<AuthorBadge
-				username={item.author_username}
-				displayName={item.author_display_name}
-				avatarUrl={item.author_avatar_url}
-			/>
+			{!item.anonymous && (
+				<AuthorBadge
+					username={item.author_username}
+					displayName={item.author_display_name}
+					avatarUrl={item.author_avatar_url}
+				/>
+			)}
 			{textPosition === "above" && inlineCaptionNode}
 			{mediaWithOverlayCaption}
 			{textPosition === "below" && inlineCaptionNode}
