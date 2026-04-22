@@ -10,9 +10,12 @@ import {
 import { config } from "../utils/config";
 import { logger } from "../utils/logger";
 
+import { errorEmbed } from "./embeds";
+import { handleHelp } from "./subcommands/help";
 import { handleRemove } from "./subcommands/remove";
 import { handleRotate } from "./subcommands/rotate";
 import { handleSetup } from "./subcommands/setup";
+import { handleStatus } from "./subcommands/status";
 import { handleToken } from "./subcommands/token";
 
 const log = logger.child({ module: "commands" });
@@ -45,7 +48,17 @@ const memeover = new SlashCommandBuilder()
 	)
 	.addSubcommand((sub) =>
 		sub.setName("remove").setDescription("Unregister this server from MemeOver"),
+	)
+	.addSubcommand((sub) =>
+		sub.setName("status").setDescription("Show bot configuration, watched channels, and uptime"),
+	)
+	.addSubcommand((sub) =>
+		sub.setName("help").setDescription("List all MemeOver commands and what they do"),
 	);
+
+// Subcommands that require the Manage Server permission. `token` and `help`
+// are deliberately open to all members.
+const PRIVILEGED_SUBS = new Set(["setup", "remove", "rotate", "status"]);
 
 // ─── Command registration ─────────────────────────────────────────────────────
 
@@ -66,7 +79,7 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 	const guildId = interaction.guildId;
 	if (!guildId) {
 		await interaction.reply({
-			content: "This command can only be used in a server.",
+			embeds: [errorEmbed("Server only", "This command can only be used in a server.")],
 			flags: MessageFlags.Ephemeral,
 		});
 		return;
@@ -74,11 +87,15 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 
 	const sub = interaction.options.getSubcommand();
 
-	// setup, remove, and rotate require Manage Server permission; token is open to all members
-	if (sub === "setup" || sub === "remove" || sub === "rotate") {
+	if (PRIVILEGED_SUBS.has(sub)) {
 		if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
 			await interaction.reply({
-				content: "❌ You need the **Manage Server** permission to use this command.",
+				embeds: [
+					errorEmbed(
+						"Permission denied",
+						"You need the **Manage Server** permission to use this command.",
+					),
+				],
 				flags: MessageFlags.Ephemeral,
 			});
 			return;
@@ -93,5 +110,9 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		await handleRotate(interaction, guildId);
 	} else if (sub === "remove") {
 		await handleRemove(interaction, guildId);
+	} else if (sub === "status") {
+		await handleStatus(interaction, guildId);
+	} else if (sub === "help") {
+		await handleHelp(interaction);
 	}
 }
