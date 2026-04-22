@@ -20,6 +20,8 @@ const MediaEventSchema = z.object({
 	media_type: MediaTypeSchema,
 	text: z.string().optional(),
 	timestamp: z.number(),
+	/** When true, the overlay should hide all author metadata — used by /memeover secret. */
+	anonymous: z.boolean().optional(),
 });
 
 const TextEventSchema = z.object({
@@ -58,6 +60,19 @@ const MemberCountUpdateMessageSchema = z.object({
 	count: z.number().int().nonnegative(),
 });
 
+const ReactionEventSchema = z.object({
+	type: z.literal("REACTION"),
+	guild_id: z.string(),
+	channel_id: z.string(),
+	message_id: z.string(),
+	/** Unicode emoji sequence (e.g. "👍", "🔥") OR the name of a custom emoji (for logs/a11y). */
+	emoji: z.string(),
+	/** CDN URL when the reaction is a custom Discord emoji (static PNG or animated GIF). Absent for unicode emojis. */
+	emoji_url: z.string().optional(),
+	user_id: z.string(),
+	timestamp: z.number(),
+});
+
 export const ServerMessageSchema = z.discriminatedUnion("type", [
 	MediaEventSchema,
 	TextEventSchema,
@@ -65,6 +80,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
 	ErrorMessageSchema,
 	PingMessageSchema,
 	MemberCountUpdateMessageSchema,
+	ReactionEventSchema,
 ]);
 
 export type MediaEvent = z.infer<typeof MediaEventSchema>;
@@ -73,6 +89,7 @@ export type JoinAckMessage = z.infer<typeof JoinAckMessageSchema>;
 export type ErrorMessage = z.infer<typeof ErrorMessageSchema>;
 export type PingMessage = z.infer<typeof PingMessageSchema>;
 export type MemberCountUpdateMessage = z.infer<typeof MemberCountUpdateMessageSchema>;
+export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type ServerMessage = z.infer<typeof ServerMessageSchema>;
 
 // ─── Error codes (stricter typing for known error values) ─────────────────────

@@ -4,12 +4,21 @@ import { create } from "zustand";
 import i18n from "@/i18n";
 import { restoreOverlayMonitor } from "./helpers";
 import { loadSettings } from "./settings";
-import type { DisplayQueueItem, OverlayHealth, Settings, WsStatus } from "./types";
+import type {
+	DisplayQueueItem,
+	FloatingReaction,
+	OverlayHealth,
+	Settings,
+	WsStatus,
+} from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MAX_QUEUE_SIZE = 50;
+/** Hard cap on simultaneously animating reactions. FIFO eviction keeps the scene
+ *  responsive during bursts while always admitting the most recent reaction. */
+const MAX_REACTIONS = 30;
 
 // ─── State shape ──────────────────────────────────────────────────────────────
 
@@ -43,6 +52,12 @@ interface AppStore {
 	// Incremented each time the settings window requests a skip of the current item
 	skipVersion: number;
 	bumpSkip: () => void;
+
+	// Floating reactions in flight on the overlay (independent of the media queue)
+	reactions: FloatingReaction[];
+	spawnReaction: (input: { emoji: string; emojiUrl?: string }) => void;
+	removeReaction: (id: string) => void;
+	clearReactions: () => void;
 
 	// True while the overlay is actively displaying an item (current !== null)
 	isDisplaying: boolean;
@@ -82,6 +97,26 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	skipVersion: 0,
 	bumpSkip: () => set((state) => ({ skipVersion: state.skipVersion + 1 })),
+
+	reactions: [],
+	spawnReaction: ({ emoji, emojiUrl }) =>
+		set((state) => {
+			const reaction: FloatingReaction = {
+				id: crypto.randomUUID(),
+				emoji,
+				emojiUrl,
+				leftPct: Math.random() * 100,
+				durationMs: 4_000 + Math.random() * 2_000,
+			};
+			const list =
+				state.reactions.length >= MAX_REACTIONS
+					? [...state.reactions.slice(1), reaction]
+					: [...state.reactions, reaction];
+			return { reactions: list };
+		}),
+	removeReaction: (id) =>
+		set((state) => ({ reactions: state.reactions.filter((r) => r.id !== id) })),
+	clearReactions: () => set({ reactions: [] }),
 
 	isDisplaying: false,
 	setIsDisplaying: (v) => set({ isDisplaying: v }),
@@ -135,6 +170,7 @@ export async function initOverlayStore(): Promise<void> {
 		useAppStore.getState().setOverlayHealth(event.payload);
 		if (event.payload === "closed") {
 			useAppStore.getState().clearQueue();
+			useAppStore.getState().clearReactions();
 		}
 	});
 

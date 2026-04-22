@@ -8,6 +8,7 @@ import { FormActions } from "./sections/form-actions";
 import { MediaTypesSection } from "./sections/media-types-section";
 import { OverlayControls } from "./sections/overlay-controls";
 import { PlacementSection } from "./sections/placement-section";
+import { ReactionsSection } from "./sections/reactions-section";
 import { StickyPreview } from "./sections/sticky-preview";
 import { TextSection } from "./sections/text-section";
 import { TimingSoundSection } from "./sections/timing-sound-section";
@@ -53,6 +54,10 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 
 								<NbCard>
 									<TimingSoundSection />
+								</NbCard>
+
+								<NbCard>
+									<ReactionsSection />
 								</NbCard>
 
 								<NbCard>

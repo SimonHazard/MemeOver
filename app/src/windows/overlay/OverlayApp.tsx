@@ -1,6 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/shared/store";
+import { FloatingReactions } from "./components/floating-reactions";
 import { MediaPopup } from "./components/media-popup";
 import { useHistoryLogger } from "./hooks/useHistoryLogger";
 import { useMediaDisplay } from "./hooks/useMediaDisplay";
@@ -47,6 +48,8 @@ export function OverlayApp() {
 				startTimer={startTimer}
 				onMediaError={onMediaError}
 			/>
+
+			<FloatingReactions />
 
 			{/* ── DEV badge (always visible in dev, not only in preview) ── */}
 			{import.meta.env.DEV && (

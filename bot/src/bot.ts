@@ -5,11 +5,16 @@ import {
 	type Message,
 	MessageFlags,
 	type PartialMessage,
+	Partials,
 } from "discord.js";
 import { handleInteraction } from "./commands/commands";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
+import { broadcastToGuild } from "./server";
 import { config } from "./utils/config";
 import { logger } from "./utils/logger";
+import { canBroadcastReaction } from "./utils/reaction-rate-limit";
+import { guildRegistry } from "./utils/registry";
+import type { ReactionEvent } from "./utils/types";
 
 const log = logger.child({ module: "bot" });
 
@@ -20,7 +25,11 @@ const discordClient = new Client({
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildMessageReactions,
 	],
+	// Required so we receive reactionAdd for messages that aren't in the cache
+	// (e.g. anything older than the bot's current uptime).
+	partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
 discordClient.on(Events.ClientReady, (c) => {
@@ -44,6 +53,45 @@ discordClient.on(
 		}
 	},
 );
+
+discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
+	// Partials fire for messages older than the bot's uptime; fetch hydrates `.message` / `.emoji`.
+	if (reaction.partial) {
+		try {
+			await reaction.fetch();
+		} catch {
+			return;
+		}
+	}
+	if (user.bot) return;
+
+	const { guildId, channelId, id: messageId } = reaction.message;
+	if (!guildId || !channelId) return;
+
+	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
+	if (!canBroadcastReaction(guildId)) return;
+
+	const emojiId = reaction.emoji.id;
+	const emojiName = reaction.emoji.name;
+	if (!emojiName && !emojiId) return;
+
+	const emoji_url =
+		emojiId !== null
+			? `https://cdn.discordapp.com/emojis/${emojiId}.${reaction.emoji.animated ? "gif" : "png"}?size=64&quality=lossless`
+			: undefined;
+
+	const event: ReactionEvent = {
+		type: "REACTION",
+		guild_id: guildId,
+		channel_id: channelId,
+		message_id: messageId,
+		emoji: emojiName ?? "",
+		emoji_url,
+		user_id: user.id,
+		timestamp: Date.now(),
+	};
+	broadcastToGuild(guildId, event);
+});
 
 // Slash commands
 discordClient.on(Events.InteractionCreate, (interaction) => {
