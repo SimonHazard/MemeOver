@@ -7,11 +7,12 @@ import { loadSettings } from "./settings";
 import type {
 	DisplayQueueItem,
 	FloatingReaction,
+	FloatingReactionAnimation,
 	OverlayHealth,
 	Settings,
 	WsStatus,
 } from "./types";
-import { DEFAULT_SETTINGS } from "./types";
+import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,25 @@ const MAX_QUEUE_SIZE = 50;
 /** Hard cap on simultaneously animating reactions. FIFO eviction keeps the scene
  *  responsive during bursts while always admitting the most recent reaction. */
 const MAX_REACTIONS = 30;
+
+const REACTION_PRESET_TIMING: Record<
+	FloatingReactionAnimation,
+	Pick<FloatingReaction, "fadeInPct" | "fadeOutPct">
+> = {
+	straight: { fadeInPct: 12, fadeOutPct: 78 },
+	serpentine: { fadeInPct: 10, fadeOutPct: 84 },
+	bounce: { fadeInPct: 6, fadeOutPct: 90 },
+	confetti: { fadeInPct: 8, fadeOutPct: 82 },
+	pop: { fadeInPct: 7, fadeOutPct: 78 },
+	firework: { fadeInPct: 8, fadeOutPct: 72 },
+};
+
+function resolveReactionAnimation(settings: Settings): FloatingReactionAnimation {
+	if (settings.floatingReactionPreset !== "random") return settings.floatingReactionPreset;
+	return FLOATING_REACTION_ANIMATIONS[
+		Math.floor(Math.random() * FLOATING_REACTION_ANIMATIONS.length)
+	] as FloatingReactionAnimation;
+}
 
 // ─── State shape ──────────────────────────────────────────────────────────────
 
@@ -101,12 +121,24 @@ export const useAppStore = create<AppStore>((set) => ({
 	reactions: [],
 	spawnReaction: ({ emoji, emojiUrl }) =>
 		set((state) => {
+			const settings = state.settings;
+			const animation = resolveReactionAnimation(settings);
+			const preset = REACTION_PRESET_TIMING[animation];
+			const direction: -1 | 1 = Math.random() < 0.5 ? -1 : 1;
 			const reaction: FloatingReaction = {
 				id: crypto.randomUUID(),
 				emoji,
 				emojiUrl,
-				leftPct: Math.random() * 100,
-				durationMs: 4_000 + Math.random() * 2_000,
+				leftPct: animation === "bounce" ? (direction === 1 ? -8 : 108) : 12 + Math.random() * 76,
+				durationMs: settings.floatingReactionDuration * 1000,
+				animation,
+				opacityPct: settings.floatingReactionOpacity,
+				sizeVmin: settings.floatingReactionSize,
+				fadeInPct: preset.fadeInPct,
+				fadeOutPct: preset.fadeOutPct,
+				amplitudeVw: 7 + Math.random() * 5,
+				direction,
+				rotationDeg: direction * (6 + Math.random() * 12),
 			};
 			const list =
 				state.reactions.length >= MAX_REACTIONS

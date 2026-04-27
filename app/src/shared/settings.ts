@@ -4,6 +4,8 @@ import {
 	CURRENT_SCHEMA_VERSION,
 	DEFAULT_SETTINGS,
 	DEFAULT_WS_URL,
+	FLOATING_REACTION_PRESETS,
+	type FloatingReactionPreset,
 	LEGACY_DEFAULT_WS_URL,
 	type Settings,
 } from "../shared/types";
@@ -21,6 +23,22 @@ const LEGACY_TEXT_SIZE_PX: Record<string, number> = {
 	"3xl": 30,
 	"4xl": 36,
 };
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+	if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+	return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function coerceFloatingReactionPreset(out: Record<string, unknown>): FloatingReactionPreset {
+	if (
+		typeof out.floatingReactionPreset === "string" &&
+		FLOATING_REACTION_PRESETS.includes(out.floatingReactionPreset as FloatingReactionPreset)
+	) {
+		return out.floatingReactionPreset as FloatingReactionPreset;
+	}
+
+	return DEFAULT_SETTINGS.floatingReactionPreset;
+}
 
 /**
  * Normalises an incoming persisted settings object to the current schema shape.
@@ -79,6 +97,27 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 			out.floatingReactionsEnabled = true;
 		}
 	}
+	// v3 → v6: introduce preset-based reactions plus duration/opacity/size.
+	// v4/v5 were never shipped, so they collapse into this single migration path.
+	out.floatingReactionPreset = coerceFloatingReactionPreset(out);
+	out.floatingReactionDuration = clampNumber(
+		out.floatingReactionDuration,
+		2,
+		10,
+		DEFAULT_SETTINGS.floatingReactionDuration,
+	);
+	out.floatingReactionOpacity = clampNumber(
+		out.floatingReactionOpacity,
+		20,
+		100,
+		DEFAULT_SETTINGS.floatingReactionOpacity,
+	);
+	out.floatingReactionSize = clampNumber(
+		out.floatingReactionSize,
+		3,
+		12,
+		DEFAULT_SETTINGS.floatingReactionSize,
+	);
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

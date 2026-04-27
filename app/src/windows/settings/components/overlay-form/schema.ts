@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FLOATING_REACTION_PRESETS } from "@/shared/types";
 
 const OVERLAY_POSITIONS = [
 	"center",
@@ -49,6 +50,10 @@ export const OverlaySettingsSchema = z.object({
 	bgBorderRadius: z.number().min(0).max(30),
 	bgPadding: z.number().min(0).max(100),
 	floatingReactionsEnabled: z.boolean(),
+	floatingReactionPreset: z.enum(FLOATING_REACTION_PRESETS),
+	floatingReactionDuration: z.number().min(2).max(10),
+	floatingReactionOpacity: z.number().min(20).max(100),
+	floatingReactionSize: z.number().min(3).max(12),
 });
 
 export type OverlaySettingsValues = z.infer<typeof OverlaySettingsSchema>;

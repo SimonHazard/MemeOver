@@ -30,6 +30,10 @@ function extractDefaults(s: Settings): OverlaySettingsValues {
 		bgBorderRadius: s.bgBorderRadius,
 		bgPadding: s.bgPadding,
 		floatingReactionsEnabled: s.floatingReactionsEnabled,
+		floatingReactionPreset: s.floatingReactionPreset,
+		floatingReactionDuration: s.floatingReactionDuration,
+		floatingReactionOpacity: s.floatingReactionOpacity,
+		floatingReactionSize: s.floatingReactionSize,
 	};
 }
 

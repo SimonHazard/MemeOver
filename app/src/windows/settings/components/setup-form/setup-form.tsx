@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import type z from "zod";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
-import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
+import { DEFAULT_SETTINGS, DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
 import { SetupSchema, type SetupValues } from "./schema";
 
@@ -81,7 +81,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 	const form = useForm({
 		defaultValues: {
 			wsUrl: initialData.wsUrl,
-			expertMode: initialData.expertMode,
+			expertMode: DEFAULT_SETTINGS.expertMode,
 			guildId: initialData.guildId,
 			token: initialData.token,
 		} satisfies SetupValues,
