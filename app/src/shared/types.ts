@@ -22,6 +22,20 @@ export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
 /** Santé de la fenêtre overlay (alive = existe et visible, closed = détruite) */
 export type OverlayHealth = "alive" | "closed";
 
+export const FLOATING_REACTION_ANIMATIONS = [
+	"straight",
+	"serpentine",
+	"bounce",
+	"confetti",
+	"pop",
+	"firework",
+] as const;
+
+export const FLOATING_REACTION_PRESETS = [...FLOATING_REACTION_ANIMATIONS, "random"] as const;
+
+export type FloatingReactionAnimation = (typeof FLOATING_REACTION_ANIMATIONS)[number];
+export type FloatingReactionPreset = FloatingReactionAnimation | "random";
+
 /**
  * One in-flight floating emoji. `leftPct` and `durationMs` are randomised at
  * spawn time (not render time) so the overlay renders deterministically even
@@ -37,6 +51,21 @@ export interface FloatingReaction {
 	leftPct: number;
 	/** Total animation duration in milliseconds (typically 4000–6000). */
 	durationMs: number;
+	animation: FloatingReactionAnimation;
+	/** Maximum opacity as a percentage (0–100). */
+	opacityPct: number;
+	/** Emoji size in viewport-min units. */
+	sizeVmin: number;
+	/** Fade-in completion point, expressed as animation progress (0–100). */
+	fadeInPct: number;
+	/** Fade-out start point, expressed as animation progress (0–100). */
+	fadeOutPct: number;
+	/** Horizontal movement amplitude in viewport-width units. */
+	amplitudeVw: number;
+	/** Direction of horizontal travel for side-to-side presets. */
+	direction: -1 | 1;
+	/** Signed rotation amount in degrees. */
+	rotationDeg: number;
 }
 
 /** Physical coordinates of a monitor's top-left corner — used as a stable identifier across sessions */
@@ -124,10 +153,18 @@ export interface Settings {
 	overlayMonitor: OverlayMonitor | null;
 	/** When true, reactions added in a watched channel float as translucent emojis across the overlay. */
 	floatingReactionsEnabled: boolean;
+	/** Motion preset used by floating reactions. */
+	floatingReactionPreset: FloatingReactionPreset;
+	/** Total floating reaction animation duration, in seconds. */
+	floatingReactionDuration: number;
+	/** Floating reaction maximum opacity (0 = invisible, 100 = fully opaque). */
+	floatingReactionOpacity: number;
+	/** Emoji size for floating reactions, in vmin. */
+	floatingReactionSize: number;
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
@@ -162,4 +199,8 @@ export const DEFAULT_SETTINGS: Settings = {
 	textColor: "#FFFFFF",
 	overlayMonitor: null,
 	floatingReactionsEnabled: true,
+	floatingReactionPreset: "random",
+	floatingReactionDuration: 5,
+	floatingReactionOpacity: 82,
+	floatingReactionSize: 6,
 };
