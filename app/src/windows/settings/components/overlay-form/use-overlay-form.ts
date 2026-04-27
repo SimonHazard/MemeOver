@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { loadSettings, persistSettings } from "@/shared/settings";
-import type { Settings } from "@/shared/types";
+import { OVERLAY_PROFILE_FIELDS, type OverlayProfileSettings, type Settings } from "@/shared/types";
 import { useAppForm } from "./form-hook";
 import type { OverlaySettingsValues } from "./schema";
 
@@ -49,17 +49,33 @@ export function useOverlayForm(initialData: Settings) {
 		extractDefaults(initialData),
 	);
 
-	const { mutateAsync: save, isPending } = useMutation({
+	async function persistOverlayValues(values: OverlaySettingsValues) {
+		const current = await queryClient.fetchQuery({
+			queryKey: ["settings"],
+			queryFn: loadSettings,
+		});
+		await persistSettings({ ...current, ...values });
+	}
+
+	const { mutateAsync: save, isPending: isSavePending } = useMutation({
 		mutationFn: async (values: OverlaySettingsValues) => {
-			const current = await queryClient.fetchQuery({
-				queryKey: ["settings"],
-				queryFn: loadSettings,
-			});
-			await persistSettings({ ...current, ...values });
+			await persistOverlayValues(values);
 		},
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["settings"] });
 			toast.success(t("toast.displaySaved"));
+		},
+		onError: () => {
+			toast.error(t("toast.settingsError"));
+		},
+	});
+
+	const { mutateAsync: apply, isPending: isApplyPending } = useMutation({
+		mutationFn: async (values: OverlaySettingsValues) => {
+			await persistOverlayValues(values);
+		},
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ["settings"] });
 		},
 		onError: () => {
 			toast.error(t("toast.settingsError"));
@@ -76,5 +92,19 @@ export function useOverlayForm(initialData: Settings) {
 		},
 	});
 
-	return { form, isPending };
+	function applyValues(values: OverlayProfileSettings) {
+		const next = values as OverlaySettingsValues;
+		for (const key of OVERLAY_PROFILE_FIELDS) {
+			form.setFieldValue(key, next[key]);
+		}
+		setBaseValues(next);
+	}
+
+	async function saveAndApplyValues(values: OverlayProfileSettings) {
+		const next = values as OverlaySettingsValues;
+		await apply(next);
+		applyValues(next);
+	}
+
+	return { form, isPending: isSavePending || isApplyPending, saveAndApplyValues };
 }

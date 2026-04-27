@@ -8,6 +8,7 @@ import { FormActions } from "./sections/form-actions";
 import { MediaTypesSection } from "./sections/media-types-section";
 import { OverlayControls } from "./sections/overlay-controls";
 import { PlacementSection } from "./sections/placement-section";
+import { ProfilesSection } from "./sections/profiles-section";
 import { ReactionsSection } from "./sections/reactions-section";
 import { StickyPreview } from "./sections/sticky-preview";
 import { TextSection } from "./sections/text-section";
@@ -19,7 +20,7 @@ export interface OverlayFormProps {
 }
 
 export function OverlayForm({ initialData }: OverlayFormProps) {
-	const { form, isPending } = useOverlayForm(initialData);
+	const { form, isPending, saveAndApplyValues } = useOverlayForm(initialData);
 	// Default to portrait — the project's primary audience shares TikTok/Reels content.
 	const [previewAspect, setPreviewAspect] = useState<PreviewAspect>("9:16");
 
@@ -45,6 +46,10 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 						<div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_280px]">
 							{/* Main column — sections grouped by user intent */}
 							<div className="space-y-5 min-w-0">
+								<NbCard>
+									<ProfilesSection onApplyProfile={saveAndApplyValues} />
+								</NbCard>
+
 								<NbCard>
 									<PlacementSection
 										previewAspect={previewAspect}
