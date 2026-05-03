@@ -163,6 +163,45 @@ export interface Settings {
 	floatingReactionSize: number;
 }
 
+export const OVERLAY_PROFILE_FIELDS = [
+	"mediaSize",
+	"duration",
+	"volume",
+	"position",
+	"positionOffsetX",
+	"positionOffsetY",
+	"enabledTypes",
+	"textSize",
+	"textPosition",
+	"textColor",
+	"mediaOpacity",
+	"syncMediaDuration",
+	"bgEnabled",
+	"bgColor",
+	"bgOpacity",
+	"bgBorderColor",
+	"bgBorderOpacity",
+	"bgBorderWidth",
+	"bgBorderRadius",
+	"bgPadding",
+	"floatingReactionsEnabled",
+	"floatingReactionPreset",
+	"floatingReactionDuration",
+	"floatingReactionOpacity",
+	"floatingReactionSize",
+] as const satisfies ReadonlyArray<keyof Settings>;
+
+export type OverlayProfileField = (typeof OVERLAY_PROFILE_FIELDS)[number];
+export type OverlayProfileSettings = Pick<Settings, OverlayProfileField>;
+
+export interface OverlayProfile {
+	id: string;
+	name: string;
+	settings: OverlayProfileSettings;
+	createdAt: number;
+	updatedAt: number;
+}
+
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
 export const CURRENT_SCHEMA_VERSION = 6;
 

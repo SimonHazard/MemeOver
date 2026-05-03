@@ -126,6 +126,10 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 export async function loadSettings(): Promise<Settings> {
 	const store = await Store.load("settings.json");
 	const saved = await store.get<unknown>("settings");
+	return normalizeSettings(saved);
+}
+
+export function normalizeSettings(saved: unknown): Settings {
 	const migrated = migrateSettings(saved);
 	// Shallow merge for top-level fields — new fields not in old settings.json get defaults.
 	// Deep merge for enabledTypes: a new media type (e.g. "sticker") added after the initial
