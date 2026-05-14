@@ -152,7 +152,7 @@
 		"monitor_single": "Un seul écran détecté.",
 		"monitor_disconnected": "L'écran sélectionné n'est plus connecté — l'overlay a été déplacé sur le principal.",
 		"monitor_screen": "Écran {{number}}",
-		"monitor_beta": "Le changement d'écran est encore en phase d'analyse — des comportements inattendus sont possibles sur certaines configurations."
+		"monitor_notice": "Le changement d'écran peut varier selon certaines configurations multi-écrans."
 	},
 	"onboarding": {
 		"step": "Étape {{current}} sur {{total}}",
@@ -212,8 +212,6 @@
 		"preferences": "Préférences",
 		"language": "Langue",
 		"theme": "Thème",
-		"betaTag": "Bêta",
-		"betaDisclaimer": "Il se peut que vous rencontriez des bugs au fil des mises à jour. Merci de votre compréhension.",
 		"bugReportTitle": "Un problème ?",
 		"bugReportDesc": "Si vous rencontrez un comportement inattendu, n'hésitez pas à nous le faire savoir.",
 		"bugReportButton": "Signaler un bug"

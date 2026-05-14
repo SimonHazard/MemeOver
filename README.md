@@ -4,7 +4,7 @@
 
 **Send memes to your friends' screen, live from Discord.**
 
-A desktop overlay app that pops up images, GIFs, videos and text from a Discord channel — straight onto your friends' screens in real-time.
+MemeOver 1.0 is a desktop overlay app and Discord bot that lets a group share images, GIFs, videos, audio, reactions and text directly on each other's screens.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/SimonHazard/MemeOver)](https://github.com/SimonHazard/MemeOver/releases/latest)
@@ -16,115 +16,126 @@ A desktop overlay app that pops up images, GIFs, videos and text from a Discord 
 ---
 
 <details>
-<summary>🇫🇷 <b>Version française</b></summary>
+<summary><b>Version francaise</b></summary>
+
+## Ce que fait MemeOver
+
+- Affiche les medias envoyes depuis Discord directement en overlay.
+- Prend en charge images, GIFs, videos, audio, textes et reactions.
+- Permet de choisir position, taille, opacite, duree et son.
+- Sauvegarde plusieurs profils d'affichage selon le contexte.
+- Gere les configurations multi-ecrans.
+- Conserve un historique pour rejouer un media recu.
+- Se met a jour automatiquement via les releases GitHub.
+- Fonctionne sur Windows, macOS et Linux.
 
 ## Fonctionnement
 
-1. **Invitez le bot** — Ajoutez le bot MemeOver à votre serveur Discord
-2. **Configurez** — Lancez `/memeover setup` pour enregistrer votre serveur
-3. **Téléchargez l'app** — Installez MemeOver et connectez-le avec vos identifiants
-4. **Envoyez des médias** — Postez une image, un GIF, une vidéo ou du texte dans le salon dédié
-5. **Surprise !** — Le média apparaît en overlay sur l'écran de vos amis
+1. Invitez le bot MemeOver sur votre serveur Discord.
+2. Lancez `/memeover setup` pour enregistrer le serveur et le salon a surveiller.
+3. Installez l'app desktop et connectez-la avec les identifiants fournis par le bot.
+4. Envoyez un media ou un message dans le salon dedie.
+5. Le contenu apparait en overlay sur les ecrans connectes.
 
 ## Commandes Discord
 
 | Commande | Permission | Description |
-|----------|-----------|-------------|
-| `/memeover setup [#salon]` | Gérer le serveur | Enregistre le serveur, optionnellement sur un salon spécifique |
+| --- | --- | --- |
+| `/memeover setup [#salon]` | Gerer le serveur | Enregistre le serveur, optionnellement sur un salon specifique |
 | `/memeover token` | Tous | Affiche les identifiants de connexion |
-| `/memeover rotate` | Gérer le serveur | Régénère le token de connexion |
-| `/memeover remove` | Gérer le serveur | Désinscrit le serveur de MemeOver |
+| `/memeover rotate` | Gerer le serveur | Regenere le token de connexion |
+| `/memeover remove` | Gerer le serveur | Desinscrit le serveur de MemeOver |
 
-## Développement
+## Developpement
 
-### Prérequis
+### Prerequis
 
 - [Bun](https://bun.sh/)
 - [Rust](https://www.rust-lang.org/)
 
-### App (Tauri)
+### Installer les dependances
 
 ```bash
 bun install
-bun tauri dev
+```
+
+### App desktop
+
+```bash
+cd app
+bun run tauri dev
+```
+
+### Site web
+
+```bash
+cd site
+bun run dev
 ```
 
 ### Bot Discord
 
 ```bash
-bun install
-bun run bot/index.ts
+cd bot
+bun run dev
 ```
 
 ### Configuration
 
-Copiez `bot/.env.example` vers `.env` à la racine et renseignez vos valeurs :
+Copiez `bot/.env.example` vers `.env` a la racine et renseignez vos valeurs :
 
 ```env
 DISCORD_TOKEN=votre_token_bot
 DISCORD_CLIENT_ID=votre_application_id
 ```
 
-Variables optionnelles : `WS_PORT`, `LOGTAIL_TOKEN`, `METRICS_TOKEN` (voir `.env.example`).
+Variables optionnelles : `WS_PORT`, `LOGTAIL_TOKEN`, `METRICS_TOKEN`.
 
-### Docker (bot uniquement)
+## Structure du projet
 
-```bash
-docker-compose up -d --build
+```text
+app/          App desktop Tauri
+bot/          Bot Discord et serveur temps reel
+shared/       Types de protocole partages
+packages/ui/  Composants UI partages
+site/         Site web Astro
 ```
-
-Ou directement :
-
-```bash
-docker run -e DISCORD_TOKEN=xxx -e DISCORD_CLIENT_ID=xxx -p 3001:3001 -d memeover-bot
-```
-
-### Structure du projet
-
-```
-app/          → Application Tauri (React 19 + Rust)
-bot/          → Bot Discord (Bun + Elysia WebSocket)
-shared/       → Types de protocole partagés (TypeScript/Zod)
-packages/ui/  → Composants UI partagés (shadcn/ui)
-site/         → Site web (Astro + Cloudflare Workers)
-```
-
-### Déploiement
-
-Consultez les workflows GitHub Actions : [app](.github/workflows/app.yml), [bot](.github/workflows/bot.yml), [site](.github/workflows/deploy-site.yml).
-
-## Discord
-
-Invitez le bot avec les paramètres : `permissions=2147486720&integration_type=0&scope=bot+applications.commands`
-
-## Contribuer
-
-Forkez le repo, ouvrez une PR — toute contribution compte. Consultez les [issues](https://github.com/SimonHazard/MemeOver/issues) pour des idées !
 
 ## Licence
 
-Ce projet est sous licence MIT — voir le fichier [LICENSE](LICENSE).
+Ce projet est sous licence MIT. Voir [LICENSE](LICENSE).
 
 </details>
 
 ---
 
-## How it works
+## Highlights
 
-1. **Invite the bot** — Add the MemeOver bot to your Discord server
-2. **Set up** — Run `/memeover setup` to register your server
-3. **Download the app** — Install MemeOver and connect it with your credentials
-4. **Send media** — Drop an image, GIF, video, or text in the dedicated Discord channel
-5. **Surprise!** — The media appears as an overlay on your friends' screen
+- Live Discord-to-screen overlay for connected friends.
+- Images, GIFs, videos, audio, text and reactions.
+- Custom placement, size, opacity, duration and sound.
+- Reusable overlay profiles for different sessions.
+- Multi-monitor selection.
+- History and replay for received media.
+- Automatic app updates through GitHub releases.
+- Windows, macOS and Linux builds.
 
-## Discord commands
+## How It Works
+
+1. Invite the MemeOver bot to your Discord server.
+2. Run `/memeover setup` to register the server and watched channel.
+3. Install the desktop app and connect it with the credentials from the bot.
+4. Send media or text in the dedicated Discord channel.
+5. The content appears as an overlay on connected screens.
+
+## Discord Commands
 
 | Command | Permission | Description |
-|---------|-----------|-------------|
-| `/memeover setup [#channel]` | Manage Server | Register your server, optionally watch a specific channel |
+| --- | --- | --- |
+| `/memeover setup [#channel]` | Manage Server | Register the server, optionally watching a specific channel |
 | `/memeover token` | Everyone | Display connection credentials |
 | `/memeover rotate` | Manage Server | Regenerate the connection token |
-| `/memeover remove` | Manage Server | Unregister your server from MemeOver |
+| `/memeover remove` | Manage Server | Unregister the server from MemeOver |
 
 ## Development
 
@@ -133,18 +144,31 @@ Ce projet est sous licence MIT — voir le fichier [LICENSE](LICENSE).
 - [Bun](https://bun.sh/)
 - [Rust](https://www.rust-lang.org/)
 
-### App (Tauri)
+### Install Dependencies
 
 ```bash
 bun install
-bun tauri dev
+```
+
+### Desktop App
+
+```bash
+cd app
+bun run tauri dev
+```
+
+### Website
+
+```bash
+cd site
+bun run dev
 ```
 
 ### Discord Bot
 
 ```bash
-bun install
-bun run bot/index.ts
+cd bot
+bun run dev
 ```
 
 ### Configuration
@@ -156,42 +180,26 @@ DISCORD_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_application_id
 ```
 
-Optional variables: `WS_PORT`, `LOGTAIL_TOKEN`, `METRICS_TOKEN` (see `.env.example`).
+Optional variables: `WS_PORT`, `LOGTAIL_TOKEN`, `METRICS_TOKEN`.
 
-### Docker (bot only)
+## Project Structure
 
-```bash
-docker-compose up -d --build
+```text
+app/          Tauri desktop app
+bot/          Discord bot and realtime server
+shared/       Shared protocol types
+packages/ui/  Shared UI components
+site/         Astro website
 ```
 
-Or directly:
+## Deployment
 
-```bash
-docker run -e DISCORD_TOKEN=xxx -e DISCORD_CLIENT_ID=xxx -p 3001:3001 -d memeover-bot
-```
+GitHub Actions build and deploy the app, bot and site:
 
-### Project structure
-
-```
-app/          → Tauri desktop app (React 19 + Rust)
-bot/          → Discord bot (Bun + Elysia WebSocket)
-shared/       → Shared protocol types (TypeScript/Zod)
-packages/ui/  → Shared UI components (shadcn/ui)
-site/         → Website (Astro + Cloudflare Workers)
-```
-
-### Deployment
-
-Check the GitHub Actions workflows: [app](.github/workflows/app.yml), [bot](.github/workflows/bot.yml), [site](.github/workflows/deploy-site.yml).
-
-## Discord
-
-Invite the bot with settings: `permissions=2147486720&integration_type=0&scope=bot+applications.commands`
-
-## Contributing
-
-Fork the repo, open a PR — every contribution matters. Check out the [issues](https://github.com/SimonHazard/MemeOver/issues) for ideas!
+- [App workflow](.github/workflows/app.yml)
+- [Bot workflow](.github/workflows/bot.yml)
+- [Site workflow](.github/workflows/deploy-site.yml)
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MemeOver is licensed under the MIT License. See [LICENSE](LICENSE).

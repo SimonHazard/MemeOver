@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [1.0.0]
+
+### Changed
+
+- Release MemeOver as a stable 1.0 desktop app and website.
+- Refresh product copy around the core MemeOver features.
+- Remove old launch wording from the app and website.
+- Update package and Tauri versions for the 1.0 release.
+
 ## [0.5.0]
 
 ### Changed

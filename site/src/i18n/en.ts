@@ -2,7 +2,9 @@ export const en = {
 	meta: {
 		title: "MemeOver — Send memes to your friends' screen, live from Discord",
 		description:
-			"MemeOver is a desktop overlay app that displays images, GIFs, videos and text sent from Discord directly on your friends' screens. Open source, self-hostable, multi-platform.",
+			"MemeOver brings Discord images, GIFs, videos, audio, reactions and text directly onto your friends' screens with a customizable desktop overlay.",
+		keywords:
+			"MemeOver, Discord overlay, meme overlay, Discord memes, desktop overlay, Tauri app, stream overlay, gaming overlay",
 	},
 	nav: {
 		features: "Features",
@@ -10,11 +12,11 @@ export const en = {
 		github: "GitHub",
 	},
 	hero: {
-		badge: "Beta · Open Source",
+		badge: "Version 1.0 · Open Source",
 		title: "MemeOver",
 		tagline: "Send memes to your friends' screen, live from Discord.",
 		description:
-			"A desktop overlay app that pops up images, GIFs, videos and text from a Discord channel — straight onto your friends' screens in real-time.",
+			"Turn a Discord channel into a shared live overlay for images, GIFs, videos, audio, reactions and text. MemeOver is built for game nights, watch parties and friend groups that like a little controlled chaos.",
 		cta_download: "Download",
 		cta_invite: "Invite Bot",
 	},
@@ -24,23 +26,23 @@ export const en = {
 			{
 				icon: "bot",
 				title: "Install the bot",
-				description: "Add the MemeOver bot to your Discord server with one click.",
+				description: "Add MemeOver to the Discord server where your group already hangs out.",
 			},
 			{
 				icon: "download",
 				title: "Get the app",
-				description: "Download MemeOver and connect it to your Discord server.",
+				description: "Each friend installs the desktop app and joins the shared overlay.",
 			},
 			{
 				icon: "send",
 				title: "Send media",
-				description: "Drop an image, GIF, video, or text in the dedicated Discord channel.",
+				description: "Drop an image, GIF, video, audio clip, reaction or message in Discord.",
 			},
 			{
 				icon: "sparkles",
-				title: "Surprise!",
+				title: "Watch it land",
 				description:
-					"The media appears as an overlay on your friends' screen — instant reactions guaranteed!",
+					"Everyone sees it appear on screen with timing, placement and replay controls.",
 			},
 		],
 	},
@@ -48,46 +50,52 @@ export const en = {
 		title: "Features",
 		items: [
 			{
+				icon: "zap",
+				title: "Live Discord Delivery",
+				description:
+					"What lands in the Discord channel shows up on connected screens moments later.",
+			},
+			{
 				icon: "image",
-				title: "All media types",
-				description: "Images, GIFs, videos, audio, and text — everything goes through.",
+				title: "Images, GIFs, Video & Audio",
+				description: "Send the formats your group actually uses without switching tools.",
 			},
 			{
-				icon: "move",
-				title: "Custom position",
-				description: "Place the overlay wherever you want on screen.",
+				icon: "message",
+				title: "Text & Reactions",
+				description: "Short messages and floating reactions give the overlay more personality.",
 			},
 			{
-				icon: "timer",
-				title: "Display duration",
-				description: "Configure how long each media stays on screen.",
+				icon: "sliders",
+				title: "Placement That Fits",
+				description: "Choose position, size, opacity, duration and sound for your own screen.",
 			},
 			{
-				icon: "moon",
-				title: "Dark & Light mode",
-				description: "The app follows your system theme — or pick your own.",
-			},
-			{
-				icon: "refresh",
-				title: "Auto-update",
-				description: "Always up to date with built-in automatic updates.",
-			},
-			{
-				icon: "code",
-				title: "Open source",
-				description: "MIT licensed, self-hostable, and community-driven.",
+				icon: "layers",
+				title: "Reusable Profiles",
+				description:
+					"Save different overlay styles for gaming, watching, streaming or quiet sessions.",
 			},
 			{
 				icon: "monitor",
-				title: "Multi-platform",
-				description: "Available on Windows, macOS, and Linux.",
+				title: "Multi-Screen Friendly",
+				description: "Pick where the overlay appears when your setup has more than one display.",
+			},
+			{
+				icon: "history",
+				title: "History & Replay",
+				description: "Missed the joke? Open the history and replay a previous media drop.",
+			},
+			{
+				icon: "refresh",
+				title: "Automatic Updates",
+				description: "Stay current without hunting for installers after every release.",
 			},
 		],
 	},
 	download: {
 		title: "Download",
-		description:
-			"MemeOver is available for Windows, macOS, and Linux. Grab the latest release from GitHub.",
+		description: "Get MemeOver 1.0 for your platform and invite the bot when your server is ready.",
 		windows: "Windows",
 		windowsFormats: ".exe / .msi",
 		macos: "macOS",
@@ -99,7 +107,7 @@ export const en = {
 	openSource: {
 		title: "Open Source",
 		description:
-			"MemeOver is fully open source under the MIT license. Contributions, bug reports, and feature requests are welcome!",
+			"MemeOver is open source under the MIT license. You can inspect it, host it yourself, report issues and shape what comes next.",
 		viewOnGithub: "View on GitHub",
 		reportBug: "Report a bug",
 		contribute:

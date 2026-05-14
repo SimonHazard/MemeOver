@@ -80,7 +80,7 @@ export function MonitorSelector() {
 								<Info className="h-3 w-3 text-muted-foreground shrink-0 cursor-default" />
 							</TooltipTrigger>
 							<TooltipContent side="right" className="max-w-56">
-								{t("display.monitor_beta")}
+								{t("display.monitor_notice")}
 							</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>

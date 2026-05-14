@@ -8,14 +8,64 @@ import { getLangFromUrl, t } from "@/i18n";
 interface Props {
 	title?: string;
 	description?: string;
+	noindex?: boolean;
 }
 
 const lang = getLangFromUrl(Astro.url);
-const { title, description } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 const pageTitle = title ?? t(lang, "meta.title");
 const pageDescription = description ?? t(lang, "meta.description");
+const pageKeywords = t(lang, "meta.keywords");
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL("/icon.png", Astro.site);
+const englishUrl = new URL("/", Astro.site);
+const frenchUrl = new URL("/fr/", Astro.site);
+const githubUrl = "https://github.com/SimonHazard/MemeOver";
+const releaseUrl = "https://github.com/SimonHazard/MemeOver/releases/latest";
+const locale = lang === "fr" ? "fr_FR" : "en_US";
+const alternateLocale = lang === "fr" ? "en_US" : "fr_FR";
+const structuredData = [
+	{
+		"@context": "https://schema.org",
+		"@type": "SoftwareApplication",
+		name: "MemeOver",
+		alternateName: "Meme Over",
+		url: englishUrl.toString(),
+		description: pageDescription,
+		applicationCategory: "EntertainmentApplication",
+		operatingSystem: "Windows, macOS, Linux",
+		isAccessibleForFree: true,
+		license: "https://github.com/SimonHazard/MemeOver/blob/main/LICENSE",
+		downloadUrl: releaseUrl,
+		codeRepository: githubUrl,
+		inLanguage: ["en", "fr"],
+		image: ogImage.toString(),
+		author: {
+			"@type": "Person",
+			name: "Simon Hazard",
+			url: "https://www.simonhazard.com/",
+		},
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "USD",
+			url: releaseUrl,
+		},
+		sameAs: [githubUrl, "https://www.simonhazard.com/"],
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		name: "MemeOver",
+		alternateName: "Meme Over",
+		url: englishUrl.toString(),
+		inLanguage: ["en", "fr"],
+		publisher: {
+			"@type": "Person",
+			name: "Simon Hazard",
+		},
+	},
+];
 ---
 
 <!doctype html>
@@ -41,7 +91,18 @@ const ogImage = new URL("/icon.png", Astro.site);
 		<!-- SEO -->
 		<title>{pageTitle}</title>
 		<meta name="description" content={pageDescription} />
+		<meta name="keywords" content={pageKeywords} />
+		<meta name="author" content="Simon Hazard" />
+		<meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow"} />
+		<meta name="theme-color" content="#f8c63d" />
 		<link rel="canonical" href={canonicalUrl} />
+		{!noindex && (
+			<>
+				<link rel="alternate" hreflang="en" href={englishUrl} />
+				<link rel="alternate" hreflang="fr" href={frenchUrl} />
+				<link rel="alternate" hreflang="x-default" href={englishUrl} />
+			</>
+		)}
 
 		<!-- Open Graph -->
 		<meta property="og:type" content="website" />
@@ -50,6 +111,8 @@ const ogImage = new URL("/icon.png", Astro.site);
 		<meta property="og:image" content={ogImage} />
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:site_name" content="MemeOver" />
+		<meta property="og:locale" content={locale} />
+		<meta property="og:locale:alternate" content={alternateLocale} />
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary" />
@@ -59,14 +122,25 @@ const ogImage = new URL("/icon.png", Astro.site);
 
 		<!-- Favicon -->
 		<link rel="icon" type="image/png" href="/icon.png" />
+		<link rel="apple-touch-icon" href="/icon.png" />
 
-		<!-- Fonts (self-hosted via Astro experimental fonts API — no third-party CDN) -->
+		{!noindex && (
+			<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+		)}
+
+		<!-- Fonts (self-hosted via Astro Fonts API — no third-party CDN) -->
 		<Font cssVariable="--display-family" preload />
 		<Font cssVariable="--text-family" preload />
 	</head>
 	<body class="bg-background text-foreground font-sans antialiased">
+		<a
+			href="#content"
+			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-40 focus:rounded-lg focus:border-2 focus:border-foreground focus:bg-background focus:px-4 focus:py-2 focus:font-display focus:text-sm focus:shadow-[2px_2px_0px_0px_var(--nb-shadow)]"
+		>
+			Skip to content
+		</a>
 		<Navbar lang={lang} />
-		<main>
+		<main id="content">
 			<slot />
 		</main>
 		<Footer lang={lang} />
