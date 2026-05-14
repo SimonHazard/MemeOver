@@ -6,7 +6,7 @@ const lang = getLangFromUrl(Astro.url);
 const dict = getTranslations(lang);
 ---
 
-<BaseLayout title={`${dict.notFound.title} — MemeOver`} description={dict.notFound.description}>
+<BaseLayout title={`${dict.notFound.title} — MemeOver`} description={dict.notFound.description} noindex>
 	<section class="min-h-[80vh] flex items-center justify-center px-4">
 		<div class="text-center flex flex-col items-center gap-6">
 			<h1 class="font-display text-8xl sm:text-9xl tracking-wide text-primary-400">
@@ -24,7 +24,7 @@ const dict = getTranslations(lang);
 			</p>
 			<a
 				href={getLocalizedPath(lang, "/")}
-				class="inline-flex items-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 transition-all hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)]"
+				class="inline-flex items-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 active:shadow-none active:translate-x-0.75 active:translate-y-0.75 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				{dict.notFound.backHome}
 			</a>

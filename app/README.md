@@ -1,7 +1,32 @@
-# Tauri + React + Typescript
+# MemeOver Desktop App
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+The MemeOver desktop app displays Discord media as a customizable overlay on the user's screen.
 
-## Recommended IDE Setup
+## Main Features
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- Receive images, GIFs, videos, audio, text and reactions from a connected Discord server.
+- Configure overlay position, size, opacity, duration, sound and display mode.
+- Save and import overlay profiles.
+- Choose the target screen on multi-monitor setups.
+- Review received media in the history and replay it.
+- Check for updates from GitHub releases.
+
+## Development
+
+From the repository root:
+
+```bash
+bun install
+cd app
+bun run tauri dev
+```
+
+## Build
+
+```bash
+cd app
+bun run build
+bun run tauri build
+```
+
+The app version is defined in both `app/package.json` and `app/src-tauri/tauri.conf.json`.

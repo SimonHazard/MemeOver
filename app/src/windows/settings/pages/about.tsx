@@ -2,12 +2,6 @@ import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Separator } from "@memeover/ui/components/ui/separator";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@memeover/ui/components/ui/tooltip";
 import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
@@ -44,21 +38,6 @@ export function AboutPage() {
 							<NbBadge className="bg-secondary-500 text-white px-2 py-0.5">
 								{appVersion ? `v${appVersion}` : "v—"}
 							</NbBadge>
-							<TooltipProvider>
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<NbBadge className="bg-primary text-primary-foreground px-2 py-0.5 cursor-default select-none">
-											{t("about.betaTag")}
-										</NbBadge>
-									</TooltipTrigger>
-									<TooltipContent
-										side="bottom"
-										className="max-w-55 text-center text-xs leading-snug"
-									>
-										{t("about.betaDisclaimer")}
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
 						</div>
 					</div>
 				</NbCard>

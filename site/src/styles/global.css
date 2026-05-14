@@ -10,4 +10,10 @@
 	--shadow-nb-sm: 2px 2px 0px 0px var(--nb-shadow);
 	--shadow-nb-md: 3px 3px 0px 0px var(--nb-shadow);
 	--shadow-nb-lg: 4px 4px 0px 0px var(--nb-shadow);
+	color-scheme: light;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.dark {
+	color-scheme: dark;
 }

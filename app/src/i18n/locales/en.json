@@ -152,7 +152,7 @@
 		"monitor_single": "Only one screen detected.",
 		"monitor_disconnected": "Previously selected screen is no longer connected — overlay moved to primary.",
 		"monitor_screen": "Screen {{number}}",
-		"monitor_beta": "Screen switching is still in analysis phase — you may experience unexpected behaviour on some setups."
+		"monitor_notice": "Screen switching may vary on some multi-monitor setups."
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",
@@ -212,8 +212,6 @@
 		"preferences": "Preferences",
 		"language": "Language",
 		"theme": "Theme",
-		"betaTag": "Beta",
-		"betaDisclaimer": "You may encounter bugs as updates roll out. Thank you for your understanding.",
 		"bugReportTitle": "Having an issue?",
 		"bugReportDesc": "If you run into unexpected behaviour, don't hesitate to let us know.",
 		"bugReportButton": "Report a bug"

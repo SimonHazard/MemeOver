@@ -1,5 +1,14 @@
 ---
-import { Code, Image, Monitor, Moon, Move, RefreshCw, Timer } from "lucide-react";
+import {
+	History,
+	Image,
+	Layers,
+	MessageCircle,
+	Monitor,
+	RefreshCw,
+	SlidersHorizontal,
+	Zap,
+} from "lucide-react";
 import type { Locale } from "@/i18n";
 import { getTranslations } from "@/i18n";
 
@@ -9,41 +18,67 @@ interface Props {
 
 const { lang } = Astro.props;
 const dict = getTranslations(lang);
+const [leadFeature, ...supportFeatures] = dict.features.items;
 
 const iconMap: Record<string, typeof Image> = {
+	zap: Zap,
 	image: Image,
-	move: Move,
-	timer: Timer,
-	moon: Moon,
-	refresh: RefreshCw,
-	code: Code,
+	message: MessageCircle,
+	sliders: SlidersHorizontal,
+	layers: Layers,
 	monitor: Monitor,
+	history: History,
+	refresh: RefreshCw,
 };
 
 const accentColors = [
 	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
 	"bg-secondary-100 dark:bg-secondary-900/40 text-secondary-600 dark:text-secondary-300",
-	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
-	"bg-secondary-100 dark:bg-secondary-900/40 text-secondary-600 dark:text-secondary-300",
-	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
-	"bg-secondary-100 dark:bg-secondary-900/40 text-secondary-600 dark:text-secondary-300",
-	"bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300",
+	"bg-card text-foreground",
 ];
+
+const LeadIcon = iconMap[leadFeature.icon] ?? Zap;
 ---
 
-<section id="features" class="py-20 px-4 bg-muted/50">
-	<div class="max-w-6xl mx-auto">
-		<h2 class="font-display text-3xl sm:text-4xl text-center tracking-wide mb-16">
-			{dict.features.title}
-		</h2>
+<section id="features" class="scroll-mt-24 bg-muted/50 px-4 py-20">
+	<div class="mx-auto max-w-7xl">
+		<div class="mb-12 flex flex-col gap-3 md:ml-[8vw]">
+			<p class="font-display text-xs uppercase tracking-wider text-muted-foreground">
+				MemeOver 1.0
+			</p>
+			<h2 class="max-w-2xl text-balance font-display text-3xl tracking-wide sm:text-4xl">
+				{dict.features.title}
+			</h2>
+		</div>
 
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-			{dict.features.items.map((feature, i) => {
-				const Icon = iconMap[feature.icon] ?? Code;
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+			<article class="relative min-h-80 overflow-hidden rounded-3xl border-2 border-foreground bg-card p-6 shadow-[5px_5px_0px_0px_var(--nb-shadow)] md:p-8">
+				<div class="absolute right-6 top-6 flex size-16 items-center justify-center rounded-2xl border-2 border-foreground bg-primary text-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)]">
+					<LeadIcon className="size-7" aria-hidden="true" />
+				</div>
+				<div class="flex min-h-64 max-w-lg flex-col justify-end gap-4 pt-24">
+					<h3 class="text-balance font-display text-3xl tracking-wide">
+						{leadFeature.title}
+					</h3>
+					<p class="text-base leading-relaxed text-muted-foreground">
+						{leadFeature.description}
+					</p>
+				</div>
+				<div class="pointer-events-none absolute -bottom-8 right-8 grid w-56 grid-cols-3 gap-3 opacity-80">
+					<div class="h-20 rounded-2xl border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_var(--nb-shadow)]"></div>
+					<div class="h-28 rounded-2xl border-2 border-foreground bg-secondary shadow-[2px_2px_0px_0px_var(--nb-shadow)]"></div>
+					<div class="h-24 rounded-2xl border-2 border-foreground bg-background shadow-[2px_2px_0px_0px_var(--nb-shadow)]"></div>
+				</div>
+			</article>
+
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1">
+				{supportFeatures.map((feature, i) => {
+					const Icon = iconMap[feature.icon] ?? Zap;
+					const offset = i % 2 === 1 ? "lg:ml-10" : "";
 				return (
-					<div class="flex items-start gap-4 p-5 rounded-2xl border-2 border-foreground bg-card shadow-[3px_3px_0px_0px_var(--nb-shadow)] hover:shadow-[5px_5px_0px_0px_var(--nb-shadow)] hover:-translate-y-0.5 transition-all">
-						<div class={`shrink-0 size-11 flex items-center justify-center rounded-xl border-2 border-foreground/20 ${accentColors[i % accentColors.length]}`}>
-							<Icon className="size-5" />
+					<article class={`flex items-start gap-4 rounded-2xl border-2 border-foreground bg-card p-5 shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--nb-shadow)] ${offset}`}>
+						<div class={`flex size-11 shrink-0 items-center justify-center rounded-xl border-2 border-foreground/20 ${accentColors[i % accentColors.length]}`}>
+							<Icon className="size-5" aria-hidden="true" />
 						</div>
 						<div class="flex flex-col gap-1">
 							<h3 class="font-display text-base tracking-wide">{feature.title}</h3>
@@ -51,9 +86,10 @@ const accentColors = [
 								{feature.description}
 							</p>
 						</div>
-					</div>
+					</article>
 				);
 			})}
+			</div>
 		</div>
 	</div>
 </section>

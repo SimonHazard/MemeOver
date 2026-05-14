@@ -15,15 +15,11 @@ const inviteHref = botClientId
 	: null;
 ---
 
-<section class="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-4 overflow-hidden">
-	<!-- Background decorative elements -->
+<section class="relative flex min-h-[calc(100dvh-3rem)] items-center justify-center overflow-hidden px-4 pb-12 pt-28">
 	<div class="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-		<!-- Primary blob -->
-		<div class="absolute top-1/4 -left-32 size-96 rounded-full bg-primary-200/30 dark:bg-primary-800/20 blur-3xl"></div>
-		<!-- Secondary blob -->
-		<div class="absolute bottom-1/4 -right-32 size-80 rounded-full bg-secondary-200/30 dark:bg-secondary-800/20 blur-3xl"></div>
-		<!-- Grid pattern -->
 		<div class="absolute inset-0 bg-[linear-gradient(to_right,var(--base-200)_1px,transparent_1px),linear-gradient(to_bottom,var(--base-200)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,var(--base-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--base-800)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-40"></div>
+		<div class="absolute left-[6vw] top-28 h-24 w-24 rotate-6 border-2 border-foreground bg-primary shadow-[4px_4px_0px_0px_var(--nb-shadow)]"></div>
+		<div class="absolute bottom-16 right-[8vw] h-28 w-20 -rotate-6 border-2 border-foreground bg-secondary shadow-[4px_4px_0px_0px_var(--nb-shadow)]"></div>
 	</div>
 
 	<HeroAnimation

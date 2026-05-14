@@ -15,7 +15,7 @@ export default defineConfig({
 			prefixDefaultLocale: false,
 		},
 	},
-	// Fonts API (stable in Astro 6 — moved out of experimental)
+	// Fonts API (stable in Astro 6)
 	fonts: [
 		{
 			// Maps to --font-display via var(--display-family) in theme.css @theme inline
