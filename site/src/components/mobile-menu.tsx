@@ -11,7 +11,7 @@ export default function MobileMenu({ links, downloadHref, downloadLabel }: Props
 	const [open, setOpen] = useState(false);
 
 	return (
-		<div className="md:hidden">
+		<div className="lg:hidden">
 			<button
 				type="button"
 				onClick={() => setOpen(!open)}
@@ -33,6 +33,9 @@ export default function MobileMenu({ links, downloadHref, downloadLabel }: Props
 							key={link.href}
 							href={link.href}
 							onClick={() => setOpen(false)}
+							{...(link.href.startsWith("http")
+								? { target: "_blank", rel: "noopener noreferrer" }
+								: {})}
 							className="rounded-lg px-3 py-2 font-display text-sm tracking-wide transition-colors duration-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 						>
 							{link.label}

@@ -1,4 +1,4 @@
-import { defineConfig, fontProviders } from "astro/config";
+import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
@@ -15,27 +15,6 @@ export default defineConfig({
 			prefixDefaultLocale: false,
 		},
 	},
-	// Fonts API (stable in Astro 6)
-	fonts: [
-		{
-			// Maps to --font-display via var(--display-family) in theme.css @theme inline
-			provider: fontProviders.google(),
-			name: "Bungee",
-			cssVariable: "--display-family",
-			weights: [400],
-			styles: ["normal"],
-			fallbacks: ["system-ui"],
-		},
-		{
-			// Maps to --font-sans / --font-text via var(--text-family) in theme.css @theme inline
-			provider: fontProviders.google(),
-			name: "Poppins",
-			cssVariable: "--text-family",
-			weights: [400, 500, 600, 700],
-			styles: ["normal"],
-			fallbacks: ["sans-serif"],
-		},
-	],
 	vite: {
 		plugins: [tailwindcss()],
 		resolve: {

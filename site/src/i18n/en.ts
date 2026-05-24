@@ -3,10 +3,11 @@ export const en = {
 		title: "MemeOver — Send memes to your friends' screen, live from Discord",
 		description:
 			"MemeOver brings Discord images, GIFs, videos, audio, reactions and text directly onto your friends' screens with a customizable desktop overlay.",
-		keywords:
-			"MemeOver, Discord overlay, meme overlay, Discord memes, desktop overlay, Tauri app, stream overlay, gaming overlay",
+		imageAlt: "MemeOver desktop overlay for Discord memes, GIFs, videos, audio and reactions.",
 	},
 	nav: {
+		howItWorks: "How it works",
+		useCases: "Use cases",
 		features: "Features",
 		download: "Download",
 		github: "GitHub",
@@ -43,6 +44,32 @@ export const en = {
 				title: "Watch it land",
 				description:
 					"Everyone sees it appear on screen with timing, placement and replay controls.",
+			},
+		],
+	},
+	useCases: {
+		kicker: "Built for shared screens",
+		title: "A Discord overlay for the moments your group already creates",
+		description:
+			"MemeOver keeps the joke inside Discord while making it visible on every connected desktop, with controls that keep the overlay fun instead of disruptive.",
+		items: [
+			{
+				icon: "gamepad",
+				title: "Game nights",
+				description:
+					"Drop reactions, GIFs and quick messages onto the match without asking everyone to alt-tab.",
+			},
+			{
+				icon: "party",
+				title: "Watch parties",
+				description:
+					"Let friends send memes, sound bites and comments that appear live while the group watches together.",
+			},
+			{
+				icon: "broadcast",
+				title: "Streaming setups",
+				description:
+					"Use a lightweight desktop overlay for Discord media without rebuilding your whole streaming scene.",
 			},
 		],
 	},
@@ -95,7 +122,8 @@ export const en = {
 	},
 	download: {
 		title: "Download",
-		description: "Get MemeOver 1.0 for your platform and invite the bot when your server is ready.",
+		description:
+			"Download the MemeOver desktop app for your platform, then invite the Discord bot when your server is ready.",
 		windows: "Windows",
 		windowsFormats: ".exe / .msi",
 		macos: "macOS",
@@ -103,6 +131,27 @@ export const en = {
 		linux: "Linux",
 		linuxFormats: ".AppImage / .deb",
 		allReleases: "All releases →",
+	},
+	faq: {
+		kicker: "Questions",
+		title: "MemeOver FAQ",
+		items: [
+			{
+				question: "What is MemeOver?",
+				answer:
+					"MemeOver is an open-source Discord overlay that sends images, GIFs, videos, audio clips, reactions and short text from a Discord channel to connected desktop screens.",
+			},
+			{
+				question: "Do all friends need the desktop app?",
+				answer:
+					"Yes. Each friend who wants to see media on their screen installs the desktop app, while the shared Discord server uses the MemeOver bot to receive media.",
+			},
+			{
+				question: "Can I control where media appears?",
+				answer:
+					"Yes. MemeOver includes placement, size, opacity, duration, sound, profiles, history and replay controls so each person can tune the overlay for their own setup.",
+			},
+		],
 	},
 	openSource: {
 		title: "Open Source",
