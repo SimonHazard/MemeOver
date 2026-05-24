@@ -1,7 +1,7 @@
 import type { Message, PartialMessage } from "discord.js";
 import { broadcastToGuild } from "../server";
-import { logger } from "../utils/logger";
 import { discordRefLogFields, logHash, mediaUrlLogFields } from "../utils/log-privacy";
+import { logger } from "../utils/logger";
 import { guildRegistry } from "../utils/registry";
 import type { MediaEvent, TextEvent } from "../utils/types";
 import { shouldDispatch } from "./dedup";
@@ -84,7 +84,10 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 			timestamp: Date.now(),
 		};
 		broadcastToGuild(guildId, event);
-		msgLog.info({ event: "broadcast_text", text_length: text.length }, "Broadcast text-only message");
+		msgLog.info(
+			{ event: "broadcast_text", text_length: text.length },
+			"Broadcast text-only message",
+		);
 		return;
 	}
 

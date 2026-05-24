@@ -89,9 +89,7 @@ export function AboutPage() {
 						</div>
 						<div className="flex-1 min-w-0 space-y-3">
 							<div>
-								<h2 className="font-display text-base tracking-wide">
-									{t("about.privacyTitle")}
-								</h2>
+								<h2 className="font-display text-base tracking-wide">{t("about.privacyTitle")}</h2>
 								<p className="text-sm font-text text-muted-foreground mt-1">
 									{t("about.privacyDesc")}
 								</p>

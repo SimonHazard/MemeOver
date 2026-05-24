@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
-import { logger } from "./utils/logger";
 import { discordRefLogFields } from "./utils/log-privacy";
+import { logger } from "./utils/logger";
 import { schedulePresenceRefresh } from "./utils/presence";
 import { guildRegistry } from "./utils/registry";
 import { ClientMessageSchema } from "./utils/schemas";
@@ -251,7 +251,10 @@ export function createServer() {
 				store.addClient(ws.id, ws);
 				startHeartbeat(ws);
 				stats.connectionOpened();
-				log.info({ ...discordRefLogFields({ wsId: ws.id }), event: "connected" }, "Client connected");
+				log.info(
+					{ ...discordRefLogFields({ wsId: ws.id }), event: "connected" },
+					"Client connected",
+				);
 			},
 
 			message(ws: WSConnection, raw: unknown) {
