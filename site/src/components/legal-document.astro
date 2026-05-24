@@ -1,0 +1,92 @@
+---
+interface Props {
+	kicker: string;
+	title: string;
+	description: string;
+	updated: string;
+	langSwitchHref: string;
+	langSwitchLabel: string;
+}
+
+const { kicker, title, description, updated, langSwitchHref, langSwitchLabel } = Astro.props;
+---
+
+<section class="px-4 py-12 sm:py-16 bg-background">
+	<div class="mx-auto max-w-3xl">
+		<div class="flex flex-col gap-5 border-b-2 border-foreground pb-8">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<p class="font-display text-xs uppercase tracking-widest text-primary-700 dark:text-primary-300">
+					{kicker}
+				</p>
+				<a
+					href={langSwitchHref}
+					class="font-display text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				>
+					{langSwitchLabel}
+				</a>
+			</div>
+			<div class="flex flex-col gap-3">
+				<h1 class="font-display text-3xl sm:text-4xl tracking-wide">{title}</h1>
+				<p class="font-text text-base leading-relaxed text-muted-foreground">{description}</p>
+				<p class="font-text text-sm text-muted-foreground">{updated}</p>
+			</div>
+		</div>
+
+		<article class="legal-document mt-8">
+			<slot />
+		</article>
+	</div>
+</section>
+
+<style>
+	.legal-document {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.legal-document :global(section) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+
+	.legal-document :global(h2) {
+		font-family: var(--font-display);
+		font-size: 1.05rem;
+		letter-spacing: 0.02em;
+	}
+
+	.legal-document :global(h3) {
+		font-family: var(--font-display);
+		font-size: 0.9rem;
+		letter-spacing: 0.02em;
+	}
+
+	.legal-document :global(p),
+	.legal-document :global(li) {
+		font-family: var(--font-text);
+		color: var(--muted-foreground);
+		line-height: 1.75;
+	}
+
+	.legal-document :global(ul) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		padding-left: 1.25rem;
+		list-style: disc;
+	}
+
+	.legal-document :global(a) {
+		color: var(--foreground);
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 3px;
+	}
+
+	.legal-document :global(strong) {
+		color: var(--foreground);
+		font-weight: 700;
+	}
+</style>

@@ -1,6 +1,7 @@
 import type { Message, PartialMessage } from "discord.js";
 import { broadcastToGuild } from "../server";
 import { logger } from "../utils/logger";
+import { discordRefLogFields, logHash, mediaUrlLogFields } from "../utils/log-privacy";
 import { guildRegistry } from "../utils/registry";
 import type { MediaEvent, TextEvent } from "../utils/types";
 import { shouldDispatch } from "./dedup";
@@ -58,7 +59,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
 
-	const msgLog = log.child({ guildId, channelId });
+	const msgLog = log.child(discordRefLogFields({ guildId, channelId, messageId: message.id }));
 	msgLog.debug({ event: "processing", includeText }, "Processing message");
 
 	const authorInfo = extractAuthorInfo(message);
@@ -83,7 +84,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 			timestamp: Date.now(),
 		};
 		broadcastToGuild(guildId, event);
-		msgLog.info({ event: "broadcast_text", text }, "Broadcast text-only message");
+		msgLog.info({ event: "broadcast_text", text_length: text.length }, "Broadcast text-only message");
 		return;
 	}
 
@@ -94,7 +95,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 		const dedupKey = `${message.id}:${urlPathname(item.url)}`;
 		if (!shouldDispatch(dedupKey)) {
 			msgLog.debug(
-				{ event: "dedup_skip", media_url: item.url, dedupKey },
+				{ event: "dedup_skip", ...mediaUrlLogFields(item.url), dedup_hash: logHash(dedupKey) },
 				"Skipping duplicate media broadcast",
 			);
 			continue;
@@ -113,7 +114,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 		};
 		broadcastToGuild(guildId, event);
 		msgLog.info(
-			{ event: "broadcast_media", media_type: item.media_type, media_url: item.url },
+			{ event: "broadcast_media", media_type: item.media_type, ...mediaUrlLogFields(item.url) },
 			"Broadcast media event",
 		);
 	}

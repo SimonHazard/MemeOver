@@ -171,6 +171,8 @@ export const fr: Translations = {
 		madeWith: "Fait avec ❤️ par",
 		author: "Simon Hazard",
 		license: "Licence MIT",
+		privacy: "Confidentialité",
+		legal: "Mentions légales",
 	},
 	notFound: {
 		title: "404",

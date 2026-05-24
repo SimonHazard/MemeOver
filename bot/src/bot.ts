@@ -12,6 +12,7 @@ import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { broadcastToGuild } from "./server";
 import { config } from "./utils/config";
 import { logger } from "./utils/logger";
+import { attachPresenceClient } from "./utils/presence";
 import { canBroadcastReaction } from "./utils/reaction-rate-limit";
 import { guildRegistry } from "./utils/registry";
 import type { ReactionEvent } from "./utils/types";
@@ -34,6 +35,7 @@ const discordClient = new Client({
 
 discordClient.on(Events.ClientReady, (c) => {
 	log.info({ event: "ready", tag: c.user.tag }, `Logged in as ${c.user.tag}`);
+	attachPresenceClient(c);
 });
 
 // New messages — include text caption

@@ -1,0 +1,91 @@
+---
+import LegalDocument from "@/components/legal-document.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+
+const title = "Legal Notice — MemeOver";
+const description = "Publisher, hosting, intellectual property, and content responsibility for MemeOver.";
+---
+
+<BaseLayout title={title} description={description}>
+	<LegalDocument
+		kicker="Legal"
+		title="Legal Notice"
+		description="MemeOver is a personal, non-commercial, open-source project maintained from France."
+		updated="Last updated: May 25, 2026"
+		langSwitchHref="/fr/mentions-legales"
+		langSwitchLabel="Version française"
+	>
+		<section>
+			<h2>Publisher</h2>
+			<p>
+				MemeOver is published personally and non-professionally by Simon Hazard, an individual
+				residing in France. Under the rules applicable to non-professional publishers, the
+				publisher's personal address is not displayed on this page. Contact is available through
+				<a href="https://www.simonhazard.com/">simonhazard.com</a> and the
+				<a href="https://github.com/SimonHazard/MemeOver">GitHub repository</a>. Please do not
+				post secrets, tokens, or private media URLs in public GitHub issues.
+			</p>
+			<p>
+				If MemeOver becomes a professional or commercial activity, this legal notice will be
+				updated with the identification details required for that status.
+			</p>
+		</section>
+
+		<section>
+			<h2>Publication Director</h2>
+			<p>Simon Hazard.</p>
+		</section>
+
+		<section>
+			<h2>Hosting</h2>
+			<p>
+				The public website is hosted on Cloudflare Workers by Cloudflare, Inc., 101 Townsend St,
+				San Francisco, CA 94107, United States. Cloudflare's contact information is available at
+				<a href="https://www.cloudflare.com/">cloudflare.com</a> and through its abuse or support
+				forms.
+			</p>
+			<p>
+				The hosted Discord bot is self-hosted by the publisher in France. Operational logs are
+				processed by Better Stack for debugging, security, and service reliability.
+			</p>
+		</section>
+
+		<section>
+			<h2>Personal Data</h2>
+			<p>
+				Information about the data controller, purposes, legal bases, recipients, transfers outside
+				the European Union, retention periods, GDPR rights, and deletion requests is available in
+				the <a href="/privacy">Privacy Policy</a>.
+			</p>
+		</section>
+
+		<section>
+			<h2>Open Source License</h2>
+			<p>
+				MemeOver's source code is distributed under the MIT License. You may inspect, fork,
+				self-host, modify, and contribute to the project under the license terms available in the
+				<a href="https://github.com/SimonHazard/MemeOver/blob/main/LICENSE">repository</a>.
+			</p>
+		</section>
+
+		<section>
+			<h2>Third-Party Services And Trademarks</h2>
+			<p>
+				MemeOver interacts with Discord and can display media hosted by Discord CDN, Tenor, Giphy,
+				or Imgur. MemeOver is not affiliated with, sponsored by, or endorsed by Discord, Tenor,
+				Giphy, Imgur, Better Stack, Cloudflare, or GitHub. Their names, logos, APIs, and services
+				remain the property of their respective owners.
+			</p>
+		</section>
+
+		<section>
+			<h2>User Content</h2>
+			<p>
+				MemeOver acts as a pass-through overlay tool. Users who send media, text, stickers, or
+				reactions through Discord remain responsible for the legality and rights attached to that
+				content, including copyright, privacy, right of publicity, and Discord server rules.
+			</p>
+		</section>
+
+	</LegalDocument>
+</BaseLayout>

@@ -6,8 +6,10 @@ import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Bug, ExternalLink } from "lucide-react";
+import { Bug, ExternalLink, FileText, Scale, ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { clearHistory } from "@/shared/history";
 import { FullscreenInfoDialog } from "@/windows/settings/components/fullscreen-info-dialog";
 import { LangToggle } from "@/windows/settings/components/lang-toggle";
 import { ThemeToggle } from "@/windows/settings/components/theme-toggle";
@@ -16,13 +18,30 @@ import { UpdateChecker } from "@/windows/settings/components/update-checker";
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AboutPage() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 
 	const { data: appVersion } = useQuery({
 		queryKey: ["app-version"],
 		queryFn: getVersion,
 		staleTime: Number.POSITIVE_INFINITY,
 	});
+
+	const isFrench = i18n.language.startsWith("fr");
+	const privacyUrl = isFrench
+		? "https://memeover.simonhazard.com/fr/confidentialite"
+		: "https://memeover.simonhazard.com/privacy";
+	const legalUrl = isFrench
+		? "https://memeover.simonhazard.com/fr/mentions-legales"
+		: "https://memeover.simonhazard.com/legal";
+
+	async function handleClearLocalHistory() {
+		try {
+			await clearHistory();
+			toast.success(t("toast.historyCleared"));
+		} catch {
+			toast.error(t("toast.clearError"));
+		}
+	}
 
 	return (
 		<div className="p-5">
@@ -58,6 +77,43 @@ export function AboutPage() {
 						<div className="flex items-center justify-between">
 							<span className="text-sm font-text text-foreground">{t("notice.gaming_compat")}</span>
 							<FullscreenInfoDialog />
+						</div>
+					</div>
+				</NbCard>
+
+				{/* ── Privacy and local data card ── */}
+				<NbCard>
+					<div className="flex items-start gap-4">
+						<div className={`p-2.5 border-2 border-foreground ${NB_SHADOW_SM} shrink-0`}>
+							<ShieldCheck className="size-5" aria-hidden="true" />
+						</div>
+						<div className="flex-1 min-w-0 space-y-3">
+							<div>
+								<h2 className="font-display text-base tracking-wide">
+									{t("about.privacyTitle")}
+								</h2>
+								<p className="text-sm font-text text-muted-foreground mt-1">
+									{t("about.privacyDesc")}
+								</p>
+							</div>
+							<ul className="list-disc pl-4 text-sm font-text text-muted-foreground leading-relaxed space-y-1">
+								<li>{t("about.privacyLocal")}</li>
+								<li>{t("about.privacyHosted")}</li>
+							</ul>
+							<div className="flex flex-wrap gap-2">
+								<NbButton size="sm" variant="outline" onClick={() => openUrl(privacyUrl)}>
+									<FileText className="size-3.5" aria-hidden="true" />
+									{t("about.privacyPolicy")}
+								</NbButton>
+								<NbButton size="sm" variant="outline" onClick={() => openUrl(legalUrl)}>
+									<Scale className="size-3.5" aria-hidden="true" />
+									{t("about.legalNotice")}
+								</NbButton>
+								<NbButton size="sm" variant="outline" onClick={handleClearLocalHistory}>
+									<Trash2 className="size-3.5" aria-hidden="true" />
+									{t("about.clearLocalHistory")}
+								</NbButton>
+							</div>
 						</div>
 					</div>
 				</NbCard>
