@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
 import { successEmbed } from "../embeds";
 
@@ -12,6 +13,7 @@ export async function handleSetup(
 
 	const isUpdate = guildRegistry.isRegistered(guildId);
 	const token = guildRegistry.register(guildId, channelId);
+	schedulePresenceRefresh();
 
 	const cfg = guildRegistry.getConfig(guildId);
 	const watchingValue =

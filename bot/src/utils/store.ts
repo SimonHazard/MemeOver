@@ -78,6 +78,16 @@ export const store = {
 		return guildRooms.size;
 	},
 
+	getJoinedClientCount(): number {
+		const wsIds = new Set<string>();
+		for (const room of guildRooms.values()) {
+			for (const wsId of room) {
+				wsIds.add(wsId);
+			}
+		}
+		return wsIds.size;
+	},
+
 	getAllGuildIds(): string[] {
 		return Array.from(guildRooms.keys());
 	},

@@ -70,6 +70,7 @@ export function HistoryPage() {
 						</NbButton>
 					)}
 				</div>
+				<p className="text-sm font-text text-muted-foreground">{t("history.localNote")}</p>
 
 				<Separator />
 

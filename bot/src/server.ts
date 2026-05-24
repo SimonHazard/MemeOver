@@ -1,7 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
+import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
+import { schedulePresenceRefresh } from "./utils/presence";
 import { guildRegistry } from "./utils/registry";
 import { ClientMessageSchema } from "./utils/schemas";
 import { stats } from "./utils/stats";
@@ -49,7 +51,10 @@ export function broadcastToGuild(guildId: string, event: ServerMessage): void {
 			client.ws_ref.send(payload);
 		} catch (err) {
 			// Socket closed between check and send — clean up
-			log.warn({ wsId, event: "send_failed", err }, "Failed to send to client, removing");
+			log.warn(
+				{ ...discordRefLogFields({ wsId }), event: "send_failed", err },
+				"Failed to send to client, removing",
+			);
 			store.removeClient(wsId);
 		}
 	}
@@ -110,7 +115,7 @@ function startHeartbeat(ws: WSConnection): void {
 
 		state.pongTimeout = setTimeout(() => {
 			log.warn(
-				{ wsId: ws.id, event: "heartbeat_timeout" },
+				{ ...discordRefLogFields({ wsId: ws.id }), event: "heartbeat_timeout" },
 				"Client missed PONG, closing connection",
 			);
 			stats.errorHeartbeatTimeout();
@@ -122,6 +127,7 @@ function startHeartbeat(ws: WSConnection): void {
 			for (const guildId of guilds) {
 				broadcastMemberCount(guildId);
 			}
+			schedulePresenceRefresh();
 			try {
 				ws.close();
 			} catch {
@@ -144,7 +150,7 @@ function clearHeartbeat(wsId: string): void {
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
 function handleJoin(ws: WSConnection, msg: JoinMessage): void {
-	const wsLog = log.child({ wsId: ws.id, guildId: msg.guild_id });
+	const wsLog = log.child(discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }));
 
 	if (!guildRegistry.isRegistered(msg.guild_id)) {
 		ws.send(
@@ -197,12 +203,16 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 	wsLog.info({ event: "join_success" }, "Client joined guild");
 	stats.joinSuccess();
 	broadcastMemberCount(msg.guild_id);
+	schedulePresenceRefresh();
 }
 
 function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 	store.leaveGuild(ws.id, msg.guild_id);
-	log.child({ wsId: ws.id, guildId: msg.guild_id }).info({ event: "leave" }, "Client left guild");
+	log
+		.child(discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }))
+		.info({ event: "leave" }, "Client left guild");
 	broadcastMemberCount(msg.guild_id);
+	schedulePresenceRefresh();
 }
 
 // ─── Server factory ───────────────────────────────────────────────────────────
@@ -241,7 +251,10 @@ export function createServer() {
 				store.addClient(ws.id, ws);
 				startHeartbeat(ws);
 				stats.connectionOpened();
-				log.info({ wsId: ws.id, event: "connected" }, "Client connected");
+				log.info(
+					{ ...discordRefLogFields({ wsId: ws.id }), event: "connected" },
+					"Client connected",
+				);
 			},
 
 			message(ws: WSConnection, raw: unknown) {
@@ -255,7 +268,10 @@ export function createServer() {
 						} satisfies ServerMessage),
 					);
 					stats.errorRateLimit();
-					log.warn({ wsId: ws.id, event: "rate_limited" }, "Client rate limited");
+					log.warn(
+						{ ...discordRefLogFields({ wsId: ws.id }), event: "rate_limited" },
+						"Client rate limited",
+					);
 					return;
 				}
 
@@ -273,7 +289,10 @@ export function createServer() {
 						} satisfies ServerMessage),
 					);
 					stats.errorParse();
-					log.warn({ wsId: ws.id, event: "parse_error" }, "Invalid JSON from client");
+					log.warn(
+						{ ...discordRefLogFields({ wsId: ws.id }), event: "parse_error" },
+						"Invalid JSON from client",
+					);
 					return;
 				}
 
@@ -289,7 +308,7 @@ export function createServer() {
 					);
 					stats.errorValidation();
 					log.warn(
-						{ wsId: ws.id, event: "validation_error" },
+						{ ...discordRefLogFields({ wsId: ws.id }), event: "validation_error" },
 						"Invalid message format from client",
 					);
 					return;
@@ -328,10 +347,14 @@ export function createServer() {
 				const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
 				store.removeClient(ws.id);
 				stats.connectionClosed();
-				log.info({ wsId: ws.id, event: "disconnected" }, "Client disconnected");
+				log.info(
+					{ ...discordRefLogFields({ wsId: ws.id }), event: "disconnected" },
+					"Client disconnected",
+				);
 				for (const guildId of guilds) {
 					broadcastMemberCount(guildId);
 				}
+				schedulePresenceRefresh();
 			},
 		});
 }

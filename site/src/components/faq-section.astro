@@ -1,0 +1,42 @@
+---
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+---
+
+<section id="faq" class="scroll-mt-24 bg-muted/50 px-4 py-20">
+	<div class="mx-auto grid max-w-5xl grid-cols-1 gap-10 lg:grid-cols-[0.75fr_1.25fr]">
+		<div class="flex flex-col gap-3">
+			<p class="font-display text-xs uppercase tracking-wider text-muted-foreground">
+				{dict.faq.kicker}
+			</p>
+			<h2 class="text-balance font-display text-3xl tracking-wide sm:text-4xl">
+				{dict.faq.title}
+			</h2>
+		</div>
+
+		<div class="flex flex-col gap-4">
+			{dict.faq.items.map((item) => (
+				<details class="group rounded-2xl border-2 border-foreground bg-card p-5 shadow-[3px_3px_0px_0px_var(--nb-shadow)]">
+					<summary class="cursor-pointer list-none font-display text-base tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card">
+						<span class="inline-flex w-full items-center justify-between gap-4">
+							<span>{item.question}</span>
+							<span class="shrink-0 text-xl leading-none transition-transform duration-200 group-open:rotate-45" aria-hidden="true">
+								+
+							</span>
+						</span>
+					</summary>
+					<p class="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+						{item.answer}
+					</p>
+				</details>
+			))}
+		</div>
+	</div>
+</section>

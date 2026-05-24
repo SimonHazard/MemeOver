@@ -3,6 +3,7 @@ import { isAllowedAndFresh } from "../../media/allowlist";
 import { shouldDispatch } from "../../media/dedup";
 import { detectMediaType, urlPathname } from "../../media/extractor";
 import { broadcastToGuild } from "../../server";
+import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy";
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
 import type { MediaEvent } from "../../utils/types";
@@ -94,7 +95,12 @@ export async function handleSecret(
 
 	broadcastToGuild(guildId, event);
 	log.info(
-		{ event: "secret_broadcast", guildId, channelId, media_type, media_url: rawUrl },
+		{
+			event: "secret_broadcast",
+			...discordRefLogFields({ guildId, channelId, messageId: interaction.id }),
+			media_type,
+			...mediaUrlLogFields(rawUrl),
+		},
 		"Anonymous meme broadcast",
 	);
 

@@ -106,6 +106,10 @@ export const guildRegistry = {
 		return registry[guildId];
 	},
 
+	getRegisteredCount(): number {
+		return Object.keys(registry).length;
+	},
+
 	verifyToken(guildId: string, token: string): boolean {
 		const stored = registry[guildId]?.token;
 		if (!stored) return false;

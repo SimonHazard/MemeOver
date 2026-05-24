@@ -62,7 +62,7 @@ export default function HeroAnimation({
 			animate="show"
 			className="grid w-full max-w-7xl grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:gap-14"
 		>
-			<div className="flex flex-col items-start gap-6 text-left">
+			<div className="flex min-w-0 flex-col items-start gap-6 text-left">
 				<motion.span
 					variants={pop}
 					className="inline-flex items-center rounded-lg border-2 border-foreground bg-secondary px-4 py-1.5 font-display text-xs uppercase tracking-wider text-secondary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)]"
@@ -70,42 +70,45 @@ export default function HeroAnimation({
 					{badge}
 				</motion.span>
 
-				<motion.div variants={pop} className="flex items-center gap-4">
+				<motion.div
+					variants={pop}
+					className="flex max-w-full min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4"
+				>
 					<img
 						src="/icon.png"
 						alt="MemeOver logo"
 						width={92}
 						height={92}
 						fetchPriority="high"
-						className="rounded-2xl border-2 border-foreground shadow-[4px_4px_0px_0px_var(--nb-shadow)]"
+						className="size-16 shrink-0 rounded-2xl border-2 border-foreground shadow-[4px_4px_0px_0px_var(--nb-shadow)] sm:size-[92px]"
 					/>
-					<h1 className="text-balance font-display text-5xl tracking-wide text-foreground sm:text-6xl md:text-7xl">
+					<h1 className="max-w-full min-w-0 break-words font-display text-4xl leading-none tracking-wide text-foreground sm:text-6xl md:text-7xl">
 						{title}
 					</h1>
 				</motion.div>
 
 				<motion.p
 					variants={fadeUp}
-					className="max-w-2xl text-balance font-display text-xl tracking-wide text-primary-700 dark:text-primary-300 sm:text-2xl"
+					className="max-w-full break-words font-display text-lg tracking-wide text-primary-700 dark:text-primary-300 sm:max-w-2xl sm:text-balance sm:text-2xl"
 				>
 					{tagline}
 				</motion.p>
 
 				<motion.p
 					variants={fadeUp}
-					className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
+					className="max-w-full break-words text-base leading-relaxed text-muted-foreground sm:max-w-xl sm:text-lg"
 				>
 					{description}
 				</motion.p>
 
-				<motion.div variants={fadeUp} className="mt-2 flex flex-wrap items-center gap-4">
+				<motion.div variants={fadeUp} className="mt-2 flex w-full flex-wrap items-center gap-4">
 					<motion.a
 						href={downloadHref}
 						target="_blank"
 						rel="noopener noreferrer"
 						whileHover={shouldReduceMotion ? undefined : { y: -2 }}
 						whileTap={{ scale: 0.98 }}
-						className="inline-flex items-center gap-2 rounded-xl border-2 border-foreground bg-primary px-6 py-3 font-display text-base tracking-wide text-primary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+						className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-foreground bg-primary px-6 py-3 font-display text-base tracking-wide text-primary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background min-[390px]:w-auto"
 					>
 						<Download className="size-5" aria-hidden="true" />
 						{ctaDownload}
@@ -117,13 +120,13 @@ export default function HeroAnimation({
 							rel="noopener noreferrer"
 							whileHover={shouldReduceMotion ? undefined : { y: -2 }}
 							whileTap={{ scale: 0.98 }}
-							className="inline-flex items-center gap-2 rounded-xl border-2 border-foreground bg-secondary px-6 py-3 font-display text-base tracking-wide text-secondary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+							className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-foreground bg-secondary px-6 py-3 font-display text-base tracking-wide text-secondary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background min-[390px]:w-auto"
 						>
 							<Bot className="size-5" aria-hidden="true" />
 							{ctaInvite}
 						</motion.a>
 					) : (
-						<span className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border-2 border-foreground/30 bg-muted px-6 py-3 font-display text-base tracking-wide text-muted-foreground opacity-50">
+						<span className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border-2 border-foreground/30 bg-muted px-6 py-3 font-display text-base tracking-wide text-muted-foreground opacity-50 min-[390px]:w-auto">
 							<Bot className="size-5" aria-hidden="true" />
 							{ctaInvite}
 						</span>

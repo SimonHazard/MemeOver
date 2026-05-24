@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
 import { errorEmbed, successEmbed } from "../embeds";
 
@@ -13,6 +14,7 @@ export async function handleRemove(
 	}
 
 	guildRegistry.unregister(guildId);
+	schedulePresenceRefresh();
 
 	const embed = successEmbed(
 		"Server removed",

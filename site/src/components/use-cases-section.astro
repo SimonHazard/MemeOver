@@ -1,0 +1,53 @@
+---
+import { Gamepad2, PartyPopper, Radio } from "lucide-react";
+import type { Locale } from "@/i18n";
+import { getTranslations } from "@/i18n";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+const dict = getTranslations(lang);
+
+const iconMap: Record<string, typeof Gamepad2> = {
+	gamepad: Gamepad2,
+	party: PartyPopper,
+	broadcast: Radio,
+};
+---
+
+<section id="use-cases" class="scroll-mt-24 px-4 py-20">
+	<div class="mx-auto grid max-w-6xl grid-cols-1 gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+		<div class="flex flex-col gap-4">
+			<p class="font-display text-xs uppercase tracking-wider text-muted-foreground">
+				{dict.useCases.kicker}
+			</p>
+			<h2 class="text-balance font-display text-3xl tracking-wide sm:text-4xl">
+				{dict.useCases.title}
+			</h2>
+			<p class="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+				{dict.useCases.description}
+			</p>
+		</div>
+
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+			{dict.useCases.items.map((item) => {
+				const Icon = iconMap[item.icon] ?? Gamepad2;
+				return (
+					<article class="flex min-h-60 flex-col justify-between gap-6 rounded-2xl border-2 border-foreground bg-card p-5 shadow-[3px_3px_0px_0px_var(--nb-shadow)]">
+						<div class="flex size-12 items-center justify-center rounded-xl border-2 border-foreground bg-secondary text-secondary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)]">
+							<Icon className="size-6" aria-hidden="true" />
+						</div>
+						<div class="flex flex-col gap-2">
+							<h3 class="font-display text-lg tracking-wide">{item.title}</h3>
+							<p class="text-sm leading-relaxed text-muted-foreground">
+								{item.description}
+							</p>
+						</div>
+					</article>
+				);
+			})}
+		</div>
+	</div>
+</section>

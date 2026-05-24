@@ -13,6 +13,8 @@ const otherLang: Locale = lang === "en" ? "fr" : "en";
 const otherLangPath = lang === "en" ? "/fr/" : "/";
 
 const links = [
+	{ href: "#how-it-works", label: t(lang, "nav.howItWorks") },
+	{ href: "#use-cases", label: t(lang, "nav.useCases") },
 	{ href: "#features", label: t(lang, "nav.features") },
 	{ href: "#download", label: t(lang, "nav.download") },
 	{ href: "https://github.com/SimonHazard/MemeOver", label: t(lang, "nav.github") },
@@ -24,14 +26,14 @@ const links = [
 		<!-- Logo -->
 		<a
 			href={getLocalizedPath(lang, "/")}
-			class="flex items-center gap-2 font-display text-xl tracking-wide transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+			class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden font-display text-lg tracking-wide transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:text-xl md:flex-none"
 		>
-			<img src="/icon.png" alt="MemeOver" width={32} height={32} class="rounded-md" />
-			MemeOver
+			<img src="/icon.png" alt="MemeOver" width={32} height={32} class="shrink-0 rounded-md" />
+			<span class="min-w-0 truncate">MemeOver</span>
 		</a>
 
 		<!-- Desktop nav -->
-		<nav class="hidden md:flex items-center gap-6" aria-label="Main navigation">
+		<nav class="hidden lg:flex items-center gap-5" aria-label="Main navigation">
 			{links.map((link) => (
 				<a
 					href={link.href}
@@ -44,7 +46,7 @@ const links = [
 		</nav>
 
 		<!-- Actions -->
-		<div class="flex items-center gap-3">
+		<div class="ml-2 flex shrink-0 items-center gap-2 sm:ml-3 sm:gap-3">
 			<!-- Language switch -->
 			<a
 				href={otherLangPath}
@@ -59,7 +61,7 @@ const links = [
 			<!-- Desktop download CTA -->
 			<a
 				href="#download"
-				class="hidden items-center rounded-lg border-2 border-foreground bg-primary px-4 py-2 font-display text-sm tracking-wide text-primary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:inline-flex"
+				class="hidden items-center rounded-lg border-2 border-foreground bg-primary px-4 py-2 font-display text-sm tracking-wide text-primary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
 			>
 				{t(lang, "nav.download")}
 			</a>
