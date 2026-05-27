@@ -30,6 +30,9 @@ const translations = {
 
 		"common.allChannels": "All channels",
 		"common.appSetupCode": "⚡ App setup code",
+		"common.cancel": "Cancel",
+		"common.controlOwnerOnlyDescription": "Run the command yourself to use this action.",
+		"common.controlOwnerOnlyTitle": "This control is not yours",
 		"common.manageServer": "Manage Server",
 		"common.notConfiguredDescription":
 			"This server has not been set up yet. Run `/memeover setup` first.",
@@ -48,15 +51,17 @@ const translations = {
 
 		"cleanup.notice":
 			"Due to inactivity, MemeOver is no longer watching the configured channels. To configure MemeOver again, use `/memeover setup` in this server.",
+		"cleanup.noticeTitle": "MemeOver paused",
 		"cleanup.wsMessage":
 			"This server was removed from MemeOver due to inactivity. Run /memeover setup to configure it again.",
 		"cleanup.wsCloseReason": "Guild removed",
 
 		"help.description":
 			"MemeOver streams the media posted in your Discord channels to a desktop overlay. Configure the bot below, then enter your credentials in the MemeOver app.",
-		"help.remove": "Unregister this server from MemeOver. Requires **Manage Server**.",
+		"help.remove":
+			"Open a confirmation before unregistering this server from MemeOver. Requires **Manage Server**.",
 		"help.rotate":
-			"Generate a new connection token. Any connected overlay will disconnect. Requires **Manage Server**.",
+			"Open a confirmation before generating a new connection token. Connected overlays must reconnect after confirmation. Requires **Manage Server**.",
 		"help.secret":
 			"Send an anonymous media item to every connected overlay. Use either an uploaded file or direct URL, with optional caption text.",
 		"help.setup":
@@ -68,10 +73,22 @@ const translations = {
 		"help.help": "Show this help message.",
 
 		"remove.notConfiguredDescription": "This server is not registered with MemeOver.",
+		"remove.cancelledDescription": "No configuration was changed.",
+		"remove.cancelledTitle": "Removal cancelled",
+		"remove.confirmButton": "Remove server",
+		"remove.confirmDescription":
+			"This will unregister the server from MemeOver. Connected overlays will be rejected on their next reconnect.",
+		"remove.confirmTitle": "Confirm server removal",
 		"remove.successDescription":
 			"This server has been removed from MemeOver. All active sessions will be rejected on next reconnect.",
 		"remove.successTitle": "Server removed",
 
+		"rotate.cancelledDescription": "The current connection token is still valid.",
+		"rotate.cancelledTitle": "Rotation cancelled",
+		"rotate.confirmButton": "Generate token",
+		"rotate.confirmDescription":
+			"This will invalidate the current connection token. Connected overlays must reconnect with the new token.",
+		"rotate.confirmTitle": "Confirm token rotation",
 		"rotate.newToken": "🔑 New token",
 		"rotate.description":
 			"Your previous token is now invalid. Update the MemeOver app with the new token below.\n\n⚠️ Any connected overlay will disconnect and must reconnect with this new token.",
@@ -145,6 +162,10 @@ const translations = {
 
 		"common.allChannels": "Tous les salons",
 		"common.appSetupCode": "⚡ Code de configuration app",
+		"common.cancel": "Annuler",
+		"common.controlOwnerOnlyDescription":
+			"Lancez la commande vous-même pour utiliser cette action.",
+		"common.controlOwnerOnlyTitle": "Ce contrôle ne vous appartient pas",
 		"common.manageServer": "Gérer le serveur",
 		"common.notConfiguredDescription":
 			"Ce serveur n'est pas encore configuré. Lancez `/memeover setup` d'abord.",
@@ -163,15 +184,17 @@ const translations = {
 
 		"cleanup.notice":
 			"Suite à une période d'inactivité, les canaux configurés ne sont plus écoutés par MemeOver. Pour reconfigurer MemeOver, utilisez `/memeover setup` dans ce serveur.",
+		"cleanup.noticeTitle": "MemeOver en pause",
 		"cleanup.wsMessage":
 			"Ce serveur a été retiré de MemeOver pour inactivité. Lancez /memeover setup pour le configurer à nouveau.",
 		"cleanup.wsCloseReason": "Serveur retiré",
 
 		"help.description":
 			"MemeOver envoie les médias postés dans vos salons Discord vers un overlay desktop. Configurez le bot ci-dessous, puis entrez vos identifiants dans l'app MemeOver.",
-		"help.remove": "Retire ce serveur de MemeOver. Requiert **Gérer le serveur**.",
+		"help.remove":
+			"Ouvre une confirmation avant de retirer ce serveur de MemeOver. Requiert **Gérer le serveur**.",
 		"help.rotate":
-			"Génère un nouveau jeton de connexion. Les overlays connectés seront déconnectés. Requiert **Gérer le serveur**.",
+			"Ouvre une confirmation avant de générer un nouveau jeton de connexion. Les overlays connectés devront se reconnecter après confirmation. Requiert **Gérer le serveur**.",
 		"help.secret":
 			"Envoie un média anonyme à tous les overlays connectés. Utilisez un fichier uploadé ou une URL directe, avec une légende optionnelle.",
 		"help.setup":
@@ -184,10 +207,22 @@ const translations = {
 		"help.help": "Affiche ce message d'aide.",
 
 		"remove.notConfiguredDescription": "Ce serveur n'est pas enregistré dans MemeOver.",
+		"remove.cancelledDescription": "Aucune configuration n'a été modifiée.",
+		"remove.cancelledTitle": "Retrait annulé",
+		"remove.confirmButton": "Retirer le serveur",
+		"remove.confirmDescription":
+			"Cette action désinscrit le serveur de MemeOver. Les overlays connectés seront rejetés à leur prochaine reconnexion.",
+		"remove.confirmTitle": "Confirmer le retrait du serveur",
 		"remove.successDescription":
 			"Ce serveur a été retiré de MemeOver. Les sessions actives seront rejetées à la prochaine reconnexion.",
 		"remove.successTitle": "Serveur retiré",
 
+		"rotate.cancelledDescription": "Le jeton de connexion actuel reste valide.",
+		"rotate.cancelledTitle": "Renouvellement annulé",
+		"rotate.confirmButton": "Générer un jeton",
+		"rotate.confirmDescription":
+			"Cette action invalide le jeton de connexion actuel. Les overlays connectés devront se reconnecter avec le nouveau jeton.",
+		"rotate.confirmTitle": "Confirmer le renouvellement du jeton",
 		"rotate.newToken": "🔑 Nouveau jeton",
 		"rotate.description":
 			"Votre ancien jeton est maintenant invalide. Mettez à jour l'app MemeOver avec le nouveau jeton ci-dessous.\n\n⚠️ Les overlays connectés seront déconnectés et devront se reconnecter avec ce nouveau jeton.",

@@ -3,11 +3,11 @@ import {
 	Events,
 	GatewayIntentBits,
 	type Message,
-	MessageFlags,
 	type PartialMessage,
 	Partials,
 } from "discord.js";
 import { handleInteraction } from "./commands/commands";
+import { errorResponse } from "./commands/response-panel";
 import { interactionLocale, t } from "./i18n";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { broadcastToGuild } from "./server";
@@ -105,10 +105,9 @@ discordClient.on(Events.InteractionCreate, (interaction) => {
 		log.error({ event: "interaction_error", err }, "Interaction handler error");
 		if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
 			try {
-				await interaction.reply({
-					content: t(interactionLocale(interaction), "bot.genericError"),
-					flags: MessageFlags.Ephemeral,
-				});
+				await interaction.reply(
+					errorResponse(t(interactionLocale(interaction), "bot.genericError")),
+				);
 			} catch {
 				// Interaction may have expired — ignore
 			}

@@ -1,10 +1,19 @@
-import { ActionRowBuilder, type APIEmbedField, ButtonBuilder, ButtonStyle } from "discord.js";
+import {
+	ButtonBuilder,
+	ButtonStyle,
+	type InteractionReplyOptions,
+	type InteractionUpdateOptions,
+} from "discord.js";
 import { type BotLocale, t } from "../i18n";
 import { config } from "../utils/config";
 import type { GuildConfig } from "../utils/registry";
-import { errorEmbed } from "./embeds";
+import { errorResponse, type PanelField, panelResponse, panelUpdate } from "./response-panel";
 
 const MEMEOVER_SITE_URL = "https://memeover.simonhazard.com";
+
+function codeBlock(value: string): string {
+	return `\`\`\`\n${value}\n\`\`\``;
+}
 
 export function buildConnectionCode(guildId: string, token: string): string {
 	const params = new URLSearchParams({
@@ -38,8 +47,8 @@ export function buildConnectionFields({
 	config?: Pick<GuildConfig, "channel_ids">;
 	tokenLabel?: string;
 	includeWatching?: boolean;
-}): APIEmbedField[] {
-	const fields: APIEmbedField[] = [];
+}): PanelField[] {
+	const fields: PanelField[] = [];
 	if (includeWatching && config) {
 		fields.push({
 			name: t(locale, "common.watching"),
@@ -50,10 +59,10 @@ export function buildConnectionFields({
 
 	fields.push(
 		{ name: t(locale, "common.serverId"), value: `\`${guildId}\``, inline: true },
-		{ name: tokenLabel ?? t(locale, "common.token"), value: `\`\`\`${token}\`\`\``, inline: false },
+		{ name: tokenLabel ?? t(locale, "common.token"), value: codeBlock(token), inline: false },
 		{
 			name: t(locale, "common.appSetupCode"),
-			value: `\`\`\`${buildConnectionCode(guildId, token)}\`\`\``,
+			value: codeBlock(buildConnectionCode(guildId, token)),
 			inline: false,
 		},
 	);
@@ -61,20 +70,77 @@ export function buildConnectionFields({
 	return fields;
 }
 
-export function notConfiguredEmbed(locale: BotLocale = "en", description?: string) {
-	return errorEmbed(
+export function notConfiguredResponse(
+	locale: BotLocale = "en",
+	description?: string,
+): InteractionReplyOptions {
+	return errorResponse(
 		t(locale, "common.notConfiguredTitle"),
 		description ?? t(locale, "common.notConfiguredDescription"),
 	);
 }
 
-export function connectionActionRows(locale: BotLocale = "en"): ActionRowBuilder<ButtonBuilder>[] {
-	return [
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			new ButtonBuilder()
-				.setStyle(ButtonStyle.Link)
-				.setURL(MEMEOVER_SITE_URL)
-				.setLabel(t(locale, "common.openMemeOver")),
-		),
-	];
+export function notConfiguredUpdate(
+	locale: BotLocale = "en",
+	description?: string,
+): InteractionUpdateOptions {
+	return panelUpdate({
+		tone: "error",
+		title: t(locale, "common.notConfiguredTitle"),
+		description: description ?? t(locale, "common.notConfiguredDescription"),
+	});
+}
+
+function openMemeOverButton(locale: BotLocale): ButtonBuilder {
+	return new ButtonBuilder()
+		.setStyle(ButtonStyle.Link)
+		.setURL(MEMEOVER_SITE_URL)
+		.setLabel(t(locale, "common.openMemeOver"));
+}
+
+interface ConnectionPanelOptions {
+	tone: "success" | "info" | "warning";
+	title: string;
+	description?: string;
+	guildId: string;
+	token: string;
+	locale?: BotLocale;
+	config?: Pick<GuildConfig, "channel_ids">;
+	tokenLabel?: string;
+	includeWatching?: boolean;
+}
+
+function connectionPanelOptions({
+	tone,
+	title,
+	description,
+	guildId,
+	token,
+	locale = "en",
+	config,
+	tokenLabel,
+	includeWatching = true,
+}: ConnectionPanelOptions) {
+	return {
+		tone,
+		title,
+		description,
+		button: openMemeOverButton(locale),
+		fields: buildConnectionFields({
+			guildId,
+			token,
+			locale,
+			config,
+			tokenLabel,
+			includeWatching,
+		}),
+	};
+}
+
+export function connectionResponse(options: ConnectionPanelOptions): InteractionReplyOptions {
+	return panelResponse(connectionPanelOptions(options));
+}
+
+export function connectionUpdate(options: ConnectionPanelOptions): InteractionUpdateOptions {
+	return panelUpdate(connectionPanelOptions(options));
 }

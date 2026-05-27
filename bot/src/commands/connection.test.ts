@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
+import { MessageFlags } from "discord.js";
 
 process.env.DISCORD_TOKEN ??= "test-discord-token";
 process.env.DISCORD_CLIENT_ID ??= "123456789012345678";
 process.env.PUBLIC_WS_URL = "wss://test.example/ws";
 
-const { buildConnectionCode, buildConnectionFields, formatWatchedChannels, notConfiguredEmbed } =
+const { buildConnectionCode, buildConnectionFields, formatWatchedChannels, notConfiguredResponse } =
 	await import("./connection");
+const { componentsToJson, EPHEMERAL_COMPONENTS_V2 } = await import("./response-panel");
 
 describe("Discord connection helpers", () => {
 	test("formats watched channel lists", () => {
@@ -54,15 +56,21 @@ describe("Discord connection helpers", () => {
 		expect(fields[0]?.value).toBe("Tous les salons");
 	});
 
-	test("builds the shared not-configured embed", () => {
-		const embed = notConfiguredEmbed().toJSON();
-		expect(embed.title).toBe("Not configured");
-		expect(embed.description).toContain("/memeover setup");
+	test("builds the shared not-configured Components V2 response", () => {
+		const response = notConfiguredResponse();
+		const json = JSON.stringify(componentsToJson(response));
+
+		expect(response.flags).toBe(MessageFlags.Ephemeral | MessageFlags.IsComponentsV2);
+		expect(response.flags).toBe(EPHEMERAL_COMPONENTS_V2);
+		expect(json).toContain("Not configured");
+		expect(json).toContain("/memeover setup");
 	});
 
-	test("builds localized not-configured embeds", () => {
-		const embed = notConfiguredEmbed("fr").toJSON();
-		expect(embed.title).toBe("Non configuré");
-		expect(embed.description).toContain("/memeover setup");
+	test("builds localized not-configured Components V2 responses", () => {
+		const response = notConfiguredResponse("fr");
+		const json = JSON.stringify(componentsToJson(response));
+
+		expect(json).toContain("Non configuré");
+		expect(json).toContain("/memeover setup");
 	});
 });

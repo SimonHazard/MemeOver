@@ -1,4 +1,4 @@
-import { type Attachment, type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import type { Attachment, ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { isAllowedAndFresh, isCdnUrlExpired } from "../../media/allowlist";
 import { shouldDispatch } from "../../media/dedup";
@@ -8,8 +8,8 @@ import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy"
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
 import type { MediaEvent, MediaType } from "../../utils/types";
-import { notConfiguredEmbed } from "../connection";
-import { errorEmbed, successEmbed } from "../embeds";
+import { notConfiguredResponse } from "../connection";
+import { errorResponse, successResponse } from "../response-panel";
 
 const log = logger.child({ module: "secret" });
 
@@ -40,8 +40,7 @@ export async function handleSecret(
 ): Promise<void> {
 	const locale = interactionLocale(interaction);
 	if (!guildRegistry.isRegistered(guildId)) {
-		const embed = notConfiguredEmbed(locale);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+		await interaction.reply(notConfiguredResponse(locale));
 		return;
 	}
 
@@ -51,58 +50,64 @@ export async function handleSecret(
 	const mediaUrl = attachment?.url ?? rawUrl;
 
 	if (!mediaUrl) {
-		const embed = errorEmbed(
-			t(locale, "secret.mediaRequiredTitle"),
-			t(locale, "secret.mediaRequiredDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.mediaRequiredTitle"),
+				t(locale, "secret.mediaRequiredDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
 	if (attachment && isCdnUrlExpired(attachment.url)) {
-		const embed = errorEmbed(
-			t(locale, "secret.attachmentExpiredTitle"),
-			t(locale, "secret.attachmentExpiredDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.attachmentExpiredTitle"),
+				t(locale, "secret.attachmentExpiredDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
 	if (!attachment && !isAllowedAndFresh(mediaUrl)) {
-		const embed = errorEmbed(
-			t(locale, "secret.urlNotAllowedTitle"),
-			t(locale, "secret.urlNotAllowedDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.urlNotAllowedTitle"),
+				t(locale, "secret.urlNotAllowedDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
 	const media_type = attachment ? detectAttachmentMediaType(attachment) : detectMediaType(mediaUrl);
 	if (!media_type) {
-		const embed = errorEmbed(
-			t(locale, "secret.unsupportedTypeTitle"),
-			t(locale, "secret.unsupportedTypeDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.unsupportedTypeTitle"),
+				t(locale, "secret.unsupportedTypeDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
 	const channelId = interaction.channelId;
 	if (!channelId) {
-		const embed = errorEmbed(
-			t(locale, "secret.channelRequiredTitle"),
-			t(locale, "secret.channelRequiredDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.channelRequiredTitle"),
+				t(locale, "secret.channelRequiredDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) {
-		const embed = errorEmbed(
-			t(locale, "secret.channelNotWatchedTitle"),
-			t(locale, "secret.channelNotWatchedDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.channelNotWatchedTitle"),
+				t(locale, "secret.channelNotWatchedDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
@@ -110,11 +115,12 @@ export async function handleSecret(
 	// would never collide. Keying on the URL alone gates anti-spam when the same
 	// meme is resubmitted within the TTL window.
 	if (!shouldDispatch(`secret:${urlPathname(mediaUrl)}`)) {
-		const embed = errorEmbed(
-			t(locale, "secret.alreadySentTitle"),
-			t(locale, "secret.alreadySentDescription"),
+		await interaction.reply(
+			errorResponse(
+				t(locale, "secret.alreadySentTitle"),
+				t(locale, "secret.alreadySentDescription"),
+			),
 		);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
@@ -145,9 +151,10 @@ export async function handleSecret(
 		"Anonymous meme broadcast",
 	);
 
-	const embed = successEmbed(
-		t(locale, "secret.successTitle"),
-		t(locale, text ? "secret.successDescriptionWithText" : "secret.successDescription"),
+	await interaction.reply(
+		successResponse(
+			t(locale, "secret.successTitle"),
+			t(locale, text ? "secret.successDescriptionWithText" : "secret.successDescription"),
+		),
 	);
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

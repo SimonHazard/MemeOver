@@ -1,7 +1,6 @@
 import {
 	type Interaction,
 	InteractionContextType,
-	MessageFlags,
 	PermissionFlagsBits,
 	REST,
 	Routes,
@@ -11,7 +10,8 @@ import { type BotTranslationKey, frLocalization, interactionLocale, t } from "..
 import { config } from "../utils/config";
 import { logger } from "../utils/logger";
 
-import { errorEmbed } from "./embeds";
+import { handleComponentInteraction } from "./component-actions";
+import { errorResponse } from "./response-panel";
 import { handleHelp } from "./subcommands/help";
 import { handleRemove } from "./subcommands/remove";
 import { handleRotate } from "./subcommands/rotate";
@@ -121,18 +121,20 @@ export async function registerCommands(): Promise<void> {
 // ─── Interaction handler ──────────────────────────────────────────────────────
 
 export async function handleInteraction(interaction: Interaction): Promise<void> {
+	if (interaction.isButton()) {
+		await handleComponentInteraction(interaction);
+		return;
+	}
+
 	if (!interaction.isChatInputCommand()) return;
 	if (interaction.commandName !== "memeover") return;
 
 	const guildId = interaction.guildId;
 	const locale = interactionLocale(interaction);
 	if (!guildId) {
-		await interaction.reply({
-			embeds: [
-				errorEmbed(t(locale, "common.serverOnlyTitle"), t(locale, "common.serverOnlyDescription")),
-			],
-			flags: MessageFlags.Ephemeral,
-		});
+		await interaction.reply(
+			errorResponse(t(locale, "common.serverOnlyTitle"), t(locale, "common.serverOnlyDescription")),
+		);
 		return;
 	}
 
@@ -140,15 +142,12 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 
 	if (PRIVILEGED_SUBS.has(sub)) {
 		if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-			await interaction.reply({
-				embeds: [
-					errorEmbed(
-						t(locale, "common.permissionDeniedTitle"),
-						t(locale, "common.permissionDeniedDescription"),
-					),
-				],
-				flags: MessageFlags.Ephemeral,
-			});
+			await interaction.reply(
+				errorResponse(
+					t(locale, "common.permissionDeniedTitle"),
+					t(locale, "common.permissionDeniedDescription"),
+				),
+			);
 			return;
 		}
 	}

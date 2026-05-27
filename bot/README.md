@@ -7,7 +7,7 @@ a lightweight WebSocket server.
 
 - Registers a Discord server with `/memeover setup`.
 - Provides credentials and a one-paste `memeover://setup` code with `/memeover token`.
-- Rotates credentials with `/memeover rotate`.
+- Rotates credentials with `/memeover rotate` after a Discord confirmation.
 - Sends supported Discord media, stickers, text and reactions to connected desktop apps.
 - Supports anonymous media pushes with `/memeover secret`.
 - Exposes `/health` and optional bearer-protected `/metrics` HTTP endpoints.
@@ -19,8 +19,8 @@ a lightweight WebSocket server.
 | --- | --- | --- |
 | `/memeover setup [#channel]` | Manage Server | Register the server; omit channel to watch all channels |
 | `/memeover token` | Everyone | Display credentials and setup code, visible only to the caller |
-| `/memeover rotate` | Manage Server | Regenerate the token and invalidate the previous one |
-| `/memeover remove` | Manage Server | Remove this server registration |
+| `/memeover rotate` | Manage Server | Confirm, then regenerate the token and invalidate the previous one |
+| `/memeover remove` | Manage Server | Confirm, then remove this server registration |
 | `/memeover secret [media] [url] [text]` | Everyone | Send an anonymous media item to connected overlays |
 | `/memeover status` | Manage Server | Show watched channels, active overlays and uptime |
 | `/memeover help` | Everyone | List command help |

@@ -1,9 +1,9 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { guildRegistry } from "../../utils/registry";
 import { store } from "../../utils/store";
 import { formatWatchedChannels } from "../connection";
-import { infoEmbed } from "../embeds";
+import { infoResponse } from "../response-panel";
 
 /** Format an uptime in seconds to a compact "Xd Yh Zm" or "Hh Mm Ss" string. */
 function formatUptime(seconds: number): string {
@@ -31,20 +31,18 @@ export async function handleStatus(
 
 	const activeOverlays = store.getGuildMembers(guildId).size;
 
-	const embed = infoEmbed(t(locale, "status.title"), undefined, [
-		{
-			name: t(locale, "status.registered"),
-			value: registered ? t(locale, "status.registeredYes") : t(locale, "status.notConfigured"),
-			inline: false,
-		},
-		{ name: t(locale, "common.watching"), value: watchingValue, inline: false },
-		{
-			name: t(locale, "status.activeOverlays"),
-			value: String(activeOverlays),
-			inline: true,
-		},
-		{ name: t(locale, "status.uptime"), value: formatUptime(process.uptime()), inline: true },
-	]);
-
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+	await interaction.reply(
+		infoResponse(t(locale, "status.title"), undefined, [
+			{
+				name: t(locale, "status.registered"),
+				value: registered ? t(locale, "status.registeredYes") : t(locale, "status.notConfigured"),
+			},
+			{ name: t(locale, "common.watching"), value: watchingValue },
+			{
+				name: t(locale, "status.activeOverlays"),
+				value: String(activeOverlays),
+			},
+			{ name: t(locale, "status.uptime"), value: formatUptime(process.uptime()) },
+		]),
+	);
 }
