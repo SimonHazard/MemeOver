@@ -17,8 +17,9 @@ import { toast } from "sonner";
 import type z from "zod";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
-import { DEFAULT_SETTINGS, DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
+import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
+import { ConnectionCodeField, type ParsedConnectionCode } from "./connection-code";
 import { SetupSchema, type SetupValues } from "./schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 	const form = useForm({
 		defaultValues: {
 			wsUrl: initialData.wsUrl,
-			expertMode: DEFAULT_SETTINGS.expertMode,
+			expertMode: initialData.expertMode,
 			guildId: initialData.guildId,
 			token: initialData.token,
 		} satisfies SetupValues,
@@ -94,6 +95,15 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 	const validateField = (schema: z.ZodType, value: string): string | undefined => {
 		const result = schema.safeParse(value);
 		return result.success ? undefined : t(result.error.issues[0]?.message ?? "");
+	};
+
+	const applyConnectionCode = (parsed: ParsedConnectionCode) => {
+		form.setFieldValue("guildId", parsed.guildId);
+		form.setFieldValue("token", parsed.token);
+		if (parsed.wsUrl) {
+			form.setFieldValue("wsUrl", parsed.wsUrl);
+			form.setFieldValue("expertMode", parsed.wsUrl !== DEFAULT_WS_URL);
+		}
 	};
 
 	return (
@@ -134,6 +144,8 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 							<Separator />
 
 							<div className="space-y-4">
+								<ConnectionCodeField onApply={applyConnectionCode} />
+
 								{/* ── Expert Mode toggle — gates the advanced wsUrl field ── */}
 								<form.Field name="expertMode">
 									{(field) => (

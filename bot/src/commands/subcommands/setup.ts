@@ -1,6 +1,7 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
+import { buildConnectionCode, connectionActionRows } from "../connection";
 import { successEmbed } from "../embeds";
 
 export async function handleSetup(
@@ -23,13 +24,22 @@ export async function handleSetup(
 
 	const embed = successEmbed(
 		isUpdate ? "MemeOver updated" : "MemeOver configured",
-		"Use the Server ID and Token below in the MemeOver app to start receiving media.\n\n_Tip: run `/memeover setup #channel` to add a channel to the watch list._",
+		"Paste the setup code below into the MemeOver app to connect in one step.\n\n_Tip: run `/memeover setup #channel` to add a channel to the watch list._",
 		[
 			{ name: "📺 Watching", value: watchingValue, inline: false },
 			{ name: "🏠 Server ID", value: `\`${guildId}\``, inline: true },
 			{ name: "🔑 Token", value: `\`\`\`${token}\`\`\``, inline: false },
+			{
+				name: "⚡ App setup code",
+				value: `\`\`\`${buildConnectionCode(guildId, token)}\`\`\``,
+				inline: false,
+			},
 		],
 	);
 
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+	await interaction.reply({
+		embeds: [embed],
+		components: connectionActionRows(),
+		flags: MessageFlags.Ephemeral,
+	});
 }

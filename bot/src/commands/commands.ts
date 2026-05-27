@@ -23,51 +23,97 @@ const log = logger.child({ module: "commands" });
 
 // ─── Command definitions ──────────────────────────────────────────────────────
 
+const fr = (value: string) => ({ fr: value });
+
 const memeover = new SlashCommandBuilder()
 	.setName("memeover")
 	.setDescription("Manage MemeOver for this server")
+	.setDescriptionLocalizations(fr("Gérer MemeOver sur ce serveur"))
 	.addSubcommand((sub) =>
 		sub
 			.setName("setup")
+			.setNameLocalizations(fr("configurer"))
 			.setDescription(
 				"Register this server. Omit #channel to watch all channels; specify one to add it to the list.",
+			)
+			.setDescriptionLocalizations(
+				fr("Configurer ce serveur. Omettez #salon pour écouter tous les salons."),
 			)
 			.addChannelOption((opt) =>
 				opt
 					.setName("channel")
+					.setNameLocalizations(fr("salon"))
 					.setDescription("Add a specific channel to watch (omit to watch all channels)")
+					.setDescriptionLocalizations(fr("Ajouter un salon précis à écouter"))
 					.setRequired(false),
 			),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("token").setDescription("Show your connection credentials (only visible to you)"),
+		sub
+			.setName("token")
+			.setNameLocalizations(fr("jeton"))
+			.setDescription("Show your connection credentials (only visible to you)")
+			.setDescriptionLocalizations(fr("Afficher les identifiants de connexion")),
 	)
 	.addSubcommand((sub) =>
 		sub
 			.setName("rotate")
-			.setDescription("Generate a new connection token, invalidating the current one"),
+			.setNameLocalizations(fr("renouveler"))
+			.setDescription("Generate a new connection token, invalidating the current one")
+			.setDescriptionLocalizations(fr("Générer un nouveau jeton de connexion")),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("remove").setDescription("Unregister this server from MemeOver"),
+		sub
+			.setName("remove")
+			.setNameLocalizations(fr("retirer"))
+			.setDescription("Unregister this server from MemeOver")
+			.setDescriptionLocalizations(fr("Retirer ce serveur de MemeOver")),
 	)
 	.addSubcommand((sub) =>
 		sub
 			.setName("secret")
-			.setDescription("Send an anonymous meme by URL — your name won't appear on the overlay")
+			.setNameLocalizations(fr("secret"))
+			.setDescription("Send an anonymous meme with optional caption text")
+			.setDescriptionLocalizations(fr("Envoyer un meme anonyme avec une légende optionnelle"))
+			.addAttachmentOption((opt) =>
+				opt
+					.setName("media")
+					.setNameLocalizations(fr("media"))
+					.setDescription("Image, GIF, video or audio file to send anonymously")
+					.setDescriptionLocalizations(fr("Image, GIF, vidéo ou audio à envoyer anonymement"))
+					.setRequired(false),
+			)
 			.addStringOption((opt) =>
 				opt
 					.setName("url")
-					.setDescription(
-						"Direct link to an image, GIF, video or audio file (Discord CDN, Tenor, Giphy, Imgur)",
-					)
-					.setRequired(true),
+					.setNameLocalizations(fr("url"))
+					.setDescription("Direct media link (Discord CDN, Tenor, Giphy, Imgur)")
+					.setDescriptionLocalizations(fr("Lien direct vers un média"))
+					.setRequired(false),
+			)
+			.addStringOption((opt) =>
+				opt
+					.setName("text")
+					.setNameLocalizations(fr("texte"))
+					.setDescription("Optional caption displayed with the secret meme")
+					.setDescriptionLocalizations(fr("Légende optionnelle affichée avec le meme"))
+					.setMaxLength(140)
+					.setRequired(false),
 			),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("status").setDescription("Show bot configuration, watched channels, and uptime"),
+		sub
+			.setName("status")
+			.setNameLocalizations(fr("statut"))
+			.setDescription("Show bot configuration, watched channels, and uptime")
+			.setDescriptionLocalizations(fr("Afficher la configuration, les salons et l'uptime")),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("help").setDescription("List all MemeOver commands and what they do"),
+		sub
+			.setName("help")
+			.setNameLocalizations(fr("aide"))
+			.setDescription("List all MemeOver commands and what they do")
+			.setDescriptionLocalizations(fr("Lister les commandes MemeOver")),
 	);
 
 // Subcommands that require the Manage Server permission. `token` and `help`

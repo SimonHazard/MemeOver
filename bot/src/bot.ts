@@ -10,6 +10,7 @@ import {
 import { handleInteraction } from "./commands/commands";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { broadcastToGuild } from "./server";
+import { startGuildCleanupScheduler } from "./utils/cleanup";
 import { config } from "./utils/config";
 import { logger } from "./utils/logger";
 import { attachPresenceClient } from "./utils/presence";
@@ -36,6 +37,7 @@ const discordClient = new Client({
 discordClient.on(Events.ClientReady, (c) => {
 	log.info({ event: "ready", tag: c.user.tag }, `Logged in as ${c.user.tag}`);
 	attachPresenceClient(c);
+	startGuildCleanupScheduler(c);
 });
 
 // New messages — include text caption

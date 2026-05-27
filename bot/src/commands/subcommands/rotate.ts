@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { guildRegistry } from "../../utils/registry";
+import { buildConnectionCode, connectionActionRows } from "../connection";
 import { errorEmbed, warningEmbed } from "../embeds";
 
 export async function handleRotate(
@@ -23,8 +24,17 @@ export async function handleRotate(
 		[
 			{ name: "🏠 Server ID", value: `\`${guildId}\``, inline: true },
 			{ name: "🔑 New token", value: `\`\`\`${newToken}\`\`\``, inline: false },
+			{
+				name: "⚡ App setup code",
+				value: `\`\`\`${buildConnectionCode(guildId, newToken)}\`\`\``,
+				inline: false,
+			},
 		],
 	);
 
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+	await interaction.reply({
+		embeds: [embed],
+		components: connectionActionRows(),
+		flags: MessageFlags.Ephemeral,
+	});
 }

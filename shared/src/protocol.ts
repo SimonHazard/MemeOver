@@ -109,6 +109,7 @@ const JoinMessageSchema = z.object({
 	type: z.literal("JOIN"),
 	guild_id: discordSnowflakeSchema,
 	token: z.string().min(1),
+	client_id: z.string().min(8).max(128).optional(),
 });
 
 const LeaveMessageSchema = z.object({

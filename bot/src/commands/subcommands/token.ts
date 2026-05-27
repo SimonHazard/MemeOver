@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { guildRegistry } from "../../utils/registry";
+import { buildConnectionCode, connectionActionRows } from "../connection";
 import { errorEmbed, infoEmbed } from "../embeds";
 
 export async function handleToken(
@@ -26,7 +27,16 @@ export async function handleToken(
 		{ name: "📺 Watching", value: watchingValue, inline: false },
 		{ name: "🏠 Server ID", value: `\`${guildId}\``, inline: true },
 		{ name: "🔑 Token", value: `\`\`\`${cfg.token}\`\`\``, inline: false },
+		{
+			name: "⚡ App setup code",
+			value: `\`\`\`${buildConnectionCode(guildId, cfg.token)}\`\`\``,
+			inline: false,
+		},
 	]);
 
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+	await interaction.reply({
+		embeds: [embed],
+		components: connectionActionRows(),
+		flags: MessageFlags.Ephemeral,
+	});
 }

@@ -123,6 +123,9 @@ function startHeartbeat(ws: WSConnection): void {
 			rateLimiters.delete(ws.id);
 			// Capture guilds before removal so we can broadcast the updated count
 			const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
+			for (const guildId of guilds) {
+				guildRegistry.recordGuildActivity(guildId);
+			}
 			store.removeClient(ws.id);
 			for (const guildId of guilds) {
 				broadcastMemberCount(guildId);
@@ -180,6 +183,8 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 		return;
 	}
 
+	guildRegistry.recordClientActivity(msg.guild_id, msg.client_id ?? ws.id);
+
 	// Idempotent: already joined → just ACK
 	if (store.isClientInGuild(ws.id, msg.guild_id)) {
 		ws.send(
@@ -207,6 +212,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 }
 
 function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
+	guildRegistry.recordGuildActivity(msg.guild_id);
 	store.leaveGuild(ws.id, msg.guild_id);
 	log
 		.child(discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }))
@@ -345,6 +351,9 @@ export function createServer() {
 				rateLimiters.delete(ws.id);
 				// Capture guilds before removal so we can broadcast the updated count
 				const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
+				for (const guildId of guilds) {
+					guildRegistry.recordGuildActivity(guildId);
+				}
 				store.removeClient(ws.id);
 				stats.connectionClosed();
 				log.info(

@@ -2,9 +2,12 @@ export interface Config {
 	discordToken: string;
 	discordClientId: string;
 	wsPort: number;
+	publicWsUrl: string;
 	logtailToken: string | undefined;
 	metricsToken: string | undefined;
 }
+
+const DEFAULT_PUBLIC_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
 
 function requireEnv(key: string): string {
 	const value = process.env[key];
@@ -24,10 +27,15 @@ function loadConfig(): Config {
 		throw new Error(`[Config] WS_PORT must be a valid port number (1-65535)`);
 	}
 
+	const publicWsUrl = process.env.PUBLIC_WS_URL || DEFAULT_PUBLIC_WS_URL;
+	if (!publicWsUrl.startsWith("ws://") && !publicWsUrl.startsWith("wss://")) {
+		throw new Error("[Config] PUBLIC_WS_URL must start with ws:// or wss://");
+	}
+
 	const logtailToken = process.env.LOGTAIL_TOKEN || undefined;
 	const metricsToken = process.env.METRICS_TOKEN || undefined;
 
-	return { discordToken, discordClientId, wsPort, logtailToken, metricsToken };
+	return { discordToken, discordClientId, wsPort, publicWsUrl, logtailToken, metricsToken };
 }
 
 export const config: Config = loadConfig();

@@ -9,18 +9,19 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
 			{
 				name: "/memeover setup [#channel]",
 				value:
-					"Register this server. Omit `#channel` to watch all channels, or specify one to add it to the watch list. Requires **Manage Server**.",
+					"Register this server and get an app setup code. Omit `#channel` to watch all channels, or specify one to add it. Requires **Manage Server**.",
 				inline: false,
 			},
 			{
 				name: "/memeover token",
-				value: "Display your connection credentials (ephemeral, visible only to you).",
+				value:
+					"Display your connection credentials and one-line app setup code (ephemeral, visible only to you).",
 				inline: false,
 			},
 			{
-				name: "/memeover secret url:<link>",
+				name: "/memeover secret media:<file> url:<link> text:<caption>",
 				value:
-					"Send an anonymous meme to every connected overlay. Your name never appears — URL only (Discord CDN, Tenor, Giphy, Imgur).",
+					"Send an anonymous media item to every connected overlay. Use either an uploaded file or direct URL, with optional caption text.",
 				inline: false,
 			},
 			{

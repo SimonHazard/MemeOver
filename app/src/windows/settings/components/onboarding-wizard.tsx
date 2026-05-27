@@ -14,6 +14,10 @@ import { toast } from "sonner";
 import type z from "zod";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import { DEFAULT_SETTINGS } from "@/shared/types";
+import {
+	ConnectionCodeField,
+	type ParsedConnectionCode,
+} from "@/windows/settings/components/setup-form/connection-code";
 import { SetupSchema, type SetupValues } from "./setup-form/schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -98,6 +102,15 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 		return result.success ? undefined : t(result.error.issues[0]?.message ?? "");
 	};
 
+	const applyConnectionCode = (parsed: ParsedConnectionCode) => {
+		form.setFieldValue("guildId", parsed.guildId);
+		form.setFieldValue("token", parsed.token);
+		if (parsed.wsUrl) {
+			form.setFieldValue("wsUrl", parsed.wsUrl);
+			form.setFieldValue("expertMode", parsed.wsUrl !== DEFAULT_SETTINGS.wsUrl);
+		}
+	};
+
 	const progress = ((step + 1) / TOTAL_STEPS) * 100;
 
 	return (
@@ -135,6 +148,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
 						{step === 1 && (
 							<StepConnection>
+								<ConnectionCodeField onApply={applyConnectionCode} />
+
 								{/* ── WebSocket URL ── */}
 								<form.Field
 									name="wsUrl"
