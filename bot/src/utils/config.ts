@@ -1,3 +1,5 @@
+import { DEFAULT_PUBLIC_WS_URL } from "@memeover/shared";
+
 export interface Config {
 	discordToken: string;
 	discordClientId: string;
@@ -6,8 +8,6 @@ export interface Config {
 	logtailToken: string | undefined;
 	metricsToken: string | undefined;
 }
-
-const DEFAULT_PUBLIC_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
 
 function requireEnv(key: string): string {
 	const value = process.env[key];

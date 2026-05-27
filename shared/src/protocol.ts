@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+// ─── Shared constants ────────────────────────────────────────────────────────
+
+export const DEFAULT_PUBLIC_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
+export const DISCORD_SNOWFLAKE_REGEX = /^\d{17,20}$/;
+export const DISCORD_SNOWFLAKE_SEARCH_REGEX = /\b\d{17,20}\b/;
+
 // ─── Media type ───────────────────────────────────────────────────────────────
 
 export const MediaTypeSchema = z.enum(["image", "gif", "video", "audio", "sticker"]);
@@ -103,18 +109,18 @@ export type ErrorCode =
 
 // ─── Client → Server schemas (messages sent by app clients to the bot) ────────
 
-const discordSnowflakeSchema = z.string().regex(/^\d{17,19}$/);
+export const DiscordSnowflakeSchema = z.string().regex(DISCORD_SNOWFLAKE_REGEX);
 
 const JoinMessageSchema = z.object({
 	type: z.literal("JOIN"),
-	guild_id: discordSnowflakeSchema,
+	guild_id: DiscordSnowflakeSchema,
 	token: z.string().min(1),
 	client_id: z.string().min(8).max(128).optional(),
 });
 
 const LeaveMessageSchema = z.object({
 	type: z.literal("LEAVE"),
-	guild_id: discordSnowflakeSchema,
+	guild_id: DiscordSnowflakeSchema,
 });
 
 const PongMessageSchema = z.object({

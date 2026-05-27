@@ -1,14 +1,17 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { interactionLocale, t } from "../../i18n";
 import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
-import { errorEmbed, successEmbed } from "../embeds";
+import { notConfiguredEmbed } from "../connection";
+import { successEmbed } from "../embeds";
 
 export async function handleRemove(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
 ): Promise<void> {
+	const locale = interactionLocale(interaction);
 	if (!guildRegistry.isRegistered(guildId)) {
-		const embed = errorEmbed("Not configured", "This server is not registered with MemeOver.");
+		const embed = notConfiguredEmbed(locale, t(locale, "remove.notConfiguredDescription"));
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
@@ -17,8 +20,8 @@ export async function handleRemove(
 	schedulePresenceRefresh();
 
 	const embed = successEmbed(
-		"Server removed",
-		"This server has been removed from MemeOver. All active sessions will be rejected on next reconnect.",
+		t(locale, "remove.successTitle"),
+		t(locale, "remove.successDescription"),
 	);
 	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

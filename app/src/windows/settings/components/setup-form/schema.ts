@@ -1,3 +1,4 @@
+import { DISCORD_SNOWFLAKE_REGEX } from "@memeover/shared";
 import { z } from "zod";
 
 // ─── Validation schema ────────────────────────────────────────────────────────
@@ -8,7 +9,7 @@ export const SetupSchema = z.object({
 		.min(1, "validation.wsUrl_required")
 		.refine((v) => v.startsWith("ws://") || v.startsWith("wss://"), "validation.wsUrl_invalid"),
 	expertMode: z.boolean(),
-	guildId: z.string().regex(/^\d{17,20}$/, "validation.guildId_invalid"),
+	guildId: z.string().regex(DISCORD_SNOWFLAKE_REGEX, "validation.guildId_invalid"),
 	token: z.string().min(1, "validation.token_required"),
 });
 

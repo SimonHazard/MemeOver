@@ -8,6 +8,7 @@
 #
 # Variables optionnelles :
 #   WS_PORT            — port WebSocket (défaut : 3001)
+#   PUBLIC_WS_URL      — URL publique incluse dans les setup codes
 #   LOGTAIL_TOKEN      — token Logtail pour les logs structurés
 #   METRICS_TOKEN      — bearer token pour protéger GET /metrics
 
@@ -20,6 +21,7 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
       WS_PORT: ${WS_PORT:-3001}
+      PUBLIC_WS_URL: ${PUBLIC_WS_URL:-wss://bot-memeover.simonhazard.com/ws}
       LOGTAIL_TOKEN: ${LOGTAIL_TOKEN}
       METRICS_TOKEN: ${METRICS_TOKEN}
     ports:

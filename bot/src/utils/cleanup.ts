@@ -1,4 +1,5 @@
 import type { Client } from "discord.js";
+import { resolveBotLocale, t } from "../i18n";
 import { discordRefLogFields } from "./log-privacy";
 import { logger } from "./logger";
 import { schedulePresenceRefresh } from "./presence";
@@ -10,10 +11,6 @@ const log = logger.child({ module: "cleanup" });
 
 const CLEANUP_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 const CLEANUP_THRESHOLD_MS = 24 * 60 * 60 * 1000;
-const CLEANUP_NOTICES = {
-	en: "Due to inactivity, MemeOver is no longer watching the configured channels. To configure MemeOver again, use `/memeover setup` in this server.",
-	fr: "Suite à une période d'inactivité, les canaux configurés ne sont plus écoutés par MemeOver. Si vous souhaitez reconfigurer MemeOver, utilisez `/memeover setup` dans ce serveur.",
-} as const;
 
 type CleanupReason = "inactive_24h" | "single_unique_client";
 
@@ -52,7 +49,7 @@ function hasValues(value: unknown): value is { values(): IterableIterator<unknow
 }
 
 function getCleanupNotice(locale: string | null | undefined): string {
-	return locale?.toLowerCase().startsWith("fr") ? CLEANUP_NOTICES.fr : CLEANUP_NOTICES.en;
+	return t(resolveBotLocale(locale), "cleanup.notice");
 }
 
 function cleanupReason(guildId: string, cfg: GuildConfig, now: number): CleanupReason | null {
@@ -144,8 +141,7 @@ function closeGuildConnections(guildId: string): void {
 	const payload = JSON.stringify({
 		type: "ERROR",
 		code: "GUILD_UNREGISTERED",
-		message:
-			"This server was removed from MemeOver due to inactivity. Run /memeover setup to configure it again.",
+		message: t("en", "cleanup.wsMessage"),
 	} satisfies ServerMessage);
 
 	for (const wsId of [...store.getGuildMembers(guildId)]) {
@@ -154,7 +150,7 @@ function closeGuildConnections(guildId: string): void {
 
 		try {
 			client.ws_ref.send(payload);
-			client.ws_ref.close(1008, "Guild removed");
+			client.ws_ref.close(1008, t("en", "cleanup.wsCloseReason"));
 		} catch (err) {
 			log.warn(
 				{ ...discordRefLogFields({ guildId, wsId }), event: "cleanup_ws_close_failed", err },

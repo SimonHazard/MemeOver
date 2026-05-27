@@ -1,13 +1,15 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { interactionLocale, t } from "../../i18n";
 import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
-import { buildConnectionCode, connectionActionRows } from "../connection";
+import { buildConnectionFields, connectionActionRows } from "../connection";
 import { successEmbed } from "../embeds";
 
 export async function handleSetup(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
 ): Promise<void> {
+	const locale = interactionLocale(interaction);
 	const channelOption = interaction.options.getChannel("channel");
 	// null → watch all channels; string → add this specific channel to the list
 	const channelId = channelOption?.id ?? null;
@@ -17,29 +19,21 @@ export async function handleSetup(
 	schedulePresenceRefresh();
 
 	const cfg = guildRegistry.getConfig(guildId);
-	const watchingValue =
-		cfg && cfg.channel_ids.length > 0
-			? cfg.channel_ids.map((id) => `<#${id}>`).join(", ")
-			: "All channels";
 
 	const embed = successEmbed(
-		isUpdate ? "MemeOver updated" : "MemeOver configured",
-		"Paste the setup code below into the MemeOver app to connect in one step.\n\n_Tip: run `/memeover setup #channel` to add a channel to the watch list._",
-		[
-			{ name: "📺 Watching", value: watchingValue, inline: false },
-			{ name: "🏠 Server ID", value: `\`${guildId}\``, inline: true },
-			{ name: "🔑 Token", value: `\`\`\`${token}\`\`\``, inline: false },
-			{
-				name: "⚡ App setup code",
-				value: `\`\`\`${buildConnectionCode(guildId, token)}\`\`\``,
-				inline: false,
-			},
-		],
+		t(locale, isUpdate ? "setup.updatedTitle" : "setup.configuredTitle"),
+		t(locale, "setup.description"),
+		buildConnectionFields({
+			guildId,
+			token,
+			locale,
+			config: cfg ?? { channel_ids: [] },
+		}),
 	);
 
 	await interaction.reply({
 		embeds: [embed],
-		components: connectionActionRows(),
+		components: connectionActionRows(locale),
 		flags: MessageFlags.Ephemeral,
 	});
 }

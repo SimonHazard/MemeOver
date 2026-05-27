@@ -1,40 +1,37 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { interactionLocale, t } from "../../i18n";
 import { guildRegistry } from "../../utils/registry";
-import { buildConnectionCode, connectionActionRows } from "../connection";
-import { errorEmbed, warningEmbed } from "../embeds";
+import { buildConnectionFields, connectionActionRows, notConfiguredEmbed } from "../connection";
+import { warningEmbed } from "../embeds";
 
 export async function handleRotate(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
 ): Promise<void> {
+	const locale = interactionLocale(interaction);
 	const newToken = guildRegistry.rotateToken(guildId);
 
 	if (!newToken) {
-		const embed = errorEmbed(
-			"Not configured",
-			"This server has not been set up yet. Run `/memeover setup` first.",
-		);
+		const embed = notConfiguredEmbed(locale);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
 
 	const embed = warningEmbed(
-		"Token rotated",
-		"Your previous token is now invalid. Update the MemeOver app with the new token below.\n\n⚠️ Any connected overlay will disconnect and must reconnect with this new token.",
-		[
-			{ name: "🏠 Server ID", value: `\`${guildId}\``, inline: true },
-			{ name: "🔑 New token", value: `\`\`\`${newToken}\`\`\``, inline: false },
-			{
-				name: "⚡ App setup code",
-				value: `\`\`\`${buildConnectionCode(guildId, newToken)}\`\`\``,
-				inline: false,
-			},
-		],
+		t(locale, "rotate.title"),
+		t(locale, "rotate.description"),
+		buildConnectionFields({
+			guildId,
+			token: newToken,
+			locale,
+			tokenLabel: t(locale, "rotate.newToken"),
+			includeWatching: false,
+		}),
 	);
 
 	await interaction.reply({
 		embeds: [embed],
-		components: connectionActionRows(),
+		components: connectionActionRows(locale),
 		flags: MessageFlags.Ephemeral,
 	});
 }

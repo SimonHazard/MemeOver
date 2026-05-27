@@ -15,7 +15,7 @@ export const fr: Translations = {
 		github: "GitHub",
 	},
 	hero: {
-		badge: "Version 1.0 · Open Source",
+		badge: "Version 1.1 · Open Source",
 		title: "MemeOver",
 		tagline: "Envoie des mèmes sur l'écran de tes amis, en direct depuis Discord.",
 		description:

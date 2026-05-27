@@ -1,4 +1,5 @@
 import { type Attachment, type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { interactionLocale, t } from "../../i18n";
 import { isAllowedAndFresh, isCdnUrlExpired } from "../../media/allowlist";
 import { shouldDispatch } from "../../media/dedup";
 import { detectMediaType, urlPathname } from "../../media/extractor";
@@ -7,6 +8,7 @@ import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy"
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
 import type { MediaEvent, MediaType } from "../../utils/types";
+import { notConfiguredEmbed } from "../connection";
 import { errorEmbed, successEmbed } from "../embeds";
 
 const log = logger.child({ module: "secret" });
@@ -36,11 +38,9 @@ export async function handleSecret(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
 ): Promise<void> {
+	const locale = interactionLocale(interaction);
 	if (!guildRegistry.isRegistered(guildId)) {
-		const embed = errorEmbed(
-			"Not configured",
-			"This server has not been set up yet. Run `/memeover setup` first.",
-		);
+		const embed = notConfiguredEmbed(locale);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
 	}
@@ -52,8 +52,8 @@ export async function handleSecret(
 
 	if (!mediaUrl) {
 		const embed = errorEmbed(
-			"Media required",
-			"Attach a media file or provide a direct URL, then optionally add `text` as the caption.",
+			t(locale, "secret.mediaRequiredTitle"),
+			t(locale, "secret.mediaRequiredDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -61,8 +61,8 @@ export async function handleSecret(
 
 	if (attachment && isCdnUrlExpired(attachment.url)) {
 		const embed = errorEmbed(
-			"Attachment expired",
-			"This Discord attachment link has expired. Upload the file again and retry `/memeover secret`.",
+			t(locale, "secret.attachmentExpiredTitle"),
+			t(locale, "secret.attachmentExpiredDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -70,8 +70,8 @@ export async function handleSecret(
 
 	if (!attachment && !isAllowedAndFresh(mediaUrl)) {
 		const embed = errorEmbed(
-			"URL not allowed",
-			"Only links from Discord CDN, Tenor, Giphy, or Imgur are accepted. Paste a direct image/GIF/video URL from one of these hosts.",
+			t(locale, "secret.urlNotAllowedTitle"),
+			t(locale, "secret.urlNotAllowedDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -80,8 +80,8 @@ export async function handleSecret(
 	const media_type = attachment ? detectAttachmentMediaType(attachment) : detectMediaType(mediaUrl);
 	if (!media_type) {
 		const embed = errorEmbed(
-			"Unsupported media type",
-			"The media must be an image, GIF, video, or audio file (`.png`, `.jpg`, `.gif`, `.mp4`, `.webm`, `.mp3`, …).",
+			t(locale, "secret.unsupportedTypeTitle"),
+			t(locale, "secret.unsupportedTypeDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -90,8 +90,8 @@ export async function handleSecret(
 	const channelId = interaction.channelId;
 	if (!channelId) {
 		const embed = errorEmbed(
-			"Channel required",
-			"This command must be used inside a text channel.",
+			t(locale, "secret.channelRequiredTitle"),
+			t(locale, "secret.channelRequiredDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -99,8 +99,8 @@ export async function handleSecret(
 
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) {
 		const embed = errorEmbed(
-			"Channel not watched",
-			"This channel is not in the MemeOver watch list. Ask a server manager to add it via `/memeover setup #channel`.",
+			t(locale, "secret.channelNotWatchedTitle"),
+			t(locale, "secret.channelNotWatchedDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -111,8 +111,8 @@ export async function handleSecret(
 	// meme is resubmitted within the TTL window.
 	if (!shouldDispatch(`secret:${urlPathname(mediaUrl)}`)) {
 		const embed = errorEmbed(
-			"Already sent",
-			"This exact URL was just pushed. Wait a moment before resending.",
+			t(locale, "secret.alreadySentTitle"),
+			t(locale, "secret.alreadySentDescription"),
 		);
 		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 		return;
@@ -146,10 +146,8 @@ export async function handleSecret(
 	);
 
 	const embed = successEmbed(
-		"Secret meme sent",
-		text
-			? "Your anonymous meme and caption were pushed to every connected overlay. Nobody sees your name."
-			: "Your anonymous meme was pushed to every connected overlay in this server. Nobody sees your name.",
+		t(locale, "secret.successTitle"),
+		t(locale, text ? "secret.successDescriptionWithText" : "secret.successDescription"),
 	);
 	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

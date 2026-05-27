@@ -15,7 +15,7 @@
 	},
 	"connection": {
 		"title": "Bot connection",
-		"error": "Connection to bot lost. Check the token, Server ID and make sure the bot is running.",
+		"error": "Connection to bot lost. Check the token, Server ID and WebSocket URL.",
 		"wsUrl": "WebSocket server URL",
 		"expertMode": "Expert mode",
 		"expertMode_hint": "Lets you set a custom WebSocket URL (self-hosted).",
@@ -163,7 +163,7 @@
 		"step1_title": "Welcome to MemeOver",
 		"step1_desc": "MemeOver displays media from your Discord server directly on your screen. Follow these steps to set up your overlay.",
 		"step2_title": "Configure the connection",
-		"step2_desc": "Start your Discord bot then enter the connection details below.",
+		"step2_desc": "Paste the setup code from Discord or enter the connection details below.",
 		"step3_title": "You're all set!",
 		"step3_desc": "The overlay is now configured. Send an image or GIF in Discord to test it!",
 		"next": "Next",

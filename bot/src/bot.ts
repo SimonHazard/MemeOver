@@ -8,6 +8,7 @@ import {
 	Partials,
 } from "discord.js";
 import { handleInteraction } from "./commands/commands";
+import { interactionLocale, t } from "./i18n";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { broadcastToGuild } from "./server";
 import { startGuildCleanupScheduler } from "./utils/cleanup";
@@ -23,6 +24,7 @@ const log = logger.child({ module: "bot" });
 // ─── Discord client ───────────────────────────────────────────────────────────
 
 const discordClient = new Client({
+	allowedMentions: { parse: [] },
 	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
@@ -103,7 +105,10 @@ discordClient.on(Events.InteractionCreate, (interaction) => {
 		log.error({ event: "interaction_error", err }, "Interaction handler error");
 		if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
 			try {
-				await interaction.reply({ content: "An error occurred.", flags: MessageFlags.Ephemeral });
+				await interaction.reply({
+					content: t(interactionLocale(interaction), "bot.genericError"),
+					flags: MessageFlags.Ephemeral,
+				});
 			} catch {
 				// Interaction may have expired — ignore
 			}
