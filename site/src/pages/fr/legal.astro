@@ -1,0 +1,129 @@
+---
+import LegalDocument from "@/components/legal-document.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+
+const title = "Légal & confidentialité — MemeOver";
+const description =
+	"Conditions d'utilisation, confidentialité et informations légales pour MemeOver.";
+---
+
+<BaseLayout title={title} description={description}>
+	<LegalDocument
+		kicker="Légal"
+		title="Conditions & confidentialité"
+		description="MemeOver affiche sur votre écran les médias, réactions et textes envoyés dans les salons Discord configurés. Cette page explique simplement les règles d'utilisation et les données nécessaires au service."
+		updated="Dernière mise à jour : 27 mai 2026"
+	>
+		<section>
+			<h2>Éditeur</h2>
+			<p>
+				MemeOver est édité par Simon Hazard, en France, à titre personnel et non professionnel.
+				Pour une demande de support, juridique, confidentialité ou suppression, contactez
+				<a href="mailto:support@simonhazard.com">support@simonhazard.com</a>.
+			</p>
+		</section>
+
+		<section>
+			<h2>Hébergement et code</h2>
+			<p>
+				Le site public est hébergé sur Cloudflare Workers par Cloudflare, Inc., 101 Townsend St,
+				San Francisco, CA 94107, États-Unis. Le bot Discord est auto-hébergé par l'éditeur. Le
+				code source est hébergé sur
+				<a href="https://github.com/SimonHazard/MemeOver">GitHub</a> et distribué sous
+				<a href="https://github.com/SimonHazard/MemeOver/blob/main/LICENSE">licence MIT</a>.
+			</p>
+		</section>
+
+		<section>
+			<h2>Conditions d'utilisation</h2>
+			<p>
+				En ajoutant le bot à un serveur Discord ou en utilisant l'app desktop, vous acceptez
+				d'utiliser MemeOver de bonne foi, dans le respect des règles Discord, des règles du serveur
+				concerné et de la loi.
+			</p>
+			<ul>
+				<li>Seules les personnes autorisées doivent configurer MemeOver sur un serveur Discord.</li>
+				<li>
+					Les gestionnaires du serveur doivent informer les membres des salons surveillés par le
+					bot.
+				</li>
+				<li>
+					Le token de connexion MemeOver doit rester privé et peut être renouvelé avec
+					<code>/memeover rotate</code>.
+				</li>
+				<li>
+					N'utilisez pas MemeOver pour harceler, spammer, contourner des permissions, surveiller
+					des membres ou diffuser du contenu illégal, sensible ou sans droits.
+				</li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Données utilisées</h2>
+			<p>
+				MemeOver utilise uniquement les données nécessaires pour diffuser les messages Discord vers
+				les overlays connectés et conserver des logs techniques utiles pour corriger d'éventuels
+				bugs, abus ou problèmes de service :
+			</p>
+			<ul>
+				<li>
+					<strong>Configuration Discord :</strong> identifiant du serveur, identifiants des salons
+					surveillés et token de connexion MemeOver aléatoire.
+				</li>
+				<li>
+					<strong>Événements envoyés aux overlays :</strong> identifiants serveur, salon, message
+					et auteur, nom d'utilisateur, nom d'affichage éventuel, avatar, URL média, type de
+					média, texte court éventuel, données de réaction et horodatage.
+				</li>
+				<li>
+					<strong>Données de l'app desktop :</strong> Server ID, token, URL WebSocket, réglages
+					d'overlay, profils et historique local des 50 derniers textes/médias affichés pour le
+					replay.
+				</li>
+				<li>
+					<strong>Logs techniques :</strong> noms d'événements, type de média, domaine du média,
+					références Discord hachées, chemin média haché et erreurs techniques. Les tokens, URLs
+					média complètes et textes de message sont masqués dans les logs.
+				</li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Aucun traceur</h2>
+			<p>
+				Le site n'utilise pas de publicité, d'analytics ou de traceur marketing. Il peut garder une
+				préférence de thème localement dans votre navigateur pour conserver le mode choisi ; cette
+				préférence ne sert pas à vous suivre.
+			</p>
+		</section>
+
+		<section>
+			<h2>Conservation et suppression</h2>
+			<p>
+				La configuration d'un serveur reste stockée jusqu'à l'utilisation de
+				<code>/memeover remove</code> par un gestionnaire du serveur ou jusqu'à une demande de
+				suppression. Les événements Discord temps réel sont transmis aux overlays connectés et ne
+				sont pas volontairement stockés par le bot hébergé après diffusion. L'historique de replay
+				reste localement sur votre appareil jusqu'à effacement.
+			</p>
+			<p>
+				Pour demander un accès, une suppression ou toute autre action liée à vos données,
+				contactez <a href="mailto:support@simonhazard.com">support@simonhazard.com</a> avec assez
+				de contexte pour identifier le serveur ou les logs concernés, par exemple l'identifiant du
+				serveur Discord. Vous pouvez aussi contacter la
+				<a href="https://www.cnil.fr/fr/plaintes">CNIL</a> si vous estimez que vos droits ne sont
+				pas respectés.
+			</p>
+		</section>
+
+		<section>
+			<h2>Responsabilité</h2>
+			<p>
+				MemeOver est fourni gratuitement, en l'état, sans garantie de disponibilité ou de
+				compatibilité. Les personnes qui envoient médias, textes, stickers ou réactions via Discord
+				restent responsables de la légalité et des droits attachés à ces contenus. MemeOver n'est
+				pas affilié à Discord, Cloudflare, GitHub, Tenor, Giphy, Imgur ou Better Stack.
+			</p>
+		</section>
+	</LegalDocument>
+</BaseLayout>

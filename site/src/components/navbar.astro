@@ -1,6 +1,6 @@
 ---
 import type { Locale } from "@/i18n";
-import { getLocalizedPath, t } from "@/i18n";
+import { getAlternateLocalePath, getLocalizedPath, t } from "@/i18n";
 import MobileMenu from "./mobile-menu.tsx";
 import ThemeToggle from "./theme-toggle.tsx";
 
@@ -10,15 +10,21 @@ interface Props {
 
 const { lang } = Astro.props;
 const otherLang: Locale = lang === "en" ? "fr" : "en";
-const otherLangPath = lang === "en" ? "/fr/" : "/";
+const otherLangPath = getAlternateLocalePath(Astro.url.pathname);
+const homePath = getLocalizedPath(lang, "/");
+const normalizedPathname = Astro.url.pathname.replace(/\/$/, "") || "/";
+const normalizedHomePath = homePath.replace(/\/$/, "") || "/";
+const isHomePage = normalizedPathname === normalizedHomePath;
+const homeAnchorHref = (hash: string) => (isHomePage ? hash : `${homePath}${hash}`);
 
 const links = [
-	{ href: "#how-it-works", label: t(lang, "nav.howItWorks") },
-	{ href: "#use-cases", label: t(lang, "nav.useCases") },
-	{ href: "#features", label: t(lang, "nav.features") },
-	{ href: "#download", label: t(lang, "nav.download") },
+	{ href: homeAnchorHref("#how-it-works"), label: t(lang, "nav.howItWorks") },
+	{ href: homeAnchorHref("#use-cases"), label: t(lang, "nav.useCases") },
+	{ href: homeAnchorHref("#features"), label: t(lang, "nav.features") },
+	{ href: homeAnchorHref("#download"), label: t(lang, "nav.download") },
 	{ href: "https://github.com/SimonHazard/MemeOver", label: t(lang, "nav.github") },
 ];
+const downloadHref = homeAnchorHref("#download");
 ---
 
 <header class="fixed left-0 right-0 top-0 z-30 border-b-2 border-foreground bg-background/80 backdrop-blur-md">
@@ -60,7 +66,7 @@ const links = [
 
 			<!-- Desktop download CTA -->
 			<a
-				href="#download"
+				href={downloadHref}
 				class="hidden items-center rounded-lg border-2 border-foreground bg-primary px-4 py-2 font-display text-sm tracking-wide text-primary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:shadow-[3px_3px_0px_0px_var(--nb-shadow)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
 			>
 				{t(lang, "nav.download")}
@@ -70,7 +76,7 @@ const links = [
 			<MobileMenu
 				client:load
 				links={links}
-				downloadHref="#download"
+				downloadHref={downloadHref}
 				downloadLabel={t(lang, "nav.download")}
 			/>
 		</div>

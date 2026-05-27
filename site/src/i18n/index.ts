@@ -47,3 +47,27 @@ export function getLocalizedPath(lang: Locale, path: string): string {
 	if (lang === "en") return path;
 	return `/${lang}${path}`;
 }
+
+const localizedPagePairs = [
+	["/", "/fr/"],
+	["/legal", "/fr/legal"],
+] as const;
+
+function normalizePathname(pathname: string): string {
+	if (pathname === "/") return pathname;
+	return pathname.replace(/\/$/, "");
+}
+
+export function getAlternateLocalePath(pathname: string): string {
+	const normalized = normalizePathname(pathname);
+	for (const [enPath, frPath] of localizedPagePairs) {
+		if (normalized === normalizePathname(enPath)) return frPath;
+		if (normalized === normalizePathname(frPath)) return enPath;
+	}
+
+	if (normalized.startsWith("/fr/")) {
+		return normalized.slice(3) || "/";
+	}
+
+	return getLocalizedPath("fr", normalized === "/" ? "/" : normalized);
+}

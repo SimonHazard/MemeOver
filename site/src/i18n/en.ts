@@ -166,8 +166,7 @@ export const en = {
 		madeWith: "Made with ❤️ by",
 		author: "Simon Hazard",
 		license: "MIT License",
-		privacy: "Privacy",
-		legal: "Legal notice",
+		legal: "Terms & privacy",
 	},
 	notFound: {
 		title: "404",
