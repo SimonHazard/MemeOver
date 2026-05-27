@@ -40,13 +40,17 @@ function coerceFloatingReactionPreset(out: Record<string, unknown>): FloatingRea
 	return DEFAULT_SETTINGS.floatingReactionPreset;
 }
 
+function generateClientId(): string {
+	return crypto.randomUUID();
+}
+
 /**
  * Normalises an incoming persisted settings object to the current schema shape.
  * Returns a partial — missing fields fall back to DEFAULT_SETTINGS via spread.
  */
 function migrateSettings(saved: unknown): Partial<Settings> {
-	if (!saved || typeof saved !== "object") return {};
-	const out: Record<string, unknown> = { ...(saved as Record<string, unknown>) };
+	const out: Record<string, unknown> =
+		saved && typeof saved === "object" ? { ...(saved as Record<string, unknown>) } : {};
 
 	// textSize: legacy string → number
 	if (typeof out.textSize === "string") {
@@ -118,6 +122,11 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		12,
 		DEFAULT_SETTINGS.floatingReactionSize,
 	);
+	// v6 → v7: stable local install id, used server-side to tell whether a guild
+	// has actually been adopted by more than one MemeOver app.
+	if (typeof out.clientId !== "string" || out.clientId.length < 8) {
+		out.clientId = generateClientId();
+	}
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;
@@ -126,7 +135,20 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 export async function loadSettings(): Promise<Settings> {
 	const store = await Store.load("settings.json");
 	const saved = await store.get<unknown>("settings");
-	return normalizeSettings(saved);
+	const settings = normalizeSettings(saved);
+	const shouldPersistNormalized =
+		!saved ||
+		typeof saved !== "object" ||
+		(saved as Record<string, unknown>).schemaVersion !== CURRENT_SCHEMA_VERSION ||
+		typeof (saved as Record<string, unknown>).clientId !== "string" ||
+		((saved as Record<string, unknown>).clientId as string).length < 8;
+
+	if (shouldPersistNormalized) {
+		await store.set("settings", settings);
+		await store.save();
+	}
+
+	return settings;
 }
 
 export function normalizeSettings(saved: unknown): Settings {

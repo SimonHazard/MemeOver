@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [1.1.0]
+
+### Added
+
+- Add the one-paste `memeover://setup` connection code flow.
+- Add floating Discord reactions, anonymous `/memeover secret` sends, and `/memeover status`.
+- Add autostart support, multi-client activity tracking, and inactive guild cleanup.
+
+### Changed
+
+- Default new installs to the hosted MemeOver WebSocket endpoint while keeping self-hosting in expert mode.
+- Refresh README documentation, development scripts, and bot deployment notes.
+- Stop tracking generated Astro `.astro` files.
+
 ## [1.0.0]
 
 ### Changed

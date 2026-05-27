@@ -10,6 +10,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
+    "types": ["bun-types", "node"],
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",

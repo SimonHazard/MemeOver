@@ -15,6 +15,7 @@ memeover/src-tauri/target/
 # Build outputs
 dist/
 build/
+site/.astro/
 
 # OS
 .DS_Store

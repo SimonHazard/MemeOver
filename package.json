@@ -3,10 +3,22 @@
   "private": true,
   "workspaces": ["bot", "app", "shared", "packages/ui", "site"],
   "scripts": {
+    "dev:app": "bun run --cwd app tauri dev",
+    "dev:bot": "bun run --cwd bot dev",
+    "dev:site": "bun run --cwd site dev",
+    "build:app": "bun run --cwd app build && bun run --cwd app tauri build",
+    "build:site": "bun run --cwd site build",
     "lint": "biome lint",
     "lint:fix": "biome lint --write",
     "format": "biome format --write",
-    "check": "biome check --write"
+    "check": "biome check",
+    "check:fix": "biome check --write",
+    "typecheck": "bun run typecheck:bot && bun run typecheck:app && bun run typecheck:shared && bun run typecheck:ui",
+    "typecheck:bot": "bun run --cwd bot typecheck",
+    "typecheck:app": "bun run --cwd app typecheck",
+    "typecheck:shared": "bun run --cwd shared typecheck",
+    "typecheck:ui": "bun run --cwd packages/ui typecheck",
+    "test": "bun test ./app/src/windows/settings/components/setup-form/connection-code-parser.test.ts ./bot/src/commands/connection.test.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.7",

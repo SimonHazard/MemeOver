@@ -19,7 +19,8 @@
 		"./theme.css": "./src/theme.css"
 	},
 	"scripts": {
-		"build": "tsup"
+		"build": "tsup",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"class-variance-authority": "^0.7.1",

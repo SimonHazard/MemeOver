@@ -1,7 +1,5 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
-import { Input } from "@memeover/ui/components/ui/input";
-import { Label } from "@memeover/ui/components/ui/label";
 import { Progress } from "@memeover/ui/components/ui/progress";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,10 +9,10 @@ import { CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import type z from "zod";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import { DEFAULT_SETTINGS } from "@/shared/types";
-import { SetupSchema, type SetupValues } from "./setup-form/schema";
+import { ConnectionCredentialsFields } from "@/windows/settings/components/setup-form/connection-fields";
+import type { SetupValues } from "./setup-form/schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,11 +91,6 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 		},
 	});
 
-	const validateField = (schema: z.ZodType, value: string): string | undefined => {
-		const result = schema.safeParse(value);
-		return result.success ? undefined : t(result.error.issues[0]?.message ?? "");
-	};
-
 	const progress = ((step + 1) / TOTAL_STEPS) * 100;
 
 	return (
@@ -135,99 +128,17 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
 						{step === 1 && (
 							<StepConnection>
-								{/* ── WebSocket URL ── */}
-								<form.Field
-									name="wsUrl"
-									validators={{
-										onBlur: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
-										onSubmit: ({ value }) => validateField(SetupSchema.shape.wsUrl, value),
-									}}
-								>
-									{(field) => (
-										<motion.div className="space-y-2" variants={fieldVariants}>
-											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
-												{t("connection.wsUrl")}
-											</Label>
-											<Input
-												id={field.name}
-												placeholder="ws://localhost:3001/ws"
-												value={field.state.value}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground focus-visible:ring-2"
-											/>
-											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive font-text">
-													{String(field.state.meta.errors[0])}
-												</p>
-											)}
+								<ConnectionCredentialsFields
+									form={form}
+									defaultWsUrl={DEFAULT_SETTINGS.wsUrl}
+									inputClassName="border-2 border-foreground/40 focus:border-foreground focus-visible:ring-2"
+									forceWsUrlVisible
+									renderFieldShell={(children) => (
+										<motion.div className="flex flex-col gap-2" variants={fieldVariants}>
+											{children}
 										</motion.div>
 									)}
-								</form.Field>
-
-								{/* ── Guild ID ── */}
-								<form.Field
-									name="guildId"
-									validators={{
-										onBlur: ({ value }) => validateField(SetupSchema.shape.guildId, value),
-										onSubmit: ({ value }) => validateField(SetupSchema.shape.guildId, value),
-									}}
-								>
-									{(field) => (
-										<motion.div className="space-y-2" variants={fieldVariants}>
-											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
-												{t("connection.guildId")}
-											</Label>
-											<Input
-												id={field.name}
-												placeholder="123456789012345678"
-												value={field.state.value}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground focus-visible:ring-2"
-											/>
-											<p className="text-xs text-muted-foreground">
-												{t("connection.guildId_hint")}
-											</p>
-											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive font-text">
-													{String(field.state.meta.errors[0])}
-												</p>
-											)}
-										</motion.div>
-									)}
-								</form.Field>
-
-								{/* ── Token ── */}
-								<form.Field
-									name="token"
-									validators={{
-										onBlur: ({ value }) => validateField(SetupSchema.shape.token, value),
-										onSubmit: ({ value }) => validateField(SetupSchema.shape.token, value),
-									}}
-								>
-									{(field) => (
-										<motion.div className="space-y-2" variants={fieldVariants}>
-											<Label htmlFor={field.name} className="font-display tracking-wide text-xs">
-												{t("connection.token")}
-											</Label>
-											<Input
-												id={field.name}
-												type="password"
-												placeholder="••••••••••••••••"
-												value={field.state.value}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												className="border-2 border-foreground/40 focus:border-foreground focus-visible:ring-2"
-											/>
-											{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive font-text">
-													{String(field.state.meta.errors[0])}
-												</p>
-											)}
-										</motion.div>
-									)}
-								</form.Field>
+								/>
 							</StepConnection>
 						)}
 

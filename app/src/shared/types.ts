@@ -1,5 +1,6 @@
 // ─── App-level ────────────────────────────────────────────────────────────────
 import type { MediaEvent, TextEvent } from "@memeover/shared";
+import { DEFAULT_PUBLIC_WS_URL } from "@memeover/shared";
 
 /** MediaEvent enriched with a unique per-display ID for React keys / queue dedup */
 export interface MediaQueueItem extends MediaEvent {
@@ -100,6 +101,8 @@ export interface EnabledTypes {
 }
 
 export interface Settings {
+	/** Stable local install identifier used by the bot for lightweight activity cleanup. */
+	clientId: string;
 	guildId: string;
 	token: string;
 	/** WebSocket URL of the bot server. Hidden from UI unless `expertMode` is on. */
@@ -203,14 +206,15 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 7;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
-export const DEFAULT_WS_URL = "wss://bot-memeover.simonhazard.com/ws";
+export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
 /** Pre-v2 default. Migration treats anything matching this as "never touched" and upgrades it silently. */
 export const LEGACY_DEFAULT_WS_URL = "ws://localhost:3001/ws";
 
 export const DEFAULT_SETTINGS: Settings = {
+	clientId: "",
 	guildId: "",
 	token: "",
 	wsUrl: DEFAULT_WS_URL,

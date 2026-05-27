@@ -18,14 +18,15 @@ export function useOverlayWs(): void {
 	const wsUrl = useAppStore((s) => s.settings.wsUrl);
 	const guildId = useAppStore((s) => s.settings.guildId);
 	const token = useAppStore((s) => s.settings.token);
+	const clientId = useAppStore((s) => s.settings.clientId);
 	const enabledTypes = useAppStore((s) => s.settings.enabledTypes);
 	const floatingReactionsEnabled = useAppStore((s) => s.settings.floatingReactionsEnabled);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 
 	// Keep credentials and filter settings in refs so WS callbacks always read
 	// the latest values without recreating the memoized handlers below.
-	const credentialsRef = useRef({ guildId, token });
-	credentialsRef.current = { guildId, token };
+	const credentialsRef = useRef({ guildId, token, clientId });
+	credentialsRef.current = { guildId, token, clientId };
 
 	const enabledTypesRef = useRef(enabledTypes);
 	enabledTypesRef.current = enabledTypes;
@@ -49,6 +50,7 @@ export function useOverlayWs(): void {
 			type: "JOIN",
 			guild_id: credentialsRef.current.guildId,
 			token: credentialsRef.current.token,
+			client_id: credentialsRef.current.clientId || undefined,
 		};
 		sendRef.current?.(JSON.stringify(join));
 	}, [setWsStatus]);

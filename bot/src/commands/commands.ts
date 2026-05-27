@@ -1,12 +1,13 @@
 import {
 	type Interaction,
+	InteractionContextType,
 	MessageFlags,
 	PermissionFlagsBits,
 	REST,
 	Routes,
 	SlashCommandBuilder,
 } from "discord.js";
-
+import { type BotTranslationKey, frLocalization, interactionLocale, t } from "../i18n";
 import { config } from "../utils/config";
 import { logger } from "../utils/logger";
 
@@ -23,51 +24,84 @@ const log = logger.child({ module: "commands" });
 
 // ─── Command definitions ──────────────────────────────────────────────────────
 
+const en = (key: BotTranslationKey) => t("en", key);
+const fr = (key: BotTranslationKey) => frLocalization(key);
+
 const memeover = new SlashCommandBuilder()
 	.setName("memeover")
-	.setDescription("Manage MemeOver for this server")
+	.setDescription(en("commands.memeover.description"))
+	.setDescriptionLocalizations(fr("commands.memeover.description"))
+	.setContexts(InteractionContextType.Guild)
 	.addSubcommand((sub) =>
 		sub
-			.setName("setup")
-			.setDescription(
-				"Register this server. Omit #channel to watch all channels; specify one to add it to the list.",
-			)
+			.setName(en("commands.setup.name"))
+			.setDescription(en("commands.setup.description"))
+			.setDescriptionLocalizations(fr("commands.setup.description"))
 			.addChannelOption((opt) =>
 				opt
-					.setName("channel")
-					.setDescription("Add a specific channel to watch (omit to watch all channels)")
+					.setName(en("commands.setup.channel.name"))
+					.setDescription(en("commands.setup.channel.description"))
+					.setDescriptionLocalizations(fr("commands.setup.channel.description"))
 					.setRequired(false),
 			),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("token").setDescription("Show your connection credentials (only visible to you)"),
+		sub
+			.setName(en("commands.token.name"))
+			.setDescription(en("commands.token.description"))
+			.setDescriptionLocalizations(fr("commands.token.description")),
 	)
 	.addSubcommand((sub) =>
 		sub
-			.setName("rotate")
-			.setDescription("Generate a new connection token, invalidating the current one"),
-	)
-	.addSubcommand((sub) =>
-		sub.setName("remove").setDescription("Unregister this server from MemeOver"),
+			.setName(en("commands.rotate.name"))
+			.setDescription(en("commands.rotate.description"))
+			.setDescriptionLocalizations(fr("commands.rotate.description")),
 	)
 	.addSubcommand((sub) =>
 		sub
-			.setName("secret")
-			.setDescription("Send an anonymous meme by URL — your name won't appear on the overlay")
+			.setName(en("commands.remove.name"))
+			.setDescription(en("commands.remove.description"))
+			.setDescriptionLocalizations(fr("commands.remove.description")),
+	)
+	.addSubcommand((sub) =>
+		sub
+			.setName(en("commands.secret.name"))
+			.setDescription(en("commands.secret.description"))
+			.setDescriptionLocalizations(fr("commands.secret.description"))
+			.addAttachmentOption((opt) =>
+				opt
+					.setName(en("commands.secret.media.name"))
+					.setDescription(en("commands.secret.media.description"))
+					.setDescriptionLocalizations(fr("commands.secret.media.description"))
+					.setRequired(false),
+			)
 			.addStringOption((opt) =>
 				opt
-					.setName("url")
-					.setDescription(
-						"Direct link to an image, GIF, video or audio file (Discord CDN, Tenor, Giphy, Imgur)",
-					)
-					.setRequired(true),
+					.setName(en("commands.secret.url.name"))
+					.setDescription(en("commands.secret.url.description"))
+					.setDescriptionLocalizations(fr("commands.secret.url.description"))
+					.setRequired(false),
+			)
+			.addStringOption((opt) =>
+				opt
+					.setName(en("commands.secret.text.name"))
+					.setDescription(en("commands.secret.text.description"))
+					.setDescriptionLocalizations(fr("commands.secret.text.description"))
+					.setMaxLength(140)
+					.setRequired(false),
 			),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("status").setDescription("Show bot configuration, watched channels, and uptime"),
+		sub
+			.setName(en("commands.status.name"))
+			.setDescription(en("commands.status.description"))
+			.setDescriptionLocalizations(fr("commands.status.description")),
 	)
 	.addSubcommand((sub) =>
-		sub.setName("help").setDescription("List all MemeOver commands and what they do"),
+		sub
+			.setName(en("commands.help.name"))
+			.setDescription(en("commands.help.description"))
+			.setDescriptionLocalizations(fr("commands.help.description")),
 	);
 
 // Subcommands that require the Manage Server permission. `token` and `help`
@@ -91,9 +125,12 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 	if (interaction.commandName !== "memeover") return;
 
 	const guildId = interaction.guildId;
+	const locale = interactionLocale(interaction);
 	if (!guildId) {
 		await interaction.reply({
-			embeds: [errorEmbed("Server only", "This command can only be used in a server.")],
+			embeds: [
+				errorEmbed(t(locale, "common.serverOnlyTitle"), t(locale, "common.serverOnlyDescription")),
+			],
 			flags: MessageFlags.Ephemeral,
 		});
 		return;
@@ -106,8 +143,8 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 			await interaction.reply({
 				embeds: [
 					errorEmbed(
-						"Permission denied",
-						"You need the **Manage Server** permission to use this command.",
+						t(locale, "common.permissionDeniedTitle"),
+						t(locale, "common.permissionDeniedDescription"),
 					),
 				],
 				flags: MessageFlags.Ephemeral,

@@ -1,6 +1,8 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { interactionLocale, t } from "../../i18n";
 import { guildRegistry } from "../../utils/registry";
 import { store } from "../../utils/store";
+import { formatWatchedChannels } from "../connection";
 import { infoEmbed } from "../embeds";
 
 /** Format an uptime in seconds to a compact "Xd Yh Zm" or "Hh Mm Ss" string. */
@@ -21,30 +23,27 @@ export async function handleStatus(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
 ): Promise<void> {
+	const locale = interactionLocale(interaction);
 	const cfg = guildRegistry.getConfig(guildId);
 	const registered = cfg !== undefined;
 
-	const watchingValue = !registered
-		? "—"
-		: cfg.channel_ids.length === 0
-			? "All channels"
-			: cfg.channel_ids.map((id) => `<#${id}>`).join(", ");
+	const watchingValue = cfg ? formatWatchedChannels(cfg.channel_ids, locale) : "—";
 
 	const activeOverlays = store.getGuildMembers(guildId).size;
 
-	const embed = infoEmbed("MemeOver status", undefined, [
+	const embed = infoEmbed(t(locale, "status.title"), undefined, [
 		{
-			name: "🔌 Registered",
-			value: registered ? "✅ Yes" : "❌ Not configured — run `/memeover setup`",
+			name: t(locale, "status.registered"),
+			value: registered ? t(locale, "status.registeredYes") : t(locale, "status.notConfigured"),
 			inline: false,
 		},
-		{ name: "📺 Watching", value: watchingValue, inline: false },
+		{ name: t(locale, "common.watching"), value: watchingValue, inline: false },
 		{
-			name: "🖥️ Active overlays",
+			name: t(locale, "status.activeOverlays"),
 			value: String(activeOverlays),
 			inline: true,
 		},
-		{ name: "⏱️ Uptime", value: formatUptime(process.uptime()), inline: true },
+		{ name: t(locale, "status.uptime"), value: formatUptime(process.uptime()), inline: true },
 	]);
 
 	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
