@@ -2,7 +2,7 @@
 import "@/styles/global.css";
 import Footer from "@/components/footer.astro";
 import Navbar from "@/components/navbar.astro";
-import { getLangFromUrl, getTranslations, t } from "@/i18n";
+import { getAlternateLocalePath, getLangFromUrl, getTranslations, t } from "@/i18n";
 
 interface Props {
 	title?: string;
@@ -16,10 +16,12 @@ const { title, description, noindex = false } = Astro.props;
 const pageTitle = title ?? t(lang, "meta.title");
 const pageDescription = description ?? t(lang, "meta.description");
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+const alternateLocaleUrl = new URL(getAlternateLocalePath(Astro.url.pathname), Astro.site);
 const ogImage = new URL("/social-card.png", Astro.site);
 const ogImageAlt = t(lang, "meta.imageAlt");
-const englishUrl = new URL("/", Astro.site);
-const frenchUrl = new URL("/fr/", Astro.site);
+const siteUrl = new URL("/", Astro.site);
+const englishUrl = lang === "en" ? canonicalUrl : alternateLocaleUrl;
+const frenchUrl = lang === "fr" ? canonicalUrl : alternateLocaleUrl;
 const githubUrl = "https://github.com/SimonHazard/MemeOver";
 const releaseUrl = "https://github.com/SimonHazard/MemeOver/releases/latest";
 const locale = lang === "fr" ? "fr_FR" : "en_US";
@@ -30,7 +32,7 @@ const structuredData = [
 		"@type": "SoftwareApplication",
 		name: "MemeOver",
 		alternateName: "Meme Over",
-		url: englishUrl.toString(),
+		url: siteUrl.toString(),
 		description: pageDescription,
 		applicationCategory: "MultimediaApplication",
 		operatingSystem: "Windows, macOS, Linux",
@@ -66,7 +68,7 @@ const structuredData = [
 		"@type": "WebSite",
 		name: "MemeOver",
 		alternateName: "Meme Over",
-		url: englishUrl.toString(),
+		url: siteUrl.toString(),
 		inLanguage: ["en", "fr"],
 		publisher: {
 			"@type": "Person",

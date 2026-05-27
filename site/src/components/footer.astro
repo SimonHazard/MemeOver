@@ -13,8 +13,7 @@ const botClientId = import.meta.env.PUBLIC_BOT_CLIENT_ID;
 const inviteHref = botClientId
 	? `https://discord.com/oauth2/authorize?client_id=${botClientId}&permissions=2147486720&integration_type=0&scope=bot+applications.commands`
 	: null;
-const privacyHref = lang === "fr" ? "/fr/confidentialite" : "/privacy";
-const legalHref = lang === "fr" ? "/fr/mentions-legales" : "/legal";
+const legalHref = lang === "fr" ? "/fr/legal" : "/legal";
 ---
 
 <footer class="border-t-2 border-foreground bg-card py-10 px-4">
@@ -55,13 +54,6 @@ const legalHref = lang === "fr" ? "/fr/mentions-legales" : "/legal";
 					</a>
 				</>
 			)}
-			<span class="text-foreground/20">·</span>
-			<a
-				href={privacyHref}
-				class="transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-			>
-				{dict.footer.privacy}
-			</a>
 			<span class="text-foreground/20">·</span>
 			<a
 				href={legalHref}
