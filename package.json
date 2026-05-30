@@ -21,7 +21,26 @@
     "test": "bun test ./app/src/windows/settings/components/setup-form/connection-code-parser.test.ts ./bot/src/commands/connection.test.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.7",
-    "shadcn": "^4.0.8"
+    "@biomejs/biome": "^2.4.16",
+    "shadcn": "^4.8.3"
+  },
+  "overrides": {
+    "@discordjs/rest": "2.6.1",
+    "@hono/node-server": "1.19.14",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "brace-expansion": "5.0.6",
+    "devalue": "5.8.1",
+    "express-rate-limit": "8.5.2",
+    "fast-uri": "3.1.2",
+    "hono": "4.12.23",
+    "ip-address": "10.2.0",
+    "lodash": "4.18.1",
+    "minimatch": "10.2.5",
+    "path-to-regexp": "8.4.2",
+    "picomatch": "4.0.4",
+    "postcss": "8.5.15",
+    "qs": "6.15.2",
+    "smol-toml": "1.6.1",
+    "ws": "8.21.0"
   }
 }

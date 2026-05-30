@@ -12,6 +12,7 @@
     "core:window:allow-hide",
     "core:window:allow-set-focus",
     "autostart:default",
+    "process:allow-restart",
     "updater:default"
   ]
 }
