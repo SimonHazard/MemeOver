@@ -1,7 +1,6 @@
 import { type JoinMessage, type PongMessage, ServerMessageSchema } from "@memeover/shared";
 import { emit } from "@tauri-apps/api/event";
-import { useCallback, useMemo, useRef } from "react";
-import useWebSocket from "react-use-websocket";
+import { useCallback, useEffect, useRef } from "react";
 import { match } from "ts-pattern";
 import { mediaEventToQueueItem, textEventToQueueItem } from "@/shared/media-factory";
 import { useAppStore } from "@/shared/store";
@@ -22,6 +21,7 @@ export function useOverlayWs(): void {
 	const enabledTypes = useAppStore((s) => s.settings.enabledTypes);
 	const floatingReactionsEnabled = useAppStore((s) => s.settings.floatingReactionsEnabled);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
+	const shouldConnect = Boolean(guildId && token && wsUrl);
 
 	// Keep credentials and filter settings in refs so WS callbacks always read
 	// the latest values without recreating the memoized handlers below.
@@ -38,22 +38,24 @@ export function useOverlayWs(): void {
 	const overlayHealthRef = useRef(overlayHealth);
 	overlayHealthRef.current = overlayHealth;
 
-	// sendMessage is returned by useWebSocket; capture it via ref so onOpen can
-	// call it even though the callback is defined before the return value is known.
-	const sendRef = useRef<((msg: string) => void) | null>(null);
+	const wsRef = useRef<WebSocket | null>(null);
+	const reconnectTimerRef = useRef<number | null>(null);
 
 	// ── Stable event handlers ─────────────────────────────────────────────────
 
-	const onOpen = useCallback(() => {
-		setWsStatus("connecting");
-		const join: JoinMessage = {
-			type: "JOIN",
-			guild_id: credentialsRef.current.guildId,
-			token: credentialsRef.current.token,
-			client_id: credentialsRef.current.clientId || undefined,
-		};
-		sendRef.current?.(JSON.stringify(join));
-	}, [setWsStatus]);
+	const onOpen = useCallback(
+		(ws: WebSocket) => {
+			setWsStatus("connecting");
+			const join: JoinMessage = {
+				type: "JOIN",
+				guild_id: credentialsRef.current.guildId,
+				token: credentialsRef.current.token,
+				client_id: credentialsRef.current.clientId || undefined,
+			};
+			ws.send(JSON.stringify(join));
+		},
+		[setWsStatus],
+	);
 
 	const onMessage = useCallback(
 		(event: MessageEvent<string>) => {
@@ -109,7 +111,7 @@ export function useOverlayWs(): void {
 				})
 				.with({ type: "PING" }, () => {
 					const pong: PongMessage = { type: "PONG" };
-					sendRef.current?.(JSON.stringify(pong));
+					wsRef.current?.send(JSON.stringify(pong));
 				})
 				.with({ type: "MEMBER_COUNT_UPDATE" }, (msg) => {
 					// Only forward counts that match our guild
@@ -132,29 +134,62 @@ export function useOverlayWs(): void {
 		void emit("ws-status-changed", "error");
 	}, [setWsStatus]);
 
-	// Memoized options object — only recreated when handlers change (i.e. never,
-	// since all deps are stable Zustand functions). Prevents react-use-websocket
-	// from seeing a new options reference on every store update.
-	const wsOptions = useMemo(
-		() => ({
-			shouldReconnect: () => true,
-			reconnectAttempts: Number.MAX_SAFE_INTEGER,
-			reconnectInterval: 3_000,
-			onOpen,
-			onMessage,
-			onClose,
-			onError,
-		}),
-		[onOpen, onMessage, onClose, onError],
-	);
+	useEffect(() => {
+		if (!shouldConnect) {
+			setWsStatus("disconnected");
+			void emit("ws-status-changed", "disconnected");
+			return;
+		}
 
-	const { sendMessage } = useWebSocket(
-		wsUrl,
-		wsOptions,
-		// Only open a connection when credentials are provided
-		Boolean(guildId && token && wsUrl),
-	);
+		let disposed = false;
 
-	// Sync the send ref with the stable function returned by react-use-websocket
-	sendRef.current = sendMessage;
+		const clearReconnect = () => {
+			if (reconnectTimerRef.current !== null) {
+				window.clearTimeout(reconnectTimerRef.current);
+				reconnectTimerRef.current = null;
+			}
+		};
+
+		const connect = () => {
+			clearReconnect();
+			if (disposed) return;
+
+			const ws = new WebSocket(wsUrl);
+			wsRef.current = ws;
+			setWsStatus("connecting");
+
+			ws.addEventListener("open", () => {
+				if (!disposed) onOpen(ws);
+			});
+
+			ws.addEventListener("message", (event) => {
+				if (!disposed) onMessage(event as MessageEvent<string>);
+			});
+
+			ws.addEventListener("error", () => {
+				if (disposed) return;
+				onError();
+				ws.close();
+			});
+
+			ws.addEventListener("close", () => {
+				if (wsRef.current === ws) {
+					wsRef.current = null;
+				}
+
+				if (disposed) return;
+				onClose();
+				reconnectTimerRef.current = window.setTimeout(connect, 3_000);
+			});
+		};
+
+		connect();
+
+		return () => {
+			disposed = true;
+			clearReconnect();
+			wsRef.current?.close();
+			wsRef.current = null;
+		};
+	}, [shouldConnect, wsUrl, onOpen, onMessage, onClose, onError, setWsStatus]);
 }

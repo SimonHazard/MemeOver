@@ -1,7 +1,7 @@
 {
 	"name": "@memeover/site",
 	"type": "module",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"private": true,
 	"scripts": {
 		"dev": "astro dev",
@@ -10,21 +10,22 @@
 		"astro": "astro"
 	},
 	"dependencies": {
-		"@astrojs/react": "5.0.0",
-		"@astrojs/sitemap": "3.7.1",
+		"@astrojs/react": "5.0.6",
+		"@astrojs/sitemap": "3.7.3",
 		"@memeover/ui": "workspace:*",
-		"astro": "6.0.3",
-		"framer-motion": "^12.12.1",
-		"lucide-react": "^0.575.0",
-		"react": "^19.1.0",
-		"react-dom": "^19.1.0"
+		"astro": "6.4.2",
+		"framer-motion": "^12.40.0",
+		"lucide-react": "^1.17.0",
+		"react": "^19.2.6",
+		"react-dom": "^19.2.6"
 	},
 	"devDependencies": {
-		"@tailwindcss/vite": "^4.1.8",
-		"@types/react": "^19.1.8",
-		"@types/react-dom": "^19.1.6",
-		"tailwindcss": "^4.1.8",
-		"typescript": "~5.8.3",
-		"wrangler": "^4.0.0"
+		"@tailwindcss/vite": "^4.3.0",
+		"@types/react": "^19.2.15",
+		"@types/react-dom": "^19.2.3",
+		"tailwindcss": "^4.3.0",
+		"typescript": "~6.0.3",
+		"vite": "7.3.3",
+		"wrangler": "^4.95.0"
 	}
 }

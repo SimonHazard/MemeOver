@@ -1,4 +1,5 @@
-import type { Client } from "discord.js";
+import type { Client, MessageCreateOptions } from "discord.js";
+import { publicPanelMessage } from "../commands/response-panel";
 import { resolveBotLocale, t } from "../i18n";
 import { discordRefLogFields } from "./log-privacy";
 import { logger } from "./logger";
@@ -17,7 +18,7 @@ type CleanupReason = "inactive_24h" | "single_unique_client";
 interface SendableTextChannel {
 	readonly id: string;
 	isTextBased(): boolean;
-	send(content: string): unknown;
+	send(options: MessageCreateOptions): unknown;
 }
 
 let cleanupTimer: ReturnType<typeof setInterval> | null = null;
@@ -48,8 +49,14 @@ function hasValues(value: unknown): value is { values(): IterableIterator<unknow
 	);
 }
 
-function getCleanupNotice(locale: string | null | undefined): string {
-	return t(resolveBotLocale(locale), "cleanup.notice");
+function getCleanupNotice(locale: string | null | undefined): MessageCreateOptions {
+	const botLocale = resolveBotLocale(locale);
+	return publicPanelMessage({
+		tone: "warning",
+		title: t(botLocale, "cleanup.noticeTitle"),
+		description: t(botLocale, "cleanup.notice"),
+		suppressNotifications: true,
+	});
 }
 
 function cleanupReason(guildId: string, cfg: GuildConfig, now: number): CleanupReason | null {
@@ -71,7 +78,11 @@ function cleanupReason(guildId: string, cfg: GuildConfig, now: number): CleanupR
 	return null;
 }
 
-async function trySendNotice(channel: unknown, guildId: string, notice: string): Promise<boolean> {
+async function trySendNotice(
+	channel: unknown,
+	guildId: string,
+	notice: MessageCreateOptions,
+): Promise<boolean> {
 	if (!isSendableTextChannel(channel)) return false;
 
 	try {

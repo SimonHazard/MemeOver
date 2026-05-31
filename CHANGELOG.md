@@ -16,6 +16,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 - Default new installs to the hosted MemeOver WebSocket endpoint while keeping self-hosting in expert mode.
 - Refresh README documentation, development scripts, and bot deployment notes.
+- Move bot replies to Discord Components V2 and add confirmations for `/memeover rotate` and `/memeover remove`.
 - Stop tracking generated Astro `.astro` files.
 
 ## [1.0.0]

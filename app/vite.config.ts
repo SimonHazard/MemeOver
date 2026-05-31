@@ -2,12 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig({
 	plugins: [
 		tanstackRouter({
 			target: "react",
@@ -20,10 +20,11 @@ export default defineConfig(async () => ({
 	],
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./src"),
-			"@memeover/ui": path.resolve(__dirname, "../packages/ui/src"),
+			"@": fileURLToPath(new URL("./src", import.meta.url)),
+			"@memeover/ui": fileURLToPath(new URL("../packages/ui/src", import.meta.url)),
 		},
 	},
+	envPrefix: ["VITE_", "TAURI_ENV_"],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
 	// 1. prevent Vite from obscuring rust errors
@@ -47,11 +48,11 @@ export default defineConfig(async () => ({
 	},
 	// Multi-page : un bundle par fenêtre Tauri
 	build: {
-		rollupOptions: {
+		rolldownOptions: {
 			input: {
-				main: path.resolve(__dirname, "index.html"),
-				overlay: path.resolve(__dirname, "overlay.html"),
+				main: fileURLToPath(new URL("./index.html", import.meta.url)),
+				overlay: fileURLToPath(new URL("./overlay.html", import.meta.url)),
 			},
 		},
 	},
-}));
+});

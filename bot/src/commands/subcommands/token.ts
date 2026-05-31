@@ -1,8 +1,7 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { guildRegistry } from "../../utils/registry";
-import { buildConnectionFields, connectionActionRows, notConfiguredEmbed } from "../connection";
-import { infoEmbed } from "../embeds";
+import { connectionResponse, notConfiguredResponse } from "../connection";
 
 export async function handleToken(
 	interaction: ChatInputCommandInteraction,
@@ -12,20 +11,18 @@ export async function handleToken(
 	const cfg = guildRegistry.getConfig(guildId);
 
 	if (!cfg) {
-		const embed = notConfiguredEmbed(locale);
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+		await interaction.reply(notConfiguredResponse(locale));
 		return;
 	}
 
-	const embed = infoEmbed(
-		t(locale, "token.title"),
-		undefined,
-		buildConnectionFields({ guildId, token: cfg.token, locale, config: cfg }),
+	await interaction.reply(
+		connectionResponse({
+			tone: "info",
+			title: t(locale, "token.title"),
+			guildId,
+			token: cfg.token,
+			locale,
+			config: cfg,
+		}),
 	);
-
-	await interaction.reply({
-		embeds: [embed],
-		components: connectionActionRows(locale),
-		flags: MessageFlags.Ephemeral,
-	});
 }

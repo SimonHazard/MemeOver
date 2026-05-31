@@ -1,9 +1,8 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
-import { buildConnectionFields, connectionActionRows } from "../connection";
-import { successEmbed } from "../embeds";
+import { connectionResponse } from "../connection";
 
 export async function handleSetup(
 	interaction: ChatInputCommandInteraction,
@@ -20,20 +19,15 @@ export async function handleSetup(
 
 	const cfg = guildRegistry.getConfig(guildId);
 
-	const embed = successEmbed(
-		t(locale, isUpdate ? "setup.updatedTitle" : "setup.configuredTitle"),
-		t(locale, "setup.description"),
-		buildConnectionFields({
+	await interaction.reply(
+		connectionResponse({
+			tone: "success",
+			title: t(locale, isUpdate ? "setup.updatedTitle" : "setup.configuredTitle"),
+			description: t(locale, "setup.description"),
 			guildId,
 			token,
 			locale,
 			config: cfg ?? { channel_ids: [] },
 		}),
 	);
-
-	await interaction.reply({
-		embeds: [embed],
-		components: connectionActionRows(locale),
-		flags: MessageFlags.Ephemeral,
-	});
 }

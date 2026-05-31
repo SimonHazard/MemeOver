@@ -1,46 +1,25 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
-import { infoEmbed } from "../embeds";
+import { panelResponse } from "../response-panel";
 
 export async function handleHelp(interaction: ChatInputCommandInteraction): Promise<void> {
 	const locale = interactionLocale(interaction);
-	const embed = infoEmbed(t(locale, "help.title"), t(locale, "help.description"), [
-		{
-			name: "/memeover setup [#channel]",
-			value: t(locale, "help.setup"),
-			inline: false,
-		},
-		{
-			name: "/memeover token",
-			value: t(locale, "help.token"),
-			inline: false,
-		},
-		{
-			name: "/memeover secret media:<file> url:<link> text:<caption>",
-			value: t(locale, "help.secret"),
-			inline: false,
-		},
-		{
-			name: "/memeover rotate",
-			value: t(locale, "help.rotate"),
-			inline: false,
-		},
-		{
-			name: "/memeover remove",
-			value: t(locale, "help.remove"),
-			inline: false,
-		},
-		{
-			name: "/memeover status",
-			value: t(locale, "help.status"),
-			inline: false,
-		},
-		{
-			name: "/memeover help",
-			value: t(locale, "help.help"),
-			inline: false,
-		},
-	]);
+	const blocks = [
+		["/memeover setup [#channel]", t(locale, "help.setup")],
+		["/memeover token", t(locale, "help.token")],
+		["/memeover secret media:<file> url:<link> text:<caption>", t(locale, "help.secret")],
+		["/memeover rotate", t(locale, "help.rotate")],
+		["/memeover remove", t(locale, "help.remove")],
+		["/memeover status", t(locale, "help.status")],
+		["/memeover help", t(locale, "help.help")],
+	].map(([name, description]) => `**${name}**\n${description}`);
 
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+	await interaction.reply(
+		panelResponse({
+			tone: "info",
+			title: t(locale, "help.title"),
+			description: t(locale, "help.description"),
+			blocks,
+		}),
+	);
 }

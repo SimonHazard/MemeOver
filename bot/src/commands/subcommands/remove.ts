@@ -1,9 +1,9 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { ButtonStyle, type ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
-import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
-import { notConfiguredEmbed } from "../connection";
-import { successEmbed } from "../embeds";
+import { actionButton } from "../component-actions";
+import { notConfiguredResponse } from "../connection";
+import { panelResponse } from "../response-panel";
 
 export async function handleRemove(
 	interaction: ChatInputCommandInteraction,
@@ -11,17 +11,35 @@ export async function handleRemove(
 ): Promise<void> {
 	const locale = interactionLocale(interaction);
 	if (!guildRegistry.isRegistered(guildId)) {
-		const embed = notConfiguredEmbed(locale, t(locale, "remove.notConfiguredDescription"));
-		await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+		await interaction.reply(
+			notConfiguredResponse(locale, t(locale, "remove.notConfiguredDescription")),
+		);
 		return;
 	}
 
-	guildRegistry.unregister(guildId);
-	schedulePresenceRefresh();
-
-	const embed = successEmbed(
-		t(locale, "remove.successTitle"),
-		t(locale, "remove.successDescription"),
+	await interaction.reply(
+		panelResponse({
+			tone: "warning",
+			title: t(locale, "remove.confirmTitle"),
+			description: t(locale, "remove.confirmDescription"),
+			actions: [
+				actionButton({
+					command: "remove",
+					action: "confirm",
+					guildId,
+					userId: interaction.user.id,
+					label: t(locale, "remove.confirmButton"),
+					style: ButtonStyle.Danger,
+				}),
+				actionButton({
+					command: "remove",
+					action: "cancel",
+					guildId,
+					userId: interaction.user.id,
+					label: t(locale, "common.cancel"),
+					style: ButtonStyle.Secondary,
+				}),
+			],
+		}),
 	);
-	await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

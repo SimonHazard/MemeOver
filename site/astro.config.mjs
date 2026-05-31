@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
 	site: "https://memeover.simonhazard.com",
@@ -19,7 +19,8 @@ export default defineConfig({
 		plugins: [tailwindcss()],
 		resolve: {
 			alias: {
-				"@memeover/ui": path.resolve("../packages/ui/src"),
+				"@": fileURLToPath(new URL("./src", import.meta.url)),
+				"@memeover/ui": fileURLToPath(new URL("../packages/ui/src", import.meta.url)),
 			},
 		},
 	},
