@@ -13,7 +13,7 @@ export const en = {
 		github: "GitHub",
 	},
 	hero: {
-		badge: "Version 1.1 · Open Source",
+		badge: "Open Source",
 		title: "MemeOver",
 		tagline: "Send memes to your friends' screen, live from Discord.",
 		description:

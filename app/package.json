@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"typecheck": "tsc --noEmit",
-		"test": "bun test src",
+		"test": "bun test ./src",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"tauri": "tauri"
