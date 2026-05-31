@@ -17,6 +17,9 @@ on:
       - "Dockerfile.bot"
       - ".github/workflows/bot.yml"
 
+permissions:
+  contents: read
+
 jobs:
   # ── Type-check (toutes les PR et tous les pushes) ────────────────────────────
   typecheck:
