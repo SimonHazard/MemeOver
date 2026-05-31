@@ -19,6 +19,7 @@ export function useOverlayWs(): void {
 	const token = useAppStore((s) => s.settings.token);
 	const clientId = useAppStore((s) => s.settings.clientId);
 	const enabledTypes = useAppStore((s) => s.settings.enabledTypes);
+	const showBotAppSources = useAppStore((s) => s.settings.showBotAppSources);
 	const floatingReactionsEnabled = useAppStore((s) => s.settings.floatingReactionsEnabled);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 	const shouldConnect = Boolean(guildId && token && wsUrl);
@@ -30,6 +31,9 @@ export function useOverlayWs(): void {
 
 	const enabledTypesRef = useRef(enabledTypes);
 	enabledTypesRef.current = enabledTypes;
+
+	const showBotAppSourcesRef = useRef(showBotAppSources);
+	showBotAppSourcesRef.current = showBotAppSources;
 
 	const reactionsEnabledRef = useRef(floatingReactionsEnabled);
 	reactionsEnabledRef.current = floatingReactionsEnabled;
@@ -87,6 +91,7 @@ export function useOverlayWs(): void {
 				})
 				.with({ type: "MEDIA" }, (msg) => {
 					if (overlayHealthRef.current === "closed") return;
+					if (msg.source === "bot_app" && !showBotAppSourcesRef.current) return;
 					const et = enabledTypesRef.current;
 					const allowed = match(msg.media_type)
 						.with("image", () => et.image)
@@ -99,10 +104,12 @@ export function useOverlayWs(): void {
 				})
 				.with({ type: "TEXT" }, (msg) => {
 					if (overlayHealthRef.current === "closed") return;
+					if (msg.source === "bot_app" && !showBotAppSourcesRef.current) return;
 					if (enabledTypesRef.current.text) enqueue(textEventToQueueItem(msg));
 				})
 				.with({ type: "REACTION" }, (msg) => {
 					if (overlayHealthRef.current === "closed") return;
+					if (msg.source === "bot_app" && !showBotAppSourcesRef.current) return;
 					if (!reactionsEnabledRef.current) return;
 					spawnReaction({ emoji: msg.emoji, emojiUrl: msg.emoji_url });
 				})

@@ -10,14 +10,11 @@ import { handleInteraction } from "./commands/commands";
 import { errorResponse } from "./commands/response-panel";
 import { interactionLocale, t } from "./i18n";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
-import { broadcastToGuild } from "./server";
+import { dispatchReaction } from "./media/reactions";
 import { startGuildCleanupScheduler } from "./utils/cleanup";
 import { config } from "./utils/config";
 import { logger } from "./utils/logger";
 import { attachPresenceClient } from "./utils/presence";
-import { canBroadcastReaction } from "./utils/reaction-rate-limit";
-import { guildRegistry } from "./utils/registry";
-import type { ReactionEvent } from "./utils/types";
 
 const log = logger.child({ module: "bot" });
 
@@ -61,42 +58,7 @@ discordClient.on(
 );
 
 discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
-	// Partials fire for messages older than the bot's uptime; fetch hydrates `.message` / `.emoji`.
-	if (reaction.partial) {
-		try {
-			await reaction.fetch();
-		} catch {
-			return;
-		}
-	}
-	if (user.bot) return;
-
-	const { guildId, channelId, id: messageId } = reaction.message;
-	if (!guildId || !channelId) return;
-
-	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
-	if (!canBroadcastReaction(guildId)) return;
-
-	const emojiId = reaction.emoji.id;
-	const emojiName = reaction.emoji.name;
-	if (!emojiName && !emojiId) return;
-
-	const emoji_url =
-		emojiId !== null
-			? `https://cdn.discordapp.com/emojis/${emojiId}.${reaction.emoji.animated ? "gif" : "png"}?size=64&quality=lossless`
-			: undefined;
-
-	const event: ReactionEvent = {
-		type: "REACTION",
-		guild_id: guildId,
-		channel_id: channelId,
-		message_id: messageId,
-		emoji: emojiName ?? "",
-		emoji_url,
-		user_id: user.id,
-		timestamp: Date.now(),
-	};
-	broadcastToGuild(guildId, event);
+	await dispatchReaction(reaction, user);
 });
 
 // Slash commands

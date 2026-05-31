@@ -2,7 +2,7 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { guildRegistry } from "../../utils/registry";
 import { store } from "../../utils/store";
-import { formatWatchedChannels } from "../connection";
+import { formatBotAppSources, formatWatchedChannels } from "../connection";
 import { infoResponse } from "../response-panel";
 
 /** Format an uptime in seconds to a compact "Xd Yh Zm" or "Hh Mm Ss" string. */
@@ -28,6 +28,7 @@ export async function handleStatus(
 	const registered = cfg !== undefined;
 
 	const watchingValue = cfg ? formatWatchedChannels(cfg.channel_ids, locale) : "—";
+	const botsValue = cfg ? formatBotAppSources(cfg.allow_bot_app_sources, locale) : "—";
 
 	const activeOverlays = store.getGuildMembers(guildId).size;
 
@@ -38,6 +39,7 @@ export async function handleStatus(
 				value: registered ? t(locale, "status.registeredYes") : t(locale, "status.notConfigured"),
 			},
 			{ name: t(locale, "common.watching"), value: watchingValue },
+			{ name: t(locale, "common.botAppSources"), value: botsValue },
 			{
 				name: t(locale, "status.activeOverlays"),
 				value: String(activeOverlays),

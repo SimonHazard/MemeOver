@@ -37,6 +37,7 @@ export const OverlaySettingsSchema = z.object({
 		text: z.boolean(),
 		sticker: z.boolean(),
 	}),
+	showBotAppSources: z.boolean(),
 	textSize: z.number().min(12).max(96),
 	textPosition: z.enum(TEXT_POSITIONS),
 	textColor: z.string(),

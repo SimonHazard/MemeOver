@@ -5,8 +5,13 @@ process.env.DISCORD_TOKEN ??= "test-discord-token";
 process.env.DISCORD_CLIENT_ID ??= "123456789012345678";
 process.env.PUBLIC_WS_URL = "wss://test.example/ws";
 
-const { buildConnectionCode, buildConnectionFields, formatWatchedChannels, notConfiguredResponse } =
-	await import("./connection");
+const {
+	buildConnectionCode,
+	buildConnectionFields,
+	formatBotAppSources,
+	formatWatchedChannels,
+	notConfiguredResponse,
+} = await import("./connection");
 const { componentsToJson, EPHEMERAL_COMPONENTS_V2 } = await import("./response-panel");
 
 describe("Discord connection helpers", () => {
@@ -14,6 +19,13 @@ describe("Discord connection helpers", () => {
 		expect(formatWatchedChannels([])).toBe("All channels");
 		expect(formatWatchedChannels([], "fr")).toBe("Tous les salons");
 		expect(formatWatchedChannels(["111", "222"])).toBe("<#111>, <#222>");
+	});
+
+	test("formats bot/app source state", () => {
+		expect(formatBotAppSources(false)).toBe("Muted");
+		expect(formatBotAppSources(true)).toBe("Enabled");
+		expect(formatBotAppSources(false, "fr")).toBe("Masqué");
+		expect(formatBotAppSources(true, "fr")).toBe("Activé");
 	});
 
 	test("builds setup codes with the public websocket URL", () => {
@@ -26,17 +38,19 @@ describe("Discord connection helpers", () => {
 		const fields = buildConnectionFields({
 			guildId: "123456789012345678",
 			token: "token-123",
-			config: { channel_ids: ["111"] },
+			config: { channel_ids: ["111"], allow_bot_app_sources: true },
 		});
 
 		expect(fields.map((field) => field.name)).toEqual([
 			"📺 Watching",
+			"🤖 Bots & apps",
 			"🏠 Server ID",
 			"🔑 Token",
 			"⚡ App setup code",
 		]);
 		expect(fields[0]?.value).toBe("<#111>");
-		expect(fields[3]?.value).toContain("memeover://setup?");
+		expect(fields[1]?.value).toBe("Enabled");
+		expect(fields[4]?.value).toContain("memeover://setup?");
 	});
 
 	test("builds localized credential fields", () => {
@@ -44,16 +58,18 @@ describe("Discord connection helpers", () => {
 			guildId: "123456789012345678",
 			token: "token-123",
 			locale: "fr",
-			config: { channel_ids: [] },
+			config: { channel_ids: [], allow_bot_app_sources: false },
 		});
 
 		expect(fields.map((field) => field.name)).toEqual([
 			"📺 Écoute",
+			"🤖 Bots & apps",
 			"🏠 Server ID",
 			"🔑 Jeton",
 			"⚡ Code de configuration app",
 		]);
 		expect(fields[0]?.value).toBe("Tous les salons");
+		expect(fields[1]?.value).toBe("Masqué");
 	});
 
 	test("builds the shared not-configured Components V2 response", () => {

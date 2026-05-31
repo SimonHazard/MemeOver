@@ -49,6 +49,7 @@ dans l'app et fournissez votre propre URL WebSocket.
 | `/memeover token` | Tous | Affiche les identifiants et le setup code, visibles uniquement par vous |
 | `/memeover rotate` | Gerer le serveur | Demande confirmation, regenere le token et invalide l'ancien |
 | `/memeover remove` | Gerer le serveur | Demande confirmation puis desinscrit le serveur de MemeOver |
+| `/memeover bots enabled:<true\|false>` | Gerer le serveur | Autorise ou masque les messages et reactions des bots/apps |
 | `/memeover secret [media] [url] [text]` | Tous | Envoie un media anonyme aux overlays connectes |
 | `/memeover status` | Gerer le serveur | Affiche configuration, salons surveilles, overlays actifs et uptime |
 | `/memeover help` | Tous | Liste les commandes disponibles |
@@ -164,6 +165,7 @@ mode in the app and provide your own WebSocket URL.
 | `/memeover token` | Everyone | Display credentials and setup code, visible only to you |
 | `/memeover rotate` | Manage Server | Confirm, then regenerate the connection token and invalidate the previous one |
 | `/memeover remove` | Manage Server | Confirm, then unregister the server from MemeOver |
+| `/memeover bots enabled:<true\|false>` | Manage Server | Allow or mute messages and reactions from bots/apps |
 | `/memeover secret [media] [url] [text]` | Everyone | Send an anonymous media item to connected overlays |
 | `/memeover status` | Manage Server | Show configuration, watched channels, active overlays and uptime |
 | `/memeover help` | Everyone | List available commands |

@@ -15,6 +15,10 @@ const translations = {
 		"commands.rotate.description": "Generate a new connection token, invalidating the current one",
 		"commands.remove.name": "remove",
 		"commands.remove.description": "Unregister this server from MemeOver",
+		"commands.bots.name": "bots",
+		"commands.bots.description": "Allow or mute messages and reactions from bots and apps",
+		"commands.bots.enabled.name": "enabled",
+		"commands.bots.enabled.description": "Enable to listen to bots/apps; disable to mute them",
 		"commands.secret.name": "secret",
 		"commands.secret.description": "Send an anonymous meme with optional caption text",
 		"commands.secret.media.name": "media",
@@ -31,9 +35,12 @@ const translations = {
 		"common.allChannels": "All channels",
 		"common.appSetupCode": "⚡ App setup code",
 		"common.cancel": "Cancel",
+		"common.botAppSources": "🤖 Bots & apps",
 		"common.controlOwnerOnlyDescription": "Run the command yourself to use this action.",
 		"common.controlOwnerOnlyTitle": "This control is not yours",
+		"common.enabled": "Enabled",
 		"common.manageServer": "Manage Server",
+		"common.muted": "Muted",
 		"common.notConfiguredDescription":
 			"This server has not been set up yet. Run `/memeover setup` first.",
 		"common.notConfiguredTitle": "Not configured",
@@ -64,6 +71,8 @@ const translations = {
 			"Open a confirmation before generating a new connection token. Connected overlays must reconnect after confirmation. Requires **Manage Server**.",
 		"help.secret":
 			"Send an anonymous media item to every connected overlay. Use either an uploaded file or direct URL, with optional caption text.",
+		"help.bots":
+			"Allow or mute media, text, and reactions posted by Discord bots, apps, and webhooks. Requires **Manage Server**.",
 		"help.setup":
 			"Register this server and get an app setup code. Omit `#channel` to watch all channels, or specify one to add it. Requires **Manage Server**.",
 		"help.status": "Show bot configuration, watched channels, active overlays, and uptime.",
@@ -125,6 +134,13 @@ const translations = {
 			"Paste the setup code below into the MemeOver app to connect in one step.\n\n_Tip: run `/memeover setup #channel` to add a channel to the watch list._",
 		"setup.updatedTitle": "MemeOver updated",
 
+		"bots.enabledTitle": "Bots & apps enabled",
+		"bots.enabledDescription":
+			"MemeOver now listens to media, text, and reactions from Discord bots, apps, and webhooks in watched channels.",
+		"bots.mutedTitle": "Bots & apps muted",
+		"bots.mutedDescription":
+			"MemeOver now ignores media, text, and reactions from Discord bots, apps, and webhooks.",
+
 		"status.activeOverlays": "🖥️ Active overlays",
 		"status.notConfigured": "❌ Not configured — run `/memeover setup`",
 		"status.registered": "🔌 Registered",
@@ -147,6 +163,11 @@ const translations = {
 		"commands.rotate.description": "Générer un nouveau jeton de connexion",
 		"commands.remove.name": "remove",
 		"commands.remove.description": "Retirer ce serveur de MemeOver",
+		"commands.bots.name": "bots",
+		"commands.bots.description": "Autoriser ou masquer les messages et réactions des bots et apps",
+		"commands.bots.enabled.name": "enabled",
+		"commands.bots.enabled.description":
+			"Active pour écouter les bots/apps; désactive pour les masquer",
 		"commands.secret.name": "secret",
 		"commands.secret.description": "Envoyer un meme anonyme avec une légende optionnelle",
 		"commands.secret.media.name": "media",
@@ -163,10 +184,13 @@ const translations = {
 		"common.allChannels": "Tous les salons",
 		"common.appSetupCode": "⚡ Code de configuration app",
 		"common.cancel": "Annuler",
+		"common.botAppSources": "🤖 Bots & apps",
 		"common.controlOwnerOnlyDescription":
 			"Lancez la commande vous-même pour utiliser cette action.",
 		"common.controlOwnerOnlyTitle": "Ce contrôle ne vous appartient pas",
+		"common.enabled": "Activé",
 		"common.manageServer": "Gérer le serveur",
+		"common.muted": "Masqué",
 		"common.notConfiguredDescription":
 			"Ce serveur n'est pas encore configuré. Lancez `/memeover setup` d'abord.",
 		"common.notConfiguredTitle": "Non configuré",
@@ -197,6 +221,8 @@ const translations = {
 			"Ouvre une confirmation avant de générer un nouveau jeton de connexion. Les overlays connectés devront se reconnecter après confirmation. Requiert **Gérer le serveur**.",
 		"help.secret":
 			"Envoie un média anonyme à tous les overlays connectés. Utilisez un fichier uploadé ou une URL directe, avec une légende optionnelle.",
+		"help.bots":
+			"Autorise ou masque les médias, textes et réactions publiés par des bots Discord, apps et webhooks. Requiert **Gérer le serveur**.",
 		"help.setup":
 			"Enregistre ce serveur et fournit un code de configuration app. Omettez `#salon` pour écouter tous les salons, ou indiquez-en un pour l'ajouter. Requiert **Gérer le serveur**.",
 		"help.status":
@@ -258,6 +284,13 @@ const translations = {
 		"setup.description":
 			"Collez le code de configuration ci-dessous dans l'app MemeOver pour vous connecter en une étape.\n\n_Astuce : lancez `/memeover setup #salon` pour ajouter un salon à écouter._",
 		"setup.updatedTitle": "MemeOver mis à jour",
+
+		"bots.enabledTitle": "Bots & apps activés",
+		"bots.enabledDescription":
+			"MemeOver écoute maintenant les médias, textes et réactions des bots Discord, apps et webhooks dans les salons surveillés.",
+		"bots.mutedTitle": "Bots & apps masqués",
+		"bots.mutedDescription":
+			"MemeOver ignore maintenant les médias, textes et réactions des bots Discord, apps et webhooks.",
 
 		"status.activeOverlays": "🖥️ Overlays actifs",
 		"status.notConfigured": "❌ Non configuré — lancez `/memeover setup`",

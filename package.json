@@ -18,7 +18,7 @@
     "typecheck:app": "bun run --cwd app typecheck",
     "typecheck:shared": "bun run --cwd shared typecheck",
     "typecheck:ui": "bun run --cwd packages/ui typecheck",
-    "test": "bun test ./app/src/windows/settings/components/setup-form/connection-code-parser.test.ts ./bot/src/commands/connection.test.ts"
+    "test": "bun test ./app/src/windows/settings/components/setup-form/connection-code-parser.test.ts ./app/src/shared/settings.test.ts ./bot/src/commands/connection.test.ts ./bot/src/media/source.test.ts ./bot/src/media/dispatch.test.ts ./bot/src/utils/registry-state.test.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",

@@ -6,6 +6,7 @@ import { guildRegistry } from "../utils/registry";
 import type { MediaEvent, TextEvent } from "../utils/types";
 import { shouldDispatch } from "./dedup";
 import { extractMedia, extractStickers, extractText, urlPathname } from "./extractor";
+import { classifyMessageSource, sourceField } from "./source";
 
 const log = logger.child({ module: "dispatcher" });
 
@@ -52,15 +53,16 @@ function extractAuthorInfo(message: Message | PartialMessage): AuthorInfo | null
  */
 export function dispatchMedia(message: Message | PartialMessage, includeText: boolean): void {
 	if (!message.guildId || !message.channelId || !message.author) return;
-	if (message.author.bot) return;
 
 	const guildId = message.guildId;
 	const channelId = message.channelId;
+	const source = classifyMessageSource(message);
 
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
+	if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
 
 	const msgLog = log.child(discordRefLogFields({ guildId, channelId, messageId: message.id }));
-	msgLog.debug({ event: "processing", includeText }, "Processing message");
+	msgLog.debug({ event: "processing", includeText, source }, "Processing message");
 
 	const authorInfo = extractAuthorInfo(message);
 	if (!authorInfo) return;
@@ -82,6 +84,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 			...authorInfo,
 			text,
 			timestamp: Date.now(),
+			...sourceField(source),
 		};
 		broadcastToGuild(guildId, event);
 		msgLog.info(
@@ -114,6 +117,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 			media_type: item.media_type,
 			text,
 			timestamp: Date.now(),
+			...sourceField(source),
 		};
 		broadcastToGuild(guildId, event);
 		msgLog.info(

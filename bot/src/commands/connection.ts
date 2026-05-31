@@ -33,6 +33,10 @@ export function formatWatchedChannels(
 		: t(locale, "common.allChannels");
 }
 
+export function formatBotAppSources(enabled: boolean, locale: BotLocale = "en"): string {
+	return enabled ? t(locale, "common.enabled") : t(locale, "common.muted");
+}
+
 export function buildConnectionFields({
 	guildId,
 	token,
@@ -44,7 +48,7 @@ export function buildConnectionFields({
 	guildId: string;
 	token: string;
 	locale?: BotLocale;
-	config?: Pick<GuildConfig, "channel_ids">;
+	config?: Pick<GuildConfig, "channel_ids" | "allow_bot_app_sources">;
 	tokenLabel?: string;
 	includeWatching?: boolean;
 }): PanelField[] {
@@ -54,6 +58,11 @@ export function buildConnectionFields({
 			name: t(locale, "common.watching"),
 			value: formatWatchedChannels(config.channel_ids, locale),
 			inline: false,
+		});
+		fields.push({
+			name: t(locale, "common.botAppSources"),
+			value: formatBotAppSources(config.allow_bot_app_sources, locale),
+			inline: true,
 		});
 	}
 
@@ -105,7 +114,7 @@ interface ConnectionPanelOptions {
 	guildId: string;
 	token: string;
 	locale?: BotLocale;
-	config?: Pick<GuildConfig, "channel_ids">;
+	config?: Pick<GuildConfig, "channel_ids" | "allow_bot_app_sources">;
 	tokenLabel?: string;
 	includeWatching?: boolean;
 }

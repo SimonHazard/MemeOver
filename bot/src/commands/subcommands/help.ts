@@ -8,6 +8,7 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
 		["/memeover setup [#channel]", t(locale, "help.setup")],
 		["/memeover token", t(locale, "help.token")],
 		["/memeover secret media:<file> url:<link> text:<caption>", t(locale, "help.secret")],
+		["/memeover bots enabled:<true|false>", t(locale, "help.bots")],
 		["/memeover rotate", t(locale, "help.rotate")],
 		["/memeover remove", t(locale, "help.remove")],
 		["/memeover status", t(locale, "help.status")],
