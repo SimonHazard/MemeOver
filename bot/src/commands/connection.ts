@@ -1,3 +1,4 @@
+import { buildConnectionCode } from "@memeover/shared";
 import {
 	ButtonBuilder,
 	ButtonStyle,
@@ -5,7 +6,7 @@ import {
 	type InteractionUpdateOptions,
 } from "discord.js";
 import { type BotLocale, t } from "../i18n";
-import { config } from "../utils/config";
+import { config as botConfig } from "../utils/config";
 import type { GuildConfig } from "../utils/registry";
 import { errorResponse, type PanelField, panelResponse, panelUpdate } from "./response-panel";
 
@@ -13,15 +14,6 @@ const MEMEOVER_SITE_URL = "https://memeover.simonhazard.com";
 
 function codeBlock(value: string): string {
 	return `\`\`\`\n${value}\n\`\`\``;
-}
-
-export function buildConnectionCode(guildId: string, token: string): string {
-	const params = new URLSearchParams({
-		guild_id: guildId,
-		token,
-		ws_url: config.publicWsUrl,
-	});
-	return `memeover://setup?${params.toString()}`;
 }
 
 export function formatWatchedChannels(
@@ -71,7 +63,7 @@ export function buildConnectionFields({
 		{ name: tokenLabel ?? t(locale, "common.token"), value: codeBlock(token), inline: false },
 		{
 			name: t(locale, "common.appSetupCode"),
-			value: codeBlock(buildConnectionCode(guildId, token)),
+			value: codeBlock(buildConnectionCode({ guildId, token, wsUrl: botConfig.publicWsUrl })),
 			inline: false,
 		},
 	);

@@ -1,17 +1,13 @@
 import { describe, expect, test } from "bun:test";
+import { buildConnectionCode } from "@memeover/shared";
 import { MessageFlags } from "discord.js";
 
 process.env.DISCORD_TOKEN ??= "test-discord-token";
 process.env.DISCORD_CLIENT_ID ??= "123456789012345678";
 process.env.PUBLIC_WS_URL = "wss://test.example/ws";
 
-const {
-	buildConnectionCode,
-	buildConnectionFields,
-	formatBotAppSources,
-	formatWatchedChannels,
-	notConfiguredResponse,
-} = await import("./connection");
+const { buildConnectionFields, formatBotAppSources, formatWatchedChannels, notConfiguredResponse } =
+	await import("./connection");
 const { componentsToJson, EPHEMERAL_COMPONENTS_V2 } = await import("./response-panel");
 
 describe("Discord connection helpers", () => {
@@ -26,12 +22,6 @@ describe("Discord connection helpers", () => {
 		expect(formatBotAppSources(true)).toBe("Enabled");
 		expect(formatBotAppSources(false, "fr")).toBe("Masqué");
 		expect(formatBotAppSources(true, "fr")).toBe("Activé");
-	});
-
-	test("builds setup codes with the public websocket URL", () => {
-		expect(buildConnectionCode("123456789012345678", "token-123")).toBe(
-			"memeover://setup?guild_id=123456789012345678&token=token-123&ws_url=wss%3A%2F%2Ftest.example%2Fws",
-		);
 	});
 
 	test("builds reusable credential fields", () => {
@@ -50,7 +40,13 @@ describe("Discord connection helpers", () => {
 		]);
 		expect(fields[0]?.value).toBe("<#111>");
 		expect(fields[1]?.value).toBe("Enabled");
-		expect(fields[4]?.value).toContain("memeover://setup?");
+		expect(fields[4]?.value).toContain(
+			buildConnectionCode({
+				guildId: "123456789012345678",
+				token: "token-123",
+				wsUrl: "wss://test.example/ws",
+			}),
+		);
 	});
 
 	test("builds localized credential fields", () => {

@@ -1,3 +1,4 @@
+import type { ParsedConnectionCode } from "@memeover/shared";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Switch } from "@memeover/ui/components/ui/switch";
@@ -10,7 +11,6 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 import { ConnectionCodeField } from "./connection-code";
-import type { ParsedConnectionCode } from "./connection-code-parser";
 import { SetupSchema, type SetupValues } from "./schema";
 
 type SetupFormApi = ReactFormExtendedApi<
