@@ -1,3 +1,4 @@
+import { type ParsedConnectionCode, parseConnectionCode } from "@memeover/shared";
 import { Button } from "@memeover/ui/components/ui/button";
 import { Input } from "@memeover/ui/components/ui/input";
 import { cn } from "@memeover/ui/lib/utils";
@@ -5,9 +6,8 @@ import { ClipboardPaste } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { type ParsedConnectionCode, parseConnectionCode } from "./connection-code-parser";
 
-export { type ParsedConnectionCode, parseConnectionCode } from "./connection-code-parser";
+export { type ParsedConnectionCode, parseConnectionCode } from "@memeover/shared";
 
 interface ConnectionCodeFieldProps {
 	className?: string;

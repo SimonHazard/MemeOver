@@ -1,9 +1,15 @@
-import { DISCORD_SNOWFLAKE_REGEX, DISCORD_SNOWFLAKE_SEARCH_REGEX } from "@memeover/shared";
+import { DISCORD_SNOWFLAKE_REGEX, DISCORD_SNOWFLAKE_SEARCH_REGEX } from "./protocol";
 
 export interface ParsedConnectionCode {
 	guildId: string;
 	token: string;
 	wsUrl?: string;
+}
+
+export interface BuildConnectionCodeOptions {
+	guildId: string;
+	token: string;
+	wsUrl: string;
 }
 
 const TOKEN_RE = /(?:token|jeton)\s*[:=]\s*([A-Za-z0-9._~-]{16,})/i;
@@ -53,6 +59,15 @@ function parseJson(raw: string): ParsedConnectionCode | null {
 	} catch {
 		return null;
 	}
+}
+
+export function buildConnectionCode({ guildId, token, wsUrl }: BuildConnectionCodeOptions): string {
+	const params = new URLSearchParams({
+		guild_id: guildId,
+		token,
+		ws_url: wsUrl,
+	});
+	return `memeover://setup?${params.toString()}`;
 }
 
 export function parseConnectionCode(raw: string): ParsedConnectionCode | null {

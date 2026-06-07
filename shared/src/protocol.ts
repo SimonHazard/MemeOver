@@ -11,6 +11,9 @@ export const DISCORD_SNOWFLAKE_SEARCH_REGEX = /\b\d{17,20}\b/;
 export const MediaTypeSchema = z.enum(["image", "gif", "video", "audio", "sticker"]);
 export type MediaType = z.infer<typeof MediaTypeSchema>;
 
+const EventSourceSchema = z.enum(["user", "bot_app"]);
+export type EventSource = z.infer<typeof EventSourceSchema>;
+
 // ─── Server → Client schemas (messages sent by the bot to app clients) ────────
 
 const MediaEventSchema = z.object({
@@ -26,6 +29,7 @@ const MediaEventSchema = z.object({
 	media_type: MediaTypeSchema,
 	text: z.string().optional(),
 	timestamp: z.number(),
+	source: EventSourceSchema.optional(),
 	/** When true, the overlay should hide all author metadata — used by /memeover secret. */
 	anonymous: z.boolean().optional(),
 });
@@ -41,6 +45,7 @@ const TextEventSchema = z.object({
 	author_avatar_url: z.string(),
 	text: z.string(),
 	timestamp: z.number(),
+	source: EventSourceSchema.optional(),
 });
 
 const JoinAckMessageSchema = z.object({
@@ -77,6 +82,7 @@ const ReactionEventSchema = z.object({
 	emoji_url: z.string().optional(),
 	user_id: z.string(),
 	timestamp: z.number(),
+	source: EventSourceSchema.optional(),
 });
 
 export const ServerMessageSchema = z.discriminatedUnion("type", [

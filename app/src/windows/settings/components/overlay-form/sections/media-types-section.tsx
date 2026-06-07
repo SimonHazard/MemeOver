@@ -1,3 +1,5 @@
+import { Label } from "@memeover/ui/components/ui/label";
+import { Switch } from "@memeover/ui/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import {
 	Tooltip,
@@ -81,6 +83,24 @@ export function MediaTypesSection() {
 						</div>
 					);
 				}}
+			</form.Field>
+
+			<form.Field name="showBotAppSources">
+				{(field) => (
+					<div className="flex items-start justify-between gap-4">
+						<div className="space-y-0.5">
+							<Label className="font-display tracking-wide text-xs">
+								{t("display.bot_app_sources")}
+							</Label>
+							<p className="text-xs text-muted-foreground">{t("display.bot_app_sources_hint")}</p>
+						</div>
+						<Switch
+							checked={field.state.value}
+							onCheckedChange={field.handleChange}
+							className="shrink-0 mt-0.5"
+						/>
+					</div>
+				)}
 			</form.Field>
 		</div>
 	);

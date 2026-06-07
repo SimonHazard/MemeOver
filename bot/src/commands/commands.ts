@@ -12,6 +12,7 @@ import { logger } from "../utils/logger";
 
 import { handleComponentInteraction } from "./component-actions";
 import { errorResponse } from "./response-panel";
+import { handleBots } from "./subcommands/bots";
 import { handleHelp } from "./subcommands/help";
 import { handleRemove } from "./subcommands/remove";
 import { handleRotate } from "./subcommands/rotate";
@@ -65,6 +66,19 @@ const memeover = new SlashCommandBuilder()
 	)
 	.addSubcommand((sub) =>
 		sub
+			.setName(en("commands.bots.name"))
+			.setDescription(en("commands.bots.description"))
+			.setDescriptionLocalizations(fr("commands.bots.description"))
+			.addBooleanOption((opt) =>
+				opt
+					.setName(en("commands.bots.enabled.name"))
+					.setDescription(en("commands.bots.enabled.description"))
+					.setDescriptionLocalizations(fr("commands.bots.enabled.description"))
+					.setRequired(true),
+			),
+	)
+	.addSubcommand((sub) =>
+		sub
 			.setName(en("commands.secret.name"))
 			.setDescription(en("commands.secret.description"))
 			.setDescriptionLocalizations(fr("commands.secret.description"))
@@ -106,7 +120,7 @@ const memeover = new SlashCommandBuilder()
 
 // Subcommands that require the Manage Server permission. `token` and `help`
 // are deliberately open to all members.
-const PRIVILEGED_SUBS = new Set(["setup", "remove", "rotate", "status"]);
+const PRIVILEGED_SUBS = new Set(["setup", "remove", "rotate", "status", "bots"]);
 
 // ─── Command registration ─────────────────────────────────────────────────────
 
@@ -160,6 +174,8 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		await handleRotate(interaction, guildId);
 	} else if (sub === "remove") {
 		await handleRemove(interaction, guildId);
+	} else if (sub === "bots") {
+		await handleBots(interaction, guildId);
 	} else if (sub === "secret") {
 		await handleSecret(interaction, guildId);
 	} else if (sub === "status") {

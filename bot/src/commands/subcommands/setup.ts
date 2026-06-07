@@ -27,7 +27,7 @@ export async function handleSetup(
 			guildId,
 			token,
 			locale,
-			config: cfg ?? { channel_ids: [] },
+			config: cfg ?? { channel_ids: [], allow_bot_app_sources: false },
 		}),
 	);
 }

@@ -17,6 +17,7 @@ function extractDefaults(s: Settings): OverlaySettingsValues {
 		positionOffsetX: s.positionOffsetX,
 		positionOffsetY: s.positionOffsetY,
 		enabledTypes: s.enabledTypes,
+		showBotAppSources: s.showBotAppSources,
 		textSize: s.textSize,
 		textPosition: s.textPosition,
 		textColor: s.textColor,

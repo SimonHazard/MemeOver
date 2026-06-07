@@ -1,3 +1,4 @@
+import { buildConnectionCode } from "@memeover/shared";
 import {
 	ButtonBuilder,
 	ButtonStyle,
@@ -5,7 +6,7 @@ import {
 	type InteractionUpdateOptions,
 } from "discord.js";
 import { type BotLocale, t } from "../i18n";
-import { config } from "../utils/config";
+import { config as botConfig } from "../utils/config";
 import type { GuildConfig } from "../utils/registry";
 import { errorResponse, type PanelField, panelResponse, panelUpdate } from "./response-panel";
 
@@ -15,15 +16,6 @@ function codeBlock(value: string): string {
 	return `\`\`\`\n${value}\n\`\`\``;
 }
 
-export function buildConnectionCode(guildId: string, token: string): string {
-	const params = new URLSearchParams({
-		guild_id: guildId,
-		token,
-		ws_url: config.publicWsUrl,
-	});
-	return `memeover://setup?${params.toString()}`;
-}
-
 export function formatWatchedChannels(
 	channelIds: readonly string[],
 	locale: BotLocale = "en",
@@ -31,6 +23,10 @@ export function formatWatchedChannels(
 	return channelIds.length > 0
 		? channelIds.map((id) => `<#${id}>`).join(", ")
 		: t(locale, "common.allChannels");
+}
+
+export function formatBotAppSources(enabled: boolean, locale: BotLocale = "en"): string {
+	return enabled ? t(locale, "common.enabled") : t(locale, "common.muted");
 }
 
 export function buildConnectionFields({
@@ -44,7 +40,7 @@ export function buildConnectionFields({
 	guildId: string;
 	token: string;
 	locale?: BotLocale;
-	config?: Pick<GuildConfig, "channel_ids">;
+	config?: Pick<GuildConfig, "channel_ids" | "allow_bot_app_sources">;
 	tokenLabel?: string;
 	includeWatching?: boolean;
 }): PanelField[] {
@@ -55,6 +51,11 @@ export function buildConnectionFields({
 			value: formatWatchedChannels(config.channel_ids, locale),
 			inline: false,
 		});
+		fields.push({
+			name: t(locale, "common.botAppSources"),
+			value: formatBotAppSources(config.allow_bot_app_sources, locale),
+			inline: true,
+		});
 	}
 
 	fields.push(
@@ -62,7 +63,7 @@ export function buildConnectionFields({
 		{ name: tokenLabel ?? t(locale, "common.token"), value: codeBlock(token), inline: false },
 		{
 			name: t(locale, "common.appSetupCode"),
-			value: codeBlock(buildConnectionCode(guildId, token)),
+			value: codeBlock(buildConnectionCode({ guildId, token, wsUrl: botConfig.publicWsUrl })),
 			inline: false,
 		},
 	);
@@ -105,7 +106,7 @@ interface ConnectionPanelOptions {
 	guildId: string;
 	token: string;
 	locale?: BotLocale;
-	config?: Pick<GuildConfig, "channel_ids">;
+	config?: Pick<GuildConfig, "channel_ids" | "allow_bot_app_sources">;
 	tokenLabel?: string;
 	includeWatching?: boolean;
 }

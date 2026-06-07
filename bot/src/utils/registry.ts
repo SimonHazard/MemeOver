@@ -2,22 +2,18 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { logger } from "./logger";
+import {
+	type GuildConfig,
+	normalizeRegistry,
+	type Registry,
+	UNIQUE_CLIENT_ID_LIMIT,
+} from "./registry-state";
+
+export type { GuildConfig, Registry } from "./registry-state";
 
 const log = logger.child({ module: "registry" });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface GuildConfig {
-	token: string;
-	/** Empty channel_ids = all channels allowed */
-	channel_ids: string[];
-	registered_at: number;
-	last_active_at: number | null;
-	/** At most two opaque app install ids; two is enough to prove the guild is not single-user. */
-	unique_client_ids: string[];
-}
-
-type Registry = Record<string, GuildConfig>;
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
@@ -27,72 +23,8 @@ const REGISTRY_TMP = path.join(DATA_DIR, "guilds.json.tmp");
 
 let registry: Registry = {};
 
-const UNIQUE_CLIENT_ID_LIMIT = 2;
-
 function generateToken(): string {
 	return randomUUID().replace(/-/g, "");
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function numberOrNull(value: unknown): number | null {
-	return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function normalizeConfig(raw: unknown, now: number): GuildConfig | null {
-	if (!isRecord(raw) || typeof raw.token !== "string") return null;
-
-	const channel_ids = Array.isArray(raw.channel_ids)
-		? raw.channel_ids.filter((id): id is string => typeof id === "string")
-		: [];
-	const unique_client_ids = Array.isArray(raw.unique_client_ids)
-		? raw.unique_client_ids
-				.filter((id): id is string => typeof id === "string" && id.length > 0)
-				.slice(0, UNIQUE_CLIENT_ID_LIMIT)
-		: [];
-
-	return {
-		token: raw.token,
-		channel_ids,
-		registered_at: numberOrNull(raw.registered_at) ?? now,
-		last_active_at: numberOrNull(raw.last_active_at),
-		unique_client_ids,
-	};
-}
-
-function normalizeRegistry(raw: unknown): { value: Registry; changed: boolean } {
-	const now = Date.now();
-	if (!isRecord(raw)) return { value: {}, changed: true };
-
-	const value: Registry = {};
-	let changed = false;
-
-	for (const [guildId, rawConfig] of Object.entries(raw)) {
-		const config = normalizeConfig(rawConfig, now);
-		if (!config) {
-			changed = true;
-			continue;
-		}
-		value[guildId] = config;
-
-		if (
-			!isRecord(rawConfig) ||
-			!Array.isArray(rawConfig.channel_ids) ||
-			rawConfig.channel_ids.some((id) => typeof id !== "string") ||
-			numberOrNull(rawConfig.registered_at) === null ||
-			!("last_active_at" in rawConfig) ||
-			(rawConfig.last_active_at !== null && numberOrNull(rawConfig.last_active_at) === null) ||
-			!Array.isArray(rawConfig.unique_client_ids) ||
-			rawConfig.unique_client_ids.length > UNIQUE_CLIENT_ID_LIMIT ||
-			rawConfig.unique_client_ids.some((id) => typeof id !== "string" || id.length === 0)
-		) {
-			changed = true;
-		}
-	}
-
-	return { value, changed };
 }
 
 function load(): void {
@@ -149,6 +81,7 @@ export const guildRegistry = {
 		registry[guildId] = {
 			token,
 			channel_ids,
+			allow_bot_app_sources: existing?.allow_bot_app_sources ?? false,
 			registered_at: existing?.registered_at ?? now,
 			last_active_at: existing?.last_active_at ?? null,
 			unique_client_ids: existing?.unique_client_ids ?? [],
@@ -163,6 +96,19 @@ export const guildRegistry = {
 		if (!existing) return;
 		registry[guildId] = { ...existing, channel_ids: [] };
 		save();
+	},
+
+	setBotAppSources(guildId: string, enabled: boolean): GuildConfig | null {
+		const existing = registry[guildId];
+		if (!existing) return null;
+		const next = { ...existing, allow_bot_app_sources: enabled };
+		registry[guildId] = next;
+		save();
+		return {
+			...next,
+			channel_ids: [...next.channel_ids],
+			unique_client_ids: [...next.unique_client_ids],
+		};
 	},
 
 	recordClientActivity(guildId: string, clientId: string): void {

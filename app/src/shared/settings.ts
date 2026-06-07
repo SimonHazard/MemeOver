@@ -127,6 +127,11 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	if (typeof out.clientId !== "string" || out.clientId.length < 8) {
 		out.clientId = generateClientId();
 	}
+	// v7 → v8: local per-profile source filter for bot/app events. Default stays
+	// muted to match the server-side default and previous behavior.
+	if (typeof out.showBotAppSources !== "boolean") {
+		out.showBotAppSources = false;
+	}
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

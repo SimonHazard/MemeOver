@@ -124,6 +124,8 @@ export interface Settings {
 	positionOffsetY: number;
 	/** Which media types are allowed to be displayed */
 	enabledTypes: EnabledTypes;
+	/** When true, this local overlay displays events tagged as coming from bots/apps. */
+	showBotAppSources: boolean;
 	/** Monotonic schema version; bumped when a load-time migration of persisted fields is required */
 	schemaVersion: number;
 	/** Font size for text overlays, in pixels (12–96) */
@@ -174,6 +176,7 @@ export const OVERLAY_PROFILE_FIELDS = [
 	"positionOffsetX",
 	"positionOffsetY",
 	"enabledTypes",
+	"showBotAppSources",
 	"textSize",
 	"textPosition",
 	"textColor",
@@ -206,7 +209,7 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 7;
+export const CURRENT_SCHEMA_VERSION = 8;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
@@ -226,6 +229,7 @@ export const DEFAULT_SETTINGS: Settings = {
 	positionOffsetX: 0,
 	positionOffsetY: 0,
 	enabledTypes: { image: true, gif: true, video: true, audio: true, text: true, sticker: true },
+	showBotAppSources: false,
 	schemaVersion: CURRENT_SCHEMA_VERSION,
 	textSize: 20,
 	textPosition: "overlay-bottom",

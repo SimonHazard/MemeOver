@@ -108,6 +108,8 @@
 		"group_text_hint": "Mise en forme des messages textes",
 		"group_types": "Types de médias activés",
 		"group_types_hint": "Quels messages déclenchent l'affichage",
+		"bot_app_sources": "Afficher les bots & apps",
+		"bot_app_sources_hint": "Affiche les événements venant des bots Discord, apps et webhooks quand le serveur les autorise.",
 		"group_reactions": "Réactions flottantes",
 		"group_reactions_hint": "Emojis translucides qui montent à l'écran quand quelqu'un réagit à un meme",
 		"group_profiles": "Profils d'overlay",
