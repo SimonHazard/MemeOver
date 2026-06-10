@@ -214,8 +214,101 @@
 	"tabs": {
 		"dashboard": "Dashboard",
 		"overlay": "Overlay",
+		"server": "Server",
 		"history": "History",
 		"about": "About"
+	},
+	"server": {
+		"title": "Self-hosted server",
+		"subtitle": "Create your Discord bot, install the local server, and manage it directly from MemeOver. Technical files stay behind the scenes.",
+		"progress": "Progress",
+		"copy": "Copy",
+		"steps": {
+			"discord": "Create the Discord bot",
+			"configure": "Configure the server",
+			"install": "Install",
+			"run": "Run",
+			"connect": "Connect MemeOver",
+			"share": "Share with friends"
+		},
+		"status": {
+			"title": "Local status",
+			"running": "Running",
+			"portOpen": "Port open",
+			"stopped": "Stopped",
+			"ok": "OK",
+			"missing": "missing",
+			"installed": "Installed",
+			"notInstalled": "Not installed",
+			"configured": "Configured",
+			"notConfigured": "Not configured"
+		},
+		"logs": {
+			"title": "Logs",
+			"empty": "No server logs yet."
+		},
+		"discord": {
+			"title": "Create the Discord bot",
+			"desc": "Follow the Discord portal, then paste the token and Client ID here.",
+			"portal": "Portal",
+			"invite": "Invite bot",
+			"adminInvite": "Administrator invite",
+			"adminInviteHint": "Easier when channel permissions get in the way, but less minimal.",
+			"instructions": "In the Developer Portal: New Application, then Bot > Reset Token, enable Message Content Intent, copy the Application ID from General Information, then invite the bot with the button above. Recommended permissions: View Channels, Send Messages, Read Message History."
+		},
+		"config": {
+			"title": "Local configuration",
+			"desc": "Choose where to install the server and which URL your friends will use.",
+			"networkHint": "For friends outside your local network, open the chosen TCP port in your firewall and in your router NAT/port-forwarding rules to this machine."
+		},
+		"install": {
+			"title": "Install server",
+			"desc": "MemeOver downloads the server source, writes configuration, and installs dependencies.",
+			"bun": "Install Bun",
+			"bunReady": "Bun ready",
+			"install": "Install",
+			"installing": "Installing…",
+			"repair": "Repair",
+			"gitMissing": "Git is required to download MemeOver. Install Git, then run this step again.",
+			"securityNote": "The bot token is saved in plain text in the install folder (bot/.env) — anyone with access to this computer can read it. \"Install Bun\" runs the official installer from bun.com."
+		},
+		"run": {
+			"title": "Manage server",
+			"desc": "Start, stop, or restart the local server from this page.",
+			"start": "Start",
+			"stop": "Stop",
+			"restart": "Restart"
+		},
+		"connect": {
+			"title": "Connect MemeOver",
+			"desc": "Once the server is running, run /memeover setup in Discord and paste the code you receive.",
+			"apply": "Save local connection"
+		},
+		"share": {
+			"title": "Share with friends",
+			"desc": "Once /memeover setup has been applied, send this code to your friends.",
+			"empty": "The friend code will appear here after local connection.",
+			"copy": "Copy code"
+		},
+		"fields": {
+			"clientId": "Discord Client ID",
+			"botToken": "Bot token",
+			"installDir": "Install folder",
+			"port": "Port",
+			"publicWs": "Public WebSocket URL",
+			"setupCode": "/memeover setup code"
+		},
+		"toast": {
+			"bunInstalled": "Bun is installed",
+			"installed": "Server installed and configured",
+			"started": "Server started",
+			"stopped": "Server stopped",
+			"restarted": "Server restarted",
+			"ipDetected": "Public IP detected",
+			"connected": "Local connection saved",
+			"inviteCopied": "Invite link copied",
+			"setupCopied": "Code copied"
+		}
 	},
 	"about": {
 		"preferences": "Preferences",

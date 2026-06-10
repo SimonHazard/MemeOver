@@ -5,6 +5,8 @@ use tauri::{
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
 
+mod server_creator;
+
 // ─── Tray state ───────────────────────────────────────────────────────────────
 
 /// Holds handles to translatable tray menu items so the frontend can
@@ -79,7 +81,15 @@ fn apply_windows_topmost(win: &tauri::WebviewWindow) {
     // Construct the typed HWND from the raw isize value.
     let hwnd = HWND(w32.hwnd.get() as *mut core::ffi::c_void);
     unsafe {
-        let _ = SetWindowPos(hwnd, Some(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        let _ = SetWindowPos(
+            hwnd,
+            Some(HWND_TOPMOST),
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+        );
     }
 }
 
@@ -180,7 +190,8 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
             // Re-apply the native window level before reloading so it is set
             // when the page finishes loading (main-overlay.tsx then calls show()).
             apply_native_overlay_level(&win);
-            win.eval("window.location.reload()").map_err(|e| e.to_string())?;
+            win.eval("window.location.reload()")
+                .map_err(|e| e.to_string())?;
         }
         None => {
             // Safety fallback: window was unexpectedly destroyed — recreate it.
@@ -214,9 +225,13 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
         .ok_or_else(|| "Overlay window not found".to_string())?;
 
     let monitors = app.available_monitors().map_err(|e| e.to_string())?;
-    let monitor = monitors
-        .get(monitor_index)
-        .ok_or_else(|| format!("Monitor index {} out of range (found {})", monitor_index, monitors.len()))?;
+    let monitor = monitors.get(monitor_index).ok_or_else(|| {
+        format!(
+            "Monitor index {} out of range (found {})",
+            monitor_index,
+            monitors.len()
+        )
+    })?;
 
     let pos = *monitor.position();
 
@@ -268,9 +283,11 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
         win.maximize().map_err(|e| e.to_string())?;
         win.set_background_color(Some(tauri::utils::config::Color(0, 0, 0, 0)))
             .map_err(|e| e.to_string())?;
-        win.set_ignore_cursor_events(true).map_err(|e| e.to_string())?;
+        win.set_ignore_cursor_events(true)
+            .map_err(|e| e.to_string())?;
     } else {
-        win.set_ignore_cursor_events(false).map_err(|e| e.to_string())?;
+        win.set_ignore_cursor_events(false)
+            .map_err(|e| e.to_string())?;
         win.set_background_color(None).map_err(|e| e.to_string())?;
         win.unmaximize().map_err(|e| e.to_string())?;
         win.set_always_on_top(false).map_err(|e| e.to_string())?;
@@ -465,6 +482,8 @@ fn setup_settings_close_behavior(app: &tauri::App) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(server_creator::ServerCreatorState::default())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_opener::init())
@@ -488,6 +507,14 @@ pub fn run() {
             update_tray_labels,
             toggle_overlay_preview_mode,
             move_overlay_to_monitor,
+            server_creator::server_creator_status,
+            server_creator::server_creator_install,
+            server_creator::server_creator_install_bun,
+            server_creator::server_creator_start,
+            server_creator::server_creator_stop,
+            server_creator::server_creator_restart,
+            server_creator::server_creator_logs,
+            server_creator::server_creator_public_ip,
         ])
         .setup(|app| {
             create_overlay_window(&app.handle().clone())?;
@@ -510,6 +537,15 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .expect("error while running tauri application")
+        .run(|app_handle, event| {
+            // Kill the managed self-hosted bot process so it does not
+            // outlive the app and keep its port bound.
+            if let tauri::RunEvent::Exit = event {
+                server_creator::shutdown(
+                    &app_handle.state::<server_creator::ServerCreatorState>(),
+                );
+            }
+        })
 }
