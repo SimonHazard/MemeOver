@@ -15,6 +15,9 @@ use tauri::{AppHandle, Manager};
 
 const REPO_URL: &str = "https://github.com/SimonHazard/MemeOver";
 const LOG_LIMIT: usize = 500;
+const INSTALL_METADATA_FILE: &str = ".memeover-server-creator.json";
+const INSTALL_METADATA_MANAGED_BY: &str = "memeover-server-creator";
+const UNMANAGED_INSTALL_ERROR: &str = "Install folder is not managed by MemeOver. Choose an empty folder or reinstall into the default folder.";
 
 /// Cloneable so commands can move an owned handle into `spawn_blocking`;
 /// the `Arc`s keep every clone pointing at the same child + log buffer.
@@ -60,6 +63,13 @@ pub struct ServerInstallResult {
     install_dir: String,
     local_ws_url: String,
     public_ws_url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct InstallMetadata {
+    managed_by: String,
+    repo_url: String,
 }
 
 /// All child processes must go through this constructor: on Windows a
@@ -157,6 +167,45 @@ fn env_path(root: &Path) -> PathBuf {
 
 fn package_json_path(root: &Path) -> PathBuf {
     bot_dir(root).join("package.json")
+}
+
+fn install_metadata_path(root: &Path) -> PathBuf {
+    root.join(INSTALL_METADATA_FILE)
+}
+
+fn expected_install_metadata() -> InstallMetadata {
+    InstallMetadata {
+        managed_by: INSTALL_METADATA_MANAGED_BY.to_string(),
+        repo_url: REPO_URL.to_string(),
+    }
+}
+
+fn write_install_metadata(root: &Path) -> Result<(), String> {
+    fs::create_dir_all(root).map_err(|e| e.to_string())?;
+    let content =
+        serde_json::to_string_pretty(&expected_install_metadata()).map_err(|e| e.to_string())?;
+    fs::write(install_metadata_path(root), format!("{content}\n")).map_err(|e| e.to_string())
+}
+
+fn read_install_metadata(root: &Path) -> Result<InstallMetadata, String> {
+    let content = fs::read_to_string(install_metadata_path(root)).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| e.to_string())
+}
+
+fn is_managed_install(root: &Path) -> bool {
+    read_install_metadata(root)
+        .map(|metadata| metadata == expected_install_metadata())
+        .unwrap_or(false)
+}
+
+fn ensure_managed_install(root: &Path) -> Result<(), String> {
+    if is_managed_install(root) {
+        return Ok(());
+    }
+    if package_json_path(root).exists() {
+        return Err(UNMANAGED_INSTALL_ERROR.to_string());
+    }
+    Err("Server is not installed yet".to_string())
 }
 
 fn command_exists(cmd: &str) -> bool {
@@ -359,11 +408,15 @@ fn install_sync(
 
     let source = source_dir(&root);
     let bot = bot_dir(&root);
+    let has_package_json = package_json_path(&root).exists();
+    if has_package_json {
+        ensure_managed_install(&root)?;
+    }
     let bun = bun_command().ok_or_else(|| "Bun is not installed yet".to_string())?;
 
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
 
-    if !package_json_path(&root).exists() {
+    if !has_package_json {
         if source.exists() {
             return Err(
                 "Install folder already contains a MemeOver folder but no bot package".into(),
@@ -379,6 +432,7 @@ fn install_sync(
             &["clone", "--depth=1", REPO_URL, &clone_dest],
             Some(&root),
         )?;
+        write_install_metadata(&root)?;
     } else if req.repair && source.join(".git").exists() {
         run_logged(state, "git", &["pull", "--ff-only"], Some(&source))?;
     } else {
@@ -507,9 +561,10 @@ fn start_sync(
 
     let root = normalize_install_dir(app, install_dir)?;
     let bot = bot_dir(&root);
-    if !bot.join("package.json").exists() {
+    if !package_json_path(&root).exists() {
         return Err("Server is not installed yet".to_string());
     }
+    ensure_managed_install(&root)?;
     let bun = bun_command().ok_or_else(|| "Bun is not installed yet".to_string())?;
 
     // Run the entry file directly instead of `bun run start`: the start
@@ -702,6 +757,12 @@ mod tests {
         ))
     }
 
+    fn create_synthetic_package_json(root: &Path) {
+        fs::create_dir_all(bot_dir(root)).expect("bot directory should be created");
+        fs::write(package_json_path(root), "{\"name\":\"@memeover/bot\"}\n")
+            .expect("package json should be written");
+    }
+
     #[test]
     fn server_creator_redacts_discord_token_shapes() {
         let fake_token = "aaaaaaaaaaaaaaaaaaaaaaaa.bbbbbb.ccccccccccccccccccccccccccccccc";
@@ -737,6 +798,68 @@ mod tests {
             content,
             "DISCORD_TOKEN=synthetic-token\nDISCORD_CLIENT_ID=123456789012345678\nWS_PORT=3001\nPUBLIC_WS_URL=wss://example.test/ws\n"
         );
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn server_creator_install_metadata_round_trips_expected_marker() {
+        let root = unique_temp_root("metadata-round-trip");
+
+        write_install_metadata(&root).expect("metadata should be written");
+
+        assert_eq!(
+            read_install_metadata(&root).expect("metadata should be readable"),
+            InstallMetadata {
+                managed_by: INSTALL_METADATA_MANAGED_BY.to_string(),
+                repo_url: REPO_URL.to_string(),
+            }
+        );
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn server_creator_rejects_package_without_metadata() {
+        let root = unique_temp_root("metadata-missing");
+        create_synthetic_package_json(&root);
+
+        let error = ensure_managed_install(&root).expect_err("missing metadata should be rejected");
+
+        assert_eq!(error, UNMANAGED_INSTALL_ERROR);
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn server_creator_rejects_wrong_repo_metadata() {
+        let root = unique_temp_root("metadata-wrong-repo");
+        create_synthetic_package_json(&root);
+        let metadata = InstallMetadata {
+            managed_by: INSTALL_METADATA_MANAGED_BY.to_string(),
+            repo_url: "https://example.test/not-memeover".to_string(),
+        };
+        fs::write(
+            install_metadata_path(&root),
+            serde_json::to_string_pretty(&metadata).expect("metadata should serialize"),
+        )
+        .expect("metadata should be written");
+
+        let error =
+            ensure_managed_install(&root).expect_err("wrong repo metadata should be rejected");
+
+        assert_eq!(error, UNMANAGED_INSTALL_ERROR);
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn server_creator_accepts_valid_metadata() {
+        let root = unique_temp_root("metadata-valid");
+        create_synthetic_package_json(&root);
+        write_install_metadata(&root).expect("metadata should be written");
+
+        ensure_managed_install(&root).expect("valid metadata should be accepted");
 
         let _ = fs::remove_dir_all(&root);
     }
