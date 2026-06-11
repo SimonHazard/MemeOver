@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
-	DISCORD_INVITE_PERMISSIONS,
 	createDiscordInviteUrl,
 	createFriendSetupCode,
 	createPublicWsUrl,
+	DISCORD_INVITE_PERMISSIONS,
 	parseServerSetupCode,
 } from "./server-creator";
 
