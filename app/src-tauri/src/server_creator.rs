@@ -685,3 +685,59 @@ pub async fn server_creator_public_ip(
     }
     Err("Could not detect public IP automatically".to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_temp_root(name: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time should be after unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "memeover-server-creator-{name}-{}-{nanos}",
+            std::process::id()
+        ))
+    }
+
+    #[test]
+    fn server_creator_redacts_discord_token_shapes() {
+        let fake_token = "aaaaaaaaaaaaaaaaaaaaaaaa.bbbbbb.ccccccccccccccccccccccccccccccc";
+        let redacted = redact_secrets(&format!("Starting with token {fake_token}"));
+
+        assert!(redacted.contains("[redacted]"));
+        assert!(!redacted.contains(fake_token));
+    }
+
+    #[test]
+    fn server_creator_redacts_token_key_value() {
+        let redacted = redact_secrets("connected token=synthetic-secret ok");
+
+        assert_eq!(redacted, "connected [redacted] ok");
+    }
+
+    #[test]
+    fn server_creator_write_env_creates_bot_env_file() {
+        let root = unique_temp_root("write-env");
+        let req = ServerInstallRequest {
+            install_dir: root.to_string_lossy().to_string(),
+            discord_token: "synthetic-token".to_string(),
+            discord_client_id: "123456789012345678".to_string(),
+            ws_port: 3001,
+            public_ws_url: "wss://example.test/ws".to_string(),
+            repair: false,
+        };
+
+        write_env(&root, &req).expect("env file should be written");
+
+        let content = fs::read_to_string(env_path(&root)).expect("env file should be readable");
+        assert_eq!(
+            content,
+            "DISCORD_TOKEN=synthetic-token\nDISCORD_CLIENT_ID=123456789012345678\nWS_PORT=3001\nPUBLIC_WS_URL=wss://example.test/ws\n"
+        );
+
+        let _ = fs::remove_dir_all(&root);
+    }
+}
