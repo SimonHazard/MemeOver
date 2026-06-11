@@ -25,5 +25,8 @@ Thumbs.db
 # Bot runtime data (guild registry)
 data/
 
+# Local implementation plans
+plans/
+
 # Logs
 *.log
