@@ -3,7 +3,7 @@ import { NB_SHADOW_MD, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import type { FileRoutesByPath } from "@tanstack/react-router";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { History, LayoutDashboard, Monitor, Settings } from "lucide-react";
+import { History, LayoutDashboard, Monitor, Server, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/shared/store";
 
@@ -22,6 +22,7 @@ interface TabDef {
 const TABS: TabDef[] = [
 	{ route: "/", icon: LayoutDashboard, labelKey: "tabs.dashboard" },
 	{ route: "/overlay", icon: Monitor, labelKey: "tabs.overlay" },
+	{ route: "/server", icon: Server, labelKey: "tabs.server" },
 	{ route: "/history", icon: History, labelKey: "tabs.history" },
 	{ route: "/about", icon: Settings, labelKey: "tabs.about" },
 ];
