@@ -52,6 +52,9 @@ DISCORD_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_discord_application_id
 ```
 
+In the Discord Developer Portal, enable `Bot > Privileged Gateway Intents > Message Content Intent`.
+Without this intent, Discord rejects the bot login with `Used disallowed intents`.
+
 Optional variables:
 
 ```env

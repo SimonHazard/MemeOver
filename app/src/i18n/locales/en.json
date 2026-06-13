@@ -254,7 +254,7 @@
 			"invite": "Invite bot",
 			"adminInvite": "Administrator invite",
 			"adminInviteHint": "Easier when channel permissions get in the way, but less minimal.",
-			"instructions": "In the Developer Portal: New Application, then Bot > Reset Token, enable Message Content Intent, copy the Application ID from General Information, then invite the bot with the button above. Recommended permissions: View Channels, Send Messages, Read Message History."
+			"instructions": "In the Developer Portal: create or select the application, then Bot > Reset Token. In Bot > Privileged Gateway Intents, enable Message Content Intent and save changes. Copy the Application ID from General Information, then invite the bot with the button above. Recommended permissions: View Channels, Send Messages, Read Message History."
 		},
 		"config": {
 			"title": "Local configuration",
