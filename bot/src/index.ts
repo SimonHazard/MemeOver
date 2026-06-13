@@ -28,7 +28,8 @@ startBot()
 		await registerCommands();
 	})
 	.catch((err: unknown) => {
-		log.error({ event: "bot_start_failed", err }, "Failed to start Discord bot");
+		const message = err instanceof Error ? err.message : "Failed to start Discord bot";
+		log.error({ event: "bot_start_failed", err }, message);
 		process.exit(1);
 	});
 

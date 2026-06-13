@@ -13,6 +13,7 @@ import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { dispatchReaction } from "./media/reactions";
 import { startGuildCleanupScheduler } from "./utils/cleanup";
 import { config } from "./utils/config";
+import { normalizeBotLoginError } from "./utils/discord-intents";
 import { logger } from "./utils/logger";
 import { attachPresenceClient } from "./utils/presence";
 
@@ -78,5 +79,9 @@ discordClient.on(Events.InteractionCreate, (interaction) => {
 });
 
 export async function startBot(): Promise<void> {
-	await discordClient.login(config.discordToken);
+	try {
+		await discordClient.login(config.discordToken);
+	} catch (err) {
+		throw normalizeBotLoginError(err);
+	}
 }

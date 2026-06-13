@@ -76,6 +76,9 @@ DISCORD_TOKEN=votre_token_bot
 DISCORD_CLIENT_ID=votre_application_id
 ```
 
+Dans le Discord Developer Portal, activez aussi `Bot > Privileged Gateway Intents > Message Content Intent`.
+Sans cet intent, Discord refuse la connexion avec `Used disallowed intents`.
+
 Variables optionnelles :
 
 ```env
@@ -191,6 +194,9 @@ Copy `bot/.env.example` to `.env` at the repository root, then fill in:
 DISCORD_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_application_id
 ```
+
+In the Discord Developer Portal, also enable `Bot > Privileged Gateway Intents > Message Content Intent`.
+Without this intent, Discord rejects the connection with `Used disallowed intents`.
 
 Optional variables:
 

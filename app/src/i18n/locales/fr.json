@@ -254,7 +254,7 @@
 			"invite": "Inviter le bot",
 			"adminInvite": "Invitation administrateur",
 			"adminInviteHint": "Plus simple si les permissions de salon bloquent, mais moins minimal.",
-			"instructions": "Dans le Developer Portal : New Application, puis Bot > Reset Token, activez Message Content Intent, copiez l'Application ID dans General Information, puis invitez le bot avec le bouton ci-dessus. Permissions recommandées : View Channels, Send Messages, Read Message History."
+			"instructions": "Dans le Developer Portal : créez ou sélectionnez l'application, puis Bot > Reset Token. Dans Bot > Privileged Gateway Intents, activez Message Content Intent et sauvegardez. Copiez l'Application ID dans General Information, puis invitez le bot avec le bouton ci-dessus. Permissions recommandées : View Channels, Send Messages, Read Message History."
 		},
 		"config": {
 			"title": "Configuration locale",
