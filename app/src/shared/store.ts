@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import i18n from "@/i18n";
 import { restoreOverlayMonitor } from "./helpers";
+import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
 import type {
 	DisplayQueueItem,
@@ -17,9 +18,6 @@ import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MAX_QUEUE_SIZE = 50;
-/** Hard cap on simultaneously animating reactions. FIFO eviction keeps the scene
- *  responsive during bursts while always admitting the most recent reaction. */
-const MAX_REACTIONS = 30;
 
 const REACTION_PRESET_TIMING: Record<
 	FloatingReactionAnimation,
@@ -140,11 +138,7 @@ export const useAppStore = create<AppStore>((set) => ({
 				direction,
 				rotationDeg: direction * (6 + Math.random() * 12),
 			};
-			const list =
-				state.reactions.length >= MAX_REACTIONS
-					? [...state.reactions.slice(1), reaction]
-					: [...state.reactions, reaction];
-			return { reactions: list };
+			return { reactions: appendReactionWithinBudget(state.reactions, reaction) };
 		}),
 	removeReaction: (id) =>
 		set((state) => ({ reactions: state.reactions.filter((r) => r.id !== id) })),
