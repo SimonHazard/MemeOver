@@ -15,24 +15,18 @@ import { LangToggle } from "@/windows/settings/components/lang-toggle";
 import { ThemeToggle } from "@/windows/settings/components/theme-toggle";
 import { UpdateChecker } from "@/windows/settings/components/update-checker";
 
+const LEGAL_URL = "https://memeover.simonhazard.com/legal/";
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AboutPage() {
-	const { t, i18n } = useTranslation();
+	const { t } = useTranslation();
 
 	const { data: appVersion } = useQuery({
 		queryKey: ["app-version"],
 		queryFn: getVersion,
 		staleTime: Number.POSITIVE_INFINITY,
 	});
-
-	const isFrench = i18n.language.startsWith("fr");
-	const privacyUrl = isFrench
-		? "https://memeover.simonhazard.com/fr/confidentialite"
-		: "https://memeover.simonhazard.com/privacy";
-	const legalUrl = isFrench
-		? "https://memeover.simonhazard.com/fr/mentions-legales"
-		: "https://memeover.simonhazard.com/legal";
 
 	async function handleClearLocalHistory() {
 		try {
@@ -99,11 +93,11 @@ export function AboutPage() {
 								<li>{t("about.privacyHosted")}</li>
 							</ul>
 							<div className="flex flex-wrap gap-2">
-								<NbButton size="sm" variant="outline" onClick={() => openUrl(privacyUrl)}>
+								<NbButton size="sm" variant="outline" onClick={() => openUrl(LEGAL_URL)}>
 									<FileText className="size-3.5" aria-hidden="true" />
 									{t("about.privacyPolicy")}
 								</NbButton>
-								<NbButton size="sm" variant="outline" onClick={() => openUrl(legalUrl)}>
+								<NbButton size="sm" variant="outline" onClick={() => openUrl(LEGAL_URL)}>
 									<Scale className="size-3.5" aria-hidden="true" />
 									{t("about.legalNotice")}
 								</NbButton>
