@@ -3,8 +3,8 @@ import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Progress } from "@memeover/ui/components/ui/progress";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Variants } from "framer-motion";
-import { AnimatePresence, motion } from "framer-motion";
+import type { Transition, Variants } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,20 +24,41 @@ interface OnboardingWizardProps {
 
 const TOTAL_STEPS = 3;
 
-const slideVariants: Variants = {
+const normalSlideVariants: Variants = {
 	enter: (d: number) => ({ x: d * 40, opacity: 0 }),
 	center: { x: 0, opacity: 1 },
 	exit: (d: number) => ({ x: d * -40, opacity: 0 }),
 };
 
-const fieldContainerVariants: Variants = {
+const reducedSlideVariants: Variants = {
+	enter: { opacity: 0 },
+	center: { opacity: 1 },
+	exit: { opacity: 0 },
+};
+
+const normalFieldContainerVariants: Variants = {
 	hidden: {},
 	visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
 };
 
-const fieldVariants: Variants = {
+const reducedFieldContainerVariants: Variants = {
+	hidden: {},
+	visible: {},
+};
+
+const normalFieldVariants: Variants = {
 	hidden: { opacity: 0, y: 8 },
 	visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+};
+
+const reducedFieldVariants: Variants = {
+	hidden: { opacity: 0 },
+	visible: { opacity: 1, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } },
+};
+
+const reducedFadeTransition: Transition = {
+	duration: 0.12,
+	ease: [0.23, 1, 0.32, 1],
 };
 
 // ─── Wizard ───────────────────────────────────────────────────────────────────
@@ -45,6 +66,7 @@ const fieldVariants: Variants = {
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
+	const reduceMotion = useReducedMotion() === true;
 
 	const [step, setStep] = useState(0);
 	const [direction, setDirection] = useState(1);
@@ -118,23 +140,26 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 					<motion.div
 						key={step}
 						custom={direction}
-						variants={slideVariants}
+						variants={reduceMotion ? reducedSlideVariants : normalSlideVariants}
 						initial="enter"
 						animate="center"
 						exit="exit"
-						transition={{ duration: 0.2, ease: "easeOut" }}
+						transition={reduceMotion ? reducedFadeTransition : { duration: 0.2, ease: "easeOut" }}
 					>
-						{step === 0 && <StepWelcome />}
+						{step === 0 && <StepWelcome reduceMotion={reduceMotion} />}
 
 						{step === 1 && (
-							<StepConnection>
+							<StepConnection reduceMotion={reduceMotion}>
 								<ConnectionCredentialsFields
 									form={form}
 									defaultWsUrl={DEFAULT_SETTINGS.wsUrl}
 									inputClassName="border-2 border-foreground/40 focus:border-foreground focus-visible:ring-2"
 									forceWsUrlVisible
 									renderFieldShell={(children) => (
-										<motion.div className="flex flex-col gap-2" variants={fieldVariants}>
+										<motion.div
+											className="flex flex-col gap-2"
+											variants={reduceMotion ? reducedFieldVariants : normalFieldVariants}
+										>
 											{children}
 										</motion.div>
 									)}
@@ -142,7 +167,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 							</StepConnection>
 						)}
 
-						{step === 2 && <StepDone />}
+						{step === 2 && <StepDone reduceMotion={reduceMotion} />}
 					</motion.div>
 				</AnimatePresence>
 
@@ -189,33 +214,39 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
 // ── StepWelcome ───────────────────────────────────────────────────────────────
 
-function StepWelcome() {
+function StepWelcome({ reduceMotion }: { reduceMotion: boolean }) {
 	const { t } = useTranslation();
 	return (
 		<NbCard>
 			<div className="space-y-3">
 				<motion.div
-					initial={{ rotate: -12, scale: 0 }}
-					animate={{ rotate: 0, scale: 1 }}
-					transition={{ type: "spring", stiffness: 400, damping: 20 }}
+					initial={reduceMotion ? { opacity: 0 } : { opacity: 0, rotate: -12, scale: 0.72 }}
+					animate={reduceMotion ? { opacity: 1 } : { opacity: 1, rotate: 0, scale: 1 }}
+					exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+					transition={
+						reduceMotion ? reducedFadeTransition : { type: "spring", duration: 0.3, bounce: 0.18 }
+					}
 					className="inline-block"
 				>
 					<Sparkles className="h-12 w-12 text-primary" aria-hidden="true" />
 				</motion.div>
 
 				<motion.h1
-					initial={{ opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ duration: 0.25, ease: "easeOut" }}
+					initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -10 }}
+					animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+					transition={reduceMotion ? reducedFadeTransition : { duration: 0.25, ease: "easeOut" }}
 					className="font-display text-2xl tracking-wide"
 				>
 					{t("onboarding.step1_title")}
 				</motion.h1>
 
 				<motion.div
-					initial={{ scaleX: 0 }}
-					animate={{ scaleX: 1 }}
-					transition={{ duration: 0.25, ease: "easeOut", delay: 0.05 }}
+					initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scaleX: 0.75 }}
+					animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scaleX: 1 }}
+					exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scaleX: 0.8 }}
+					transition={
+						reduceMotion ? reducedFadeTransition : { duration: 0.25, ease: "easeOut", delay: 0.05 }
+					}
 					style={{ originX: 0 }}
 					className="bg-primary h-1.5 w-12 border border-foreground"
 				/>
@@ -223,7 +254,9 @@ function StepWelcome() {
 				<motion.p
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
-					transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
+					transition={
+						reduceMotion ? reducedFadeTransition : { duration: 0.25, ease: "easeOut", delay: 0.1 }
+					}
 					className="text-muted-foreground"
 				>
 					{t("onboarding.step1_desc")}
@@ -235,7 +268,13 @@ function StepWelcome() {
 
 // ── StepConnection ────────────────────────────────────────────────────────────
 
-function StepConnection({ children }: { children: React.ReactNode }) {
+function StepConnection({
+	children,
+	reduceMotion,
+}: {
+	children: React.ReactNode;
+	reduceMotion: boolean;
+}) {
 	const { t } = useTranslation();
 	return (
 		<NbCard>
@@ -246,7 +285,7 @@ function StepConnection({ children }: { children: React.ReactNode }) {
 				</div>
 				<motion.div
 					className="space-y-4"
-					variants={fieldContainerVariants}
+					variants={reduceMotion ? reducedFieldContainerVariants : normalFieldContainerVariants}
 					initial="hidden"
 					animate="visible"
 				>
@@ -265,16 +304,21 @@ const sparklePositions: { style: React.CSSProperties; delay: number }[] = [
 	{ style: { position: "absolute", top: "0px", left: "-8px" }, delay: 0.35 },
 ];
 
-function StepDone() {
+function StepDone({ reduceMotion }: { reduceMotion: boolean }) {
 	const { t } = useTranslation();
 	return (
 		<NbCard>
 			<div className="text-center space-y-3">
 				<div className="relative inline-block mx-auto">
 					<motion.div
-						initial={{ scale: 0 }}
-						animate={{ scale: [0, 1.1, 1] }}
-						transition={{ type: "spring", stiffness: 500, damping: 20 }}
+						initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.72 }}
+						animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+						exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+						transition={
+							reduceMotion
+								? reducedFadeTransition
+								: { type: "spring", duration: 0.36, bounce: 0.22 }
+						}
 					>
 						<CheckCircle className="h-12 w-12 text-primary" aria-hidden="true" />
 					</motion.div>
@@ -284,9 +328,10 @@ function StepDone() {
 							<motion.div
 								key={key}
 								style={style}
-								initial={{ opacity: 0, scale: 0 }}
-								animate={{ opacity: 1, scale: 1 }}
-								transition={{ delay, duration: 0.2 }}
+								initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.7 }}
+								animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+								exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+								transition={reduceMotion ? reducedFadeTransition : { delay, duration: 0.2 }}
 							>
 								<Sparkles className="h-3 w-3 text-primary" />
 							</motion.div>
@@ -295,9 +340,11 @@ function StepDone() {
 				</div>
 
 				<motion.h2
-					initial={{ opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
+					initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -10 }}
+					animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+					transition={
+						reduceMotion ? reducedFadeTransition : { duration: 0.25, ease: "easeOut", delay: 0.1 }
+					}
 					className="text-xl font-display tracking-wide"
 				>
 					{t("onboarding.step3_title")}
