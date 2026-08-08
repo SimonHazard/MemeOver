@@ -38,6 +38,8 @@ const SWATCH_LABELS: Record<SwatchColor, string> = {
 	"#FFFFFF": "Blanc",
 };
 
+const ICON_TRANSITION = { type: "spring", duration: 0.18, bounce: 0.1 } as const;
+
 function getContrastColor(hex: string): string {
 	const r = parseInt(hex.slice(1, 3), 16);
 	const g = parseInt(hex.slice(3, 5), 16);
@@ -48,8 +50,8 @@ function getContrastColor(hex: string): string {
 
 // Shared Neo-brutalist swatch button classes
 const swatchBase =
-	"relative rounded-sm border-2 border-foreground transition-all duration-150 hover:scale-110 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:scale-95 active:shadow-none";
-const swatchSelected = "shadow-[2px_2px_0px_0px_var(--nb-shadow)] scale-105";
+	"relative rounded-sm border-2 border-foreground transition-[transform,box-shadow,border-color] duration-150 hover:scale-110 hover:shadow-[2px_2px_0px_0px_var(--nb-shadow)] active:scale-95 active:shadow-none";
+const swatchSelected = "shadow-[2px_2px_0px_0px_var(--nb-shadow)] scale-105 hover:scale-110";
 
 export interface ColorPickerProps {
 	value: string;
@@ -82,10 +84,10 @@ export function ColorPicker({ value, onChange, onReset }: ColorPickerProps) {
 										{isSelected && (
 											<motion.span
 												className="absolute inset-0 flex items-center justify-center"
-												initial={{ scale: 0 }}
-												animate={{ scale: 1 }}
-												exit={{ scale: 0 }}
-												transition={{ type: "spring", stiffness: 400, damping: 20 }}
+												initial={{ scale: 0.8, opacity: 0 }}
+												animate={{ scale: 1, opacity: 1 }}
+												exit={{ scale: 0.8, opacity: 0 }}
+												transition={ICON_TRANSITION}
 											>
 												<Check
 													className="size-3.5"
@@ -121,10 +123,10 @@ export function ColorPicker({ value, onChange, onReset }: ColorPickerProps) {
 									<motion.span
 										key="check"
 										className="absolute inset-0 flex items-center justify-center"
-										initial={{ scale: 0 }}
-										animate={{ scale: 1 }}
-										exit={{ scale: 0 }}
-										transition={{ type: "spring", stiffness: 400, damping: 20 }}
+										initial={{ scale: 0.8, opacity: 0 }}
+										animate={{ scale: 1, opacity: 1 }}
+										exit={{ scale: 0.8, opacity: 0 }}
+										transition={ICON_TRANSITION}
 									>
 										<Check
 											className="size-3.5"
@@ -135,10 +137,10 @@ export function ColorPicker({ value, onChange, onReset }: ColorPickerProps) {
 								) : (
 									<motion.span
 										key="palette"
-										initial={{ scale: 0 }}
-										animate={{ scale: 1 }}
-										exit={{ scale: 0 }}
-										transition={{ type: "spring", stiffness: 400, damping: 20 }}
+										initial={{ scale: 0.8, opacity: 0 }}
+										animate={{ scale: 1, opacity: 1 }}
+										exit={{ scale: 0.8, opacity: 0 }}
+										transition={ICON_TRANSITION}
 									>
 										<Palette className="size-3.5" />
 									</motion.span>
