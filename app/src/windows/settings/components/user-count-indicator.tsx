@@ -1,4 +1,4 @@
-import { NB_HOVER_SHADOW_LG, NB_SHADOW_MD } from "@memeover/ui/lib/nb-classes";
+import { NB_SHADOW_MD } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users } from "lucide-react";
@@ -37,10 +37,6 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 				// Neo-brutalist borders & shadow
 				"border-2 border-foreground",
 				NB_SHADOW_MD,
-				// Hover micro-interaction — badge lifts and shadow extends
-				"transition-all duration-100 ease-out",
-				"hover:-translate-x-px hover:-translate-y-px",
-				NB_HOVER_SHADOW_LG,
 				// State-driven background
 				liveState === "active" && "bg-emerald-400 text-black",
 				liveState === "alone" && "bg-amber-300 text-black",
@@ -49,12 +45,6 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 		>
 			{/* ── Live dot ── */}
 			<span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-				{liveState === "active" && (
-					<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-700 opacity-60" />
-				)}
-				{liveState === "alone" && (
-					<span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-amber-600 opacity-60" />
-				)}
 				<span
 					className={cn(
 						"relative inline-flex h-2 w-2 rounded-full",
