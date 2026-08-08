@@ -327,7 +327,7 @@
 	},
 	"settings": {
 		"autostart": "Launch at startup",
-		"autostart_hint": "Automatically launch MemeOver when the system starts."
+		"autostart_hint": "Automatically launch MemeOver in the system tray when you sign in."
 	},
 	"history": {
 		"title": "History",

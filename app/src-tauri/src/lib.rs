@@ -4,8 +4,12 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
+#[cfg(not(debug_assertions))]
+use tauri_plugin_autostart::ManagerExt as _;
 
 mod server_creator;
+
+const AUTOSTART_ARG: &str = "--autostart";
 
 // ─── Tray state ───────────────────────────────────────────────────────────────
 
@@ -14,6 +18,10 @@ mod server_creator;
 struct TrayState {
     show_item: Mutex<MenuItem<tauri::Wry>>,
     quit_item: Mutex<MenuItem<tauri::Wry>>,
+}
+
+fn launched_from_autostart() -> bool {
+    std::env::args_os().skip(1).any(|arg| arg == AUTOSTART_ARG)
 }
 
 // ─── Native overlay level (macOS) ─────────────────────────────────────────────
@@ -401,6 +409,16 @@ fn setup_overlay_close_notification(app: &tauri::App) {
 
 // ─── Tray icon ────────────────────────────────────────────────────────────────
 
+fn show_settings_window(app: &tauri::AppHandle) {
+    #[cfg(target_os = "macos")]
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
+
+    if let Some(win) = app.get_webview_window("settings") {
+        let _ = win.show();
+        let _ = win.set_focus();
+    }
+}
+
 fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     let show_i = MenuItem::with_id(app, "show", "Show MemeOver", true, None::<&str>)?;
     let hide_i = MenuItem::with_id(app, "hide", "Hide MemeOver", true, None::<&str>)?;
@@ -437,18 +455,14 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
                     if win.is_visible().unwrap_or(false) {
                         let _ = win.hide();
                     } else {
-                        let _ = win.show();
-                        let _ = win.set_focus();
+                        show_settings_window(app);
                     }
                 }
             }
         })
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => {
-                if let Some(w) = app.get_webview_window("settings") {
-                    let _ = w.show();
-                    let _ = w.set_focus();
-                }
+                show_settings_window(app);
             }
             "hide" => {
                 if let Some(w) = app.get_webview_window("settings") {
@@ -490,14 +504,11 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // Focus the settings window of the already-running instance
-            if let Some(win) = app.get_webview_window("settings") {
-                let _ = win.show();
-                let _ = win.set_focus();
-            }
+            show_settings_window(app);
         }))
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
+            Some(vec![AUTOSTART_ARG]),
         ))
         .invoke_handler(tauri::generate_handler![
             set_overlay_click_through,
@@ -517,6 +528,18 @@ pub fn run() {
             server_creator::server_creator_public_ip,
         ])
         .setup(|app| {
+            let background_start = launched_from_autostart();
+
+            #[cfg(not(debug_assertions))]
+            {
+                // Re-register existing entries so installs that enabled autostart
+                // before the background flag was introduced receive it as well.
+                let autolaunch = app.autolaunch();
+                if autolaunch.is_enabled().unwrap_or(false) {
+                    let _ = autolaunch.enable();
+                }
+            }
+
             create_overlay_window(&app.handle().clone())?;
 
             // Apply the native window level immediately after creation (prod only).
@@ -530,6 +553,13 @@ pub fn run() {
             setup_overlay_close_notification(app);
             setup_tray(app)?;
             setup_settings_close_behavior(app);
+
+            if background_start {
+                #[cfg(target_os = "macos")]
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            } else {
+                show_settings_window(app.handle());
+            }
 
             // Start the background watcher that reasserts the window level every 2 s.
             #[cfg(not(debug_assertions))]

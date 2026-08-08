@@ -327,7 +327,7 @@
 	},
 	"settings": {
 		"autostart": "Lancer au démarrage",
-		"autostart_hint": "Lance MemeOver automatiquement au démarrage du système."
+		"autostart_hint": "Lance MemeOver dans la zone de notification à l’ouverture de session."
 	},
 	"history": {
 		"title": "Historique",
