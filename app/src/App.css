@@ -54,3 +54,42 @@
 [data-window="overlay"] img {
 	background: transparent !important;
 }
+
+/* ─── Overlay audio equalizer ─────────────────────────────────────────────── */
+
+.overlay-audio-equalizer-bar {
+	transform-origin: bottom;
+	animation-name: overlay-equalizer-pulse;
+	animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+}
+
+@keyframes overlay-equalizer-pulse {
+	from {
+		transform: scaleY(0.25);
+	}
+	to {
+		transform: scaleY(1);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.overlay-audio-equalizer-bar {
+		animation: none;
+	}
+
+	.overlay-audio-equalizer-bar:nth-child(1),
+	.overlay-audio-equalizer-bar:nth-child(5) {
+		transform: scaleY(0.4);
+	}
+
+	.overlay-audio-equalizer-bar:nth-child(2),
+	.overlay-audio-equalizer-bar:nth-child(4) {
+		transform: scaleY(0.7);
+	}
+
+	.overlay-audio-equalizer-bar:nth-child(3) {
+		transform: scaleY(1);
+	}
+}

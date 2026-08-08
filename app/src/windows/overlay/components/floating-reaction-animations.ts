@@ -62,13 +62,13 @@ export function buildReactionKeyframes(
 	if (reduceMotion) {
 		const times = [0, fadeIn, fadeOut, 1];
 		return {
-			initial: { y: "0vh", opacity: 0, scale: 0.85 },
+			initial: { x: "0vw", y: "0vh", opacity: 0, rotate: 0, scale: 0.97 },
 			animate: {
 				x: ["0vw", "0vw", "0vw", "0vw"],
-				y: ["0vh", "-8vh", "-10vh", "-10vh"],
+				y: ["0vh", "0vh", "0vh", "0vh"],
 				opacity: [0, maxOpacity, maxOpacity, 0],
 				rotate: [0, 0, 0, 0],
-				scale: [0.85, 1, 1, 0.95],
+				scale: [0.97, 1, 1, 0.97],
 			},
 			transition: { duration, ease: "easeOut", times },
 		};
