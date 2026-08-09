@@ -164,6 +164,7 @@ export const fr: Translations = {
 			"MemeOver est open source sous licence MIT. Tu peux l'inspecter, l'auto-héberger, signaler des problèmes et aider à choisir la suite.",
 		viewOnGithub: "Voir sur GitHub",
 		reportBug: "Signaler un bug",
+		supportOnKofi: "Soutenir sur Ko-fi",
 		contribute:
 			"Fork le repo, ouvre une PR — chaque contribution compte. Jette un œil aux issues pour des idées !",
 	},
