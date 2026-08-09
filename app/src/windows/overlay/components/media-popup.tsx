@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { DisplayQueueItem, OverlayPosition, Settings } from "@/shared/types";
 import { MediaDisplay } from "./media-display";
 
@@ -39,22 +39,26 @@ export function MediaPopup({
 	startTimer,
 	onMediaError,
 }: MediaPopupProps) {
+	const reduceMotion = useReducedMotion();
+
 	return (
 		<AnimatePresence mode="wait" onExitComplete={onExitComplete}>
 			{isVisible && current && (
 				<motion.div
 					key={current.queueId}
 					className={`fixed flex items-center justify-center ${POSITION_CLASSES[settings.position]}`}
-					initial={{ scale: 0.3, opacity: 0 }}
+					initial={{ scale: reduceMotion ? 1 : 0.3, opacity: 0 }}
 					animate={{
 						scale: 1,
 						opacity: 1,
-						transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+						transition: reduceMotion
+							? { duration: 0.12, ease: [0.23, 1, 0.32, 1] }
+							: { type: "spring", duration: 0.28, bounce: 0.2 },
 					}}
 					exit={{
-						scale: 0.85,
+						scale: reduceMotion ? 1 : 0.96,
 						opacity: 0,
-						transition: { duration: 0.18, ease: "easeIn" },
+						transition: { duration: reduceMotion ? 0.12 : 0.13, ease: [0.23, 1, 0.32, 1] },
 					}}
 				>
 					{/* Inner wrapper applies the user offset without fighting the anchor's

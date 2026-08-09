@@ -1,5 +1,5 @@
 ---
-import { Bug, GitFork } from "lucide-react";
+import { Bug, Coffee, GitFork } from "lucide-react";
 import type { Locale } from "@/i18n";
 import { getTranslations } from "@/i18n";
 
@@ -41,6 +41,15 @@ const dict = getTranslations(lang);
 			>
 				<Bug className="size-5" aria-hidden="true" />
 				{dict.openSource.reportBug}
+			</a>
+			<a
+				href="https://ko-fi.com/simonhazard"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:bg-primary-500 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+			>
+				<Coffee className="size-5" aria-hidden="true" />
+				{dict.openSource.supportOnKofi}
 			</a>
 		</div>
 	</div>

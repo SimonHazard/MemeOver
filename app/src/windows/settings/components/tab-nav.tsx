@@ -51,7 +51,7 @@ export function TabNav() {
 							size="sm"
 							onClick={() => navigate({ to: tab.route })}
 							className={cn(
-								"relative h-8 gap-1.5 rounded-lg text-sm font-display tracking-wide border-2 transition-all cursor-pointer",
+								"relative h-8 gap-1.5 rounded-lg text-sm font-display tracking-wide border-2 transition-[color,background-color,border-color,transform,box-shadow] duration-150 cursor-pointer",
 								isActive
 									? `bg-primary-400 text-primary-foreground border-foreground ${NB_SHADOW_SM} hover:bg-primary-400 hover:text-primary-foreground dark:hover:bg-primary-400 -translate-x-px -translate-y-px`
 									: "bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:bg-accent",
@@ -61,7 +61,10 @@ export function TabNav() {
 							<span>{t(tab.labelKey)}</span>
 							{showUpdateDot && (
 								<span className="pointer-events-none absolute -top-1 -right-1 flex size-2.5">
-									<span className="absolute inline-flex h-full w-full rounded-full bg-secondary-500 opacity-75 animate-ping" />
+									<span
+										className="absolute inline-flex h-full w-full rounded-full bg-secondary-500 opacity-75 animate-ping"
+										style={{ animationIterationCount: 2 }}
+									/>
 									<span className="relative inline-flex size-2.5 rounded-full bg-secondary-500 border border-foreground" />
 								</span>
 							)}

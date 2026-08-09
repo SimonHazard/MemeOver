@@ -24,7 +24,7 @@ export const NB_BTN_BASE = [
 	"border-2 border-foreground",
 	NB_SHADOW_SM,
 	"active:shadow-none active:translate-x-0.5 active:translate-y-0.5",
-	"transition-all font-display tracking-wide",
+	"transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 font-display tracking-wide",
 ].join(" ");
 
 /** Small button — NB_BTN_BASE + text-xs */
@@ -35,7 +35,7 @@ export const NB_BTN_LG = [
 	"border-2 border-foreground",
 	NB_SHADOW_MD,
 	"active:shadow-none active:translate-x-0.75 active:translate-y-0.75",
-	"transition-all font-display tracking-wide",
+	"transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 font-display tracking-wide",
 ].join(" ");
 
 /** Disabled state — combine with any NB_BTN_* */
@@ -53,7 +53,7 @@ export const NB_TOGGLE_ITEM = [
 	// Full static string — never `data-[state=on]:${NB_SHADOW_SM}` (breaks Tailwind scanner)
 	"data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 	"hover:bg-primary-400/15 hover:border-foreground/60",
-	"transition-all font-display text-xs tracking-wide",
+	"transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 font-display text-xs tracking-wide",
 ].join(" ");
 
 /** Toggle — similar to ToggleGroupItem but with hover states */
@@ -64,7 +64,7 @@ export const NB_TOGGLE = [
 	// Full static string — never `data-[state=on]:${NB_SHADOW_SM}` (breaks Tailwind scanner)
 	"data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 	"hover:bg-primary-400/15 hover:border-foreground/60",
-	"transition-all",
+	"transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150",
 ].join(" ");
 
 // ─── Card classes ────────────────────────────────────────────────────────────

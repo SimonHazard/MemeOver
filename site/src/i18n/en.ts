@@ -159,6 +159,7 @@ export const en = {
 			"MemeOver is open source under the MIT license. You can inspect it, host it yourself, report issues and shape what comes next.",
 		viewOnGithub: "View on GitHub",
 		reportBug: "Report a bug",
+		supportOnKofi: "Support on Ko-fi",
 		contribute:
 			"Fork the repo, open a PR — every contribution matters. Check out the issues for ideas!",
 	},

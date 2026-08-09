@@ -59,18 +59,13 @@ function VersionChip({
 	label,
 	version,
 	highlight = false,
-	delay = 0,
 }: {
 	label: string;
 	version: string;
 	highlight?: boolean;
-	delay?: number;
 }) {
 	return (
-		<motion.div
-			initial={{ opacity: 0, y: 6 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay, duration: 0.25, ease: "easeOut" }}
+		<div
 			className={cn(
 				"flex-1 border-2 border-foreground p-3 text-center",
 				highlight && `bg-primary/5 ${NB_SHADOW_SM}`,
@@ -82,7 +77,7 @@ function VersionChip({
 			<p className={cn("font-display text-xl tracking-wide", highlight && "text-primary")}>
 				v{version}
 			</p>
-		</motion.div>
+		</div>
 	);
 }
 
@@ -115,25 +110,16 @@ function UpdateDialogContent({
 
 			{/* Version comparison */}
 			<div className="flex items-center gap-3">
-				<VersionChip label={t("updater.currentLabel")} version={meta.currentVersion} delay={0} />
-				<motion.div
-					initial={{ opacity: 0, x: -6 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ delay: 0.1, duration: 0.2 }}
-				>
+				<VersionChip label={t("updater.currentLabel")} version={meta.currentVersion} />
+				<div>
 					<ArrowRight className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
-				</motion.div>
-				<VersionChip label={t("updater.newLabel")} version={meta.version} highlight delay={0.08} />
+				</div>
+				<VersionChip label={t("updater.newLabel")} version={meta.version} highlight />
 			</div>
 
 			{/* Changelog */}
 			{meta.body && (
-				<motion.div
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					transition={{ delay: 0.15, duration: 0.3 }}
-					className="space-y-2"
-				>
+				<div className="space-y-2">
 					<p className="text-xs uppercase tracking-widest text-muted-foreground font-display">
 						{t("updater.changelog")}
 					</p>
@@ -142,7 +128,7 @@ function UpdateDialogContent({
 							<Markdown components={markdownComponents}>{meta.body}</Markdown>
 						</ScrollArea>
 					</div>
-				</motion.div>
+				</div>
 			)}
 
 			{/* Download progress */}
