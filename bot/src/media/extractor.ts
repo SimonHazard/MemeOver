@@ -63,8 +63,12 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 	// 2. Embeds (Tenor, Giphy, direct image embeds)
 	for (const embed of message.embeds) {
 		if (embed.video?.url) {
-			if (!isCdnUrlExpired(embed.video.url))
-				results.push({ url: embed.video.url, media_type: "video" });
+			if (!isCdnUrlExpired(embed.video.url)) {
+				// Discord exposes animated GIF embeds as `gifv`: the transport is
+				// generally MP4/WebM, but the user-facing media type is still GIF.
+				const media_type: MediaType = embed.data.type === "gifv" ? "gif" : "video";
+				results.push({ url: embed.video.url, media_type });
+			}
 		} else if (embed.image?.url) {
 			if (!isCdnUrlExpired(embed.image.url)) {
 				const mt = detectMediaType(embed.image.url) ?? "image";

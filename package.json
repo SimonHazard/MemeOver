@@ -18,29 +18,37 @@
     "typecheck:app": "bun run --cwd app typecheck",
     "typecheck:shared": "bun run --cwd shared typecheck",
     "typecheck:ui": "bun run --cwd packages/ui typecheck",
-    "test": "bun test ./shared/src/setup-code.test.ts ./app/src/shared/settings.test.ts ./app/src/shared/reaction-budget.test.ts ./app/src/shared/server-creator.test.ts ./app/src/windows/overlay/components/floating-reaction-animations.test.ts ./bot/src/commands/connection.test.ts ./bot/src/media/source.test.ts ./bot/src/media/dispatch.test.ts ./bot/src/utils/discord-intents.test.ts ./bot/src/utils/registry-state.test.ts"
+    "test": "bun test ./shared/src/setup-code.test.ts ./app/src/shared/settings.test.ts ./app/src/shared/reaction-budget.test.ts ./app/src/shared/server-creator.test.ts ./app/src/windows/overlay/components/floating-reaction-animations.test.ts ./app/src/windows/overlay/components/media-display.test.ts ./bot/src/commands/connection.test.ts ./bot/src/media/extractor.test.ts ./bot/src/media/source.test.ts ./bot/src/media/dispatch.test.ts ./bot/src/utils/discord-intents.test.ts ./bot/src/utils/registry-state.test.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.16",
-    "shadcn": "^4.8.3"
+    "@biomejs/biome": "^2.5.13",
+    "shadcn": "^4.21.0"
   },
   "overrides": {
-    "@discordjs/rest": "2.6.1",
-    "@hono/node-server": "1.19.14",
-    "@modelcontextprotocol/sdk": "1.29.0",
-    "brace-expansion": "5.0.6",
+    "@babel/core": "7.29.7",
+    "@discordjs/rest": "2.6.3",
+    "@hono/node-server": "1.19.17",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "baseline-browser-mapping": "2.11.24",
+    "body-parser": "2.3.0",
+    "brace-expansion": "5.0.12",
     "devalue": "5.8.1",
-    "express-rate-limit": "8.5.2",
-    "fast-uri": "3.1.2",
-    "hono": "4.12.23",
-    "ip-address": "10.2.0",
+    "esbuild": "0.28.2",
+    "express-rate-limit": "8.7.0",
+    "fast-uri": "3.1.8",
+    "hono": "4.13.8",
+    "ip-address": "10.7.2",
+    "js-yaml": "4.3.2",
     "lodash": "4.18.1",
     "minimatch": "10.2.5",
     "path-to-regexp": "8.4.2",
     "picomatch": "4.0.4",
-    "postcss": "8.5.15",
-    "qs": "6.15.2",
-    "smol-toml": "1.6.1",
+    "postcss": "8.5.28",
+    "postcss-selector-parser": "7.1.6",
+    "qs": "6.16.0",
+    "smol-toml": "1.8.0",
+    "svgo": "4.1.0",
+    "browserslist": "4.29.0",
     "ws": "8.21.0"
   }
 }
