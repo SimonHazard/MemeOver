@@ -10,6 +10,12 @@ const OVERLAY_CAPTION_SHADOW =
 	"-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000";
 // Stickers use fit-box too but capped smaller — Discord sticker assets lose fidelity past ~25vmin.
 const STICKER_MAX_VMIN = 25;
+const VIDEO_URL_PATTERN = /\.(mp4|webm|mov)(?:\?.*)?$/i;
+
+/** Discord `gifv` embeds are GIFs backed by a video transport. */
+export function isVideoBackedGif(mediaType: string, url: string): boolean {
+	return mediaType === "gif" && VIDEO_URL_PATTERN.test(url);
+}
 
 function hexToRgba(hex: string, opacity: number): string {
 	const r = parseInt(hex.slice(1, 3), 16);
@@ -166,18 +172,21 @@ export function MediaDisplay({
 	const useInlineCaption = hasCaption && !useOverlay;
 
 	const mediaNode = (() => {
-		if (item.media_type === "video") {
+		const videoBackedGif = isVideoBackedGif(item.media_type, item.media_url);
+		if (item.media_type === "video" || videoBackedGif) {
 			return (
 				<video
 					src={item.media_url}
 					autoPlay
-					loop={false}
-					muted={settings.volume === 0}
+					loop={videoBackedGif}
+					muted={videoBackedGif || settings.volume === 0}
 					onLoadedMetadata={(e) => {
-						(e.currentTarget as HTMLVideoElement).volume = settings.volume / 100;
+						(e.currentTarget as HTMLVideoElement).volume = videoBackedGif
+							? 0
+							: settings.volume / 100;
 					}}
 					onPlay={startTimer}
-					onEnded={onVideoEnd}
+					onEnded={videoBackedGif ? undefined : onVideoEnd}
 					onError={onMediaError}
 					style={{ ...fitBoxStyle, background: "transparent", opacity }}
 					className="rounded-xl block transition-opacity duration-300"

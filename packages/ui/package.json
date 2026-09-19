@@ -1,7 +1,7 @@
 {
 	"name": "@memeover/ui",
 	"private": true,
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"type": "module",
 	"exports": {
 		"./components/ui/*": {
@@ -25,18 +25,18 @@
 	"dependencies": {
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"lucide-react": "^1.17.0",
-		"radix-ui": "^1.4.3",
-		"sonner": "^2.0.7",
-		"tailwind-merge": "^3.6.0"
+		"lucide-react": "^1.39.0",
+		"radix-ui": "^1.5.0",
+		"sonner": "^2.0.8",
+		"tailwind-merge": "^3.7.0"
 	},
 	"peerDependencies": {
-		"react": "^19.2.6",
-		"react-dom": "^19.2.6"
+		"react": "^19.2.8",
+		"react-dom": "^19.2.8"
 	},
 	"devDependencies": {
-		"@types/react": "^19.2.15",
-		"@types/react-dom": "^19.2.3",
+		"@types/react": "^19.2.18",
+		"@types/react-dom": "^19.2.5",
 		"tsup": "^8.5.1",
 		"typescript": "~6.0.3"
 	}

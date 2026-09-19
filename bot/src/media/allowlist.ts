@@ -14,6 +14,12 @@ export const ALLOWED_MEDIA_HOSTS: ReadonlySet<string> = new Set([
 	"media2.giphy.com",
 	"media3.giphy.com",
 	"media4.giphy.com",
+	"i.giphy.com",
+	// KLIPY — current GIF delivery domains
+	"klipy.com",
+	"static.klipy.com",
+	"static1.klipy.com",
+	"static2.klipy.com",
 	"i.imgur.com",
 ]);
 
