@@ -82,19 +82,31 @@ export function UnsavedChangesDialog({ isPending }: { isPending: boolean }) {
 								<DialogTitle>{t("unsavedChanges.title")}</DialogTitle>
 								<DialogDescription>{t("unsavedChanges.description")}</DialogDescription>
 							</DialogHeader>
-							<DialogFooter>
-								<NbButton type="button" variant="outline" disabled={busy} onClick={stay}>
+							<DialogFooter className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+								<NbButton
+									type="button"
+									variant="outline"
+									className="h-auto min-h-9 min-w-0 w-full whitespace-normal"
+									disabled={busy}
+									onClick={stay}
+								>
 									{t("unsavedChanges.stay")}
 								</NbButton>
 								<NbButton
 									type="button"
 									variant="outline"
+									className="h-auto min-h-9 min-w-0 w-full whitespace-normal"
 									disabled={busy}
 									onClick={() => void leave(true)}
 								>
 									{t("unsavedChanges.discard")}
 								</NbButton>
-								<NbButton type="button" disabled={busy} onClick={() => void saveAndLeave()}>
+								<NbButton
+									type="button"
+									className="h-auto min-h-9 min-w-0 w-full whitespace-normal sm:col-span-2"
+									disabled={busy}
+									onClick={() => void saveAndLeave()}
+								>
 									{busy ? t("display.saving") : t("unsavedChanges.saveAndLeave")}
 								</NbButton>
 							</DialogFooter>
