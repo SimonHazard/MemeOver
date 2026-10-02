@@ -1,8 +1,10 @@
+import { EASE_OUT } from "@memeover/ui/lib/motion";
 import { NB_SHADOW_MD } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 import { useAppStore } from "@/shared/store";
 import type { WsStatus } from "@/shared/types";
 
@@ -58,23 +60,14 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 			{/* ── Icon ── */}
 			<Users className="h-3 w-3 shrink-0 opacity-60" aria-hidden="true" />
 
-			{/* ── Count (springs on every change) ── */}
-			<AnimatePresence mode="popLayout" initial={false}>
-				{liveState === "active" && (
-					<motion.span
-						key={memberCount}
-						initial={{ scale: 1.5, opacity: 0 }}
-						animate={{ scale: 1, opacity: 1 }}
-						exit={{ scale: 0.5, opacity: 0 }}
-						transition={{ type: "spring", stiffness: 600, damping: 28 }}
-						className="font-display text-sm font-bold tabular-nums leading-none tracking-wide"
-						aria-hidden="true"
-					>
-						{memberCount}
-					</motion.span>
-				)}
-			</AnimatePresence>
-
+			{liveState === "active" && (
+				<span
+					className="font-display text-sm font-bold tabular-nums leading-none tracking-wide"
+					aria-hidden="true"
+				>
+					<AnimatedNumber value={memberCount} />
+				</span>
+			)}
 			{/* ── Label (slides on state change) ── */}
 			<AnimatePresence mode="popLayout" initial={false}>
 				<motion.span
@@ -82,7 +75,7 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 					initial={{ opacity: 0, x: 6 }}
 					animate={{ opacity: 1, x: 0 }}
 					exit={{ opacity: 0, x: -6 }}
-					transition={{ duration: 0.15, ease: "easeOut" }}
+					transition={{ duration: 0.15, ease: EASE_OUT }}
 					className="font-display text-xs font-medium tracking-wide whitespace-nowrap leading-none"
 					aria-hidden="true"
 				>

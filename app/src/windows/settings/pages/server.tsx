@@ -41,7 +41,6 @@ export function ServerPage() {
 							onAdministratorInviteChange={server.actions.setAdministratorInvite}
 							onOpenPortal={server.actions.openPortal}
 							onOpenInvite={server.actions.openInvite}
-							onCopyInvite={server.actions.copyInvite}
 						/>
 
 						<ServerConfigCard
@@ -83,10 +82,7 @@ export function ServerPage() {
 							onApplySetupCode={server.actions.applySetupCode}
 						/>
 
-						<ServerShareCard
-							friendSetupCode={server.friendSetupCode}
-							onCopySetupCode={server.actions.copySetupCode}
-						/>
+						<ServerShareCard friendSetupCode={server.friendSetupCode} />
 
 						<div className="xl:col-span-2">
 							<ServerLogsCard logs={server.logs} loading={server.logsLoading} />

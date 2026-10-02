@@ -1,6 +1,7 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Progress } from "@memeover/ui/components/ui/progress";
+import { EASE_OUT } from "@memeover/ui/lib/motion";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Transition, Variants } from "framer-motion";
@@ -53,12 +54,12 @@ const normalFieldVariants: Variants = {
 
 const reducedFieldVariants: Variants = {
 	hidden: { opacity: 0 },
-	visible: { opacity: 1, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } },
+	visible: { opacity: 1, transition: { duration: 0.12, ease: EASE_OUT } },
 };
 
 const reducedFadeTransition: Transition = {
 	duration: 0.12,
-	ease: [0.23, 1, 0.32, 1],
+	ease: EASE_OUT,
 };
 
 // ─── Wizard ───────────────────────────────────────────────────────────────────

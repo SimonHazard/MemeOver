@@ -240,11 +240,6 @@ export function useServerPage() {
 		}
 	}
 
-	async function copyText(value: string, message: string) {
-		await navigator.clipboard.writeText(value);
-		toast.success(message);
-	}
-
 	async function applySetupCode() {
 		const parsed = parseServerSetupCode(setupCode);
 		if (!parsed) {
@@ -305,9 +300,7 @@ export function useServerPage() {
 		actions: {
 			applySetupCode: () => void applySetupCode(),
 			chooseInstallDir: () => void chooseInstallDir(),
-			copyInvite: () => inviteUrl && void copyText(inviteUrl, t("server.toast.inviteCopied")),
-			copySetupCode: () =>
-				friendSetupCode && void copyText(friendSetupCode, t("server.toast.setupCopied")),
+
 			detectIp: () => detectIpMutation.mutate(),
 			install: () => installMutation.mutate(false),
 			installBun: () => installBunMutation.mutate(),

@@ -2,11 +2,15 @@ import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { Badge } from "@memeover/ui/components/ui/badge";
 import { Separator } from "@memeover/ui/components/ui/separator";
+import { EASE_OUT } from "@memeover/ui/lib/motion";
 import { cn } from "@memeover/ui/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AnimatedNumber } from "@/components/motion/animated-number";
+import { StatusLabel } from "@/components/motion/status-label";
 import {
 	clearQueue,
 	overlayHealthVariant,
@@ -19,6 +23,7 @@ import { useAppStore } from "@/shared/store";
 
 export function OverlayControls() {
 	const { t } = useTranslation();
+	const reduced = useReducedMotion();
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 	const queueSize = useAppStore((s) => s.queueSize);
 	const isDisplaying = useAppStore((s) => s.isDisplaying);
@@ -36,8 +41,11 @@ export function OverlayControls() {
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<h2 className="font-display text-base tracking-wide">{t("overlay.controls")}</h2>
-				<NbBadge variant={overlayHealthVariant(overlayHealth)} className="px-2 py-0.5">
-					{t(`health.${overlayHealth}`)}
+				<NbBadge
+					variant={overlayHealthVariant(overlayHealth)}
+					className="px-2 py-0.5 transition-[color,background-color,border-color] duration-200 ease-out"
+				>
+					<StatusLabel status={overlayHealth} label={t(`health.${overlayHealth}`)} />
 				</NbBadge>
 			</div>
 
@@ -99,11 +107,24 @@ export function OverlayControls() {
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					<span className="font-display text-sm tracking-wide">{t("actions.clearQueue")}</span>
-					{queueSize > 0 && (
-						<Badge variant="secondary" className="border border-foreground rounded-md text-xs">
-							{t("actions.queueSize", { count: queueSize })}
-						</Badge>
-					)}
+					<AnimatePresence initial={false}>
+						{queueSize > 0 && (
+							<motion.span
+								initial={{ opacity: 0, scale: reduced ? 1 : 0.95 }}
+								animate={{ opacity: 1, scale: 1, transition: { duration: 0.15, ease: EASE_OUT } }}
+								exit={{
+									opacity: 0,
+									scale: reduced ? 1 : 0.95,
+									transition: { duration: 0.1, ease: EASE_OUT },
+								}}
+							>
+								<Badge variant="secondary" className="border border-foreground rounded-md text-xs">
+									<AnimatedNumber value={queueSize} />{" "}
+									{t("actions.queueSizeLabel", { count: queueSize })}
+								</Badge>
+							</motion.span>
+						)}
+					</AnimatePresence>
 				</div>
 				<div className="flex items-center gap-2">
 					<NbButton

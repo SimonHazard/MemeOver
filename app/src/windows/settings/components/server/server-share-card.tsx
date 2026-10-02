@@ -1,16 +1,9 @@
-import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Separator } from "@memeover/ui/components/ui/separator";
-import { Clipboard } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { CopyButton } from "@/components/motion/copy-button";
 
-export function ServerShareCard({
-	friendSetupCode,
-	onCopySetupCode,
-}: {
-	friendSetupCode: string | null;
-	onCopySetupCode: () => void;
-}) {
+export function ServerShareCard({ friendSetupCode }: { friendSetupCode: string | null }) {
 	const { t } = useTranslation();
 
 	return (
@@ -26,10 +19,11 @@ export function ServerShareCard({
 						{friendSetupCode ?? t("server.share.empty")}
 					</pre>
 				</div>
-				<NbButton disabled={!friendSetupCode} onClick={onCopySetupCode}>
-					<Clipboard className="size-4" aria-hidden="true" />
-					{t("server.share.copy")}
-				</NbButton>
+				<CopyButton
+					value={friendSetupCode ?? ""}
+					label={t("server.share.copy")}
+					disabled={!friendSetupCode}
+				/>
 			</div>
 		</NbCard>
 	);

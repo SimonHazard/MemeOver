@@ -1,5 +1,7 @@
 import { cn } from "@memeover/ui/lib/utils";
+import { useReducedMotion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { OverlayPosition } from "@/shared/types";
 
@@ -9,18 +11,6 @@ const ASPECT_CSS: Record<PreviewAspect, string> = {
 	"9:16": "9 / 16",
 	"16:9": "16 / 9",
 	"1:1": "1 / 1",
-};
-
-const PREVIEW_POSITION_CLASSES: Record<OverlayPosition, string> = {
-	center: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-	"top-left": "absolute top-2 left-2",
-	top: "absolute top-2 left-1/2 -translate-x-1/2",
-	"top-right": "absolute top-2 right-2",
-	left: "absolute top-1/2 left-2 -translate-y-1/2",
-	right: "absolute top-1/2 right-2 -translate-y-1/2",
-	"bottom-left": "absolute bottom-2 left-2",
-	bottom: "absolute bottom-2 left-1/2 -translate-x-1/2",
-	"bottom-right": "absolute bottom-2 right-2",
 };
 
 // Approximate the Tailwind `top-2 / left-2 / …` edge inset (8px) as a % of the
@@ -81,6 +71,18 @@ export function PositionPreview({
 	previewAspect = "9:16",
 }: PositionPreviewProps) {
 	const { t } = useTranslation();
+	const reduced = useReducedMotion();
+	const [previous, setPrevious] = useState({ position, mediaSize, offsetX, offsetY });
+	const [gliding, setGliding] = useState(false);
+	if (
+		previous.position !== position ||
+		previous.mediaSize !== mediaSize ||
+		previous.offsetX !== offsetX ||
+		previous.offsetY !== offsetY
+	) {
+		setGliding(previous.position !== position);
+		setPrevious({ position, mediaSize, offsetX, offsetY });
+	}
 
 	const base = anchorBbox(position, mediaSize);
 	const finalBbox: Bbox = {
@@ -107,40 +109,48 @@ export function PositionPreview({
 					className="absolute inset-0"
 					style={{ transform: `translate(${offsetX}%, ${offsetY}%)` }}
 				>
-					{/* The fit-box — a dashed square sized from `mediaSize` as % of frame
-					    height on both axes. Represents the hard bounds inside which media fits. */}
 					<div
-						className={cn(
-							PREVIEW_POSITION_CLASSES[position],
-							"flex items-center justify-center border border-dashed rounded transition-colors",
-							offscreen ? "border-destructive/70" : "border-primary/40",
-						)}
-						style={{ height: `${mediaSize}%`, aspectRatio: "1 / 1" }}
+						className="absolute inset-0"
+						style={{
+							transform: `translate(${base.x}%, ${base.y}%)`,
+							transition: gliding && !reduced ? "transform 220ms var(--ease-in-out)" : "none",
+						}}
 					>
-						{/* Simulated media — adopts the toggled aspect, fills the box diagonally. */}
+						{/* The fit-box — a dashed square sized from `mediaSize` as % of frame
+					    height on both axes. Represents the hard bounds inside which media fits. */}
 						<div
 							className={cn(
-								"flex items-center justify-center rounded border transition-colors",
-								offscreen
-									? "bg-destructive/20 border-destructive"
-									: "bg-primary/20 border-primary/50",
+								"absolute top-0 left-0",
+								"flex items-center justify-center border border-dashed rounded transition-colors",
+								offscreen ? "border-destructive/70" : "border-primary/40",
 							)}
-							style={{
-								maxWidth: "100%",
-								maxHeight: "100%",
-								aspectRatio: ASPECT_CSS[previewAspect],
-								width: previewAspect === "9:16" ? "auto" : "100%",
-								height: previewAspect === "9:16" ? "100%" : "auto",
-							}}
+							style={{ height: `${mediaSize}%`, aspectRatio: "1 / 1" }}
 						>
-							<span
+							{/* Simulated media — adopts the toggled aspect, fills the box diagonally. */}
+							<div
 								className={cn(
-									"text-xs font-medium select-none truncate px-1",
-									offscreen ? "text-destructive" : "text-primary/70",
+									"flex items-center justify-center rounded border transition-colors",
+									offscreen
+										? "bg-destructive/20 border-destructive"
+										: "bg-primary/20 border-primary/50",
 								)}
+								style={{
+									maxWidth: "100%",
+									maxHeight: "100%",
+									aspectRatio: ASPECT_CSS[previewAspect],
+									width: previewAspect === "9:16" ? "auto" : "100%",
+									height: previewAspect === "9:16" ? "100%" : "auto",
+								}}
 							>
-								{label}
-							</span>
+								<span
+									className={cn(
+										"text-xs font-medium select-none truncate px-1",
+										offscreen ? "text-destructive" : "text-primary/70",
+									)}
+								>
+									{label}
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>

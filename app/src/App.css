@@ -75,6 +75,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.animate-in,
+	.animate-out {
+		--tw-enter-scale: 1 !important;
+		--tw-exit-scale: 1 !important;
+		--tw-enter-translate-x: 0 !important;
+		--tw-enter-translate-y: 0 !important;
+		--tw-exit-translate-x: 0 !important;
+		--tw-exit-translate-y: 0 !important;
+		--tw-enter-rotate: 0 !important;
+		--tw-exit-rotate: 0 !important;
+	}
+
 	.overlay-audio-equalizer-bar {
 		animation: none;
 	}
@@ -92,4 +104,17 @@
 	.overlay-audio-equalizer-bar:nth-child(3) {
 		transform: scaleY(1);
 	}
+}
+
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+	transition: none !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
 }

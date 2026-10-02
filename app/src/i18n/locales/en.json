@@ -44,7 +44,9 @@
 		"skipCurrent": "Skip",
 		"displaySettings": "Display settings",
 		"history": "History",
-		"queueSize": "{{count}} pending"
+		"queueSize": "{{count}} pending",
+		"queueSizeLabel_one": "pending",
+		"queueSizeLabel_other": "pending"
 	},
 	"display": {
 		"title": "Display",
@@ -375,5 +377,12 @@
 		"later": "Later",
 		"downloadNow": "Download & Install",
 		"foundToast": "Update v{{version}} is available!"
+	},
+	"motion": {
+		"holdLabel": "Hold to {{label}}",
+		"holdHint": "Hold the mouse button, Space or Enter for 1.2 seconds. Release to cancel.",
+		"copied": "Copied",
+		"toggleTheme": "Toggle theme",
+		"copyError": "Could not copy to clipboard."
 	}
 }

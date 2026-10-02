@@ -1,21 +1,14 @@
 import { Button } from "@memeover/ui/components/ui/button";
-import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@memeover/ui/components/ui/dialog";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Import, Save, Trash2, Upload } from "lucide-react";
+import { Check, Download, Import, Save, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { AnimatedList } from "@/components/motion/animated-list";
+import { HoldToConfirmButton } from "@/components/motion/hold-to-confirm-button";
 import {
 	createOverlayProfile,
 	deleteOverlayProfile,
@@ -67,7 +60,6 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 	const queryClient = useQueryClient();
 	const { i18n, t } = useTranslation();
 	const [profileName, setProfileName] = useState("");
-	const [profileToDelete, setProfileToDelete] = useState<OverlayProfile | null>(null);
 	const importInputRef = useRef<HTMLInputElement>(null);
 
 	const profilesQuery = useQuery({
@@ -100,7 +92,6 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 		mutationFn: deleteOverlayProfile,
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["overlayProfiles"] });
-			setProfileToDelete(null);
 			toast.success(t("toast.profileDeleted"));
 		},
 		onError: () => toast.error(t("toast.profileDeleteError")),
@@ -165,7 +156,6 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 				<div className="flex items-end gap-2">
 					<Button
 						type="button"
-						className="active:scale-[0.98]"
 						disabled={!canCreate}
 						onClick={() => void createMutation.mutateAsync()}
 					>
@@ -175,7 +165,6 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 					<Button
 						type="button"
 						variant="outline"
-						className="active:scale-[0.98]"
 						disabled={isBusy}
 						onClick={() => importInputRef.current?.click()}
 					>
@@ -196,102 +185,70 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 
 			<Separator />
 
-			{profilesQuery.isLoading ? (
-				<div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-					{t("display.profile_loading")}
-				</div>
-			) : profiles.length === 0 ? (
-				<div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-					{t("display.profile_empty")}
-				</div>
-			) : (
-				<div className="flex flex-col gap-2">
-					{profiles.map((profile) => (
-						<div
-							key={profile.id}
-							className="grid gap-3 rounded-md border bg-background/60 p-3 sm:grid-cols-[minmax(0,1fr)_auto]"
-						>
-							<div className="min-w-0">
-								<p className="truncate font-medium">{profile.name}</p>
-								<p className="text-xs text-muted-foreground">
-									{updatedLabel}{" "}
-									<span className="font-mono tabular-nums" translate="no">
-										{formatProfileDate(i18n.language, profile.updatedAt)}
-									</span>
-								</p>
-							</div>
-							<div className="flex flex-wrap items-center gap-2">
-								<Button
-									type="button"
-									size="sm"
-									disabled={isBusy}
-									onClick={() => applyMutation.mutate(profile)}
-								>
-									<Check data-icon="inline-start" aria-hidden="true" />
-									{t("display.profile_apply")}
-								</Button>
-								<Button
-									type="button"
-									size="sm"
-									variant="outline"
-									disabled={isBusy}
-									onClick={() => void updateMutation.mutateAsync(profile)}
-								>
-									<Upload data-icon="inline-start" aria-hidden="true" />
-									{t("display.profile_update")}
-								</Button>
-								<Button
-									type="button"
-									size="sm"
-									variant="outline"
-									disabled={isBusy}
-									onClick={() => downloadProfile(profile)}
-								>
-									<Download data-icon="inline-start" aria-hidden="true" />
-									{t("display.profile_export")}
-								</Button>
-								<Button
-									type="button"
-									size="icon-sm"
-									variant="ghost"
-									disabled={isBusy}
-									aria-label={t("display.profile_delete_named", { name: profile.name })}
-									onClick={() => setProfileToDelete(profile)}
-								>
-									<Trash2 aria-hidden="true" />
-								</Button>
-							</div>
+			<AnimatedList
+				items={profiles}
+				itemKey={(profile) => profile.id}
+				loading={profilesQuery.isLoading}
+				skeleton={
+					<div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+						{t("display.profile_loading")}
+					</div>
+				}
+				empty={
+					<div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+						{t("display.profile_empty")}
+					</div>
+				}
+				renderItem={(profile) => (
+					<div key={profile.id} className="grid gap-3 rounded-md border bg-background/60 p-3">
+						<div className="min-w-0">
+							<p className="truncate font-medium">{profile.name}</p>
+							<p className="text-xs text-muted-foreground">
+								{updatedLabel}{" "}
+								<span className="font-mono tabular-nums" translate="no">
+									{formatProfileDate(i18n.language, profile.updatedAt)}
+								</span>
+							</p>
 						</div>
-					))}
-				</div>
-			)}
-
-			<Dialog open={!!profileToDelete} onOpenChange={(open) => !open && setProfileToDelete(null)}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>{t("display.profile_delete_title")}</DialogTitle>
-						<DialogDescription>
-							{t("display.profile_delete_desc", { name: profileToDelete?.name ?? "" })}
-						</DialogDescription>
-					</DialogHeader>
-					<DialogFooter>
-						<DialogClose asChild>
-							<Button type="button" variant="outline">
-								{t("display.profile_cancel")}
+						<div className="flex flex-wrap items-center gap-2">
+							<Button
+								type="button"
+								size="sm"
+								disabled={isBusy}
+								onClick={() => applyMutation.mutate(profile)}
+							>
+								<Check data-icon="inline-start" aria-hidden="true" />
+								{t("display.profile_apply")}
 							</Button>
-						</DialogClose>
-						<Button
-							type="button"
-							variant="destructive"
-							disabled={!profileToDelete || deleteMutation.isPending}
-							onClick={() => profileToDelete && deleteMutation.mutate(profileToDelete.id)}
-						>
-							<Trash2 data-icon="inline-start" aria-hidden="true" />
-							{t("display.profile_delete")}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								disabled={isBusy}
+								onClick={() => void updateMutation.mutateAsync(profile)}
+							>
+								<Upload data-icon="inline-start" aria-hidden="true" />
+								{t("display.profile_update")}
+							</Button>
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								disabled={isBusy}
+								onClick={() => downloadProfile(profile)}
+							>
+								<Download data-icon="inline-start" aria-hidden="true" />
+								{t("display.profile_export")}
+							</Button>
+							<HoldToConfirmButton
+								disabled={isBusy}
+								label={t("display.profile_delete_named", { name: profile.name })}
+								onConfirm={() => deleteMutation.mutate(profile.id)}
+							/>
+						</div>
+					</div>
+				)}
+			/>
 		</div>
 	);
 }
