@@ -17,7 +17,7 @@ const log = logger.child({ module: "registry" });
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = process.env.MEMEOVER_DATA_DIR || path.join(process.cwd(), "data");
 const REGISTRY_FILE = path.join(DATA_DIR, "guilds.json");
 const REGISTRY_TMP = path.join(DATA_DIR, "guilds.json.tmp");
 

@@ -3,9 +3,20 @@
 	"compilerOptions": {
 		"jsx": "react-jsx",
 		"paths": {
-			"@/*": ["./src/*"],
-			"@memeover/ui/*": ["../packages/ui/src/*"]
+			"@/*": [
+				"./src/*"
+			],
+			"@memeover/ui/*": [
+				"../packages/ui/src/*"
+			]
 		}
 	},
-	"include": ["src/**/*", "astro.config.mjs", ".astro/**/*"]
+	"include": [
+		"src/**/*",
+		"astro.config.mjs",
+		".astro/**/*"
+	],
+	"exclude": [
+		"src/**/*.test.ts"
+	]
 }

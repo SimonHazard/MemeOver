@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FLOATING_REACTION_PRESETS } from "@/shared/types";
+import { FLOATING_REACTION_PRESETS, type Settings } from "@/shared/types";
 
 const OVERLAY_POSITIONS = [
 	"center",
@@ -58,3 +58,34 @@ export const OverlaySettingsSchema = z.object({
 });
 
 export type OverlaySettingsValues = z.infer<typeof OverlaySettingsSchema>;
+
+export function extractDefaults(s: Settings): OverlaySettingsValues {
+	return {
+		mediaSize: s.mediaSize,
+		duration: s.duration,
+		syncMediaDuration: s.syncMediaDuration,
+		volume: s.volume,
+		position: s.position,
+		positionOffsetX: s.positionOffsetX,
+		positionOffsetY: s.positionOffsetY,
+		enabledTypes: s.enabledTypes,
+		showBotAppSources: s.showBotAppSources,
+		textSize: s.textSize,
+		textPosition: s.textPosition,
+		textColor: s.textColor,
+		mediaOpacity: s.mediaOpacity,
+		bgEnabled: s.bgEnabled,
+		bgColor: s.bgColor,
+		bgOpacity: s.bgOpacity,
+		bgBorderColor: s.bgBorderColor,
+		bgBorderOpacity: s.bgBorderOpacity,
+		bgBorderWidth: s.bgBorderWidth,
+		bgBorderRadius: s.bgBorderRadius,
+		bgPadding: s.bgPadding,
+		floatingReactionsEnabled: s.floatingReactionsEnabled,
+		floatingReactionPreset: s.floatingReactionPreset,
+		floatingReactionDuration: s.floatingReactionDuration,
+		floatingReactionOpacity: s.floatingReactionOpacity,
+		floatingReactionSize: s.floatingReactionSize,
+	};
+}

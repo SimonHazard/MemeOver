@@ -8,6 +8,7 @@ type Broadcast = {
 
 const broadcasts: Broadcast[] = [];
 let allowBotAppSources = false;
+let pausedUntil: number | null = null;
 let nextMessageId = 1;
 
 const isChannelAllowed = mock((guildId: string, channelId: string) => {
@@ -17,6 +18,7 @@ const getConfig = mock((guildId: string) => {
 	if (guildId !== "guild-1") return undefined;
 	return {
 		token: "token-1",
+		paused_until: pausedUntil,
 		channel_ids: ["channel-1"],
 		allow_bot_app_sources: allowBotAppSources,
 		registered_at: 1,
@@ -43,7 +45,7 @@ mock.module("../utils/reaction-rate-limit", () => ({
 	canBroadcastReaction,
 }));
 
-const { dispatchMedia } = await import("./dispatcher");
+const { dispatchMedia, hasNewEmbedMedia } = await import("./dispatcher");
 const { dispatchReaction } = await import("./reactions");
 
 function makeAuthor(bot: boolean): Pick<User, "bot" | "displayAvatarURL" | "id" | "username"> {
@@ -59,10 +61,14 @@ function makeMessage({
 	bot = false,
 	content = "hello from discord",
 	attachments = new Map(),
+	stickers = new Map(),
+	embeds = [],
 }: {
 	bot?: boolean;
 	content?: string;
 	attachments?: Map<string, { contentType: string; url: string }>;
+	stickers?: Map<string, { format: number; url: string }>;
+	embeds?: Record<string, unknown>[];
 } = {}): Message {
 	return {
 		applicationId: null,
@@ -70,11 +76,11 @@ function makeMessage({
 		author: makeAuthor(bot),
 		channelId: "channel-1",
 		content,
-		embeds: [],
+		embeds,
 		guildId: "guild-1",
-		id: `message-${nextMessageId++}`,
+		id: `message-${crypto.randomUUID()}-${nextMessageId++}`,
 		member: null,
-		stickers: new Map(),
+		stickers,
 		webhookId: null,
 	} as unknown as Message;
 }
@@ -105,6 +111,7 @@ function makeUser(bot: boolean): Pick<User, "bot" | "id"> {
 beforeEach(() => {
 	broadcasts.length = 0;
 	allowBotAppSources = false;
+	pausedUntil = null;
 	nextMessageId = 1;
 	isChannelAllowed.mockClear();
 	getConfig.mockClear();
@@ -191,4 +198,99 @@ describe("bot/app source dispatch gates", () => {
 		});
 		expect(broadcasts[0]?.event).not.toHaveProperty("source");
 	});
+});
+
+test("text only strips URLs", () => {
+	dispatchMedia(makeMessage({ content: "hello https://x/a" }), true);
+	expect(broadcasts).toHaveLength(1);
+	expect(broadcasts[0].event).toMatchObject({ type: "TEXT", text: "hello" });
+});
+test("text disabled emits nothing", () => {
+	dispatchMedia(makeMessage(), false);
+	expect(broadcasts).toEqual([]);
+});
+for (const format of [1, 3])
+	test(`sticker dispatch ${format}`, () => {
+		dispatchMedia(
+			makeMessage({
+				content: "",
+				stickers: new Map([["s", { format, url: "https://cdn.discordapp.com/s.png" }]]),
+			}),
+			false,
+		);
+		expect(broadcasts).toHaveLength(format === 3 ? 0 : 1);
+		if (format === 1)
+			expect(broadcasts[0].event).toMatchObject({ type: "MEDIA", media_type: "sticker" });
+	});
+test("media dedup with two attachments and captions", () => {
+	const message = makeMessage({
+		content: "caption",
+		attachments: new Map([
+			["a", { contentType: "image/png", url: "https://cdn.discordapp.com/a.png" }],
+			["b", { contentType: "video/mp4", url: "https://cdn.discordapp.com/b.mp4" }],
+		]),
+	});
+	dispatchMedia(message, true);
+	dispatchMedia(message, true);
+	expect(broadcasts).toHaveLength(2);
+	for (const b of broadcasts) expect(b.event).toMatchObject({ type: "MEDIA", text: "caption" });
+});
+test("unwatched channel dropped", () => {
+	isChannelAllowed.mockReturnValueOnce(false);
+	dispatchMedia(makeMessage(), true);
+	expect(broadcasts).toEqual([]);
+});
+test("new embed pathname detection", () => {
+	expect(
+		hasNewEmbedMedia(
+			makeMessage({
+				content: "",
+				embeds: [{ image: { url: "https://cdn.discordapp.com/a.png?x=1" } }],
+			}),
+		),
+	).toBe(true);
+	expect(
+		hasNewEmbedMedia(
+			makeMessage({
+				content: "https://cdn.discordapp.com/a.png?x=2",
+				embeds: [{ image: { url: "https://cdn.discordapp.com/a.png?x=1" } }],
+			}),
+		),
+	).toBe(false);
+});
+test("partial reaction fetch failure ignored", async () => {
+	const reaction = makeReaction();
+	Object.assign(reaction, {
+		partial: true,
+		fetch: async () => {
+			throw new Error("gone");
+		},
+	});
+	await dispatchReaction(reaction, makeUser(false) as User);
+	expect(broadcasts).toEqual([]);
+});
+for (const animated of [true, false])
+	test(`custom reaction animated=${animated}`, async () => {
+		const reaction = makeReaction();
+		Object.assign(reaction.emoji, { animated, id: "123", name: "custom" });
+		await dispatchReaction(reaction, makeUser(false) as User);
+		expect(broadcasts[0].event).toMatchObject({
+			emoji_url: `https://cdn.discordapp.com/emojis/123.${animated ? "gif" : "png"}?size=64&quality=lossless`,
+		});
+	});
+test("unicode reaction has no CDN URL", async () => {
+	await dispatchReaction(makeReaction(), makeUser(false) as User);
+	// characterization: the event has an undefined URL; JSON serialization omits it.
+	expect(broadcasts[0].event.emoji_url).toBeUndefined();
+});
+test("empty emoji dropped", async () => {
+	const reaction = makeReaction();
+	Object.assign(reaction.emoji, { name: null, id: null });
+	await dispatchReaction(reaction, makeUser(false) as User);
+	expect(broadcasts).toEqual([]);
+});
+test("reaction quota rejects broadcast", async () => {
+	canBroadcastReaction.mockReturnValueOnce(false);
+	await dispatchReaction(makeReaction(), makeUser(false) as User);
+	expect(broadcasts).toEqual([]);
 });
