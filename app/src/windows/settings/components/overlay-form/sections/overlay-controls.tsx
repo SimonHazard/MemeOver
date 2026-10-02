@@ -20,6 +20,7 @@ import {
 	skipCurrentItem,
 } from "@/shared/helpers";
 import { useAppStore } from "@/shared/store";
+import { PauseIndicator } from "@/windows/overlay/components/pause-indicator";
 
 export function OverlayControls() {
 	const { t } = useTranslation();
@@ -49,6 +50,7 @@ export function OverlayControls() {
 				</NbBadge>
 			</div>
 
+			<PauseIndicator inline />
 			<Separator />
 
 			<div className="grid grid-cols-3 gap-2">

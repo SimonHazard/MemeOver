@@ -3,6 +3,7 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 import { create } from "zustand";
 import i18n from "@/i18n";
+import { isGuildPausedAt } from "./guild-pause";
 import { restoreOverlayMonitor } from "./helpers";
 import { toReplayItem } from "./history-expiry";
 import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors";
@@ -47,6 +48,9 @@ function resolveReactionAnimation(settings: Settings): FloatingReactionAnimation
 interface AppStore {
 	lastJoinError: string | null;
 	serverFeatures: string[];
+	guildPausedUntil: number | null;
+	guildPaused: boolean;
+	setGuildPausedUntil: (value: number | null) => void;
 	currentAuthorId: string | null;
 	setCurrentAuthorId: (id: string | null) => void;
 	wsRevokedReason: SessionRevocationCode | null;
@@ -101,6 +105,17 @@ interface AppStore {
 export const useAppStore = create<AppStore>((set) => ({
 	lastJoinError: null,
 	serverFeatures: [],
+	guildPausedUntil: null,
+	guildPaused: false,
+	setGuildPausedUntil: (value) =>
+		set((state) => {
+			const paused = isGuildPausedAt(value, Date.now());
+			return {
+				guildPausedUntil: paused ? value : null,
+				guildPaused: paused,
+				queue: paused ? [] : state.queue,
+			};
+		}),
 	wsRevokedReason: null,
 	setWsRevokedReason: (reason) => set({ wsRevokedReason: reason }),
 	currentAuthorId: null,
@@ -206,6 +221,7 @@ export const useAppStore = create<AppStore>((set) => ({
  * - Listens for "replay-item" to re-enqueue a history item from the settings window
  */
 export async function initOverlayStore(): Promise<void> {
+	void emit("guild-pause-changed", null);
 	try {
 		const settings = await loadSettings();
 		useAppStore.getState().updateSettings(settings);
@@ -249,6 +265,8 @@ export async function initOverlayStore(): Promise<void> {
 
 	// Broadcast queue length and display state to the settings window whenever they change
 	useAppStore.subscribe((state, prevState) => {
+		if (state.guildPausedUntil !== prevState.guildPausedUntil)
+			void emit("guild-pause-changed", state.guildPausedUntil);
 		if (state.queue.length !== prevState.queue.length) {
 			void emit("queue-size-changed", state.queue.length);
 		}
@@ -271,6 +289,9 @@ export async function initSettingsStore(): Promise<void> {
 	);
 	await listen<string[]>("ws-features-changed", (event) =>
 		useAppStore.setState({ serverFeatures: event.payload }),
+	);
+	await listen<number | null>("guild-pause-changed", (event) =>
+		useAppStore.getState().setGuildPausedUntil(event.payload),
 	);
 	// Track previous status to fire toasts only on genuine transitions.
 	// This runs entirely outside React — toast() and i18n.t() are both safe here.

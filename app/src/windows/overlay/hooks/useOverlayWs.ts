@@ -1,6 +1,7 @@
 import type { JoinMessage, SessionRevocationCode } from "@memeover/shared";
 import { emit } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { fallbackExpiryDelay, isGuildPausedAt } from "@/shared/guild-pause";
 import { mutedIdSet } from "@/shared/muted-authors";
 import { useAppStore } from "@/shared/store";
 import { bindSocket, sendClientMessage, setServerFeatures, unbindSocket } from "../ws-client";
@@ -49,6 +50,7 @@ export function useOverlayWs(): void {
 	const overlayHealthRef = useRef(overlayHealth);
 	overlayHealthRef.current = overlayHealth;
 
+	const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
 	const revokedRef = useRef<SessionRevocationCode | null>(null);
 	const [reconnectNonce, setReconnectNonce] = useState(0);
@@ -121,6 +123,20 @@ export function useOverlayWs(): void {
 				case "server_error":
 					console.warn("[WS] Server error:", action.message);
 					break;
+				case "guild_state": {
+					if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);
+					const value = isGuildPausedAt(action.pausedUntil, Date.now()) ? action.pausedUntil : null;
+					useAppStore.getState().setGuildPausedUntil(value);
+					if (value !== null) {
+						const delay = fallbackExpiryDelay(value, Date.now());
+						if (delay !== null)
+							pauseTimerRef.current = setTimeout(
+								() => useAppStore.getState().setGuildPausedUntil(null),
+								delay,
+							);
+					}
+					break;
+				}
 				case "pong":
 					sendClientMessage({ type: "PONG" });
 					break;
@@ -197,6 +213,8 @@ export function useOverlayWs(): void {
 				// A retired socket may close after its replacement has already joined.
 				if (disposed || wsRef.current !== ws) return;
 				void emit("ws-features-changed", []);
+				if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);
+				useAppStore.getState().setGuildPausedUntil(null);
 				unbindSocket(ws);
 				if (wsRef.current === ws) {
 					wsRef.current = null;
@@ -212,6 +230,8 @@ export function useOverlayWs(): void {
 
 		return () => {
 			disposed = true;
+			if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);
+			useAppStore.getState().setGuildPausedUntil(null);
 			clearReconnect();
 			if (wsRef.current) {
 				unbindSocket(wsRef.current);
