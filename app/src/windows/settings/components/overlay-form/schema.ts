@@ -22,6 +22,7 @@ const TEXT_POSITIONS = [
 ] as const;
 
 export const OverlaySettingsSchema = z.object({
+	maxQueuedPerAuthor: z.number().int().min(0).max(10),
 	mediaSize: z.number().min(10).max(90),
 	duration: z.number().min(1).max(30),
 	syncMediaDuration: z.boolean(),
@@ -61,6 +62,7 @@ export type OverlaySettingsValues = z.infer<typeof OverlaySettingsSchema>;
 
 export function extractDefaults(s: Settings): OverlaySettingsValues {
 	return {
+		maxQueuedPerAuthor: s.maxQueuedPerAuthor,
 		mediaSize: s.mediaSize,
 		duration: s.duration,
 		syncMediaDuration: s.syncMediaDuration,
