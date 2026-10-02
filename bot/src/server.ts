@@ -1,6 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
 import { Elysia } from "elysia";
+import { buildGuildDiag, createCooldown } from "./diag/diag";
+import { collectGuildDiagFacts } from "./diag/discord-diag";
 import { config } from "./utils/config";
 import { SERVER_FEATURES } from "./utils/features";
 import { isPausedAt } from "./utils/guild-pause";
@@ -13,6 +15,7 @@ import { stats } from "./utils/stats";
 import { store } from "./utils/store";
 import type { JoinMessage, LeaveMessage, ServerMessage, WSConnection } from "./utils/types";
 
+const diagCooldown = createCooldown(5000);
 const log = logger.child({ module: "server" });
 
 // Pre-compute once at startup to avoid per-request allocation
@@ -148,6 +151,7 @@ function startHeartbeat(ws: WSConnection): void {
 		try {
 			ws.send(JSON.stringify({ type: "PING" } satisfies ServerMessage));
 		} catch {
+			diagCooldown.forget(ws.id);
 			clearHeartbeat(ws.id);
 			return;
 		}
@@ -161,6 +165,7 @@ function startHeartbeat(ws: WSConnection): void {
 				"Client missed PONG, closing connection",
 			);
 			stats.errorHeartbeatTimeout();
+			diagCooldown.forget(ws.id);
 			clearHeartbeat(ws.id);
 			rateLimiters.delete(ws.id);
 			// Capture guilds before removal so we can broadcast the updated count
@@ -386,6 +391,51 @@ export function createServer() {
 					case "LEAVE":
 						handleLeave(ws, msg);
 						break;
+					case "DIAG_REQUEST": {
+						const replyError = (
+							code: "NOT_JOINED" | "RATE_LIMITED" | "DIAG_UNAVAILABLE",
+							message: string,
+						) => {
+							try {
+								ws.send(JSON.stringify({ type: "ERROR", code, message } satisfies ServerMessage));
+							} catch {
+								/* socket closed during collection */
+							}
+						};
+						if (!store.isClientInGuild(ws.id, msg.guild_id)) {
+							replyError("NOT_JOINED", "Join this guild before requesting diagnostics");
+							break;
+						}
+						if (!diagCooldown.tryTake(ws.id)) {
+							replyError("RATE_LIMITED", "Diagnostics: max 1 per 5 s");
+							break;
+						}
+						void (async () => {
+							try {
+								const facts = await collectGuildDiagFacts(msg.guild_id);
+								// Rotation/removal may have revoked this membership while REST calls ran.
+								if (!store.isClientInGuild(ws.id, msg.guild_id)) return;
+								ws.send(JSON.stringify(buildGuildDiag(facts)));
+								log.debug(
+									{
+										event: "diag_served",
+										...discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }),
+									},
+									"Diagnostics served",
+								);
+							} catch {
+								replyError("DIAG_UNAVAILABLE", "Diagnostics unavailable");
+								log.debug(
+									{
+										event: "diag_failed",
+										...discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }),
+									},
+									"Diagnostics unavailable",
+								);
+							}
+						})();
+						break;
+					}
 					case "PONG": {
 						// Clear the pending pong timeout for this client
 						const state = heartbeats.get(ws.id);
@@ -404,6 +454,7 @@ export function createServer() {
 			},
 
 			close(ws: WSConnection) {
+				diagCooldown.forget(ws.id);
 				clearHeartbeat(ws.id);
 				rateLimiters.delete(ws.id);
 				// Capture guilds before removal so we can broadcast the updated count

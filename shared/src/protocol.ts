@@ -22,6 +22,8 @@ export const ERROR_CODES = [
 	"SERVER_SHUTDOWN",
 	"GUILD_UNREGISTERED",
 	"TOKEN_ROTATED",
+	"NOT_JOINED",
+	"DIAG_UNAVAILABLE",
 ] as const;
 export const ErrorCodeSchema = z.enum(ERROR_CODES);
 
@@ -116,6 +118,36 @@ const GuildStateMessageSchema = z.object({
 });
 export type GuildStateMessage = z.infer<typeof GuildStateMessageSchema>;
 
+export const DIAG_FEATURE = "diag";
+const DiagRequestSchema = z.object({
+	type: z.literal("DIAG_REQUEST"),
+	guild_id: z.string().regex(DISCORD_SNOWFLAKE_REGEX),
+});
+const DiagMessageSchema = z.object({
+	type: z.literal("DIAG"),
+	guild_id: z.string(),
+	registered: z.boolean(),
+	all_channels: z.boolean(),
+	channels: z
+		.array(
+			z.object({
+				id: z.string(),
+				name: z.string().nullable(),
+				missing: z.boolean(),
+				perms: z.object({ view: z.boolean(), history: z.boolean() }),
+			}),
+		)
+		.max(25),
+	unviewable_channel_count: z.number().int().nonnegative().nullable(),
+	allow_bot_app_sources: z.boolean(),
+	message_content_intent: z.boolean().nullable(),
+	overlays_connected: z.number().int().nonnegative(),
+	client_id: z.string(),
+	paused_until: z.number().int().nullable().optional(),
+});
+export type DiagRequest = z.infer<typeof DiagRequestSchema>;
+export type DiagMessage = z.infer<typeof DiagMessageSchema>;
+
 export const ServerMessageSchema = z.discriminatedUnion("type", [
 	MediaEventSchema,
 	TextEventSchema,
@@ -125,6 +157,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
 	MemberCountUpdateMessageSchema,
 	ReactionEventSchema,
 	GuildStateMessageSchema,
+	DiagMessageSchema,
 ]);
 
 export type MediaEvent = z.infer<typeof MediaEventSchema>;
@@ -162,6 +195,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
 	JoinMessageSchema,
 	LeaveMessageSchema,
 	PongMessageSchema,
+	DiagRequestSchema,
 ]);
 
 export type JoinMessage = z.infer<typeof JoinMessageSchema>;
