@@ -7,7 +7,15 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["bot/src/**", "app/src/**", "shared/src/**", "site/src/**", "!**/routeTree.gen.ts"]
+		"includes": [
+			"test/**",
+			"scripts/**",
+			"bot/src/**",
+			"app/src/**",
+			"shared/src/**",
+			"site/src/**",
+			"!**/routeTree.gen.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true,

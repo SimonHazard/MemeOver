@@ -863,4 +863,94 @@ mod tests {
 
         let _ = fs::remove_dir_all(&root);
     }
+
+    fn request() -> ServerInstallRequest {
+        ServerInstallRequest {
+            install_dir: String::new(),
+            discord_token: "synthetic".into(),
+            discord_client_id: "12345678901234567".into(),
+            ws_port: 3001,
+            public_ws_url: "wss://example.test/ws".into(),
+            repair: false,
+        }
+    }
+    #[test]
+    fn token_shape_boundaries() {
+        for (a, b, c, valid) in [
+            (19, 5, 25, false),
+            (20, 4, 25, false),
+            (20, 5, 24, false),
+            (20, 5, 25, true),
+            (20, 10, 25, true),
+            (20, 11, 25, false),
+        ] {
+            assert_eq!(
+                looks_like_discord_token(&format!(
+                    "{}.{}.{}",
+                    "a".repeat(a),
+                    "b".repeat(b),
+                    "c".repeat(c)
+                )),
+                valid
+            );
+        }
+        for value in [
+            "aaaaaaaaaaaaaaaaaaaa.bbbbb.ccccccccccccccccccccccccc.extra",
+            "aaaaaaaaaaaaaaaaaaa+.bbbbb.ccccccccccccccccccccccccc",
+            "aaaaaaaaaaaaaaaaaaaa..ccccccccccccccccccccccccc",
+        ] {
+            assert!(!looks_like_discord_token(value));
+        }
+    }
+    #[test]
+    fn redaction_key_is_case_insensitive() {
+        assert!(should_redact("TOKEN=x"));
+        assert!(should_redact("Token=x"));
+        assert!(!should_redact("hello"));
+    }
+    #[test]
+    fn log_ring_drops_oldest_and_redacts() {
+        let logs = Arc::new(Mutex::new(VecDeque::new()));
+        for i in 0..501 {
+            push_log_to(&logs, format!("line-{i}"));
+        }
+        {
+            let entries = logs.lock().unwrap();
+            assert_eq!(entries.len(), 500);
+            assert_eq!(entries.front().unwrap(), "line-1");
+        }
+        push_log_to(
+            &logs,
+            "aaaaaaaaaaaaaaaaaaaa.bbbbb.ccccccccccccccccccccccccc",
+        );
+        assert_eq!(logs.lock().unwrap().back().unwrap(), "[redacted]");
+    }
+    #[test]
+    fn runtime_request_checks_port_and_ws_prefix() {
+        let mut req = request();
+        req.ws_port = 0;
+        assert!(validate_runtime_request(&req).is_err());
+        req.ws_port = 1;
+        for (url, valid) in [
+            ("http://example.test", false),
+            ("ws://example.test", true),
+            ("wss://example.test", true),
+        ] {
+            req.public_ws_url = url.into();
+            assert_eq!(validate_runtime_request(&req).is_ok(), valid);
+        }
+    }
+    #[test]
+    fn install_request_checks_token_and_snowflake() {
+        let mut req = request();
+        req.discord_token = "  ".into();
+        assert!(validate_install_request(&req).is_err());
+        req.discord_token = "synthetic".into();
+        for id in ["1".repeat(16), "1".repeat(21), "a".repeat(17)] {
+            req.discord_client_id = id;
+            assert!(validate_install_request(&req).is_err());
+        }
+        req.discord_client_id = "  12345678901234567  ".into();
+        assert!(validate_install_request(&req).is_ok());
+    }
 }

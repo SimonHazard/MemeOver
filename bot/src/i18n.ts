@@ -1,6 +1,6 @@
 export type BotLocale = "en" | "fr";
 
-const translations = {
+export const translations = {
 	en: {
 		"commands.memeover.description": "Manage MemeOver for this server",
 		"commands.setup.name": "setup",

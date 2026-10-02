@@ -5,38 +5,7 @@ import { toast } from "sonner";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import { OVERLAY_PROFILE_FIELDS, type OverlayProfileSettings, type Settings } from "@/shared/types";
 import { useAppForm } from "./form-hook";
-import type { OverlaySettingsValues } from "./schema";
-
-function extractDefaults(s: Settings): OverlaySettingsValues {
-	return {
-		mediaSize: s.mediaSize,
-		duration: s.duration,
-		syncMediaDuration: s.syncMediaDuration,
-		volume: s.volume,
-		position: s.position,
-		positionOffsetX: s.positionOffsetX,
-		positionOffsetY: s.positionOffsetY,
-		enabledTypes: s.enabledTypes,
-		showBotAppSources: s.showBotAppSources,
-		textSize: s.textSize,
-		textPosition: s.textPosition,
-		textColor: s.textColor,
-		mediaOpacity: s.mediaOpacity,
-		bgEnabled: s.bgEnabled,
-		bgColor: s.bgColor,
-		bgOpacity: s.bgOpacity,
-		bgBorderColor: s.bgBorderColor,
-		bgBorderOpacity: s.bgBorderOpacity,
-		bgBorderWidth: s.bgBorderWidth,
-		bgBorderRadius: s.bgBorderRadius,
-		bgPadding: s.bgPadding,
-		floatingReactionsEnabled: s.floatingReactionsEnabled,
-		floatingReactionPreset: s.floatingReactionPreset,
-		floatingReactionDuration: s.floatingReactionDuration,
-		floatingReactionOpacity: s.floatingReactionOpacity,
-		floatingReactionSize: s.floatingReactionSize,
-	};
-}
+import { extractDefaults, type OverlaySettingsValues } from "./schema";
 
 export function useOverlayForm(initialData: Settings) {
 	const queryClient = useQueryClient();

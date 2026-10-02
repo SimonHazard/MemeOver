@@ -18,7 +18,9 @@
     "typecheck:app": "bun run --cwd app typecheck",
     "typecheck:shared": "bun run --cwd shared typecheck",
     "typecheck:ui": "bun run --cwd packages/ui typecheck",
-    "test": "bun test ./shared/src/setup-code.test.ts ./app/src/shared/settings.test.ts ./app/src/shared/reaction-budget.test.ts ./app/src/shared/server-creator.test.ts ./app/src/windows/overlay/components/floating-reaction-animations.test.ts ./app/src/windows/overlay/components/media-display.test.ts ./bot/src/commands/connection.test.ts ./bot/src/media/extractor.test.ts ./bot/src/media/source.test.ts ./bot/src/media/dispatch.test.ts ./bot/src/utils/discord-intents.test.ts ./bot/src/utils/registry-state.test.ts"
+    "test": "bun run test:unit && bun run test:mocked",
+    "test:unit": "bun test ./app/src ./bot/src ./shared/src ./site/src ./packages/ui/src --path-ignore-patterns='**/*.mocked.test.ts'",
+    "test:mocked": "bun scripts/run-mocked-tests.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13",

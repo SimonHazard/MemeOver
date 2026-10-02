@@ -1,0 +1,36 @@
+{
+	"hooks": {
+		"PreToolUse": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-protected-paths.sh"
+					}
+				],
+				"matcher": "Edit|MultiEdit|Write"
+			}
+		],
+		"PostToolUse": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-edited-file.sh"
+					}
+				],
+				"matcher": "Edit|MultiEdit|Write"
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typecheck-touched.sh"
+					}
+				]
+			}
+		]
+	}
+}
