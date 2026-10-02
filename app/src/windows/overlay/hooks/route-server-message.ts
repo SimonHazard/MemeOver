@@ -35,6 +35,7 @@ export type OverlayAction =
 	| { kind: "reaction"; emoji: string; emojiUrl?: string }
 	| { kind: "server_error"; message: ErrorMessage }
 	| { kind: "session_revoked"; code: SessionRevocationCode }
+	| { kind: "guild_state"; pausedUntil: number | null }
 	| { kind: "pong" }
 	| { kind: "member_count"; count: number }
 	| { kind: "drop"; reason: DropReason; detail?: unknown };
@@ -101,6 +102,13 @@ export function routeServerMessage(raw: string, ctx: RouteContext): OverlayActio
 				isSessionRevocationCode(msg.code)
 					? { kind: "session_revoked", code: msg.code }
 					: { kind: "server_error", message: msg },
+		)
+		.with(
+			{ type: "GUILD_STATE" },
+			(msg): OverlayAction =>
+				msg.guild_id === ctx.guildId
+					? { kind: "guild_state", pausedUntil: msg.paused_until }
+					: drop("other_guild"),
 		)
 		.with({ type: "PING" }, (): OverlayAction => ({ kind: "pong" }))
 		.with(
