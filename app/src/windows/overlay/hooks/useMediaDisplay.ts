@@ -1,4 +1,7 @@
+import { emit } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isMediaExpired } from "@/shared/history-expiry";
+import { traceMetadata } from "@/shared/overlay-trace";
 import { useAppStore } from "@/shared/store";
 import type { DisplayQueueItem } from "@/shared/types";
 
@@ -86,6 +89,15 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Skip the broken item — immediately triggers hide → onExitComplete → next
 	const onMediaError = useCallback(() => {
 		console.warn("[MediaDisplay] Media failed to load, skipping item");
+		const item = currentRef.current;
+		if (item)
+			void emit("overlay-trace", {
+				id: crypto.randomUUID(),
+				at: Date.now(),
+				...traceMetadata(JSON.stringify(item)),
+				decision: "dropped",
+				reason: isMediaExpired(item, Date.now()) ? "expired_url" : "load_failed",
+			});
 		hide();
 	}, [hide]);
 

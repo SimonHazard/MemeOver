@@ -7,6 +7,8 @@ import { isGuildPausedAt } from "./guild-pause";
 import { restoreOverlayMonitor } from "./helpers";
 import { toReplayItem } from "./history-expiry";
 import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors";
+import type { OverlayTraceEntry } from "./overlay-trace";
+import { pushTrace, traceMetadata } from "./overlay-trace";
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
@@ -23,6 +25,7 @@ import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const MAX_QUEUE_SIZE = 50;
+let emitQueueTrace: ((entry: OverlayTraceEntry) => void) | undefined;
 
 const REACTION_PRESET_TIMING: Record<
 	FloatingReactionAnimation,
@@ -46,6 +49,8 @@ function resolveReactionAnimation(settings: Settings): FloatingReactionAnimation
 // ─── State shape ──────────────────────────────────────────────────────────────
 
 interface AppStore {
+	trace: OverlayTraceEntry[];
+	clearTrace: () => void;
 	lastJoinError: string | null;
 	serverFeatures: string[];
 	guildPausedUntil: number | null;
@@ -103,6 +108,8 @@ interface AppStore {
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useAppStore = create<AppStore>((set) => ({
+	trace: [],
+	clearTrace: () => set({ trace: [] }),
 	lastJoinError: null,
 	serverFeatures: [],
 	guildPausedUntil: null,
@@ -145,6 +152,13 @@ export const useAppStore = create<AppStore>((set) => ({
 				state.settings.hideAnonymous,
 			);
 			if (mutedReason) {
+				emitQueueTrace?.({
+					id: crypto.randomUUID(),
+					at: Date.now(),
+					...traceMetadata(JSON.stringify(item)),
+					decision: "dropped",
+					reason: mutedReason,
+				});
 				return state;
 			}
 			const reason = canEnqueue(state.queue, item, {
@@ -153,9 +167,22 @@ export const useAppStore = create<AppStore>((set) => ({
 				isReplay: opts?.isReplay ?? item.replayOf !== undefined,
 			});
 			if (reason) {
+				emitQueueTrace?.({
+					id: crypto.randomUUID(),
+					at: Date.now(),
+					...traceMetadata(JSON.stringify(item)),
+					decision: "dropped",
+					reason,
+				} satisfies OverlayTraceEntry);
 				if (reason === "author_limit") console.debug("[Queue] Dropped item:", reason);
 				return state;
 			}
+			emitQueueTrace?.({
+				id: crypto.randomUUID(),
+				at: Date.now(),
+				...traceMetadata(JSON.stringify(item)),
+				decision: "queued",
+			} satisfies OverlayTraceEntry);
 			return { queue: [...state.queue, item] };
 		}),
 	dequeue: () => set((state) => ({ queue: state.queue.slice(1) })),
@@ -221,6 +248,9 @@ export const useAppStore = create<AppStore>((set) => ({
  * - Listens for "replay-item" to re-enqueue a history item from the settings window
  */
 export async function initOverlayStore(): Promise<void> {
+	emitQueueTrace = (entry) => {
+		void emit("overlay-trace", entry).catch(() => {});
+	};
 	void emit("guild-pause-changed", null);
 	try {
 		const settings = await loadSettings();
@@ -284,6 +314,9 @@ export async function initOverlayStore(): Promise<void> {
  * - Subscribes to "member-count-changed" Tauri events emitted by the overlay window
  */
 export async function initSettingsStore(): Promise<void> {
+	await listen<OverlayTraceEntry>("overlay-trace", (event) =>
+		useAppStore.setState((state) => ({ trace: pushTrace(state.trace, event.payload) })),
+	);
 	await listen<string | null>("ws-join-error", (event) =>
 		useAppStore.setState({ lastJoinError: event.payload }),
 	);

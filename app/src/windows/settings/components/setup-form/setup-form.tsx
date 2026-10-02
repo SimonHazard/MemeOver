@@ -21,6 +21,7 @@ import { loadSettings, persistSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
+import { DiagnosticsPanel } from "../diagnostics/diagnostics-panel";
 import { ConnectionCredentialsFields } from "./connection-fields";
 import type { SetupValues } from "./schema";
 
@@ -171,6 +172,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 						</div>
 					</form>
 				</NbCard>
+				<DiagnosticsPanel />
 				{/* ── Autostart Card ── */}
 				{/* Le toggle ne passe pas par le TanStack Form intentionnellement : l'autostart est une action système immédiate (write dans le registre/LaunchAgent), pas une valeur à valider et soumettre en batch avec d'autres champs — d'où le useState + useEffect direct.  */}
 				<NbCard>

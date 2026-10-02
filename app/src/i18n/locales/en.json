@@ -432,6 +432,87 @@
 		"downloadNow": "Download & Install",
 		"foundToast": "Update v{{version}} is available!"
 	},
+	"diagnostics": {
+		"title": "Why is nothing showing?",
+		"run": "Run checks",
+		"running": "Checking…",
+		"localTest": "Send local test",
+		"traceTitle": "Recent events",
+		"clear": "Clear",
+		"empty": "Post a meme in a watched channel and watch this list.",
+		"copied": "Setup command copied",
+		"actionFailed": "The action could not be completed.",
+		"hiddenChannels": "The bot cannot see {{count}} channels.",
+		"sourcesServerMuted": "Messages from bots and apps are muted on the server.",
+		"sourcesLocalMuted": "Messages from bots and apps are hidden locally.",
+		"sourcesAllowed": "Messages from bots and apps are allowed.",
+		"monitorMissing": "The saved monitor is unavailable; showing the overlay uses the primary monitor.",
+		"silent": "Audio and video are silent.",
+		"askResume": "Ask an admin to run /memeover resume.",
+		"authorsFiltered": "{{count}} authors are muted; anonymous messages may also be hidden.",
+		"rows": {
+			"credentials": "Connection credentials",
+			"connection": "Bot connection",
+			"guild": "Registered server",
+			"channels": "Watched channels",
+			"bot-sources": "Messages from bots and apps",
+			"intent": "Message Content access",
+			"overlay": "Overlay window",
+			"display": "Display settings",
+			"pause": "Server pause",
+			"muted-authors": "Author filters"
+		},
+		"status": {
+			"ok": "OK",
+			"warn": "Check",
+			"fail": "Problem",
+			"unknown": "Unknown",
+			"pending": "Checking"
+		},
+		"fixes": {
+			"goto-setup": "Edit connection",
+			"copy-setup-command": "Copy setup command",
+			"open-reauthorize": "Reauthorize bot",
+			"open-dev-portal": "Developer portal",
+			"show-overlay": "Show overlay",
+			"fix-display": "Restore display",
+			"manage-muted": "Manage authors"
+		},
+		"decisions": {
+			"displayed": "Displayed",
+			"queued": "Queued",
+			"reaction_shown": "Reaction shown",
+			"dropped": "Ignored"
+		},
+		"reasons": {
+			"invalid_json": "Unreadable message",
+			"invalid_schema": "Unsupported message",
+			"overlay_closed": "Overlay closed",
+			"bot_app_source": "Bot/app source hidden",
+			"media_type_disabled": "Media type disabled",
+			"text_disabled": "Text disabled",
+			"reactions_disabled": "Reactions disabled",
+			"other_guild": "Other server",
+			"author_muted": "Author muted",
+			"anonymous_hidden": "Anonymous message hidden",
+			"queue_full": "Queue full",
+			"author_limit": "Author queue limit reached",
+			"load_failed": "Media failed to load",
+			"expired_url": "Media URL expired",
+			"join_rejected": "Connection refused",
+			"session_revoked": "Session revoked",
+			"guild_paused": "Server paused"
+		},
+		"remote": {
+			"pending": "Waiting for the bot.",
+			"unsupported": "The bot is too old for remote checks.",
+			"offline": "The bot is disconnected.",
+			"timeout": "The bot did not answer in time.",
+			"RATE_LIMITED": "Wait before running checks again.",
+			"NOT_JOINED": "Connect to the server first.",
+			"DIAG_UNAVAILABLE": "Remote checks are unavailable."
+		}
+	},
 	"motion": {
 		"holdLabel": "Hold to {{label}}",
 		"holdHint": "Hold the mouse button, Space or Enter for 1.2 seconds. Release to cancel.",
