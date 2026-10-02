@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export const SERVER_CREATOR_DEFAULT_PORT = 3001;
 export const DISCORD_DEVELOPER_PORTAL_URL = "https://discord.com/developers/applications";
-export const DISCORD_INVITE_PERMISSIONS = 68608;
+export { createDiscordInviteUrl, DISCORD_INVITE_PERMISSIONS } from "@memeover/shared";
 
 export interface ServerCreatorStatus {
 	platform: string;
@@ -42,18 +42,6 @@ export function createPublicWsUrl(ipOrHost: string, port: number): string {
 	if (!host) return `ws://YOUR_PUBLIC_IP:${port}/ws`;
 	if (host.startsWith("ws://") || host.startsWith("wss://")) return host;
 	return `ws://${host}:${port}/ws`;
-}
-
-export function createDiscordInviteUrl(clientId: string, administrator = false): string | null {
-	const id = clientId.trim();
-	if (!/^\d{17,20}$/.test(id)) return null;
-	const permissions = administrator ? 8 : DISCORD_INVITE_PERMISSIONS;
-	const params = new URLSearchParams({
-		client_id: id,
-		scope: "bot applications.commands",
-		permissions: String(permissions),
-	});
-	return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
 export function createFriendSetupCode({
