@@ -18,6 +18,7 @@ describe("registry normalization", () => {
 
 		expect(normalized.changed).toBe(true);
 		expect(normalized.value["guild-1"]).toEqual({
+			paused_until: null,
 			token: "token-1",
 			channel_ids: ["channel-1"],
 			allow_bot_app_sources: false,

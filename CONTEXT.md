@@ -16,3 +16,4 @@
 - **Floating reaction**: a short-lived emoji animation rendered independently of the display queue.
 - **Reaction budget**: weighted admission with FIFO eviction to bound reaction scene complexity.
 
+- **Guild pause**: an admin-controlled persisted `paused_until`; the bot drops new events and the overlay clears its waiting queue.

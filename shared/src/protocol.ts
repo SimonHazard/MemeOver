@@ -108,6 +108,14 @@ const ReactionEventSchema = z.object({
 	source: EventSourceSchema.optional(),
 });
 
+export const GUILD_STATE_FEATURE = "guild_state";
+const GuildStateMessageSchema = z.object({
+	type: z.literal("GUILD_STATE"),
+	guild_id: z.string(),
+	paused_until: z.number().int().nullable(),
+});
+export type GuildStateMessage = z.infer<typeof GuildStateMessageSchema>;
+
 export const ServerMessageSchema = z.discriminatedUnion("type", [
 	MediaEventSchema,
 	TextEventSchema,
@@ -116,6 +124,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
 	PingMessageSchema,
 	MemberCountUpdateMessageSchema,
 	ReactionEventSchema,
+	GuildStateMessageSchema,
 ]);
 
 export type MediaEvent = z.infer<typeof MediaEventSchema>;

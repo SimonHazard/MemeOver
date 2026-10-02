@@ -80,6 +80,7 @@ export const guildRegistry = {
 
 		registry[guildId] = {
 			token,
+			paused_until: existing?.paused_until ?? null,
 			channel_ids,
 			allow_bot_app_sources: existing?.allow_bot_app_sources ?? false,
 			registered_at: existing?.registered_at ?? now,
@@ -98,6 +99,13 @@ export const guildRegistry = {
 		save();
 	},
 
+	setPausedUntil(guildId: string, pausedUntil: number | null): GuildConfig | null {
+		const cfg = registry[guildId];
+		if (!cfg) return null;
+		registry[guildId] = { ...cfg, paused_until: pausedUntil };
+		save();
+		return this.getConfig(guildId) ?? null;
+	},
 	setBotAppSources(guildId: string, enabled: boolean): GuildConfig | null {
 		const existing = registry[guildId];
 		if (!existing) return null;

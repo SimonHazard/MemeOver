@@ -41,7 +41,7 @@ async function joined() {
 	const c = await client();
 	expect(await joinGuild(c, guildId, token)).toMatchObject({
 		success: true,
-		features: [],
+		features: ["guild_state"],
 	});
 	expect(await c.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
 	return c;
@@ -90,7 +90,7 @@ test("JOIN is idempotent", async () => {
 	const c = await joined();
 	expect(await joinGuild(c, guildId, token)).toMatchObject({
 		success: true,
-		features: [],
+		features: ["guild_state"],
 	});
 	c.send("not json");
 	expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
