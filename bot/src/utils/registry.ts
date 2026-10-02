@@ -138,8 +138,7 @@ export const guildRegistry = {
 
 	/**
 	 * Generate a new token for an existing guild, invalidating the previous one.
-	 * All currently connected WebSocket clients will fail their next auth check
-	 * and must reconnect with the new token.
+	 * Callers must revoke connected sessions with evictGuild immediately after rotation.
 	 * Returns the new token, or null if the guild is not registered.
 	 */
 	rotateToken(guildId: string): string | null {

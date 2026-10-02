@@ -1,12 +1,12 @@
 import type { Client, MessageCreateOptions } from "discord.js";
 import { publicPanelMessage } from "../commands/response-panel";
 import { resolveBotLocale, t } from "../i18n";
+import { evictGuild } from "../server";
 import { discordRefLogFields } from "./log-privacy";
 import { logger } from "./logger";
 import { schedulePresenceRefresh } from "./presence";
 import { type GuildConfig, guildRegistry } from "./registry";
 import { store } from "./store";
-import type { ServerMessage } from "./types";
 
 const log = logger.child({ module: "cleanup" });
 
@@ -149,26 +149,12 @@ async function postCleanupNotice(client: Client, guildId: string, cfg: GuildConf
 }
 
 function closeGuildConnections(guildId: string): void {
-	const payload = JSON.stringify({
-		type: "ERROR",
-		code: "GUILD_UNREGISTERED",
-		message: t("en", "cleanup.wsMessage"),
-	} satisfies ServerMessage);
-
-	for (const wsId of [...store.getGuildMembers(guildId)]) {
-		const client = store.getClient(wsId);
-		if (!client) continue;
-
-		try {
-			client.ws_ref.send(payload);
-			client.ws_ref.close(1008, t("en", "cleanup.wsCloseReason"));
-		} catch (err) {
-			log.warn(
-				{ ...discordRefLogFields({ guildId, wsId }), event: "cleanup_ws_close_failed", err },
-				"Failed to close cleaned-up guild client",
-			);
-		}
-	}
+	evictGuild(
+		guildId,
+		"GUILD_UNREGISTERED",
+		t("en", "cleanup.wsMessage"),
+		t("en", "cleanup.wsCloseReason"),
+	);
 }
 
 export async function runGuildCleanup(client: Client, now = Date.now()): Promise<void> {

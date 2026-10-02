@@ -14,7 +14,7 @@ mock.module("./utils/config", () => ({
 }));
 mock.module("./utils/logger", () => ({ logger: pino({ level: "silent" }) }));
 const { guildRegistry } = await import("./utils/registry");
-const { createServer, broadcastToGuild } = await import("./server");
+const { createServer, broadcastToGuild, evictGuild } = await import("./server");
 let server: ReturnType<typeof startServer>;
 const clients: TestClient[] = [];
 const guildId = "123456789012345678";
@@ -41,6 +41,7 @@ async function joined() {
 	const c = await client();
 	expect(await joinGuild(c, guildId, token)).toMatchObject({
 		success: true,
+		features: [],
 	});
 	expect(await c.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
 	return c;
@@ -89,6 +90,7 @@ test("JOIN is idempotent", async () => {
 	const c = await joined();
 	expect(await joinGuild(c, guildId, token)).toMatchObject({
 		success: true,
+		features: [],
 	});
 	c.send("not json");
 	expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
@@ -150,4 +152,78 @@ test("broadcast reaches only joined clients", async () => {
 	broadcastToGuild(guildId, event);
 	expect(await first.next()).toEqual(event);
 	await expect(unjoined.next(undefined, 50)).rejects.toThrow("Timed out");
+});
+
+test("rotation evicts immediately and only new credentials can rejoin", async () => {
+	const g = "123456789012345679",
+		old = guildRegistry.register(g, null),
+		a = await client(),
+		unjoined = await client();
+	try {
+		expect(await joinGuild(a, g, old)).toMatchObject({ success: true });
+		await a.next();
+		const next = guildRegistry.rotateToken(g);
+		expect(evictGuild(g, "TOKEN_ROTATED", "msg", "Token rotated")).toBe(1);
+		expect(await a.next()).toEqual({ type: "ERROR", code: "TOKEN_ROTATED", message: "msg" });
+		expect((await a.closed).code).toBe(1008);
+		broadcastToGuild(g, {
+			type: "TEXT",
+			guild_id: g,
+			channel_id: "c",
+			message_id: "m",
+			author_id: "a",
+			author_username: "A",
+			author_avatar_url: "",
+			text: "after revocation",
+			timestamp: 1,
+		});
+		const b = await client();
+		expect(await joinGuild(b, g, old)).toMatchObject({ success: false, error: "Invalid token" });
+		expect(await joinGuild(b, g, next ?? "")).toMatchObject({ success: true });
+		expect(await b.next()).toMatchObject({ count: 1 });
+		unjoined.send("not json");
+		expect(await unjoined.next()).toMatchObject({ code: "PARSE_ERROR" });
+	} finally {
+		guildRegistry.unregister(g);
+	}
+});
+test("removal evicts and rejects later joins", async () => {
+	const g = "123456789012345680",
+		secret = guildRegistry.register(g, null),
+		a = await client();
+	expect(await joinGuild(a, g, secret)).toMatchObject({ success: true });
+	await a.next();
+	guildRegistry.unregister(g);
+	expect(evictGuild(g, "GUILD_UNREGISTERED", "removed")).toBe(1);
+	expect(await a.next()).toMatchObject({ code: "GUILD_UNREGISTERED" });
+	expect((await a.closed).code).toBe(1008);
+	expect(await joinGuild(await client(), g, secret)).toMatchObject({
+		success: false,
+		error: "Unknown guild — run /memeover setup in your Discord server first",
+	});
+});
+test("multi-guild socket retains other authorized room", async () => {
+	const g = "123456789012345681",
+		secret = guildRegistry.register(g, null),
+		a = await joined();
+	try {
+		expect(await joinGuild(a, g, secret)).toMatchObject({ success: true });
+		await a.next();
+		expect(evictGuild(g, "TOKEN_ROTATED", "msg")).toBe(1);
+		expect(await a.next()).toMatchObject({ code: "TOKEN_ROTATED" });
+		broadcastToGuild(guildId, {
+			type: "TEXT",
+			guild_id: guildId,
+			channel_id: "c",
+			message_id: "m",
+			author_id: "a",
+			author_username: "A",
+			author_avatar_url: "",
+			text: "still joined",
+			timestamp: 1,
+		});
+		expect(await a.next()).toMatchObject({ text: "still joined" });
+	} finally {
+		guildRegistry.unregister(g);
+	}
 });

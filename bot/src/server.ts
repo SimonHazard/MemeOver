@@ -1,6 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
+import type { SessionRevocationCode } from "@memeover/shared";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
+import { SERVER_FEATURES } from "./utils/features";
 import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
 import { schedulePresenceRefresh } from "./utils/presence";
@@ -61,6 +63,45 @@ export function broadcastToGuild(guildId: string, event: ServerMessage): void {
 
 	// Counts broadcast events (one per Discord message), not per-recipient sends
 	stats.messageBroadcast();
+}
+
+/** Remove membership synchronously before notifying or closing revoked clients. */
+export function evictGuild(
+	guildId: string,
+	code: SessionRevocationCode,
+	message: string,
+	closeReason = "Session revoked",
+): number {
+	let evicted = 0;
+	for (const wsId of [...store.getGuildMembers(guildId)]) {
+		const client = store.getClient(wsId);
+		store.leaveGuild(wsId, guildId);
+		if (!client) continue;
+		evicted++;
+		try {
+			client.ws_ref.send(JSON.stringify({ type: "ERROR", code, message } satisfies ServerMessage));
+		} catch (err) {
+			log.warn(
+				{ ...discordRefLogFields({ guildId, wsId }), event: "guild_eviction_send_failed", err },
+				"Failed to notify revoked client",
+			);
+		}
+		if (client.joined_guilds.size === 0) {
+			try {
+				client.ws_ref.close(1008, closeReason);
+			} catch (err) {
+				log.warn(
+					{ ...discordRefLogFields({ guildId, wsId }), event: "guild_eviction_close_failed", err },
+					"Failed to close revoked client",
+				);
+			}
+		}
+	}
+	log.info(
+		{ ...discordRefLogFields({ guildId }), event: "guild_evicted", code, evicted },
+		"Guild sessions revoked",
+	);
+	return evicted;
 }
 
 // ─── Rate limiting ─────────────────────────────────────────────────────────────
@@ -192,6 +233,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 				type: "JOIN_ACK",
 				guild_id: msg.guild_id,
 				success: true,
+				features: [...SERVER_FEATURES],
 			} satisfies ServerMessage),
 		);
 		return;
@@ -203,6 +245,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 			type: "JOIN_ACK",
 			guild_id: msg.guild_id,
 			success: true,
+			features: [...SERVER_FEATURES],
 		} satisfies ServerMessage),
 	);
 	wsLog.info({ event: "join_success" }, "Client joined guild");
