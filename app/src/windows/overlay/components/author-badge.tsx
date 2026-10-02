@@ -1,26 +1,76 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@memeover/ui/components/ui/avatar";
+import { DURATION, EASE_OUT } from "@memeover/ui/lib/motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { BADGE_ENTER_DELAY_S } from "./overlay-motion";
+
+// Lands just after the media pop has started: the media reads first, then who sent it.
+
+// Discord's default avatar palette — a familiar colour while the avatar loads (or if it fails).
+const FALLBACK_COLORS = ["#5865F2", "#757E8A", "#3BA55C", "#FAA61A", "#ED4245", "#EB459F"] as const;
+
+/** Stable fallback colour per author, so the same friend always gets the same placeholder. */
+export function fallbackAvatarColor(authorId: string): string {
+	let hash = 0;
+	for (let i = 0; i < authorId.length; i++) {
+		hash = (hash * 31 + authorId.charCodeAt(i)) | 0;
+	}
+	return FALLBACK_COLORS[Math.abs(hash) % FALLBACK_COLORS.length];
+}
 
 interface AuthorBadgeProps {
+	authorId: string;
 	username: string;
 	displayName?: string;
 	avatarUrl: string;
+	/** Caps the badge to the media box so long names truncate instead of overflowing. */
+	maxWidth: string;
 }
 
-export function AuthorBadge({ username, displayName, avatarUrl }: AuthorBadgeProps) {
+export function AuthorBadge({
+	authorId,
+	username,
+	displayName,
+	avatarUrl,
+	maxWidth,
+}: AuthorBadgeProps) {
+	const reduceMotion = useReducedMotion();
 	const name = displayName ?? username;
+
 	return (
-		<div
-			className="flex items-center gap-1.5 self-start
-		                bg-black/65 backdrop-blur-md rounded-full
-		                px-2.5 py-1 ring-1 ring-white/10"
+		<motion.div
+			// Sized in em from a viewport-relative base so the badge stays legible from 1080p to 4K.
+			style={{ fontSize: "clamp(12px, 1.5vmin, 22px)", maxWidth }}
+			className="flex min-w-0 items-center gap-[0.45em] self-start
+			           rounded-full bg-black/65 py-[0.25em] pr-[0.85em] pl-[0.25em]
+			           shadow-[0_2px_10px_rgb(0_0_0/0.35)] ring-1 ring-white/10 backdrop-blur-md"
+			initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: "translateY(6px)" }}
+			animate={{
+				opacity: 1,
+				transform: "translateY(0px)",
+				transition: reduceMotion
+					? { duration: DURATION.reduced, ease: EASE_OUT }
+					: { duration: 0.22, ease: EASE_OUT, delay: BADGE_ENTER_DELAY_S },
+			}}
 		>
-			<Avatar className="w-5 h-5 shrink-0">
-				<AvatarImage src={avatarUrl} alt="" />
-				<AvatarFallback className="text-[8px]">{name.charAt(0).toUpperCase()}</AvatarFallback>
-			</Avatar>
-			<span className="text-white text-xs font-semibold leading-none whitespace-nowrap">
-				{name}
-			</span>
-		</div>
+			<motion.span
+				className="flex shrink-0"
+				initial={reduceMotion ? false : { transform: "scale(0.85)" }}
+				animate={{
+					transform: "scale(1)",
+					transition: { type: "spring", duration: 0.35, bounce: 0.3, delay: BADGE_ENTER_DELAY_S },
+				}}
+			>
+				<Avatar className="size-[1.6em] ring-1 ring-white/15">
+					<AvatarImage src={avatarUrl} alt="" />
+					<AvatarFallback
+						className="font-bold text-[0.7em] text-white"
+						style={{ backgroundColor: fallbackAvatarColor(authorId) }}
+					>
+						{name.charAt(0).toUpperCase()}
+					</AvatarFallback>
+				</Avatar>
+			</motion.span>
+			<span className="min-w-0 truncate font-semibold text-white leading-none">{name}</span>
+		</motion.div>
 	);
 }

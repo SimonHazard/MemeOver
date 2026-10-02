@@ -1,7 +1,10 @@
+import { motion, useReducedMotion } from "framer-motion";
 import type React from "react";
 import type { DisplayQueueItem, Settings, TextPosition } from "@/shared/types";
+import { isVideoBackedGif } from "../media/media-kind";
 import { AudioEqualizer } from "./audio-equalizer";
 import { AuthorBadge } from "./author-badge";
+import { captionMotion } from "./overlay-motion";
 import { InlineText, TextDisplay } from "./text-bubble";
 
 const CAPTION_SHADOW = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000";
@@ -10,12 +13,8 @@ const OVERLAY_CAPTION_SHADOW =
 	"-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000";
 // Stickers use fit-box too but capped smaller — Discord sticker assets lose fidelity past ~25vmin.
 const STICKER_MAX_VMIN = 25;
-const VIDEO_URL_PATTERN = /\.(mp4|webm|mov)(?:\?.*)?$/i;
 
-/** Discord `gifv` embeds are GIFs backed by a video transport. */
-export function isVideoBackedGif(mediaType: string, url: string): boolean {
-	return mediaType === "gif" && VIDEO_URL_PATTERN.test(url);
-}
+export { isVideoBackedGif } from "../media/media-kind";
 
 function hexToRgba(hex: string, opacity: number): string {
 	const r = parseInt(hex.slice(1, 3), 16);
@@ -41,19 +40,22 @@ function InlineCaption({
 	width,
 	color,
 	fontSize,
+	reduced,
 }: {
 	text: string;
 	width: string;
 	color: string;
 	fontSize: number;
+	reduced: boolean;
 }) {
 	return (
-		<p
+		<motion.p
+			{...captionMotion(reduced)}
 			style={{ maxWidth: width, textShadow: CAPTION_SHADOW, color, fontSize }}
 			className="font-semibold text-center leading-snug line-clamp-2 overflow-hidden px-2"
 		>
 			<InlineText text={text} />
-		</p>
+		</motion.p>
 	);
 }
 
@@ -62,14 +64,17 @@ function OverlayCaption({
 	color,
 	fontSize,
 	anchorClass,
+	reduced,
 }: {
 	text: string;
 	color: string;
 	fontSize: number;
 	anchorClass: string;
+	reduced: boolean;
 }) {
 	return (
-		<p
+		<motion.p
+			{...captionMotion(reduced)}
 			style={{
 				textShadow: OVERLAY_CAPTION_SHADOW,
 				color,
@@ -78,7 +83,7 @@ function OverlayCaption({
 			className={`absolute ${anchorClass} w-[92%] font-black uppercase text-center leading-tight tracking-wide line-clamp-3 overflow-hidden pointer-events-none`}
 		>
 			<InlineText text={text} emojiHeight={`${fontSize * 1.1}px`} />
-		</p>
+		</motion.p>
 	);
 }
 
@@ -101,6 +106,7 @@ export function MediaDisplay({
 	startTimer,
 	onMediaError,
 }: MediaDisplayProps) {
+	const reduced = Boolean(useReducedMotion());
 	// Fit-box model: the media fits a `mediaSize × mediaSize` vmin square,
 	// preserving its aspect ratio. vmin (vs vw) keeps the visual size consistent
 	// across monitor orientations and caps height automatically for portrait content.
@@ -144,9 +150,11 @@ export function MediaDisplay({
 		const inner = (
 			<>
 				<AuthorBadge
+					authorId={item.author_id}
 					username={item.author_username}
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
+					maxWidth={boxSize}
 				/>
 				<TextDisplay text={item.text} width={boxSize} textSize={textSize} textColor={textColor} />
 			</>
@@ -189,7 +197,7 @@ export function MediaDisplay({
 					onEnded={videoBackedGif ? undefined : onVideoEnd}
 					onError={onMediaError}
 					style={{ ...fitBoxStyle, background: "transparent", opacity }}
-					className="rounded-xl block transition-opacity duration-300"
+					className="rounded-xl block"
 				/>
 			);
 		}
@@ -201,7 +209,7 @@ export function MediaDisplay({
 					onLoad={startTimer}
 					onError={onMediaError}
 					style={{ ...fitBoxStyle, opacity }}
-					className="rounded-xl block transition-opacity duration-300"
+					className="rounded-xl block"
 					draggable={false}
 				/>
 			);
@@ -212,8 +220,8 @@ export function MediaDisplay({
 					style={{ maxWidth: boxSize, opacity }}
 					className={
 						bgEnabled
-							? "rounded-xl flex flex-col items-center gap-3 transition-opacity duration-300"
-							: "rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3 transition-opacity duration-300"
+							? "rounded-xl flex flex-col items-center gap-3"
+							: "rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3"
 					}
 				>
 					<AudioEqualizer />
@@ -227,12 +235,13 @@ export function MediaDisplay({
 						onError={onMediaError}
 					/>
 					{caption && (
-						<p
+						<motion.p
+							{...captionMotion(reduced)}
 							style={{ textShadow: CAPTION_SHADOW, color: textColor, fontSize: textSize }}
 							className="font-semibold text-center leading-snug line-clamp-2 overflow-hidden w-full"
 						>
 							<InlineText text={caption} />
-						</p>
+						</motion.p>
 					)}
 				</div>
 			);
@@ -252,7 +261,7 @@ export function MediaDisplay({
 					height: "auto",
 					opacity,
 				}}
-				className="block transition-opacity duration-300"
+				className="block"
 				draggable={false}
 			/>
 		);
@@ -268,6 +277,7 @@ export function MediaDisplay({
 				color={textColor}
 				fontSize={textSize}
 				anchorClass={overlayAnchorClass(textPosition)}
+				reduced={reduced}
 			/>
 		</div>
 	) : (
@@ -275,16 +285,24 @@ export function MediaDisplay({
 	);
 
 	const inlineCaptionNode = useInlineCaption ? (
-		<InlineCaption text={caption} width={boxSize} color={textColor} fontSize={textSize} />
+		<InlineCaption
+			reduced={reduced}
+			text={caption}
+			width={boxSize}
+			color={textColor}
+			fontSize={textSize}
+		/>
 	) : null;
 
 	const mediaContent = (
 		<>
 			{!item.anonymous && (
 				<AuthorBadge
+					authorId={item.author_id}
 					username={item.author_username}
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
+					maxWidth={boxSize}
 				/>
 			)}
 			{textPosition === "above" && inlineCaptionNode}
