@@ -6,6 +6,18 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.5.0]
+
+### Added
+
+- Add shared motion tokens and reduced-motion paths.
+- Improve author badges and captions while preserving the media entrance.
+- Add hold-to-confirm profile deletion, copy feedback, animated counters and profile lists.
+
+### Changed
+
+- Keep settings transitions focused and improve position and theme previews.
+
 ## [1.4.5]
 
 ### Added

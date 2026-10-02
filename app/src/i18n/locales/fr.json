@@ -44,7 +44,9 @@
 		"skipCurrent": "Passer",
 		"displaySettings": "Paramètres d'affichage",
 		"history": "Historique",
-		"queueSize": "{{count}} en attente"
+		"queueSize": "{{count}} en attente",
+		"queueSizeLabel_one": "en attente",
+		"queueSizeLabel_other": "en attente"
 	},
 	"display": {
 		"title": "Affichage",
@@ -375,5 +377,19 @@
 		"later": "Plus tard",
 		"downloadNow": "Télécharger et installer",
 		"foundToast": "Mise à jour v{{version}} disponible !"
+	},
+	"motion": {
+		"holdLabel": "Maintenir pour {{label}}",
+		"holdHint": "Maintiens le bouton, Espace ou Entrée pendant 1,2 seconde. Relâche pour annuler.",
+		"copied": "Copié",
+		"toggleTheme": "Changer de thème",
+		"copyError": "Impossible de copier dans le presse-papiers."
+	},
+	"unsavedChanges": {
+		"title": "Modifications non enregistrées",
+		"description": "Tes réglages ont été modifiés. Sauvegarde-les avant de quitter cette page, ou abandonne les modifications.",
+		"stay": "Continuer à modifier",
+		"discard": "Abandonner",
+		"saveAndLeave": "Sauvegarder et continuer"
 	}
 }

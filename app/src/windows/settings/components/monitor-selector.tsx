@@ -104,7 +104,7 @@ export function MonitorSelector() {
 							disabled={isDisabled}
 							className={cn(
 								NB_BTN_SM,
-								"flex items-center gap-1.5 px-3 py-1.5 rounded-none transition-none",
+								"flex items-center gap-1.5 px-3 py-1.5 rounded-none",
 								active
 									? "bg-foreground text-background shadow-nb-sm"
 									: "bg-background text-foreground",

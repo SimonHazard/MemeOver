@@ -1,5 +1,6 @@
 import type React from "react";
 import type { DisplayQueueItem, Settings, TextPosition } from "@/shared/types";
+import { isVideoBackedGif } from "../media/media-kind";
 import { AudioEqualizer } from "./audio-equalizer";
 import { AuthorBadge } from "./author-badge";
 import { InlineText, TextDisplay } from "./text-bubble";
@@ -10,12 +11,8 @@ const OVERLAY_CAPTION_SHADOW =
 	"-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000";
 // Stickers use fit-box too but capped smaller — Discord sticker assets lose fidelity past ~25vmin.
 const STICKER_MAX_VMIN = 25;
-const VIDEO_URL_PATTERN = /\.(mp4|webm|mov)(?:\?.*)?$/i;
 
-/** Discord `gifv` embeds are GIFs backed by a video transport. */
-export function isVideoBackedGif(mediaType: string, url: string): boolean {
-	return mediaType === "gif" && VIDEO_URL_PATTERN.test(url);
-}
+export { isVideoBackedGif } from "../media/media-kind";
 
 function hexToRgba(hex: string, opacity: number): string {
 	const r = parseInt(hex.slice(1, 3), 16);
@@ -144,9 +141,11 @@ export function MediaDisplay({
 		const inner = (
 			<>
 				<AuthorBadge
+					authorId={item.author_id}
 					username={item.author_username}
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
+					maxWidth={boxSize}
 				/>
 				<TextDisplay text={item.text} width={boxSize} textSize={textSize} textColor={textColor} />
 			</>
@@ -189,7 +188,7 @@ export function MediaDisplay({
 					onEnded={videoBackedGif ? undefined : onVideoEnd}
 					onError={onMediaError}
 					style={{ ...fitBoxStyle, background: "transparent", opacity }}
-					className="rounded-xl block transition-opacity duration-300"
+					className="rounded-xl block"
 				/>
 			);
 		}
@@ -201,7 +200,7 @@ export function MediaDisplay({
 					onLoad={startTimer}
 					onError={onMediaError}
 					style={{ ...fitBoxStyle, opacity }}
-					className="rounded-xl block transition-opacity duration-300"
+					className="rounded-xl block"
 					draggable={false}
 				/>
 			);
@@ -212,8 +211,8 @@ export function MediaDisplay({
 					style={{ maxWidth: boxSize, opacity }}
 					className={
 						bgEnabled
-							? "rounded-xl flex flex-col items-center gap-3 transition-opacity duration-300"
-							: "rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3 transition-opacity duration-300"
+							? "rounded-xl flex flex-col items-center gap-3"
+							: "rounded-xl bg-black/70 backdrop-blur-lg p-6 flex flex-col items-center gap-3"
 					}
 				>
 					<AudioEqualizer />
@@ -252,7 +251,7 @@ export function MediaDisplay({
 					height: "auto",
 					opacity,
 				}}
-				className="block transition-opacity duration-300"
+				className="block"
 				draggable={false}
 			/>
 		);
@@ -282,9 +281,11 @@ export function MediaDisplay({
 		<>
 			{!item.anonymous && (
 				<AuthorBadge
+					authorId={item.author_id}
 					username={item.author_username}
 					displayName={item.author_display_name}
 					avatarUrl={item.author_avatar_url}
+					maxWidth={boxSize}
 				/>
 			)}
 			{textPosition === "above" && inlineCaptionNode}

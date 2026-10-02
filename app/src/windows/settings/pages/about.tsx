@@ -6,9 +6,10 @@ import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Bug, ExternalLink, FileText, Scale, ShieldCheck, Trash2 } from "lucide-react";
+import { Bug, ExternalLink, FileText, Scale, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { HoldToConfirmButton } from "@/components/motion/hold-to-confirm-button";
 import { clearHistory } from "@/shared/history";
 import { FullscreenInfoDialog } from "@/windows/settings/components/fullscreen-info-dialog";
 import { LangToggle } from "@/windows/settings/components/lang-toggle";
@@ -101,10 +102,10 @@ export function AboutPage() {
 									<Scale className="size-3.5" aria-hidden="true" />
 									{t("about.legalNotice")}
 								</NbButton>
-								<NbButton size="sm" variant="outline" onClick={handleClearLocalHistory}>
-									<Trash2 className="size-3.5" aria-hidden="true" />
-									{t("about.clearLocalHistory")}
-								</NbButton>
+								<HoldToConfirmButton
+									label={t("about.clearLocalHistory")}
+									onConfirm={() => void handleClearLocalHistory()}
+								/>
 							</div>
 						</div>
 					</div>

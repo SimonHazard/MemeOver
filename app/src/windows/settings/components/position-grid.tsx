@@ -76,7 +76,7 @@ const ITEM_BASE = [
 	"border-2 border-foreground !rounded-none",
 	"shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 	"bg-background text-foreground",
-	"transition-all duration-75 ease-out",
+	"transition-[translate,box-shadow,background-color,color] duration-75 ease-out",
 	"hover:translate-x-px hover:translate-y-px hover:shadow-[1px_1px_0px_0px_var(--nb-shadow)]",
 	"active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
 	"data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",

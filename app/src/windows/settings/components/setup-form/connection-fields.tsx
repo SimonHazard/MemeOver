@@ -10,6 +10,7 @@ import type {
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
+import { Collapsible } from "@/components/motion/collapsible";
 import { ConnectionCodeField } from "./connection-code";
 import { SetupSchema, type SetupValues } from "./schema";
 
@@ -122,8 +123,8 @@ export function ConnectionCredentialsFields({
 			)}
 
 			<form.Subscribe selector={(s) => s.values.expertMode}>
-				{(expertMode) =>
-					forceWsUrlVisible || expertMode ? (
+				{(expertMode) => (
+					<Collapsible open={forceWsUrlVisible || expertMode}>
 						<form.Field
 							name="wsUrl"
 							validators={{
@@ -151,8 +152,8 @@ export function ConnectionCredentialsFields({
 								)
 							}
 						</form.Field>
-					) : null
-				}
+					</Collapsible>
+				)}
 			</form.Subscribe>
 
 			<form.Field

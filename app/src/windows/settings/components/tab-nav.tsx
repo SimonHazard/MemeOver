@@ -62,7 +62,7 @@ export function TabNav() {
 							{showUpdateDot && (
 								<span className="pointer-events-none absolute -top-1 -right-1 flex size-2.5">
 									<span
-										className="absolute inline-flex h-full w-full rounded-full bg-secondary-500 opacity-75 animate-ping"
+										className="absolute inline-flex h-full w-full rounded-full bg-secondary-500 opacity-75 motion-safe:animate-ping"
 										style={{ animationIterationCount: 2 }}
 									/>
 									<span className="relative inline-flex size-2.5 rounded-full bg-secondary-500 border border-foreground" />

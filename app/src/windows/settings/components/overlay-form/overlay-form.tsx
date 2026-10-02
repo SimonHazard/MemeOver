@@ -13,6 +13,7 @@ import { ReactionsSection } from "./sections/reactions-section";
 import { StickyPreview } from "./sections/sticky-preview";
 import { TextSection } from "./sections/text-section";
 import { TimingSoundSection } from "./sections/timing-sound-section";
+import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 import { useOverlayForm } from "./use-overlay-form";
 
 export interface OverlayFormProps {
@@ -39,10 +40,12 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 				<form
 					onSubmit={(e) => {
 						e.preventDefault();
-						void form.handleSubmit();
+						// Persistence failures are reported by the mutation toast.
+						void form.handleSubmit().catch(() => {});
 					}}
 				>
 					<form.AppForm>
+						<UnsavedChangesDialog isPending={isPending} />
 						<div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_280px]">
 							{/* Main column — sections grouped by user intent */}
 							<div className="space-y-5 min-w-0">
@@ -77,17 +80,20 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 									<MediaTypesSection />
 								</NbCard>
 
-								<FormActions isPending={isPending} />
+								<div className="md:hidden">
+									<FormActions isPending={isPending} />
+								</div>
 							</div>
 
 							{/* Sticky preview sidebar — desktop only */}
-							<aside className="hidden md:block md:sticky md:top-5 md:self-start">
+							<aside className="hidden md:block md:sticky md:top-5 md:self-start space-y-5">
 								<NbCard>
 									<StickyPreview
 										previewAspect={previewAspect}
 										onPreviewAspectChange={setPreviewAspect}
 									/>
 								</NbCard>
+								<FormActions isPending={isPending} />
 							</aside>
 						</div>
 					</form.AppForm>

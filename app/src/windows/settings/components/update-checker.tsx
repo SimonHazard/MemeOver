@@ -14,7 +14,6 @@ import { ScrollArea } from "@memeover/ui/components/ui/scroll-area";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { NB_SHADOW_LG, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowRight,
 	CheckCircle2,
@@ -29,6 +28,7 @@ import { useTranslation } from "react-i18next";
 import type { Components } from "react-markdown";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
+import { Collapsible } from "@/components/motion/collapsible";
 import { type UpdateMeta, useUpdater } from "@/windows/settings/hooks/useUpdater";
 
 // ─── Markdown components (styled to match the NB design) ─────────────────────
@@ -132,28 +132,17 @@ function UpdateDialogContent({
 			)}
 
 			{/* Download progress */}
-			<AnimatePresence>
-				{(isDownloading || isReady) && (
-					<motion.div
-						key="progress"
-						initial={{ height: 0, opacity: 0 }}
-						animate={{ height: "auto", opacity: 1 }}
-						exit={{ height: 0, opacity: 0 }}
-						transition={{ duration: 0.25, ease: "easeInOut" }}
-						className="overflow-hidden"
-					>
-						<div className="space-y-2 pt-1">
-							<Progress
-								value={isReady ? 100 : progress}
-								className="h-2.5 border border-foreground rounded-none bg-muted"
-							/>
-							<p className="text-xs text-center text-muted-foreground font-text">
-								{isReady ? t("updater.readyToInstall") : t("updater.downloading", { progress })}
-							</p>
-						</div>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			<Collapsible open={isDownloading || isReady}>
+				<div className="space-y-2 pt-1">
+					<Progress
+						value={isReady ? 100 : progress}
+						className="h-2.5 border border-foreground rounded-none bg-muted"
+					/>
+					<p className="text-xs text-center text-muted-foreground font-text">
+						{isReady ? t("updater.readyToInstall") : t("updater.downloading", { progress })}
+					</p>
+				</div>
+			</Collapsible>
 
 			<DialogFooter className="gap-2 sm:gap-2">
 				{/* Close (later) — always available unless ready to install */}

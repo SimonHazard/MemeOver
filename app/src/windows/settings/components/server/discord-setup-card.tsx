@@ -4,8 +4,9 @@ import { Alert, AlertDescription } from "@memeover/ui/components/ui/alert";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { Switch } from "@memeover/ui/components/ui/switch";
-import { Clipboard, ExternalLink, ShieldCheck } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { CopyButton } from "@/components/motion/copy-button";
 import { FieldShell } from "./field-shell";
 
 export function DiscordSetupCard({
@@ -18,7 +19,6 @@ export function DiscordSetupCard({
 	onAdministratorInviteChange,
 	onOpenPortal,
 	onOpenInvite,
-	onCopyInvite,
 }: {
 	discordClientId: string;
 	discordToken: string;
@@ -29,7 +29,6 @@ export function DiscordSetupCard({
 	onAdministratorInviteChange: (value: boolean) => void;
 	onOpenPortal: () => void;
 	onOpenInvite: () => void;
-	onCopyInvite: () => void;
 }) {
 	const { t } = useTranslation();
 
@@ -86,10 +85,7 @@ export function DiscordSetupCard({
 						<ShieldCheck className="size-4" aria-hidden="true" />
 						{t("server.discord.invite")}
 					</NbButton>
-					<NbButton variant="outline" disabled={!inviteUrl} onClick={onCopyInvite}>
-						<Clipboard className="size-4" aria-hidden="true" />
-						{t("server.copy")}
-					</NbButton>
+					<CopyButton value={inviteUrl ?? ""} label={t("server.copy")} disabled={!inviteUrl} />
 				</div>
 
 				<Alert>
