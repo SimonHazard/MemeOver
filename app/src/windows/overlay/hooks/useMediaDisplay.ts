@@ -4,10 +4,13 @@ import { isMediaExpired } from "@/shared/history-expiry";
 import { traceMetadata } from "@/shared/overlay-trace";
 import { useAppStore } from "@/shared/store";
 import type { DisplayQueueItem } from "@/shared/types";
+import { mediaPreloader } from "../media/browser-loaders";
+import { type MediaPreloader, PRELOAD_GATE_MS, withTimeout } from "../media/media-preloader";
 
 import {
 	displayDurationMs,
 	EXIT_RECOVERY_MS,
+	gateOutcome,
 	isSkipRequest,
 	safetyDelayMs,
 	shouldArmDisplayTimer,
@@ -18,6 +21,7 @@ import {
 
 interface UseMediaDisplayReturn {
 	current: DisplayQueueItem | null;
+	src?: string;
 	isVisible: boolean;
 	/** Call when the exit animation has fully completed */
 	onExitComplete: () => void;
@@ -29,7 +33,11 @@ interface UseMediaDisplayReturn {
 	onMediaError: () => void;
 }
 
-export function useMediaDisplay(): UseMediaDisplayReturn {
+export function useMediaDisplay({
+	preloader = mediaPreloader,
+}: {
+	preloader?: MediaPreloader;
+} = {}): UseMediaDisplayReturn {
 	// Granular selectors — avoids re-rendering on unrelated store changes
 	const guildPaused = useAppStore((s) => s.guildPaused);
 	const queue = useAppStore((s) => s.queue);
@@ -42,6 +50,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 
 	const [current, setCurrent] = useState<DisplayQueueItem | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
+	const [src, setSrc] = useState<string | undefined>();
 
 	// Primary display timer
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,6 +67,9 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Tracks the current item without triggering useCallback recreation
 	const currentRef = useRef(current);
 	currentRef.current = current;
+
+	const gatingIdRef = useRef<string | null>(null);
+	const pinnedIdRef = useRef<string | null>(null);
 
 	const hide = useCallback(() => {
 		if (timerRef.current !== null) {
@@ -129,16 +141,71 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		);
 	}, [current, setCurrentAuthorId]);
 
-	// Admit the current queue head immediately; preloading is introduced separately.
+	// Warm only the head while another item is displayed.
+	useEffect(() => {
+		if (current && queue[0] && !guildPaused && overlayHealth !== "closed")
+			void preloader.preload(queue[0]);
+	}, [current, queue, guildPaused, overlayHealth, preloader]);
+	// Release after React has removed the media, including forced exit recovery.
+	useEffect(() => {
+		if (pinnedIdRef.current && pinnedIdRef.current !== current?.queueId) {
+			preloader.unpin(pinnedIdRef.current);
+			pinnedIdRef.current = null;
+		}
+		if (!current && overlayHealth === "closed") preloader.clear();
+	}, [current, overlayHealth, preloader]);
+	useEffect(
+		() => () => {
+			if (pinnedIdRef.current) preloader.unpin(pinnedIdRef.current);
+			preloader.clear();
+		},
+		[preloader],
+	);
+	// Gate each queue head; canceled effects cannot publish a stale item.
 	useEffect(() => {
 		if (guildPaused || overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
 		const next = queue[0];
-		if (!next) return;
-		dequeue();
-		currentRef.current = next;
-		setCurrent(next);
-		setIsVisible(true);
-	}, [queue, current, dequeue, guildPaused, overlayHealth]);
+		if (!next || gatingIdRef.current === next.queueId) return;
+		let canceled = false;
+		gatingIdRef.current = next.queueId;
+		const display = () => {
+			preloader.pin(next.queueId);
+			pinnedIdRef.current = next.queueId;
+			setSrc(preloader.srcFor(next.queueId));
+			dequeue();
+			currentRef.current = next;
+			setCurrent(next);
+			setIsVisible(true);
+		};
+		if (next.type === "TEXT") display();
+		else
+			void withTimeout(preloader.preload(next), PRELOAD_GATE_MS).then((result) => {
+				const state = useAppStore.getState();
+				if (
+					canceled ||
+					state.overlayHealth === "closed" ||
+					state.guildPaused ||
+					currentRef.current !== null ||
+					state.queue[0]?.queueId !== next.queueId
+				)
+					return;
+				if (gateOutcome(result) === "show") display();
+				else if (result !== "timeout" && result.status === "failed") {
+					dequeue();
+					void emit("overlay-trace", {
+						id: crypto.randomUUID(),
+						at: Date.now(),
+						...traceMetadata(JSON.stringify(next)),
+						decision: "dropped",
+						reason: result.reason,
+					});
+				}
+			});
+		return () => {
+			canceled = true;
+			if (gatingIdRef.current === next.queueId) gatingIdRef.current = null;
+		};
+	}, [queue, current, dequeue, guildPaused, overlayHealth, preloader]);
 
 	// ── Effect 4: Safety fallback ─────────────────────────────────────────────
 	// TEXT items have no DOM event to call startTimer → fire immediately (delay=0).
@@ -188,6 +255,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 
 	return {
 		current,
+		src,
 		isVisible,
 		onExitComplete,
 		onVideoEnd,

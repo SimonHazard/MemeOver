@@ -6,6 +6,18 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.9.0]
+
+### Added
+
+- Preload the next media item with a bounded cache and display gate.
+- Decode images and warm video/audio sources with cancellation and blob cleanup.
+
+### Changed
+
+- Keep original media URLs as a fallback when fetch or CORS prevents blob loading.
+- Restrict media fetch connections to the existing supported hosts.
+
 ## [1.8.0]
 
 ### Added
