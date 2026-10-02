@@ -17,6 +17,8 @@ export type { ExtractedMedia };
 
 export type {
 	ClientMessage,
+	DiagMessage,
+	DiagRequest,
 	ErrorCode,
 	ErrorMessage,
 	GuildStateMessage,

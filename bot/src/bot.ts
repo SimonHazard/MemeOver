@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 import { handleInteraction } from "./commands/commands";
 import { errorResponse } from "./commands/response-panel";
+import { attachDiagClient } from "./diag/discord-diag";
 import { interactionLocale, t } from "./i18n";
 import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
 import { dispatchReaction } from "./media/reactions";
@@ -37,6 +38,7 @@ const discordClient = new Client({
 discordClient.on(Events.ClientReady, (c) => {
 	log.info({ event: "ready", tag: c.user.tag }, `Logged in as ${c.user.tag}`);
 	attachPresenceClient(c);
+	attachDiagClient(c);
 	startGuildCleanupScheduler(c);
 });
 
