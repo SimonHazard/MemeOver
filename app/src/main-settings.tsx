@@ -1,3 +1,4 @@
+import { MotionConfig } from "framer-motion";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { initSettingsStore } from "./shared/store";
@@ -18,6 +19,8 @@ void checkForUpdatesInBackground();
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 	<React.StrictMode>
-		<SettingsApp />
+		<MotionConfig reducedMotion="user">
+			<SettingsApp />
+		</MotionConfig>
 	</React.StrictMode>,
 );

@@ -29,6 +29,7 @@ export default defineConfig({
 		"components/branded/nb-card": "src/components/branded/nb-card.tsx",
 		// ── lib ──────────────────────────────────────────────────────────────
 		"lib/nb-classes": "src/lib/nb-classes.ts",
+		"lib/motion": "src/lib/motion.ts",
 		"lib/utils": "src/lib/utils.ts",
 	},
 	format: ["esm"],

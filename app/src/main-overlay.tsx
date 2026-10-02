@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { MotionConfig } from "framer-motion";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { initOverlayStore } from "./shared/store";
@@ -35,8 +36,10 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 	<React.StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<OverlayApp />
-		</QueryClientProvider>
+		<MotionConfig reducedMotion="user">
+			<QueryClientProvider client={queryClient}>
+				<OverlayApp />
+			</QueryClientProvider>
+		</MotionConfig>
 	</React.StrictMode>,
 );
