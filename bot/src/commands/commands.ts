@@ -8,13 +8,15 @@ import {
 } from "discord.js";
 import { type BotTranslationKey, frLocalization, interactionLocale, t } from "../i18n";
 import { config } from "../utils/config";
+import { PAUSE_CHOICES } from "../utils/guild-pause";
 import { logger } from "../utils/logger";
-
 import { handleComponentInteraction } from "./component-actions";
 import { errorResponse } from "./response-panel";
 import { handleBots } from "./subcommands/bots";
 import { handleHelp } from "./subcommands/help";
+import { handlePause } from "./subcommands/pause";
 import { handleRemove } from "./subcommands/remove";
+import { handleResume } from "./subcommands/resume";
 import { handleRotate } from "./subcommands/rotate";
 import { handleSecret } from "./subcommands/secret";
 import { handleSetup } from "./subcommands/setup";
@@ -28,7 +30,7 @@ const log = logger.child({ module: "commands" });
 const en = (key: BotTranslationKey) => t("en", key);
 const fr = (key: BotTranslationKey) => frLocalization(key);
 
-const memeover = new SlashCommandBuilder()
+export const memeover = new SlashCommandBuilder()
 	.setName("memeover")
 	.setDescription(en("commands.memeover.description"))
 	.setDescriptionLocalizations(fr("commands.memeover.description"))
@@ -113,6 +115,32 @@ const memeover = new SlashCommandBuilder()
 	)
 	.addSubcommand((sub) =>
 		sub
+			.setName(en("commands.pause.name"))
+			.setDescription(en("commands.pause.description"))
+			.setDescriptionLocalizations(fr("commands.pause.description"))
+			.addStringOption((opt) =>
+				opt
+					.setName("duration")
+					.setDescription(en("commands.pause.duration.description"))
+					.setDescriptionLocalizations(fr("commands.pause.duration.description"))
+					.setRequired(true)
+					.addChoices(
+						...Object.keys(PAUSE_CHOICES).map((choice) => ({
+							name: en(`commands.pause.choice.${choice}` as BotTranslationKey),
+							value: choice,
+							name_localizations: fr(`commands.pause.choice.${choice}` as BotTranslationKey),
+						})),
+					),
+			),
+	)
+	.addSubcommand((sub) =>
+		sub
+			.setName(en("commands.resume.name"))
+			.setDescription(en("commands.resume.description"))
+			.setDescriptionLocalizations(fr("commands.resume.description")),
+	)
+	.addSubcommand((sub) =>
+		sub
 			.setName(en("commands.help.name"))
 			.setDescription(en("commands.help.description"))
 			.setDescriptionLocalizations(fr("commands.help.description")),
@@ -120,7 +148,7 @@ const memeover = new SlashCommandBuilder()
 
 // Subcommands that require the Manage Server permission. `token` and `help`
 // are deliberately open to all members.
-const PRIVILEGED_SUBS = new Set(["setup", "remove", "rotate", "status", "bots"]);
+const PRIVILEGED_SUBS = new Set(["setup", "remove", "rotate", "status", "bots", "pause", "resume"]);
 
 // ─── Command registration ─────────────────────────────────────────────────────
 
@@ -180,6 +208,10 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		await handleSecret(interaction, guildId);
 	} else if (sub === "status") {
 		await handleStatus(interaction, guildId);
+	} else if (sub === "pause") {
+		await handlePause(interaction, guildId);
+	} else if (sub === "resume") {
+		await handleResume(interaction, guildId);
 	} else if (sub === "help") {
 		await handleHelp(interaction);
 	}

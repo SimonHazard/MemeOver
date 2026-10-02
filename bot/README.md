@@ -25,6 +25,8 @@ a lightweight WebSocket server.
 | `/memeover bots enabled:<true\|false>` | Manage Server | Allow or mute messages and reactions from bots/apps |
 | `/memeover secret [media] [url] [text]` | Everyone | Send an anonymous media item to connected overlays |
 | `/memeover status` | Manage Server | Show watched channels, active overlays and uptime |
+| `/memeover pause duration:<5m\|15m\|30m\|1h\|2h\|indefinite>` | Manage Server | Pause broadcasts; incoming events are dropped |
+| `/memeover resume` | Manage Server | Resume broadcasts |
 | `/memeover help` | Everyone | List command help |
 
 ## Development
@@ -89,3 +91,5 @@ volume when using Docker Compose.
 bun run --cwd bot typecheck
 bun run --cwd bot test
 ```
+
+`MEMEOVER_DATA_DIR` optionally overrides registry storage (default: `./data` relative to the working directory).

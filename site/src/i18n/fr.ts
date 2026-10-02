@@ -247,6 +247,18 @@ export const fr: Translations = {
 				published: true,
 			},
 			{
+				name: "/memeover pause",
+				description: "Met la diffusion en pause.",
+				access: "Gérer le serveur",
+				published: false,
+			},
+			{
+				name: "/memeover resume",
+				description: "Reprend la diffusion.",
+				access: "Gérer le serveur",
+				published: false,
+			},
+			{
 				name: "/memeover help",
 				description: "Liste les commandes disponibles.",
 				access: "Tous",

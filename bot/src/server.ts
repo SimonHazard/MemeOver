@@ -3,6 +3,7 @@ import { JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
 import { SERVER_FEATURES } from "./utils/features";
+import { isPausedAt } from "./utils/guild-pause";
 import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
 import { schedulePresenceRefresh } from "./utils/presence";
@@ -193,6 +194,17 @@ function clearHeartbeat(wsId: string): void {
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
+function sendGuildState(ws: WSConnection, guildId: string): void {
+	const cfg = guildRegistry.getConfig(guildId);
+	ws.send(
+		JSON.stringify({
+			type: "GUILD_STATE",
+			guild_id: guildId,
+			paused_until: isPausedAt(cfg, Date.now()) ? (cfg?.paused_until ?? null) : null,
+		} satisfies ServerMessage),
+	);
+}
+
 function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 	const wsLog = log.child(discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }));
 
@@ -236,6 +248,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 				features: [...SERVER_FEATURES],
 			} satisfies ServerMessage),
 		);
+		sendGuildState(ws, msg.guild_id);
 		return;
 	}
 
@@ -248,6 +261,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 			features: [...SERVER_FEATURES],
 		} satisfies ServerMessage),
 	);
+	sendGuildState(ws, msg.guild_id);
 	wsLog.info({ event: "join_success" }, "Client joined guild");
 	stats.joinSuccess();
 	broadcastMemberCount(msg.guild_id);
