@@ -81,46 +81,58 @@ export const fr: Translations = {
 		items: [
 			{
 				icon: "zap",
-				title: "Envoi Live Depuis Discord",
-				description:
-					"Ce qui arrive dans le salon Discord apparaît sur les écrans connectés juste après.",
+				title: "Un code à coller",
+				description: "Lance /memeover setup puis colle le code de connexion dans l’application.",
 			},
 			{
 				icon: "image",
-				title: "Images, GIFs, Vidéos & Sons",
-				description: "Envoie les formats que ton groupe utilise vraiment, sans changer d'outil.",
+				title: "Images, GIFs et stickers",
+				description:
+					"Les stickers Discord et GIFs, y compris les gifv vidéo, rejoignent images, vidéos et audios.",
 			},
 			{
 				icon: "message",
-				title: "Textes & Réactions",
+				title: "Memes anonymes",
 				description:
-					"Les messages courts et réactions flottantes donnent plus de caractère à l'overlay.",
+					"Utilise /memeover secret pour envoyer un meme sans afficher ton badge auteur.",
+			},
+			{
+				icon: "message",
+				title: "Textes et réactions",
+				description:
+					"Les messages courts et réactions flottantes gardent la conversation à l’écran.",
 			},
 			{
 				icon: "sliders",
-				title: "Placement Sur Mesure",
-				description: "Choisis position, taille, opacité, durée et son pour ton propre écran.",
+				title: "Un placement adapté",
+				description: "Choisis position, taille, opacité, durée et son pour ton écran.",
 			},
 			{
 				icon: "layers",
-				title: "Profils Réutilisables",
+				title: "Profils réutilisables",
 				description:
-					"Sauvegarde plusieurs styles d'overlay pour jouer, regarder, streamer ou rester discret.",
+					"Enregistre et partage tes styles d’overlay sans partager les identifiants de connexion.",
 			},
 			{
 				icon: "monitor",
-				title: "Pensé Multi-Écran",
-				description:
-					"Choisis où l'overlay apparaît quand ta configuration utilise plusieurs écrans.",
+				title: "Tray et multi-écrans",
+				description: "Démarre dans la zone de notification et choisis l’écran de ton overlay.",
 			},
 			{
 				icon: "history",
-				title: "Historique & Replay",
-				description: "Tu as raté la blague ? Ouvre l'historique et rejoue un média reçu.",
+				title: "Historique et replay",
+				description:
+					"Retrouve les 50 derniers éléments affichés et rejoue les médias encore disponibles.",
+			},
+			{
+				icon: "layers",
+				title: "Ton propre bot",
+				description:
+					"L’onglet Serveur de l’application aide à installer, configurer et lancer ton instance de bot.",
 			},
 			{
 				icon: "refresh",
-				title: "Mises à Jour Automatiques",
+				title: "Mises à jour automatiques",
 				description: "Reste à jour sans chercher un nouvel installateur à chaque version.",
 			},
 		],
@@ -156,6 +168,16 @@ export const fr: Translations = {
 				answer:
 					"Oui. MemeOver propose placement, taille, opacité, durée, son, profils, historique et replay pour adapter l'overlay à chaque configuration.",
 			},
+			{
+				question: "Puis-je héberger le bot moi-même ?",
+				answer:
+					"Oui. Utilise l’onglet Serveur de l’application pour installer et lancer ton instance, ou suis le guide Docker.",
+			},
+			{
+				question: "Puis-je envoyer un meme anonymement ?",
+				answer:
+					"Utilise /memeover secret. L’overlay masque le badge auteur ; cela ne garantit pas l’anonymat auprès de Discord ou de l’opérateur du bot.",
+			},
 		],
 	},
 	openSource: {
@@ -174,6 +196,85 @@ export const fr: Translations = {
 		license: "Licence MIT",
 		legal: "Conditions & confidentialité",
 	},
+	commands: {
+		title: "Commandes Discord",
+		description:
+			"Configure ton serveur et envoie des memes depuis Discord. Les commandes de gestion nécessitent Gérer le serveur.",
+		commandLabel: "Commande",
+		accessLabel: "Accès",
+		descriptionLabel: "Action",
+		items: [
+			{
+				name: "/memeover setup",
+				description: "Enregistre le serveur ; sans salon, tous les salons sont surveillés.",
+				access: "Gérer le serveur",
+				published: true,
+			},
+			{
+				name: "/memeover token",
+				description: "Affiche les identifiants et le code de configuration en privé.",
+				access: "Tous",
+				published: true,
+			},
+			{
+				name: "/memeover rotate",
+				description: "Demande confirmation puis renouvelle le token.",
+				access: "Gérer le serveur",
+				published: true,
+			},
+			{
+				name: "/memeover remove",
+				description: "Demande confirmation puis désinscrit le serveur.",
+				access: "Gérer le serveur",
+				published: true,
+			},
+			{
+				name: "/memeover bots",
+				description: "Autorise ou masque les messages et réactions des bots et applications.",
+				access: "Gérer le serveur",
+				published: true,
+			},
+			{
+				name: "/memeover secret",
+				description: "Envoie un média anonyme aux overlays connectés.",
+				access: "Tous",
+				published: true,
+			},
+			{
+				name: "/memeover status",
+				description: "Affiche la configuration, les salons et les overlays connectés.",
+				access: "Gérer le serveur",
+				published: true,
+			},
+			{
+				name: "/memeover help",
+				description: "Liste les commandes disponibles.",
+				access: "Tous",
+				published: true,
+			},
+		],
+	},
+	selfHost: {
+		title: "Héberger ton propre bot",
+		description: "Choisis l’assistant intégré ou lance le dépôt avec Docker.",
+		appTitle: "Depuis l’application",
+		appSteps: [
+			"Ouvre l’onglet Serveur et choisis un dossier d’installation.",
+			"Installe le bot et Bun si nécessaire.",
+			"Crée une application Discord, renseigne son ID et le token du bot, puis active Message Content Intent dans le portail développeur.",
+			"Invite le bot, enregistre la configuration, lance-le et vérifie son état.",
+			"Lance /memeover setup dans Discord et utilise le code de connexion pour connecter tes amis.",
+		],
+		dockerTitle: "Avec Docker",
+		dockerNote:
+			"Clone le dépôt. Copie bot/.env.example vers .env à la racine, renseigne DISCORD_TOKEN et DISCORD_CLIENT_ID et active Message Content Intent. Configure PUBLIC_WS_URL avec une adresse accessible à tes amis. Garde les tokens privés.",
+		guideLabel: "Guide complet",
+	},
+	changelog: {
+		title: "Notes de version",
+		description: "Historique des versions du dépôt. Les notes de version sont rédigées en anglais.",
+	},
+	menu: { toggle: "Ouvrir ou fermer le menu", label: "Navigation principale" },
 	notFound: {
 		title: "404",
 		description: "Cette page n'existe pas. Elle est probablement partie chercher des mèmes.",

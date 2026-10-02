@@ -7,17 +7,24 @@ permissions:
 
 # Déclenché sur push main et PR quand le site ou l'UI partagée change.
 on:
+  release:
+    types: [published]
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - "site/**"
       - "packages/ui/**"
+      - "shared/**"
+      - "app/package.json"
       - ".github/workflows/deploy-site.yml"
   pull_request:
     paths:
       - "site/**"
       - "packages/ui/**"
+      - "shared/**"
+      - "app/package.json"
       - ".github/workflows/deploy-site.yml"
 
 # Annule le déploiement en cours si un nouveau commit arrive sur la même ref.
@@ -38,7 +45,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Astro 6 requiert Node >=22.12.0 — ubuntu-latest embarque Node 20 par défaut.
+      # Astro 7 requiert Node >=22.12.0 — ubuntu-latest embarque Node 20 par défaut.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -67,6 +74,7 @@ jobs:
       - name: Build site
         working-directory: site
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLIC_BOT_CLIENT_ID: ${{ vars.PUBLIC_BOT_CLIENT_ID }}
         run: bun run build
 
@@ -84,7 +92,7 @@ jobs:
   deploy-production:
     name: Deploy → Production
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) || (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'app-v'))
     runs-on: ubuntu-latest
     environment:
       name: production

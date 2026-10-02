@@ -1,3 +1,4 @@
+import { EASE_IN_OUT, EASE_OUT } from "@memeover/ui/lib/motion";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { Bot, Download, Image, MessageCircle, Smile, Video, Volume2 } from "lucide-react";
 
@@ -21,7 +22,7 @@ const container: Variants = {
 
 const fadeUp: Variants = {
 	hidden: { opacity: 0, y: 24 },
-	show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+	show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE_OUT } },
 };
 
 const pop: Variants = {
@@ -30,7 +31,7 @@ const pop: Variants = {
 		opacity: 1,
 		scale: 1,
 		rotate: 0,
-		transition: { type: "spring", stiffness: 200, damping: 15 },
+		transition: { type: "spring", duration: 0.5, bounce: 0.25 },
 	},
 };
 
@@ -107,8 +108,8 @@ export default function HeroAnimation({
 						target="_blank"
 						rel="noopener noreferrer"
 						whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-						whileTap={{ scale: 0.98 }}
-						className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-foreground bg-primary px-6 py-3 font-display text-base tracking-wide text-primary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background min-[390px]:w-auto"
+						whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+						className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-foreground bg-primary px-6 py-3 font-display text-base tracking-wide text-primary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background min-[390px]:w-auto"
 					>
 						<Download className="size-5" aria-hidden="true" />
 						{ctaDownload}
@@ -119,8 +120,8 @@ export default function HeroAnimation({
 							target="_blank"
 							rel="noopener noreferrer"
 							whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-							whileTap={{ scale: 0.98 }}
-							className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-foreground bg-secondary px-6 py-3 font-display text-base tracking-wide text-secondary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background min-[390px]:w-auto"
+							whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+							className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-foreground bg-secondary px-6 py-3 font-display text-base tracking-wide text-secondary-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,background-color] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background min-[390px]:w-auto"
 						>
 							<Bot className="size-5" aria-hidden="true" />
 							{ctaInvite}
@@ -139,7 +140,7 @@ export default function HeroAnimation({
 				<motion.div
 					className="absolute right-0 top-0 flex w-[86%] flex-col gap-4 rounded-3xl border-2 border-foreground bg-background p-5 shadow-[8px_8px_0px_0px_var(--nb-shadow)]"
 					animate={shouldReduceMotion ? undefined : { y: [0, -8, 0] }}
-					transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+					transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: EASE_IN_OUT }}
 				>
 					<div className="flex items-center justify-between border-b-2 border-foreground pb-3">
 						<div className="flex items-center gap-3">
@@ -161,7 +162,7 @@ export default function HeroAnimation({
 									duration: 4.5,
 									delay: index * 0.25,
 									repeat: Number.POSITIVE_INFINITY,
-									ease: "easeInOut",
+									ease: EASE_IN_OUT,
 								}}
 							>
 								<div className="flex size-10 items-center justify-center rounded-xl border-2 border-foreground bg-primary-100 text-foreground">

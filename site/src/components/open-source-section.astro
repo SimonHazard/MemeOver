@@ -11,7 +11,7 @@ const { lang } = Astro.props;
 const dict = getTranslations(lang);
 ---
 
-<section id="open-source" class="px-4 py-20 bg-muted/50">
+<section data-reveal id="open-source" class="px-4 py-20 bg-muted/50">
 	<div class="max-w-4xl mx-auto text-center">
 		<h2 class="font-display text-3xl sm:text-4xl tracking-wide mb-4">
 			{dict.openSource.title}
@@ -28,7 +28,7 @@ const dict = getTranslations(lang);
 				href="https://github.com/SimonHazard/MemeOver"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				<GitFork className="size-5" aria-hidden="true" />
 				{dict.openSource.viewOnGithub}
@@ -37,7 +37,7 @@ const dict = getTranslations(lang);
 				href="https://github.com/SimonHazard/MemeOver/issues"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-card text-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-card text-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				<Bug className="size-5" aria-hidden="true" />
 				{dict.openSource.reportBug}
@@ -46,7 +46,7 @@ const dict = getTranslations(lang);
 				href="https://ko-fi.com/simonhazard"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:bg-primary-500 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none active:translate-x-0.75 active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:bg-primary-500 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				<Coffee className="size-5" aria-hidden="true" />
 				{dict.openSource.supportOnKofi}

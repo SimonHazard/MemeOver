@@ -6,6 +6,15 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.5.1]
+
+### Changed
+
+- Refresh English and French website content and add command, self-hosting and changelog pages.
+- Share the minimal Discord invite permission helper.
+- Resolve published downloads from GitHub with a safe offline fallback.
+- Improve navigation accessibility and reduced-motion behavior.
+
 ## [1.5.0]
 
 ### Added
