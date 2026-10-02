@@ -477,7 +477,7 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
-// ─── Settings window — close → hide ──────────────────────────────────────────
+// ─── Settings window — check unsaved edits before hiding ──────────────────────
 
 fn setup_settings_close_behavior(app: &tauri::App) {
     if let Some(win) = app.get_webview_window("settings") {
@@ -485,7 +485,7 @@ fn setup_settings_close_behavior(app: &tauri::App) {
         win.on_window_event(move |event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let _ = win2.hide();
+                let _ = win2.emit("settings-close-requested", ());
             }
         });
     }

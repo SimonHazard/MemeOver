@@ -11,10 +11,7 @@ export function useOverlayForm(initialData: Settings) {
 	const queryClient = useQueryClient();
 	const { t } = useTranslation();
 
-	// useState stabilise la référence des defaultValues : elle ne change que lors d'une
-	// sauvegarde explicite via setBaseValues(value). handleSubmit() marque isTouched=true
-	// sur tous les champs, donc form.update() ne déclenchera jamais de reset() même si
-	// les defaultValues changent après la sauvegarde — pas de rollback visuel.
+	// Persisted values are the comparison baseline for save and navigation guards.
 	const [baseValues, setBaseValues] = useState<OverlaySettingsValues>(() =>
 		extractDefaults(initialData),
 	);
@@ -56,18 +53,20 @@ export function useOverlayForm(initialData: Settings) {
 		defaultValues: baseValues,
 		onSubmit: async ({ value }) => {
 			await save(value);
-			// Met à jour les defaultValues de TanStack Form : form.state.isDefaultValue
-			// repassera à true, désactivant le bouton Save — sans appel à reset().
+			const draft = form.state.values;
 			setBaseValues(value);
+			form.reset(value);
+			// Preserve edits made while persistence was in flight.
+			for (const key of OVERLAY_PROFILE_FIELDS) {
+				if (!Object.is(draft[key], value[key])) form.setFieldValue(key, draft[key]);
+			}
 		},
 	});
 
 	function applyValues(values: OverlayProfileSettings) {
 		const next = values as OverlaySettingsValues;
-		for (const key of OVERLAY_PROFILE_FIELDS) {
-			form.setFieldValue(key, next[key]);
-		}
 		setBaseValues(next);
+		form.reset(next);
 	}
 
 	async function saveAndApplyValues(values: OverlayProfileSettings) {

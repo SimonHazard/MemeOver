@@ -384,5 +384,12 @@
 		"copied": "Copied",
 		"toggleTheme": "Toggle theme",
 		"copyError": "Could not copy to clipboard."
+	},
+	"unsavedChanges": {
+		"title": "Unsaved changes",
+		"description": "Your settings have changed. Save them before leaving this page, or discard the changes.",
+		"stay": "Keep editing",
+		"discard": "Discard",
+		"saveAndLeave": "Save and continue"
 	}
 }

@@ -2,7 +2,6 @@ import { EASE_OUT } from "@memeover/ui/lib/motion";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { DisplayQueueItem, OverlayPosition, Settings } from "@/shared/types";
 import { MediaDisplay } from "./media-display";
-import { transformOriginFor } from "./overlay-motion";
 
 // ─── Position map (Tailwind) ──────────────────────────────────────────────────
 
@@ -46,40 +45,41 @@ export function MediaPopup({
 	return (
 		<AnimatePresence mode="wait" onExitComplete={onExitComplete}>
 			{isVisible && current && (
-				<motion.div
+				<div
 					key={current.queueId}
-					style={{ transformOrigin: transformOriginFor(settings.position) }}
 					className={`fixed flex items-center justify-center ${POSITION_CLASSES[settings.position]}`}
-					initial={{ scale: reduceMotion ? 1 : 0.3, opacity: 0 }}
-					animate={{
-						scale: 1,
-						opacity: 1,
-						transition: reduceMotion
-							? { duration: 0.12, ease: EASE_OUT }
-							: { type: "spring", duration: 0.28, bounce: 0.2 },
-					}}
-					exit={{
-						scale: reduceMotion ? 1 : 0.96,
-						opacity: 0,
-						transition: { duration: reduceMotion ? 0.12 : 0.13, ease: EASE_OUT },
-					}}
 				>
-					{/* Inner wrapper applies the user offset without fighting the anchor's
-					    Tailwind -translate-x-1/2 on top/bottom/center positions. */}
 					<div
 						style={{
 							transform: `translate(${settings.positionOffsetX}vw, ${settings.positionOffsetY}vh)`,
 						}}
 					>
-						<MediaDisplay
-							item={current}
-							settings={settings}
-							onVideoEnd={onVideoEnd}
-							startTimer={startTimer}
-							onMediaError={onMediaError}
-						/>
+						<motion.div
+							style={{ transformOrigin: "50% 50%" }}
+							initial={{ scale: reduceMotion ? 1 : 0.3, opacity: 0 }}
+							animate={{
+								scale: 1,
+								opacity: 1,
+								transition: reduceMotion
+									? { duration: 0.12, ease: EASE_OUT }
+									: { type: "spring", duration: 0.28, bounce: 0.2 },
+							}}
+							exit={{
+								scale: reduceMotion ? 1 : 0.96,
+								opacity: 0,
+								transition: { duration: reduceMotion ? 0.12 : 0.13, ease: EASE_OUT },
+							}}
+						>
+							<MediaDisplay
+								item={current}
+								settings={settings}
+								onVideoEnd={onVideoEnd}
+								startTimer={startTimer}
+								onMediaError={onMediaError}
+							/>
+						</motion.div>
 					</div>
-				</motion.div>
+				</div>
 			)}
 		</AnimatePresence>
 	);

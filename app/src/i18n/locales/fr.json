@@ -384,5 +384,12 @@
 		"copied": "Copié",
 		"toggleTheme": "Changer de thème",
 		"copyError": "Impossible de copier dans le presse-papiers."
+	},
+	"unsavedChanges": {
+		"title": "Modifications non enregistrées",
+		"description": "Tes réglages ont été modifiés. Sauvegarde-les avant de quitter cette page, ou abandonne les modifications.",
+		"stay": "Continuer à modifier",
+		"discard": "Abandonner",
+		"saveAndLeave": "Sauvegarder et continuer"
 	}
 }
