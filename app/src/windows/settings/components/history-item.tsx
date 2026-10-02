@@ -1,10 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@memeover/ui/components/ui/avatar";
 import { Button } from "@memeover/ui/components/ui/button";
 import { Card } from "@memeover/ui/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@memeover/ui/components/ui/tooltip";
 import { NB_BTN_DISABLED, NB_HOVER_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import {
 	Clapperboard,
+	EyeOff,
 	FileAudio,
 	ImageIcon,
 	MessageSquare,
@@ -16,6 +18,8 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatTime } from "@/shared/helpers";
 import type { HistoryItem } from "@/shared/history";
+import { isMediaExpired } from "@/shared/history-expiry";
+import { canMuteAuthor } from "@/shared/muted-authors";
 import { InlineText } from "@/windows/overlay/components/text-bubble";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,6 +27,7 @@ import { InlineText } from "@/windows/overlay/components/text-bubble";
 interface HistoryItemCardProps {
 	item: HistoryItem;
 	onReplay: (item: HistoryItem) => void;
+	onMuteAuthor?: (item: HistoryItem) => void;
 	disabled?: boolean;
 }
 
@@ -64,15 +69,21 @@ function MediaTypeBadge({ item }: { item: HistoryItem }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryItemCardProps) {
+export function HistoryItemCard({
+	item,
+	onReplay,
+	onMuteAuthor,
+	disabled = false,
+}: HistoryItemCardProps) {
 	const { t } = useTranslation();
+	const expired = isMediaExpired(item, Date.now());
 	const displayName = item.author_display_name ?? item.author_username;
 	const initials = displayName.charAt(0).toUpperCase();
 
 	return (
 		<Card
 			className={cn(
-				"px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 transition-all",
+				"px-4 py-3 border-2 border-foreground/20 hover:border-foreground/60 transition-[border-color,box-shadow] duration-150 ease-out",
 				NB_HOVER_SHADOW_SM,
 			)}
 		>
@@ -94,6 +105,11 @@ export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryIte
 							{formatDate(item.recordedAt)} · {formatTime(item.recordedAt)}
 						</span>
 						<MediaTypeBadge item={item} />
+						{expired && (
+							<span className="border border-destructive/40 rounded px-1.5 py-0.5 text-[10px] font-display text-muted-foreground">
+								{t("history.expired")}
+							</span>
+						)}
 					</div>
 
 					{/* Row 3 — Text preview (TEXT items only) */}
@@ -104,22 +120,61 @@ export function HistoryItemCard({ item, onReplay, disabled = false }: HistoryIte
 					)}
 				</div>
 
-				{/* ── Replay button ── */}
-				<Button
-					variant="outline"
-					size="icon"
-					className={cn(
-						"shrink-0 border-2 border-foreground/30",
-						cn("hover:border-foreground hover:bg-primary-400/10", NB_HOVER_SHADOW_SM),
-						"active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all",
-						NB_BTN_DISABLED,
+				{!expired &&
+					item.type === "MEDIA" &&
+					["image", "gif", "sticker"].includes(item.media_type) && (
+						<img
+							src={item.media_url}
+							width={32}
+							height={32}
+							loading="lazy"
+							alt=""
+							className="h-8 w-8 object-cover rounded shrink-0"
+							onError={(event) => {
+								event.currentTarget.style.display = "none";
+							}}
+						/>
 					)}
-					title={t("history.replay")}
-					disabled={disabled}
-					onClick={() => onReplay(item)}
-				>
-					<Play className="h-3.5 w-3.5" />
-				</Button>
+				{onMuteAuthor && canMuteAuthor(item) && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="icon"
+								aria-label={t("history.muteAuthor")}
+								onClick={() => onMuteAuthor(item)}
+								className="shrink-0 border-2 border-foreground/30"
+							>
+								<EyeOff className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>{t("history.muteAuthor")}</TooltipContent>
+					</Tooltip>
+				)}
+				{/* ── Replay button ── */}
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span tabIndex={expired ? 0 : undefined}>
+							<Button
+								variant="outline"
+								size="icon"
+								className={cn(
+									"shrink-0 border-2 border-foreground/30",
+									cn("hover:border-foreground hover:bg-primary-400/10", NB_HOVER_SHADOW_SM),
+									"active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-[translate,box-shadow,border-color,background-color] duration-150 ease-out",
+									NB_BTN_DISABLED,
+								)}
+								title={expired ? undefined : t("history.replay")}
+								aria-label={t("history.replay")}
+								disabled={disabled || expired}
+								onClick={() => onReplay(item)}
+							>
+								<Play className="h-3.5 w-3.5" />
+							</Button>
+						</span>
+					</TooltipTrigger>
+					{expired && <TooltipContent>{t("history.expiredHint")}</TooltipContent>}
+				</Tooltip>
 			</div>
 		</Card>
 	);
