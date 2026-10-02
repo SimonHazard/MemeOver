@@ -6,6 +6,18 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.8.0]
+
+### Added
+
+- Add local and authenticated remote diagnostics for missing overlay content.
+- Show a bounded, ephemeral event trace without media URLs or credentials.
+- Add a synthetic local display test excluded from history.
+
+### Changed
+
+- Negotiate diagnostics support and rate-limit remote requests.
+
 ## [1.7.0]
 
 ### Added

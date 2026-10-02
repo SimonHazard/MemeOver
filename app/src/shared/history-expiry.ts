@@ -1,4 +1,5 @@
 import { isCdnUrlExpired, isDiscordCdnUrl } from "@memeover/shared";
+import { isLocalTestItem } from "./local-test";
 import type { DisplayQueueItem } from "./types";
 export function isMediaExpired(item: DisplayQueueItem, now: number): boolean {
 	return (
@@ -20,5 +21,5 @@ export function toReplayItem(
 	return { ...display, queueId: newQueueId, replayOf: item.queueId };
 }
 export function shouldLogToHistory(item: DisplayQueueItem): boolean {
-	return !item.replayOf;
+	return !item.replayOf && !isLocalTestItem(item);
 }

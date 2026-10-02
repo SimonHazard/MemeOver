@@ -1,4 +1,5 @@
 import {
+	type DiagMessage,
 	type ErrorMessage,
 	isSessionRevocationCode,
 	ServerMessageSchema,
@@ -36,6 +37,7 @@ export type OverlayAction =
 	| { kind: "server_error"; message: ErrorMessage }
 	| { kind: "session_revoked"; code: SessionRevocationCode }
 	| { kind: "guild_state"; pausedUntil: number | null }
+	| { kind: "diag"; message: DiagMessage }
 	| { kind: "pong" }
 	| { kind: "member_count"; count: number }
 	| { kind: "drop"; reason: DropReason; detail?: unknown };
@@ -109,6 +111,11 @@ export function routeServerMessage(raw: string, ctx: RouteContext): OverlayActio
 				msg.guild_id === ctx.guildId
 					? { kind: "guild_state", pausedUntil: msg.paused_until }
 					: drop("other_guild"),
+		)
+		.with(
+			{ type: "DIAG" },
+			(msg): OverlayAction =>
+				msg.guild_id === ctx.guildId ? { kind: "diag", message: msg } : drop("other_guild"),
 		)
 		.with({ type: "PING" }, (): OverlayAction => ({ kind: "pong" }))
 		.with(
