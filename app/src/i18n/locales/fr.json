@@ -27,7 +27,9 @@
 		"quickPaste_apply": "Appliquer",
 		"quickPaste_hint": "Copiez le bloc “App setup code” depuis /memeover setup ou /memeover token.",
 		"save": "Sauvegarder et connecter",
-		"saving": "Sauvegarde…"
+		"saving": "Sauvegarde…",
+		"tokenRotated": "Le jeton de ce serveur a changé dans Discord. Collez le nouveau code de configuration pour vous reconnecter.",
+		"guildUnregistered": "Ce serveur a été retiré de MemeOver. Exécutez /memeover setup dans Discord, puis collez le nouveau code de configuration."
 	},
 	"overlay": {
 		"controls": "Contrôles de l'overlay",
@@ -36,7 +38,10 @@
 		"close": "Fermer",
 		"dev_preview": "Aperçu production",
 		"dev_preview_enter": "Activer aperçu",
-		"dev_preview_exit": "Quitter aperçu"
+		"dev_preview_exit": "Quitter aperçu",
+		"pausedGuild": "En pause par un administrateur",
+		"pausedGuildUntil": "jusqu’à {{time}}",
+		"pausedGuildIndefinite": "jusqu’à la reprise"
 	},
 	"actions": {
 		"title": "Actions",
@@ -160,7 +165,10 @@
 		"monitor_single": "Un seul écran détecté.",
 		"monitor_disconnected": "L'écran sélectionné n'est plus connecté — l'overlay a été déplacé sur le principal.",
 		"monitor_screen": "Écran {{number}}",
-		"monitor_notice": "Le changement d'écran peut varier selon certaines configurations multi-écrans."
+		"monitor_notice": "Le changement d'écran peut varier selon certaines configurations multi-écrans.",
+		"maxQueuedPerAuthor": "Mèmes en attente par personne",
+		"maxQueuedPerAuthor_unlimited": "Illimité",
+		"maxQueuedPerAuthor_hint": "Mèmes en attente par personne. Les replays ne sont pas limités."
 	},
 	"onboarding": {
 		"step": "Étape {{current}} sur {{total}}",
@@ -207,7 +215,12 @@
 		"profileUpdateError": "Impossible de remplacer ce profil",
 		"profileDeleteError": "Impossible de supprimer ce profil",
 		"profileImportError": "Import impossible. Vérifiez que le fichier est un profil MemeOver valide.",
-		"profileApplyError": "Impossible d'appliquer ce profil"
+		"profileApplyError": "Impossible d'appliquer ce profil",
+		"sessionRevoked": "Déconnexion par le bot : nouveau code de configuration requis",
+		"historyPurged": "{{count}} média(s) expiré(s) supprimé(s)",
+		"authorMuted": "{{name}} masqué sur votre overlay",
+		"authorUnmuted": "Auteur affiché à nouveau",
+		"undo": "Annuler"
 	},
 	"tray": {
 		"show": "Afficher les paramètres",
@@ -338,7 +351,20 @@
 		"replay": "Rejouer",
 		"back": "Retour",
 		"clearAll": "Tout effacer",
-		"from": "de {{name}}"
+		"from": "de {{name}}",
+		"expired": "Expiré",
+		"expiredHint": "Ce lien Discord a expiré. Les liens médias Discord durent environ 24 heures.",
+		"autoPurge": "Supprimer automatiquement les médias expirés",
+		"autoPurgeHint": "Nettoyer l’historique au démarrage et toutes les heures.",
+		"cleanNow": "Nettoyer maintenant",
+		"nothingToPurge": "Aucun média expiré à supprimer",
+		"muteAuthor": "Masquer cet auteur",
+		"mutedAuthorsTitle": "Auteurs masqués",
+		"mutedAuthorsHint": "Ces préférences concernent uniquement votre overlay.",
+		"unmute": "Afficher à nouveau",
+		"mutedOn": "Masqué le {{date}}",
+		"hideAnonymous": "Masquer les mèmes anonymes /secret",
+		"hideAnonymousHint": "Les mèmes anonymes ne peuvent pas être masqués par auteur."
 	},
 	"memberCount": {
 		"alone": "Seul",

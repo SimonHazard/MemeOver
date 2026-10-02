@@ -2,6 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/shared/store";
 import type { DisplayQueueItem } from "@/shared/types";
 
+import {
+	displayDurationMs,
+	EXIT_RECOVERY_MS,
+	isSkipRequest,
+	safetyDelayMs,
+	shouldArmDisplayTimer,
+	shouldDequeue,
+} from "./media-display-decisions";
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseMediaDisplayReturn {
@@ -21,6 +30,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Granular selectors — avoids re-rendering on unrelated store changes
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
+	const setCurrentAuthorId = useAppStore((s) => s.setCurrentAuthorId);
 	const setIsDisplaying = useAppStore((s) => s.setIsDisplaying);
 	const duration = useAppStore((s) => s.settings.duration);
 	const syncMediaDuration = useAppStore((s) => s.settings.syncMediaDuration);
@@ -68,15 +78,8 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 			safetyTimerRef.current = null;
 		}
 		const item = currentRef.current;
-		if (
-			syncMediaDurationRef.current &&
-			item !== null &&
-			item.type === "MEDIA" &&
-			(item.media_type === "video" || item.media_type === "audio")
-		) {
-			return; // let onVideoEnd handle closing
-		}
-		timerRef.current = setTimeout(hide, durationRef.current * 1_000);
+		if (!shouldArmDisplayTimer(item, syncMediaDurationRef.current)) return;
+		timerRef.current = setTimeout(hide, displayDurationMs({ duration: durationRef.current }));
 	}, [hide]);
 
 	// Skip the broken item — immediately triggers hide → onExitComplete → next
@@ -89,7 +92,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 
 	// ── Effect 0: Skip current item on demand from settings window ────────────
 	useEffect(() => {
-		if (skipVersion === 0) return; // initial mount — not a real skip
+		if (!isSkipRequest(skipVersion)) return; // initial mount — not a real skip
 		hide();
 	}, [skipVersion, hide]);
 
@@ -108,17 +111,21 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setIsDisplaying is a stable Zustand setter — omitted from deps intentionally
 	useEffect(() => {
 		setIsDisplaying(current !== null);
-	}, [current]);
+		setCurrentAuthorId(
+			current?.type === "MEDIA" && current.anonymous ? "secret" : (current?.author_id ?? null),
+		);
+	}, [current, setCurrentAuthorId]);
 
-	// ── Effect 3: Dequeue the next item ───────────────────────────────────────
+	// Admit the current queue head immediately; preloading is introduced separately.
 	useEffect(() => {
-		if (current !== null || queue.length === 0) return;
-
+		if (overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
 		const next = queue[0];
+		if (!next) return;
 		dequeue();
+		currentRef.current = next;
 		setCurrent(next);
 		setIsVisible(true);
-	}, [queue, current, dequeue]);
+	}, [queue, current, dequeue, overlayHealth]);
 
 	// ── Effect 4: Safety fallback ─────────────────────────────────────────────
 	// TEXT items have no DOM event to call startTimer → fire immediately (delay=0).
@@ -126,7 +133,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	useEffect(() => {
 		if (current === null) return;
 
-		const delay = current.type === "TEXT" ? 0 : 2_000;
+		const delay = safetyDelayMs(current);
 		safetyTimerRef.current = setTimeout(() => {
 			safetyTimerRef.current = null;
 			startTimer();
@@ -151,7 +158,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		const id = setTimeout(() => {
 			console.warn("[MediaDisplay] onExitComplete did not fire — force-clearing current");
 			setCurrent(null);
-		}, 1_000);
+		}, EXIT_RECOVERY_MS);
 
 		return () => clearTimeout(id);
 	}, [isVisible, current]);
@@ -166,5 +173,12 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		hide();
 	}, [hide]);
 
-	return { current, isVisible, onExitComplete, onVideoEnd, startTimer, onMediaError };
+	return {
+		current,
+		isVisible,
+		onExitComplete,
+		onVideoEnd,
+		startTimer,
+		onMediaError,
+	};
 }

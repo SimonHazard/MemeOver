@@ -6,6 +6,19 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.0]
+
+### Added
+
+- Hide selected authors and anonymous messages locally.
+- Limit pending media per author with profile-aware settings.
+- Extract and test overlay message routing and display decisions.
+
+### Fixed
+
+- Revoke active overlay sessions immediately after token rotation or server removal.
+- Regenerate replay IDs, prevent replay duplication in history and purge expired Discord media.
+
 ## [1.5.1]
 
 ### Changed

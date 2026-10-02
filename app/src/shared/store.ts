@@ -1,8 +1,12 @@
+import { isSessionRevocationCode, type SessionRevocationCode } from "@memeover/shared";
 import { emit, listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 import { create } from "zustand";
 import i18n from "@/i18n";
 import { restoreOverlayMonitor } from "./helpers";
+import { toReplayItem } from "./history-expiry";
+import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors";
+import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
 import type {
@@ -17,7 +21,7 @@ import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MAX_QUEUE_SIZE = 50;
+export const MAX_QUEUE_SIZE = 50;
 
 const REACTION_PRESET_TIMING: Record<
 	FloatingReactionAnimation,
@@ -41,13 +45,19 @@ function resolveReactionAnimation(settings: Settings): FloatingReactionAnimation
 // ─── State shape ──────────────────────────────────────────────────────────────
 
 interface AppStore {
+	lastJoinError: string | null;
+	serverFeatures: string[];
+	currentAuthorId: string | null;
+	setCurrentAuthorId: (id: string | null) => void;
+	wsRevokedReason: SessionRevocationCode | null;
+	setWsRevokedReason: (reason: SessionRevocationCode | null) => void;
 	// Settings (loaded from Tauri Store by initOverlayStore / initSettingsStore)
 	settings: Settings;
 	updateSettings: (partial: Partial<Settings>) => void;
 
 	// Display queue — accepts both MediaQueueItem and TextQueueItem
 	queue: DisplayQueueItem[];
-	enqueue: (item: DisplayQueueItem) => void;
+	enqueue: (item: DisplayQueueItem, opts?: { isReplay?: boolean }) => void;
 	dequeue: () => void;
 	clearQueue: () => void;
 
@@ -89,13 +99,48 @@ interface AppStore {
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useAppStore = create<AppStore>((set) => ({
+	lastJoinError: null,
+	serverFeatures: [],
+	wsRevokedReason: null,
+	setWsRevokedReason: (reason) => set({ wsRevokedReason: reason }),
+	currentAuthorId: null,
+	setCurrentAuthorId: (id) => set({ currentAuthorId: id }),
 	settings: DEFAULT_SETTINGS,
-	updateSettings: (partial) => set((state) => ({ settings: { ...state.settings, ...partial } })),
+	updateSettings: (partial) =>
+		set((state) => {
+			const settings = { ...state.settings, ...partial };
+			const muted = mutedIdSet(settings.mutedAuthors);
+			const skip =
+				state.currentAuthorId !== null &&
+				muteDropReason({ author_id: state.currentAuthorId }, muted, settings.hideAnonymous) !==
+					null;
+			return {
+				settings,
+				queue: dropMutedFromQueue(state.queue, muted, settings.hideAnonymous),
+				skipVersion: state.skipVersion + (skip ? 1 : 0),
+			};
+		}),
 
 	queue: [],
-	enqueue: (item) =>
+	enqueue: (item, opts) =>
 		set((state) => {
-			if (state.queue.length >= MAX_QUEUE_SIZE) return state;
+			const mutedReason = muteDropReason(
+				item,
+				mutedIdSet(state.settings.mutedAuthors),
+				state.settings.hideAnonymous,
+			);
+			if (mutedReason) {
+				return state;
+			}
+			const reason = canEnqueue(state.queue, item, {
+				maxQueue: MAX_QUEUE_SIZE,
+				maxPerAuthor: state.settings.maxQueuedPerAuthor,
+				isReplay: opts?.isReplay ?? item.replayOf !== undefined,
+			});
+			if (reason) {
+				if (reason === "author_limit") console.debug("[Queue] Dropped item:", reason);
+				return state;
+			}
 			return { queue: [...state.queue, item] };
 		}),
 	dequeue: () => set((state) => ({ queue: state.queue.slice(1) })),
@@ -186,7 +231,9 @@ export async function initOverlayStore(): Promise<void> {
 	});
 
 	await listen<DisplayQueueItem>("replay-item", (event) => {
-		useAppStore.getState().enqueue(event.payload);
+		useAppStore
+			.getState()
+			.enqueue(toReplayItem(event.payload, crypto.randomUUID()), { isReplay: true });
 	});
 
 	// Track overlay visibility so the WS hook can discard messages while hidden.
@@ -219,15 +266,32 @@ export async function initOverlayStore(): Promise<void> {
  * - Subscribes to "member-count-changed" Tauri events emitted by the overlay window
  */
 export async function initSettingsStore(): Promise<void> {
+	await listen<string | null>("ws-join-error", (event) =>
+		useAppStore.setState({ lastJoinError: event.payload }),
+	);
+	await listen<string[]>("ws-features-changed", (event) =>
+		useAppStore.setState({ serverFeatures: event.payload }),
+	);
 	// Track previous status to fire toasts only on genuine transitions.
 	// This runs entirely outside React — toast() and i18n.t() are both safe here.
 	let prevWsStatus: WsStatus = "disconnected";
 
+	await listen<SessionRevocationCode>("ws-session-revoked", (event) => {
+		if (!isSessionRevocationCode(event.payload)) return;
+		useAppStore.getState().setWsRevokedReason(event.payload);
+		toast.error(i18n.t("toast.sessionRevoked"));
+	});
+
 	await listen<WsStatus>("ws-status-changed", (event) => {
 		const status = event.payload;
+		if (status === "connected") useAppStore.getState().setWsRevokedReason(null);
 		if (status === "connected" && prevWsStatus !== "connected") {
 			toast.success(i18n.t("toast.wsConnected"));
-		} else if (status === "error" && prevWsStatus !== "error") {
+		} else if (
+			status === "error" &&
+			prevWsStatus !== "error" &&
+			!useAppStore.getState().wsRevokedReason
+		) {
 			toast.error(i18n.t("toast.wsError"));
 		}
 		prevWsStatus = status;

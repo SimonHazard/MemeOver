@@ -1,9 +1,11 @@
-import { type JoinMessage, type PongMessage, ServerMessageSchema } from "@memeover/shared";
+import type { JoinMessage, SessionRevocationCode } from "@memeover/shared";
 import { emit } from "@tauri-apps/api/event";
-import { useCallback, useEffect, useRef } from "react";
-import { match } from "ts-pattern";
-import { mediaEventToQueueItem, textEventToQueueItem } from "@/shared/media-factory";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { mutedIdSet } from "@/shared/muted-authors";
 import { useAppStore } from "@/shared/store";
+import { bindSocket, sendClientMessage, setServerFeatures, unbindSocket } from "../ws-client";
+
+import { routeServerMessage } from "./route-server-message";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -22,6 +24,11 @@ export function useOverlayWs(): void {
 	const showBotAppSources = useAppStore((s) => s.settings.showBotAppSources);
 	const floatingReactionsEnabled = useAppStore((s) => s.settings.floatingReactionsEnabled);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
+	const mutedAuthors = useAppStore((s) => s.settings.mutedAuthors);
+	const hideAnonymous = useAppStore((s) => s.settings.hideAnonymous);
+	const muted = useMemo(() => mutedIdSet(mutedAuthors), [mutedAuthors]);
+	const muteRef = useRef({ muted, hideAnonymous });
+	muteRef.current = { muted, hideAnonymous };
 	const shouldConnect = Boolean(guildId && token && wsUrl);
 
 	// Keep credentials and filter settings in refs so WS callbacks always read
@@ -43,90 +50,95 @@ export function useOverlayWs(): void {
 	overlayHealthRef.current = overlayHealth;
 
 	const wsRef = useRef<WebSocket | null>(null);
+	const revokedRef = useRef<SessionRevocationCode | null>(null);
+	const [reconnectNonce, setReconnectNonce] = useState(0);
+	const previousCredentialsRef = useRef({ guildId, token });
+	useEffect(() => {
+		const changed =
+			previousCredentialsRef.current.guildId !== guildId ||
+			previousCredentialsRef.current.token !== token;
+		previousCredentialsRef.current = { guildId, token };
+		if (changed && revokedRef.current !== null) {
+			revokedRef.current = null;
+			setReconnectNonce((n) => n + 1);
+		}
+	}, [guildId, token]);
 	const reconnectTimerRef = useRef<number | null>(null);
 
 	// ── Stable event handlers ─────────────────────────────────────────────────
 
-	const onOpen = useCallback(
-		(ws: WebSocket) => {
-			setWsStatus("connecting");
-			const join: JoinMessage = {
-				type: "JOIN",
-				guild_id: credentialsRef.current.guildId,
-				token: credentialsRef.current.token,
-				client_id: credentialsRef.current.clientId || undefined,
-			};
-			ws.send(JSON.stringify(join));
-		},
-		[setWsStatus],
-	);
+	const onOpen = useCallback(() => {
+		setWsStatus("connecting");
+		const join: JoinMessage = {
+			type: "JOIN",
+			guild_id: credentialsRef.current.guildId,
+			token: credentialsRef.current.token,
+			client_id: credentialsRef.current.clientId || undefined,
+		};
+		sendClientMessage(join);
+	}, [setWsStatus]);
 
 	const onMessage = useCallback(
 		(event: MessageEvent<string>) => {
-			const result = ServerMessageSchema.safeParse(
-				(() => {
-					try {
-						return JSON.parse(event.data) as unknown;
-					} catch {
-						console.warn("[WS] Failed to parse message:", event.data);
-						return null;
+			const action = routeServerMessage(event.data, {
+				overlayHealth: overlayHealthRef.current,
+				showBotAppSources: showBotAppSourcesRef.current,
+				enabledTypes: enabledTypesRef.current,
+				floatingReactionsEnabled: reactionsEnabledRef.current,
+				guildId: credentialsRef.current.guildId,
+				mutedAuthors: muteRef.current.muted,
+				hideAnonymous: muteRef.current.hideAnonymous,
+			});
+			switch (action.kind) {
+				case "join_ack":
+					if (action.success) {
+						setServerFeatures(action.features);
+						void emit("ws-join-error", null);
+						void emit("ws-features-changed", action.features ?? []);
+						revokedRef.current = null;
+						setWsStatus("connected");
+						void emit("ws-status-changed", "connected");
+					} else {
+						setWsStatus("error");
+						void emit("ws-status-changed", "error");
+						console.warn("[WS] JOIN_ACK error:", action.error);
+						void emit("ws-join-error", action.error ?? null);
 					}
-				})(),
-			);
-
-			if (!result.success) {
-				console.warn("[WS] Invalid message schema:", result.error.issues);
-				return;
-			}
-
-			match(result.data)
-				.with({ type: "JOIN_ACK", success: true }, () => {
-					setWsStatus("connected");
-					void emit("ws-status-changed", "connected");
-				})
-				.with({ type: "JOIN_ACK", success: false }, (msg) => {
+					break;
+				case "enqueue":
+					enqueue(action.item);
+					break;
+				case "reaction":
+					spawnReaction({ emoji: action.emoji, emojiUrl: action.emojiUrl });
+					break;
+				case "session_revoked":
+					revokedRef.current = action.code;
 					setWsStatus("error");
-					void emit("ws-status-changed", "error");
-					console.warn("[WS] JOIN_ACK error:", msg.error);
-				})
-				.with({ type: "MEDIA" }, (msg) => {
-					if (overlayHealthRef.current === "closed") return;
-					if (msg.source === "bot_app" && !showBotAppSourcesRef.current) return;
-					const et = enabledTypesRef.current;
-					const allowed = match(msg.media_type)
-						.with("image", () => et.image)
-						.with("gif", () => et.gif)
-						.with("video", () => et.video)
-						.with("audio", () => et.audio)
-						.with("sticker", () => et.sticker)
-						.exhaustive();
-					if (allowed) enqueue(mediaEventToQueueItem(msg));
-				})
-				.with({ type: "TEXT" }, (msg) => {
-					if (overlayHealthRef.current === "closed") return;
-					if (msg.source === "bot_app" && !showBotAppSourcesRef.current) return;
-					if (enabledTypesRef.current.text) enqueue(textEventToQueueItem(msg));
-				})
-				.with({ type: "REACTION" }, (msg) => {
-					if (overlayHealthRef.current === "closed") return;
-					if (msg.source === "bot_app" && !showBotAppSourcesRef.current) return;
-					if (!reactionsEnabledRef.current) return;
-					spawnReaction({ emoji: msg.emoji, emojiUrl: msg.emoji_url });
-				})
-				.with({ type: "ERROR" }, (msg) => {
-					console.warn("[WS] Server error:", msg);
-				})
-				.with({ type: "PING" }, () => {
-					const pong: PongMessage = { type: "PONG" };
-					wsRef.current?.send(JSON.stringify(pong));
-				})
-				.with({ type: "MEMBER_COUNT_UPDATE" }, (msg) => {
-					// Only forward counts that match our guild
-					if (msg.guild_id !== credentialsRef.current.guildId) return;
-					setMemberCount(msg.count);
-					void emit("member-count-changed", msg.count);
-				})
-				.exhaustive();
+					void emit("ws-session-revoked", action.code).then(() =>
+						emit("ws-status-changed", "error"),
+					);
+					break;
+				case "server_error":
+					console.warn("[WS] Server error:", action.message);
+					break;
+				case "pong":
+					sendClientMessage({ type: "PONG" });
+					break;
+				case "member_count":
+					setMemberCount(action.count);
+					void emit("member-count-changed", action.count);
+					break;
+				case "drop":
+					if (action.reason === "invalid_json")
+						console.warn("[WS] Failed to parse message:", action.detail);
+					else if (action.reason === "invalid_schema")
+						console.warn("[WS] Invalid message schema:", action.detail);
+					break;
+				default: {
+					const exhaustive: never = action;
+					return exhaustive;
+				}
+			}
 		},
 		[enqueue, spawnReaction, setWsStatus, setMemberCount],
 	);
@@ -141,6 +153,7 @@ export function useOverlayWs(): void {
 		void emit("ws-status-changed", "error");
 	}, [setWsStatus]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: nonce deliberately restarts a revoked connection after credentials change.
 	useEffect(() => {
 		if (!shouldConnect) {
 			setWsStatus("disconnected");
@@ -159,14 +172,15 @@ export function useOverlayWs(): void {
 
 		const connect = () => {
 			clearReconnect();
-			if (disposed) return;
+			if (disposed || revokedRef.current !== null) return;
 
 			const ws = new WebSocket(wsUrl);
 			wsRef.current = ws;
+			bindSocket(ws);
 			setWsStatus("connecting");
 
 			ws.addEventListener("open", () => {
-				if (!disposed) onOpen(ws);
+				if (!disposed) onOpen();
 			});
 
 			ws.addEventListener("message", (event) => {
@@ -180,11 +194,15 @@ export function useOverlayWs(): void {
 			});
 
 			ws.addEventListener("close", () => {
+				// A retired socket may close after its replacement has already joined.
+				if (disposed || wsRef.current !== ws) return;
+				void emit("ws-features-changed", []);
+				unbindSocket(ws);
 				if (wsRef.current === ws) {
 					wsRef.current = null;
 				}
 
-				if (disposed) return;
+				if (revokedRef.current !== null) return;
 				onClose();
 				reconnectTimerRef.current = window.setTimeout(connect, 3_000);
 			});
@@ -195,8 +213,11 @@ export function useOverlayWs(): void {
 		return () => {
 			disposed = true;
 			clearReconnect();
-			wsRef.current?.close();
+			if (wsRef.current) {
+				unbindSocket(wsRef.current);
+				wsRef.current.close();
+			}
 			wsRef.current = null;
 		};
-	}, [shouldConnect, wsUrl, onOpen, onMessage, onClose, onError, setWsStatus]);
+	}, [shouldConnect, wsUrl, reconnectNonce, onOpen, onMessage, onClose, onError, setWsStatus]);
 }
