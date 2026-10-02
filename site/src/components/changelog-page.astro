@@ -1,0 +1,11 @@
+---
+import { getLangFromUrl, getTranslations } from "@/i18n";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { Content } from "../../../CHANGELOG.md";
+
+const dict = getTranslations(getLangFromUrl(Astro.url));
+---
+<BaseLayout title={`${dict.changelog.title} — MemeOver`} description={dict.changelog.description}>
+ <section class="mx-auto max-w-3xl px-4 pt-28 pb-16 space-y-6"><h1 class="font-display text-3xl">{dict.changelog.title}</h1><p class="text-muted-foreground">{dict.changelog.description}</p><div class="changelog-content border-2 border-foreground rounded-xl bg-card p-6 shadow-nb-md"><Content /></div></section>
+</BaseLayout>
+<style>.changelog-content :global(h1) { display: none; } .changelog-content :global(h2) { font-family: var(--font-display); font-size: 1.3rem; margin: 2rem 0 1rem; } .changelog-content :global(h3) { font-weight: 600; margin: 1rem 0; } .changelog-content :global(ul) { list-style: disc; padding-left: 1.5rem; } .changelog-content :global(li) { margin: 0.5rem 0; } .changelog-content :global(a) { text-decoration: underline; }</style>

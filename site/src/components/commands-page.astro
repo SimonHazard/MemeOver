@@ -1,0 +1,11 @@
+---
+import { getLangFromUrl, getTranslations } from "@/i18n";
+import BaseLayout from "@/layouts/base-layout.astro";
+
+const dict = getTranslations(getLangFromUrl(Astro.url));
+---
+<BaseLayout title={`${dict.commands.title} — MemeOver`} description={dict.commands.description}>
+ <section class="mx-auto max-w-5xl px-4 pt-28 pb-16 space-y-6"><h1 class="font-display text-3xl">{dict.commands.title}</h1><p class="text-muted-foreground">{dict.commands.description}</p>
+ <div class="overflow-x-auto rounded-xl border-2 border-foreground bg-card shadow-nb-md"><table class="w-full text-sm"><thead class="border-b-2 border-foreground bg-muted"><tr>{[dict.commands.commandLabel,dict.commands.accessLabel,dict.commands.descriptionLabel].map(label => <th scope="col" class="p-4 text-left font-display">{label}</th>)}</tr></thead><tbody>{dict.commands.items.filter(item => item.published).map(item => <tr class="border-b border-border last:border-0"><th scope="row" class="p-4 text-left font-mono whitespace-nowrap">{item.name}</th><td class="p-4">{item.access}</td><td class="p-4 min-w-48">{item.description}</td></tr>)}</tbody></table></div>
+ </section>
+</BaseLayout>

@@ -3,6 +3,7 @@ import "@/styles/global.css";
 import Footer from "@/components/footer.astro";
 import Navbar from "@/components/navbar.astro";
 import { getAlternateLocalePath, getLangFromUrl, getTranslations, t } from "@/i18n";
+import appPackage from "../../../app/package.json";
 
 interface Props {
 	title?: string;
@@ -36,7 +37,7 @@ const structuredData = [
 		description: pageDescription,
 		applicationCategory: "MultimediaApplication",
 		operatingSystem: "Windows, macOS, Linux",
-		softwareVersion: "1.0",
+		softwareVersion: appPackage.version,
 		isAccessibleForFree: true,
 		license: "https://github.com/SimonHazard/MemeOver/blob/main/LICENSE",
 		downloadUrl: releaseUrl,
@@ -44,12 +45,7 @@ const structuredData = [
 		inLanguage: ["en", "fr"],
 		image: ogImage.toString(),
 		screenshot: ogImage.toString(),
-		featureList: [
-			dict.features.items[0]?.title,
-			dict.features.items[1]?.title,
-			dict.features.items[2]?.title,
-			dict.features.items[3]?.title,
-		].filter(Boolean),
+		featureList: dict.features.items.map((item) => item.title),
 		author: {
 			"@type": "Person",
 			name: "Simon Hazard",
@@ -79,7 +75,7 @@ const structuredData = [
 ---
 
 <!doctype html>
-<html lang={lang} class="scroll-smooth">
+<html lang={lang} class="motion-safe:scroll-smooth">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -155,5 +151,13 @@ const structuredData = [
 			<slot />
 		</main>
 		<Footer lang={lang} />
-	</body>
+	<script>
+ if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const targets = document.querySelectorAll("[data-reveal]");
+  const observer = new IntersectionObserver(entries => { for (const entry of entries) if (entry.isIntersecting) { entry.target.setAttribute("data-revealed", ""); observer.unobserve(entry.target); } }, { rootMargin: "0px 0px -100px 0px" });
+  document.documentElement.classList.add("js");
+  for (const target of targets) observer.observe(target);
+ }
+</script>
+</body>
 </html>

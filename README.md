@@ -28,6 +28,10 @@ GIFs, videos, audio, reactions and text directly on each other's screens.
 - Conserve un historique local pour rejouer les derniers medias recus.
 - Fournit un code `memeover://setup` pour connecter l'app en un copier-coller.
 - Se met a jour automatiquement via les releases GitHub.
+- Cree votre bot self-host depuis l'onglet Serveur de l'app.
+- Envoie un media anonyme avec `/memeover secret` et affiche l'etat avec `/memeover status`.
+- Demarre dans le tray a l'ouverture de session.
+- Lit les GIF Discord au format video (gifv).
 - Fonctionne sur Windows, macOS et Linux.
 
 ## Fonctionnement
@@ -58,7 +62,7 @@ dans l'app et fournissez votre propre URL WebSocket.
 
 ### Prerequis
 
-- [Bun](https://bun.sh/)
+- [Bun](https://bun.sh/) 1.4.2+ (WebSocket test shutdown requires this runtime)
 - [Rust](https://www.rust-lang.org/)
 
 ### Installation
@@ -69,7 +73,8 @@ bun install
 
 ### Configuration locale
 
-Copiez `bot/.env.example` vers `.env` a la racine du repo, puis renseignez :
+Pour `bun run dev:bot`, copiez `bot/.env.example` vers `bot/.env`, puis renseignez :
+Pour Docker Compose, utilisez un `.env` a la racine du repo.
 
 ```env
 DISCORD_TOKEN=votre_token_bot
@@ -147,6 +152,10 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE).
 - Local history and replay for recently displayed media.
 - One-paste `memeover://setup` connection code from Discord.
 - Automatic app updates through GitHub releases.
+- Self-hosted server creator in the app's Server tab.
+- Anonymous `/memeover secret` sends and `/memeover status` server information.
+- Start on login in the tray.
+- Discord video-backed GIF (gifv) playback.
 - Windows, macOS and Linux builds.
 
 ## How It Works
@@ -177,7 +186,7 @@ mode in the app and provide your own WebSocket URL.
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/)
+- [Bun](https://bun.sh/) 1.4.2+ (WebSocket test shutdown requires this runtime)
 - [Rust](https://www.rust-lang.org/)
 
 ### Install
@@ -188,7 +197,8 @@ bun install
 
 ### Local Configuration
 
-Copy `bot/.env.example` to `.env` at the repository root, then fill in:
+For `bun run dev:bot`, copy `bot/.env.example` to `bot/.env`, then fill in:
+For Docker Compose, use a `.env` at the repository root.
 
 ```env
 DISCORD_TOKEN=your_bot_token

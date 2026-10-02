@@ -20,7 +20,7 @@ export default function ThemeToggle() {
 			type="button"
 			onClick={toggle}
 			aria-label="Toggle dark mode"
-			className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg border-2 border-foreground bg-background shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-accent active:translate-x-0.5 active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+			className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg border-2 border-foreground bg-background shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[background-color,box-shadow,transform,translate] duration-200 hover:bg-accent motion-safe:active:translate-x-0.5 motion-safe:active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 		>
 			{dark ? (
 				<Sun className="size-5" aria-hidden="true" />

@@ -18,7 +18,7 @@ const iconMap: Record<string, typeof Bot> = {
 };
 ---
 
-<section id="how-it-works" class="px-4 py-20">
+<section data-reveal id="how-it-works" class="px-4 py-20">
 	<div class="max-w-6xl mx-auto">
 		<h2 class="text-balance font-display text-3xl sm:text-4xl text-center tracking-wide mb-16">
 			{dict.howItWorks.title}
@@ -28,7 +28,7 @@ const iconMap: Record<string, typeof Bot> = {
 			{dict.howItWorks.steps.map((step, i) => {
 				const Icon = iconMap[step.icon] ?? Sparkles;
 				return (
-					<article class="relative flex flex-col items-center text-center gap-4 p-6 rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform] duration-200 hover:shadow-[6px_6px_0px_0px_var(--nb-shadow)] hover:-translate-y-1">
+					<article class="relative flex flex-col items-center text-center gap-4 p-6 rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[6px_6px_0px_0px_var(--nb-shadow)] hover:-translate-y-1">
 						{/* Step number */}
 						<span class="absolute -top-3 -left-3 size-8 flex items-center justify-center rounded-lg bg-primary text-primary-foreground font-display text-sm border-2 border-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)]">
 							{i + 1}

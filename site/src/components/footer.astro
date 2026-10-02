@@ -1,6 +1,7 @@
 ---
+import { createDiscordInviteUrl } from "@memeover/shared";
 import type { Locale } from "@/i18n";
-import { getTranslations } from "@/i18n";
+import { getLocalizedPath, getTranslations } from "@/i18n";
 
 interface Props {
 	lang: Locale;
@@ -11,7 +12,7 @@ const dict = getTranslations(lang);
 
 const botClientId = import.meta.env.PUBLIC_BOT_CLIENT_ID;
 const inviteHref = botClientId
-	? `https://discord.com/oauth2/authorize?client_id=${botClientId}&permissions=2147552256&integration_type=0&scope=bot+applications.commands`
+	? createDiscordInviteUrl(botClientId, false, { integrationType: 0 })
 	: null;
 const legalHref = lang === "fr" ? "/fr/legal" : "/legal";
 ---
@@ -54,9 +55,9 @@ const legalHref = lang === "fr" ? "/fr/legal" : "/legal";
 					</a>
 				</>
 			)}
-			<span class="text-foreground/20">·</span>
-			<a
-				href={legalHref}
+			{[ ["/commands",dict.commands.title], ["/self-host",dict.selfHost.title], ["/changelog",dict.changelog.title] ].map(([path,label]) => <a href={getLocalizedPath(lang, path)} class="underline-offset-4 hover:underline">{label}</a>)}
+ <span class="text-foreground/20">·</span>
+ <a href={legalHref}
 				class="transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
 			>
 				{dict.footer.legal}

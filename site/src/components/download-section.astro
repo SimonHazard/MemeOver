@@ -2,6 +2,7 @@
 import { Apple, Download, Laptop, PackageOpen } from "lucide-react";
 import type { Locale } from "@/i18n";
 import { getTranslations } from "@/i18n";
+import { formatAssetSize, latestRelease } from "@/lib/latest-release";
 
 interface Props {
 	lang: Locale;
@@ -12,18 +13,22 @@ const dict = getTranslations(lang);
 
 const releaseUrl = "https://github.com/SimonHazard/MemeOver/releases/latest";
 
+const release = await latestRelease();
 const platforms = [
 	{
+		asset: release?.assets.windowsExe,
 		name: dict.download.windows,
 		formats: dict.download.windowsFormats,
 		Icon: Laptop,
 	},
 	{
+		asset: release?.assets.macDmg,
 		name: dict.download.macos,
 		formats: dict.download.macosFormats,
 		Icon: Apple,
 	},
 	{
+		asset: release?.assets.linuxAppImage,
 		name: dict.download.linux,
 		formats: dict.download.linuxFormats,
 		Icon: PackageOpen,
@@ -31,7 +36,7 @@ const platforms = [
 ];
 ---
 
-<section id="download" class="scroll-mt-24 px-4 py-20">
+<section data-reveal id="download" class="scroll-mt-24 px-4 py-20">
 	<div class="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
 		<div class="flex flex-col gap-4">
 			<h2 class="text-balance font-display text-3xl tracking-wide sm:text-4xl">
@@ -56,10 +61,10 @@ const platforms = [
 					const Icon = platform.Icon;
 					return (
 						<a
-							href={releaseUrl}
+							href={platform.asset?.url ?? releaseUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="group flex min-h-40 flex-col justify-between rounded-2xl border-2 border-foreground bg-background p-5 shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:-translate-y-1 hover:bg-muted hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+							class="group flex min-h-40 flex-col justify-between rounded-2xl border-2 border-foreground bg-background p-5 shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate,background-color] ease-out duration-200 [@media(hover:hover)]:motion-safe:hover:-translate-y-1 motion-safe:active:translate-y-0 active:shadow-none hover:bg-muted hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
 						>
 							<div class="flex items-center justify-between">
 								<div class="flex size-12 items-center justify-center rounded-xl border-2 border-foreground bg-primary">
@@ -73,12 +78,15 @@ const platforms = [
 								</span>
 								<span class="font-display text-xs tracking-wide text-muted-foreground">
 									{platform.formats}
+ {platform.asset && release && <span class="block text-xs">v{release.version} · {formatAssetSize(platform.asset.size)}</span>}
 								</span>
 							</div>
 						</a>
 					);
 				})}
 			</div>
+ {release && <div class="mt-4 flex flex-wrap justify-center gap-4 text-xs underline underline-offset-4"><a href={release.assets.windowsMsi.url}>Windows MSI</a><a href={release.assets.linuxDeb.url}>Linux deb</a><a href={release.assets.linuxRpm.url}>Linux rpm</a></div>}
+
 		</div>
 	</div>
 </section>
