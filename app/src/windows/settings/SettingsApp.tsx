@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@memeover/ui/components/ui/tooltip";
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -32,5 +33,9 @@ export function SettingsApp() {
 			void unlisten.then((stop) => stop());
 		};
 	}, []);
-	return <RouterProvider router={router} />;
+	return (
+		<TooltipProvider>
+			<RouterProvider router={router} />
+		</TooltipProvider>
+	);
 }
