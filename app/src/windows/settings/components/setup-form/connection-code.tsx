@@ -1,5 +1,5 @@
 import { type ParsedConnectionCode, parseConnectionCode } from "@memeover/shared";
-import { Button } from "@memeover/ui/components/ui/button";
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { Input } from "@memeover/ui/components/ui/input";
 import { cn } from "@memeover/ui/lib/utils";
 import { ClipboardPaste } from "lucide-react";
@@ -47,18 +47,17 @@ export function ConnectionCodeField({ className, onApply }: ConnectionCodeFieldP
 						}
 					}}
 					placeholder={t("connection.quickPaste_placeholder")}
-					className="border-2 border-input focus:border-foreground"
 				/>
-				<Button
+				<NbButton
 					type="button"
 					onClick={applyValue}
 					disabled={!value.trim()}
-					className="shrink-0 border-2"
+					className="shrink-0"
 					aria-label={t("connection.quickPaste_apply")}
 				>
 					<ClipboardPaste className="h-4 w-4" aria-hidden="true" />
 					<span className="hidden sm:inline">{t("connection.quickPaste_apply")}</span>
-				</Button>
+				</NbButton>
 			</div>
 			<p className="mt-2 text-xs text-muted-foreground">{t("connection.quickPaste_hint")}</p>
 		</div>

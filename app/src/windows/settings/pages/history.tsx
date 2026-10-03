@@ -1,7 +1,7 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { Skeleton } from "@memeover/ui/components/ui/skeleton";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -135,11 +135,11 @@ export function HistoryPage() {
 
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<div className="flex items-center gap-3">
-						<Switch
+						<NbSwitch
 							id="history-auto-purge"
 							checked={settings?.historyAutoPurge ?? true}
 							disabled={!settings || isSavingPurge}
-							onCheckedChange={setAutoPurge}
+							onCheckedChange={(checked) => setAutoPurge(checked)}
 						/>
 						<div>
 							<label htmlFor="history-auto-purge" className="text-sm font-display">

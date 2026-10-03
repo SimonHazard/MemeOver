@@ -3,6 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
 	entry: {
 		// ── ui components ────────────────────────────────────────────────────
+		"components/ui/accordion": "src/components/ui/accordion.tsx",
 		"components/ui/alert": "src/components/ui/alert.tsx",
 		"components/ui/avatar": "src/components/ui/avatar.tsx",
 		"components/ui/badge": "src/components/ui/badge.tsx",
@@ -24,9 +25,11 @@ export default defineConfig({
 		"components/ui/toggle-group": "src/components/ui/toggle-group.tsx",
 		"components/ui/tooltip": "src/components/ui/tooltip.tsx",
 		// ── branded components ───────────────────────────────────────────────
+		"components/branded/nb-accordion": "src/components/branded/nb-accordion.tsx",
 		"components/branded/nb-badge": "src/components/branded/nb-badge.tsx",
 		"components/branded/nb-button": "src/components/branded/nb-button.tsx",
 		"components/branded/nb-card": "src/components/branded/nb-card.tsx",
+		"components/branded/nb-switch": "src/components/branded/nb-switch.tsx",
 		// ── lib ──────────────────────────────────────────────────────────────
 		"lib/nb-classes": "src/lib/nb-classes.ts",
 		"lib/motion": "src/lib/motion.ts",

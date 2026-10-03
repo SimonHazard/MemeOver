@@ -104,32 +104,30 @@ export function TextSection() {
 						<Label className="font-display tracking-wide text-xs">
 							{t("display.textPosition")}
 						</Label>
-						<TooltipProvider delayDuration={150}>
+						<TooltipProvider delay={150}>
 							<ToggleGroup
-								type="single"
-								value={field.state.value}
-								onValueChange={(v) => {
-									if (v) field.handleChange(v as TextPosition);
+								value={[field.state.value]}
+								onValueChange={([next]) => {
+									if (next) field.handleChange(next);
 								}}
-								className="flex gap-1.5 justify-start"
+								spacing={1.5}
+								className="justify-start"
 							>
 								{TEXT_POSITIONS.map(({ value, icon: Icon, labelKey }) => {
 									const label = t(labelKey);
 									return (
 										<Tooltip key={value}>
-											<TooltipTrigger asChild>
-												{/* span absorbs Tooltip's `data-state` so ToggleGroupItem can keep
-												    its own (which drives the selected background color). */}
-												<span className="inline-flex">
+											<TooltipTrigger
+												render={
 													<ToggleGroupItem
 														value={value}
 														size="sm"
 														className={NB_TOGGLE_ITEM}
 														aria-label={label}
-													>
-														<Icon className="h-4 w-4" />
-													</ToggleGroupItem>
-												</span>
+													/>
+												}
+											>
+												<Icon className="h-4 w-4" />
 											</TooltipTrigger>
 											<TooltipContent side="bottom">{label}</TooltipContent>
 										</Tooltip>

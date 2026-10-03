@@ -1,6 +1,6 @@
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Slider } from "@memeover/ui/components/ui/slider";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { SectionHeader } from "../components/section-header";
@@ -45,9 +45,9 @@ export function TimingSoundSection() {
 							</Label>
 							<p className="text-xs text-muted-foreground">{t("display.syncMediaDuration_hint")}</p>
 						</div>
-						<Switch
+						<NbSwitch
 							checked={field.state.value}
-							onCheckedChange={field.handleChange}
+							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"
 						/>
 					</div>

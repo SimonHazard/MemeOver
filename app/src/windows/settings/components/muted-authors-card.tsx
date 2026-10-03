@@ -1,7 +1,7 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@memeover/ui/components/ui/avatar";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -59,11 +59,11 @@ export function MutedAuthorsCard() {
 					</label>
 					<p className="text-xs text-muted-foreground">{t("history.hideAnonymousHint")}</p>
 				</div>
-				<Switch
+				<NbSwitch
 					id="hide-anonymous"
 					checked={settings.hideAnonymous}
 					disabled={isSaving}
-					onCheckedChange={hideAnonymous}
+					onCheckedChange={(checked) => hideAnonymous(checked)}
 				/>
 			</div>
 		</NbCard>

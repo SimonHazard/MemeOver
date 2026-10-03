@@ -38,7 +38,7 @@ export function HoldToConfirmButton({
 			<NbButton
 				variant="outline"
 				size="sm"
-				className={`relative overflow-hidden min-h-11 touch-manipulation ${className}`}
+				className={`relative overflow-hidden touch-manipulation ${className}`}
 				disabled={disabled}
 				aria-label={t("motion.holdLabel", { label })}
 				aria-describedby={hintId}

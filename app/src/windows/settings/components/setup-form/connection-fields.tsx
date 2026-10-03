@@ -1,7 +1,7 @@
 import type { ParsedConnectionCode } from "@memeover/shared";
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Label } from "@memeover/ui/components/ui/label";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import type {
 	FormAsyncValidateOrFn,
 	FormValidateOrFn,
@@ -106,7 +106,7 @@ export function ConnectionCredentialsFields({
 									{t("connection.expertMode_hint")}
 								</p>
 							</div>
-							<Switch
+							<NbSwitch
 								id={field.name}
 								checked={field.state.value}
 								onCheckedChange={(checked) => {
@@ -115,7 +115,7 @@ export function ConnectionCredentialsFields({
 										form.setFieldValue("wsUrl", defaultWsUrl);
 									}
 								}}
-								className="border-2 border-foreground shrink-0"
+								className="shrink-0"
 							/>
 						</div>
 					)}

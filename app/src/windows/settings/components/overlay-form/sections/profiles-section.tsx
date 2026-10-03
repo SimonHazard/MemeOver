@@ -1,4 +1,4 @@
-import { Button } from "@memeover/ui/components/ui/button";
+import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Separator } from "@memeover/ui/components/ui/separator";
@@ -154,15 +154,15 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 					/>
 				</div>
 				<div className="flex items-end gap-2">
-					<Button
+					<NbButton
 						type="button"
 						disabled={!canCreate}
 						onClick={() => void createMutation.mutateAsync()}
 					>
 						<Save data-icon="inline-start" aria-hidden="true" />
 						{t("display.profile_save")}
-					</Button>
-					<Button
+					</NbButton>
+					<NbButton
 						type="button"
 						variant="outline"
 						disabled={isBusy}
@@ -170,7 +170,7 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 					>
 						<Import data-icon="inline-start" aria-hidden="true" />
 						{t("display.profile_import")}
-					</Button>
+					</NbButton>
 					<input
 						ref={importInputRef}
 						type="file"
@@ -211,7 +211,7 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 							</p>
 						</div>
 						<div className="flex flex-wrap items-center gap-2">
-							<Button
+							<NbButton
 								type="button"
 								size="sm"
 								disabled={isBusy}
@@ -219,8 +219,8 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 							>
 								<Check data-icon="inline-start" aria-hidden="true" />
 								{t("display.profile_apply")}
-							</Button>
-							<Button
+							</NbButton>
+							<NbButton
 								type="button"
 								size="sm"
 								variant="outline"
@@ -229,8 +229,8 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 							>
 								<Upload data-icon="inline-start" aria-hidden="true" />
 								{t("display.profile_update")}
-							</Button>
-							<Button
+							</NbButton>
+							<NbButton
 								type="button"
 								size="sm"
 								variant="outline"
@@ -239,7 +239,7 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 							>
 								<Download data-icon="inline-start" aria-hidden="true" />
 								{t("display.profile_export")}
-							</Button>
+							</NbButton>
 							<HoldToConfirmButton
 								disabled={isBusy}
 								label={t("display.profile_delete_named", { name: profile.name })}

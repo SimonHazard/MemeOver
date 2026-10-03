@@ -24,7 +24,7 @@ function NbAccordionItem({ className, ...props }: React.ComponentProps<typeof Ac
 				"border-2 border-foreground rounded-md bg-card overflow-hidden",
 				NB_SHADOW_SM,
 				"last:border-b-2",
-				"data-[state=open]:bg-primary-400/10",
+				"data-open:bg-primary-400/10",
 				"transition-colors",
 				className,
 			)}
@@ -43,7 +43,7 @@ function NbAccordionTrigger({
 			className={cn(
 				"px-3 py-2.5 font-display tracking-wide text-xs text-foreground rounded-none",
 				"hover:no-underline hover:bg-primary-400/15",
-				"data-[state=open]:border-b-2 data-[state=open]:border-foreground",
+				"data-panel-open:border-b-2 data-panel-open:border-foreground",
 				"[&>svg]:text-foreground [&>svg]:translate-y-0",
 				"transition-colors",
 				className,
