@@ -6,6 +6,21 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.2]
+
+### Changed
+
+- Migrate shared UI components from Radix to Base UI and adapt the settings controls.
+- Harmonize switches, inputs, profile actions and connection buttons with the neo-brutalist design.
+- Replace the bundled Bungee font and improve reduced-motion transitions for settings controls.
+- Translate position and color controls, preview summaries and French interface labels.
+- Identify site deployments by the published app release and queue production deployments without interrupting an active run.
+
+### Fixed
+
+- Show localized connection errors for unknown servers and invalid tokens, with a generic fallback for unknown errors.
+- Add localized titles and technical details to local server operation errors.
+
 ## [1.6.1]
 
 ### Fixed

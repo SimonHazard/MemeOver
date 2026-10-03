@@ -1,0 +1,36 @@
+name: Site — Refresh after app release
+run-name: Site — refresh requested by ${{ github.event.release.tag_name }}
+
+# Les releases portent une ref de tag, refusée par l’environnement production.
+# Le dispatch sur main conserve les règles de la branche protégée et ses approbations.
+on:
+  release:
+    types: [published]
+
+permissions:
+  actions: write
+
+jobs:
+  refresh:
+    name: Request site deployment on main
+    if: startsWith(github.event.release.tag_name, 'app-v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch site deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.payload.release.tag_name;
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-site.yml',
+              ref: 'main',
+              inputs: { release_tag: tag },
+            });
+            await core.summary
+              .addHeading('Site refresh requested')
+              .addRaw(`Release ${tag}: the site will build from main and await production approval.`, true)
+              .addLink('Follow the site deployment',
+                `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/workflows/deploy-site.yml`)
+              .write();

@@ -1,5 +1,5 @@
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Label } from "@memeover/ui/components/ui/label";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import {
 	Tooltip,
@@ -42,31 +42,30 @@ export function MediaTypesSection() {
 
 					return (
 						<div className="space-y-3">
-							<TooltipProvider delayDuration={150}>
+							<TooltipProvider delay={150}>
 								<ToggleGroup
-									type="multiple"
+									multiple
 									value={enabledTypesToList(field.state.value)}
 									onValueChange={(vals) => field.handleChange(listToEnabledTypes(vals))}
-									className="flex gap-1.5 justify-start"
+									spacing={1.5}
+									className="justify-start"
 								>
 									{MEDIA_TYPE_KEYS.map((value) => {
 										const Icon = MEDIA_TYPE_ICONS[value];
 										const label = t(`display.type_${value}`);
 										return (
 											<Tooltip key={value}>
-												<TooltipTrigger asChild>
-													{/* span absorbs Tooltip's `data-state` so ToggleGroupItem can keep
-													    its own (which drives the selected background color). */}
-													<span className="inline-flex">
+												<TooltipTrigger
+													render={
 														<ToggleGroupItem
 															value={value}
 															size="sm"
 															aria-label={label}
 															className={NB_TOGGLE_ITEM}
-														>
-															<Icon className="h-4 w-4" />
-														</ToggleGroupItem>
-													</span>
+														/>
+													}
+												>
+													<Icon className="h-4 w-4" />
 												</TooltipTrigger>
 												<TooltipContent side="bottom">{label}</TooltipContent>
 											</Tooltip>
@@ -94,9 +93,9 @@ export function MediaTypesSection() {
 							</Label>
 							<p className="text-xs text-muted-foreground">{t("display.bot_app_sources_hint")}</p>
 						</div>
-						<Switch
+						<NbSwitch
 							checked={field.state.value}
-							onCheckedChange={field.handleChange}
+							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"
 						/>
 					</div>

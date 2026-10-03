@@ -15,11 +15,13 @@
 	},
 	"connection": {
 		"title": "Connexion au bot",
-		"error": "Connexion au bot perdue. Vérifiez le token, le Server ID et l'URL WebSocket.",
+		"error": "Connexion au bot perdue. Vérifiez le token, l'ID du serveur et l'URL WebSocket.",
+		"joinUnknownGuild": "Ce serveur n'est pas encore enregistré auprès du bot. Lancez /memeover setup sur votre serveur Discord, puis réessayez.",
+		"joinInvalidToken": "Le bot a refusé ce token. Vérifiez-le ou collez le nouveau code de configuration.",
 		"wsUrl": "URL du serveur WebSocket",
 		"expertMode": "Mode expert",
 		"expertMode_hint": "Permet de configurer une URL WebSocket personnalisée (self-hosted).",
-		"guildId": "Server ID",
+		"guildId": "ID du serveur",
 		"guildId_hint": "Obtenu avec /memeover setup dans Discord.",
 		"token": "Token",
 		"quickPaste": "Code de configuration Discord",
@@ -61,6 +63,15 @@
 		"duration_unit": "s",
 		"volume": "Volume (médias)",
 		"position": "Position",
+		"position_top_left": "En haut à gauche",
+		"position_top": "En haut au centre",
+		"position_top_right": "En haut à droite",
+		"position_left": "Au milieu à gauche",
+		"position_center": "Au centre",
+		"position_right": "Au milieu à droite",
+		"position_bottom_left": "En bas à gauche",
+		"position_bottom": "En bas au centre",
+		"position_bottom_right": "En bas à droite",
 		"preview": "Aperçu",
 		"preview_media": "Média",
 		"save": "Sauvegarder",
@@ -76,6 +87,17 @@
 		"type_sticker": "Stickers",
 		"textSize": "Taille du texte",
 		"textColor": "Couleur du texte",
+		"color_black": "Noir",
+		"color_gray": "Gris",
+		"color_light_gray": "Gris clair",
+		"color_yellow": "Jaune",
+		"color_green": "Vert",
+		"color_red": "Rouge",
+		"color_blue": "Bleu",
+		"color_purple": "Violet",
+		"color_white": "Blanc",
+		"color_custom": "Couleur personnalisée",
+		"color_reset": "Réinitialiser la couleur",
 		"textPosition": "Position du texte",
 		"textPos_above": "Au-dessus",
 		"textPos_below": "En-dessous",
@@ -145,11 +167,11 @@
 		"reactions_preset_straight_hint": "Le mouvement classique, simple et lisible.",
 		"reactions_preset_bounce": "Rebond latéral",
 		"reactions_preset_bounce_hint": "La réaction arrive d'un côté, rebondit en bas, puis ressort de l'autre.",
-		"reactions_preset_confetti": "Confetti drift",
+		"reactions_preset_confetti": "Confettis à la dérive",
 		"reactions_preset_confetti_hint": "Une dérive diagonale légère, comme portée par l'air.",
-		"reactions_preset_pop": "Pop & Float",
+		"reactions_preset_pop": "Pop & flottement",
 		"reactions_preset_pop_hint": "La réaction apparaît avec un pop, flotte un instant, puis disparaît.",
-		"reactions_preset_firework": "Firework",
+		"reactions_preset_firework": "Feu d'artifice",
 		"reactions_preset_firework_hint": "La réaction monte puis éclate en petites copies translucides.",
 		"reactions_preset_random": "Aléatoire",
 		"reactions_preset_random_hint": "Alterne automatiquement entre tous les mouvements.",
@@ -186,7 +208,7 @@
 	"validation": {
 		"wsUrl_required": "L'URL WebSocket est requise",
 		"wsUrl_invalid": "Doit commencer par ws:// ou wss://",
-		"guildId_invalid": "Doit être un Server ID Discord valide (17–20 chiffres)",
+		"guildId_invalid": "Doit être un ID de serveur Discord valide (17–20 chiffres)",
 		"token_required": "Le token est requis"
 	},
 	"toast": {
@@ -227,7 +249,7 @@
 		"quit": "Quitter"
 	},
 	"tabs": {
-		"dashboard": "Dashboard",
+		"dashboard": "Tableau de bord",
 		"overlay": "Overlay",
 		"server": "Serveur",
 		"history": "Historique",
@@ -259,8 +281,8 @@
 			"notConfigured": "À configurer"
 		},
 		"logs": {
-			"title": "Logs",
-			"empty": "Aucun log serveur pour l'instant."
+			"title": "Journaux",
+			"empty": "Aucun journal du serveur pour l'instant."
 		},
 		"discord": {
 			"title": "Créer le bot Discord",
@@ -322,7 +344,13 @@
 			"ipDetected": "IP publique détectée",
 			"connected": "Connexion locale sauvegardée",
 			"inviteCopied": "Lien d'invitation copié",
-			"setupCopied": "Code copié"
+			"setupCopied": "Code copié",
+			"bunInstallFailed": "Installation de Bun impossible",
+			"installFailed": "Installation du serveur impossible",
+			"startFailed": "Démarrage du serveur impossible",
+			"stopFailed": "Arrêt du serveur impossible",
+			"restartFailed": "Redémarrage du serveur impossible",
+			"ipDetectFailed": "Détection de l'IP publique impossible"
 		}
 	},
 	"about": {
@@ -330,9 +358,9 @@
 		"language": "Langue",
 		"theme": "Thème",
 		"privacyTitle": "Confidentialité & données locales",
-		"privacyDesc": "MemeOver est un passe-plat open source : le bot transmet les événements Discord aux overlays connectés et les logs techniques sont minimisés.",
+		"privacyDesc": "MemeOver est un passe-plat open source : le bot transmet les événements Discord aux overlays connectés et les journaux techniques sont minimisés.",
 		"privacyLocal": "Sur cet appareil : paramètres, token, profils et historique local limité aux 50 derniers éléments affichés.",
-		"privacyHosted": "Côté bot hébergé : configuration du serveur et logs techniques Better Stack sans URL média complète, texte de message ni token.",
+		"privacyHosted": "Côté bot hébergé : configuration du serveur et journaux techniques Better Stack sans URL média complète, texte de message ni token.",
 		"privacyPolicy": "Politique de confidentialité",
 		"legalNotice": "Mentions légales",
 		"clearLocalHistory": "Effacer l'historique local",

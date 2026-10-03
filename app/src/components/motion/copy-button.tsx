@@ -9,11 +9,14 @@ export function CopyButton({
 	label,
 	onCopied,
 	disabled = false,
+	size = "sm",
 }: {
 	value: string;
 	label: string;
 	onCopied?: () => void;
 	disabled?: boolean;
+	/** Match the height of neighbouring action buttons. */
+	size?: "sm" | "default";
 }) {
 	const { t } = useTranslation(),
 		reduced = useReducedMotion();
@@ -40,7 +43,12 @@ export function CopyButton({
 		}
 	};
 	return (
-		<NbButton variant="outline" size="sm" disabled={disabled || !value} onClick={() => void copy()}>
+		<NbButton
+			variant="outline"
+			size={size}
+			disabled={disabled || !value}
+			onClick={() => void copy()}
+		>
 			<span className="relative h-4 w-4">
 				<AnimatePresence mode="popLayout" initial={false}>
 					<motion.span

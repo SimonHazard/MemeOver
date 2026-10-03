@@ -147,10 +147,8 @@ function UpdateDialogContent({
 			<DialogFooter className="gap-2 sm:gap-2">
 				{/* Close (later) — always available unless ready to install */}
 				{!isReady && (
-					<DialogClose asChild>
-						<NbButton variant="outline" size="sm" disabled={isDownloading}>
-							{t("updater.later")}
-						</NbButton>
+					<DialogClose render={<NbButton variant="outline" size="sm" disabled={isDownloading} />}>
+						{t("updater.later")}
 					</DialogClose>
 				)}
 

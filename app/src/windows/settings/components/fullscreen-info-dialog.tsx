@@ -24,10 +24,8 @@ export function FullscreenInfoDialog() {
 
 	return (
 		<Dialog>
-			<DialogTrigger asChild>
-				<NbButton variant="outline" size="sm">
-					{t("notice.show_info")}
-				</NbButton>
+			<DialogTrigger render={<NbButton variant="outline" size="sm" />}>
+				{t("notice.show_info")}
 			</DialogTrigger>
 
 			<DialogContent
@@ -47,20 +45,16 @@ export function FullscreenInfoDialog() {
 					</div>
 				</DialogHeader>
 
-				<DialogDescription asChild>
-					<div className="space-y-3 text-sm leading-relaxed">
-						<p>{t("notice.fullscreen_body")}</p>
-						<p className="text-amber-700 dark:text-amber-400 font-medium">
-							{t("notice.fullscreen_fix")}
-						</p>
-					</div>
+				<DialogDescription render={<div />} className="space-y-3 text-sm leading-relaxed">
+					<p>{t("notice.fullscreen_body")}</p>
+					<p className="text-amber-700 dark:text-amber-400 font-medium">
+						{t("notice.fullscreen_fix")}
+					</p>
 				</DialogDescription>
 
 				<DialogFooter>
-					<DialogClose asChild>
-						<NbButton variant="outline" size="sm">
-							{t("notice.fullscreen_dismiss")}
-						</NbButton>
+					<DialogClose render={<NbButton variant="outline" size="sm" />}>
+						{t("notice.fullscreen_dismiss")}
 					</DialogClose>
 				</DialogFooter>
 			</DialogContent>

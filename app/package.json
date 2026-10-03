@@ -1,7 +1,7 @@
 {
 	"name": "@memeover/app",
 	"private": true,
-	"version": "1.6.1",
+	"version": "1.6.2",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -12,6 +12,7 @@
 		"tauri": "tauri"
 	},
 	"dependencies": {
+		"@base-ui/react": "^1.8.0",
 		"@memeover/shared": "workspace:*",
 		"@memeover/ui": "workspace:*",
 		"@tanstack/react-form": "^1.33.5",
@@ -29,7 +30,6 @@
 		"framer-motion": "^12.43.0",
 		"i18next": "^26.3.1",
 		"lucide-react": "^1.39.0",
-		"radix-ui": "^1.5.0",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
 		"react-i18next": "^17.0.14",

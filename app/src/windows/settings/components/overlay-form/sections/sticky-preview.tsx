@@ -1,6 +1,7 @@
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { useTranslation } from "react-i18next";
 import { AspectToggle } from "../../aspect-toggle";
+import { POSITION_LABEL_KEYS } from "../../position-grid";
 import type { PreviewAspect } from "../../position-preview";
 import { PositionPreview } from "../../position-preview";
 import { useOverlayFormContext } from "../form-hook";
@@ -12,7 +13,7 @@ interface StickyPreviewProps {
 
 export function StickyPreview({ previewAspect, onPreviewAspectChange }: StickyPreviewProps) {
 	const form = useOverlayFormContext();
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 
 	return (
 		<div className="space-y-3">
@@ -47,7 +48,7 @@ export function StickyPreview({ previewAspect, onPreviewAspectChange }: StickyPr
 						<p className="text-[11px] font-mono text-muted-foreground leading-relaxed break-words">
 							{t("display.preview_summary", {
 								size: mediaSize,
-								position,
+								position: t(POSITION_LABEL_KEYS[position]).toLocaleLowerCase(i18n.language),
 								duration,
 								opacity,
 							})}

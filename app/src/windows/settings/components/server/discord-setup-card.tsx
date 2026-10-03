@@ -1,9 +1,9 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Alert, AlertDescription } from "@memeover/ui/components/ui/alert";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Separator } from "@memeover/ui/components/ui/separator";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import { ExternalLink, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CopyButton } from "@/components/motion/copy-button";
@@ -77,7 +77,7 @@ export function DiscordSetupCard({
 							{t("server.discord.adminInviteHint")}
 						</span>
 					</div>
-					<Switch checked={administratorInvite} onCheckedChange={onAdministratorInviteChange} />
+					<NbSwitch checked={administratorInvite} onCheckedChange={onAdministratorInviteChange} />
 				</div>
 
 				<div className="flex flex-wrap gap-2">
@@ -85,7 +85,12 @@ export function DiscordSetupCard({
 						<ShieldCheck className="size-4" aria-hidden="true" />
 						{t("server.discord.invite")}
 					</NbButton>
-					<CopyButton value={inviteUrl ?? ""} label={t("server.copy")} disabled={!inviteUrl} />
+					<CopyButton
+						value={inviteUrl ?? ""}
+						label={t("server.copy")}
+						disabled={!inviteUrl}
+						size="default"
+					/>
 				</div>
 
 				<Alert>

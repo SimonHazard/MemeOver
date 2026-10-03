@@ -1,11 +1,11 @@
 import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Alert, AlertDescription } from "@memeover/ui/components/ui/alert";
 import { Button } from "@memeover/ui/components/ui/button";
 import { Label } from "@memeover/ui/components/ui/label";
 import { Separator } from "@memeover/ui/components/ui/separator";
-import { Switch } from "@memeover/ui/components/ui/switch";
-import { NB_BTN_DISABLED, NB_BTN_LG } from "@memeover/ui/lib/nb-classes";
+import { NB_BTN_DISABLED, NB_BTN_LG, NB_SHADOW_LG } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Collapsible } from "@/components/motion/collapsible";
 import { StatusLabel } from "@/components/motion/status-label";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
+import { joinErrorKey } from "@/shared/join-error";
 import { loadSettings, persistSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
@@ -108,16 +109,18 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 
 				{/* ── WS error alert ── */}
 				<Collapsible open={wsStatus === "error"}>
-					<Alert variant="destructive">
+					<Alert
+						variant="destructive"
+						className={`border-2 border-foreground bg-destructive/10 ${NB_SHADOW_LG}`}
+					>
 						<AlertDescription>
-							{(!wsRevokedReason && lastJoinError) ||
-								t(
-									wsRevokedReason === "TOKEN_ROTATED"
-										? "connection.tokenRotated"
-										: wsRevokedReason === "GUILD_UNREGISTERED"
-											? "connection.guildUnregistered"
-											: "connection.error",
-								)}
+							{t(
+								wsRevokedReason === "TOKEN_ROTATED"
+									? "connection.tokenRotated"
+									: wsRevokedReason === "GUILD_UNREGISTERED"
+										? "connection.guildUnregistered"
+										: joinErrorKey(lastJoinError),
+							)}
 						</AlertDescription>
 					</Alert>
 				</Collapsible>
@@ -182,11 +185,11 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 								{t("settings.autostart_hint")}
 							</p>
 						</div>
-						<Switch
+						<NbSwitch
 							id="autostart"
 							checked={autostart}
 							onCheckedChange={(checked) => void handleAutostartChange(checked)}
-							className="border-2 border-foreground shrink-0"
+							className="shrink-0"
 						/>
 					</div>
 				</NbCard>

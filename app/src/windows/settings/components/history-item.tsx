@@ -137,41 +137,41 @@ export function HistoryItemCard({
 					)}
 				{onMuteAuthor && canMuteAuthor(item) && (
 					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								variant="outline"
-								size="icon"
-								aria-label={t("history.muteAuthor")}
-								onClick={() => onMuteAuthor(item)}
-								className="shrink-0 border-2 border-foreground/30"
-							>
-								<EyeOff className="h-3.5 w-3.5" />
-							</Button>
+						<TooltipTrigger
+							render={
+								<Button
+									variant="outline"
+									size="icon"
+									aria-label={t("history.muteAuthor")}
+									onClick={() => onMuteAuthor(item)}
+									className="shrink-0 border-2 border-foreground/30"
+								/>
+							}
+						>
+							<EyeOff className="h-3.5 w-3.5" />
 						</TooltipTrigger>
 						<TooltipContent>{t("history.muteAuthor")}</TooltipContent>
 					</Tooltip>
 				)}
 				{/* ── Replay button ── */}
 				<Tooltip>
-					<TooltipTrigger asChild>
-						<span tabIndex={expired ? 0 : undefined}>
-							<Button
-								variant="outline"
-								size="icon"
-								className={cn(
-									"shrink-0 border-2 border-foreground/30",
-									cn("hover:border-foreground hover:bg-primary-400/10", NB_HOVER_SHADOW_SM),
-									"active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-[translate,box-shadow,border-color,background-color] duration-150 ease-out",
-									NB_BTN_DISABLED,
-								)}
-								title={expired ? undefined : t("history.replay")}
-								aria-label={t("history.replay")}
-								disabled={disabled || expired}
-								onClick={() => onReplay(item)}
-							>
-								<Play className="h-3.5 w-3.5" />
-							</Button>
-						</span>
+					<TooltipTrigger render={<span tabIndex={expired ? 0 : undefined} />}>
+						<Button
+							variant="outline"
+							size="icon"
+							className={cn(
+								"shrink-0 border-2 border-foreground/30",
+								cn("hover:border-foreground hover:bg-primary-400/10", NB_HOVER_SHADOW_SM),
+								"active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-[translate,box-shadow,border-color,background-color] duration-150 ease-out",
+								NB_BTN_DISABLED,
+							)}
+							title={expired ? undefined : t("history.replay")}
+							aria-label={t("history.replay")}
+							disabled={disabled || expired}
+							onClick={() => onReplay(item)}
+						>
+							<Play className="h-3.5 w-3.5" />
+						</Button>
 					</TooltipTrigger>
 					{expired && <TooltipContent>{t("history.expiredHint")}</TooltipContent>}
 				</Tooltip>

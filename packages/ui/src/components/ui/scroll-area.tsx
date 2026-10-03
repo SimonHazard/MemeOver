@@ -1,20 +1,18 @@
-import { ScrollArea as ScrollAreaPrimitive } from "radix-ui";
-import type * as React from "react";
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 
 import { cn } from "@memeover/ui/lib/utils";
 
-function ScrollArea({
-	className,
-	children,
-	...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
+function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.Props) {
 	return (
 		<ScrollAreaPrimitive.Root
 			data-slot="scroll-area"
 			className={cn("relative overflow-hidden", className)}
 			{...props}
 		>
-			<ScrollAreaPrimitive.Viewport className="focus-visible:ring-ring h-full w-full rounded-[inherit] transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px]">
+			<ScrollAreaPrimitive.Viewport
+				data-slot="scroll-area-viewport"
+				className="focus-visible:ring-ring h-full w-full rounded-[inherit] transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px]"
+			>
 				{children}
 			</ScrollAreaPrimitive.Viewport>
 			<ScrollBar />
@@ -27,7 +25,7 @@ function ScrollBar({
 	className,
 	orientation = "vertical",
 	...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Scrollbar>) {
+}: ScrollAreaPrimitive.Scrollbar.Props) {
 	return (
 		<ScrollAreaPrimitive.Scrollbar
 			data-slot="scroll-area-scrollbar"

@@ -86,7 +86,7 @@ export function PlacementSection({ previewAspect, onPreviewAspectChange }: Place
 			</form.Field>
 
 			{/* Fine-tune offsets — collapsed by default to keep the section clean */}
-			<NbAccordion type="single" collapsible>
+			<NbAccordion>
 				<NbAccordionItem value="offset">
 					<NbAccordionTrigger>{t("display.fine_tune_position")}</NbAccordionTrigger>
 					<NbAccordionContent>

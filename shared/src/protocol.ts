@@ -24,6 +24,15 @@ export const ERROR_CODES = [
 	"TOKEN_ROTATED",
 ] as const;
 export const ErrorCodeSchema = z.enum(ERROR_CODES);
+
+/**
+ * JOIN_ACK failure texts. The wire field stays a free string so older clients keep
+ * working; newer clients match these exact values to show a localized message.
+ */
+export const JOIN_ACK_ERRORS = {
+	unknownGuild: "Unknown guild — run /memeover setup in your Discord server first",
+	invalidToken: "Invalid token",
+} as const;
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
 // ─── Server → Client schemas (messages sent by the bot to app clients) ────────

@@ -1,3 +1,4 @@
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Input } from "@memeover/ui/components/ui/input";
 import { Label } from "@memeover/ui/components/ui/label";
 import {
@@ -9,7 +10,6 @@ import {
 	SelectValue,
 } from "@memeover/ui/components/ui/select";
 import { Slider } from "@memeover/ui/components/ui/slider";
-import { Switch } from "@memeover/ui/components/ui/switch";
 import { useTranslation } from "react-i18next";
 import type { FloatingReactionPreset } from "@/shared/types";
 import { DEFAULT_SETTINGS, FLOATING_REACTION_PRESETS } from "@/shared/types";
@@ -86,9 +86,9 @@ export function ReactionsSection() {
 							</Label>
 							<p className="text-xs text-muted-foreground">{t("display.reactions_enabled_hint")}</p>
 						</div>
-						<Switch
+						<NbSwitch
 							checked={field.state.value}
-							onCheckedChange={field.handleChange}
+							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"
 						/>
 					</div>
@@ -106,8 +106,14 @@ export function ReactionsSection() {
 											{t("display.reactions_preset")}
 										</Label>
 										<Select
+											items={REACTION_PRESETS.map((preset) => ({
+												value: preset.value,
+												label: t(preset.labelKey),
+											}))}
 											value={field.state.value}
-											onValueChange={(value) => field.handleChange(value as FloatingReactionPreset)}
+											onValueChange={(value) => {
+												if (value) field.handleChange(value);
+											}}
 										>
 											<SelectTrigger className="w-full">
 												<SelectValue />

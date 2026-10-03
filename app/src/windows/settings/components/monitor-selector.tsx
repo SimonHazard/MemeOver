@@ -76,9 +76,9 @@ export function MonitorSelector() {
 					<Label className="font-display tracking-wide text-xs">{t("display.monitor")}</Label>
 					<TooltipProvider>
 						<Tooltip>
-							<TooltipTrigger asChild>
-								<Info className="h-3 w-3 text-muted-foreground shrink-0 cursor-default" />
-							</TooltipTrigger>
+							<TooltipTrigger
+								render={<Info className="h-3 w-3 text-muted-foreground shrink-0 cursor-default" />}
+							/>
 							<TooltipContent side="right" className="max-w-56">
 								{t("display.monitor_notice")}
 							</TooltipContent>

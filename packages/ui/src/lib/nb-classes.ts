@@ -47,11 +47,11 @@ export const NB_BTN_DISABLED =
 /** ToggleGroupItem — inactive dim, active primary with shadow, hover reveal */
 export const NB_TOGGLE_ITEM = [
 	"active:translate-x-px active:translate-y-px active:shadow-none motion-reduce:active:translate-x-0 motion-reduce:active:translate-y-0 gap-1.5 border-2 border-foreground/30",
-	"data-[state=on]:border-foreground",
-	"data-[state=on]:bg-primary-400 data-[state=on]:text-primary-foreground",
-	"data-[state=off]:opacity-50",
-	// Full static string — never `data-[state=on]:${NB_SHADOW_SM}` (breaks Tailwind scanner)
-	"data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
+	"data-pressed:border-foreground",
+	"data-pressed:bg-primary-400 data-pressed:text-primary-foreground",
+	"not-data-pressed:opacity-50",
+	// Full static string — never `data-pressed:${NB_SHADOW_SM}` (breaks Tailwind scanner)
+	"data-pressed:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 	"hover:bg-primary-400/15 hover:border-foreground/60",
 	"transition-[color,background-color,border-color,box-shadow,transform,translate,scale,opacity] duration-150 ease-out font-display text-xs tracking-wide",
 ].join(" ");
@@ -59,12 +59,24 @@ export const NB_TOGGLE_ITEM = [
 /** Toggle — similar to ToggleGroupItem but with hover states */
 export const NB_TOGGLE = [
 	"active:translate-x-px active:translate-y-px active:shadow-none motion-reduce:active:translate-x-0 motion-reduce:active:translate-y-0 border-2 border-foreground/30",
-	"data-[state=on]:bg-primary-400 data-[state=on]:text-primary-foreground",
-	"data-[state=on]:border-foreground",
-	// Full static string — never `data-[state=on]:${NB_SHADOW_SM}` (breaks Tailwind scanner)
-	"data-[state=on]:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
+	"data-pressed:bg-primary-400 data-pressed:text-primary-foreground",
+	"data-pressed:border-foreground",
+	// Full static string — never `data-pressed:${NB_SHADOW_SM}` (breaks Tailwind scanner)
+	"data-pressed:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 	"hover:bg-primary-400/15 hover:border-foreground/60",
 	"transition-[color,background-color,border-color,box-shadow,transform,translate,scale,opacity] duration-150 ease-out",
+].join(" ");
+
+// ─── Switch classes ──────────────────────────────────────────────────────────
+
+/**
+ * Switch — thick track border sized so the 16px thumb sits flush inside it;
+ * the "on" state lifts with the same offset shadow as pressed NB toggles.
+ */
+export const NB_SWITCH = [
+	"border-2 border-foreground data-[size=default]:h-5 data-[size=default]:w-[34px]",
+	// Full static string — never `data-checked:${NB_SHADOW_SM}` (breaks Tailwind scanner)
+	"data-checked:shadow-[2px_2px_0px_0px_var(--nb-shadow)]",
 ].join(" ");
 
 // ─── Card classes ────────────────────────────────────────────────────────────
