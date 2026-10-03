@@ -6,6 +6,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.1]
+
+### Fixed
+
+- Restore the history settings page by providing tooltip context to all settings routes.
+- Refresh the production website from protected main after app releases instead of deploying from a rejected release tag.
+
 ## [1.6.0]
 
 ### Added
