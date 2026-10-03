@@ -14,6 +14,18 @@ export type MediaType = z.infer<typeof MediaTypeSchema>;
 const EventSourceSchema = z.enum(["user", "bot_app"]);
 export type EventSource = z.infer<typeof EventSourceSchema>;
 
+export const ERROR_CODES = [
+	"PARSE_ERROR",
+	"UNKNOWN_TYPE",
+	"VALIDATION_ERROR",
+	"RATE_LIMITED",
+	"SERVER_SHUTDOWN",
+	"GUILD_UNREGISTERED",
+	"TOKEN_ROTATED",
+] as const;
+export const ErrorCodeSchema = z.enum(ERROR_CODES);
+export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
+
 // ─── Server → Client schemas (messages sent by the bot to app clients) ────────
 
 const MediaEventSchema = z.object({
@@ -53,11 +65,13 @@ const JoinAckMessageSchema = z.object({
 	guild_id: z.string(),
 	success: z.boolean(),
 	error: z.string().optional(),
+	features: z.array(z.string()).optional(),
 });
 
 const ErrorMessageSchema = z.object({
 	type: z.literal("ERROR"),
-	code: z.string(),
+	// Unknown future codes are dropped by old clients, like unknown message types.
+	code: ErrorCodeSchema,
 	message: z.string(),
 });
 
@@ -106,13 +120,6 @@ export type ServerMessage = z.infer<typeof ServerMessageSchema>;
 
 // ─── Error codes (stricter typing for known error values) ─────────────────────
 
-export type ErrorCode =
-	| "PARSE_ERROR"
-	| "UNKNOWN_TYPE"
-	| "VALIDATION_ERROR"
-	| "RATE_LIMITED"
-	| "SERVER_SHUTDOWN";
-
 // ─── Client → Server schemas (messages sent by app clients to the bot) ────────
 
 export const DiscordSnowflakeSchema = z.string().regex(DISCORD_SNOWFLAKE_REGEX);
@@ -143,3 +150,14 @@ export type JoinMessage = z.infer<typeof JoinMessageSchema>;
 export type LeaveMessage = z.infer<typeof LeaveMessageSchema>;
 export type PongMessage = z.infer<typeof PongMessageSchema>;
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;
+
+export const SESSION_REVOCATION_CODES = ["TOKEN_ROTATED", "GUILD_UNREGISTERED"] as const;
+export type SessionRevocationCode = (typeof SESSION_REVOCATION_CODES)[number];
+export function isSessionRevocationCode(code: string): code is SessionRevocationCode {
+	return SESSION_REVOCATION_CODES.some((candidate) => candidate === code);
+}
+
+/** Missing features means an older bot; optional client messages must not be sent. */
+export function supportsFeature(features: readonly string[] | undefined, feature: string): boolean {
+	return features?.includes(feature) ?? false;
+}

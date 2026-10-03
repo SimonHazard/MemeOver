@@ -1,5 +1,7 @@
 import { emit } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";
+import { purgeExpired } from "./history-expiry";
+import { loadSettings } from "./settings";
 import type { DisplayQueueItem } from "./types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -57,8 +59,33 @@ export async function clearHistory(): Promise<void> {
 
 /**
  * Emit a "replay-item" event so the overlay window re-enqueues the item.
- * Called from the settings window's history page.
+ * Called from the settings window's history page; the overlay regenerates queueId.
  */
 export async function replayHistoryItem(item: DisplayQueueItem): Promise<void> {
 	await emit("replay-item", item);
+}
+
+export async function purgeExpiredHistory(now = Date.now()): Promise<number> {
+	const store = await getStore();
+	const items = (await store.get<HistoryItem[]>("history")) ?? [];
+	const { kept, removed } = purgeExpired(items, now);
+	if (removed > 0) {
+		await store.set("history", kept);
+		await store.save();
+		await emit("history-updated");
+	}
+	return removed;
+}
+let autoPurgeTimer: ReturnType<typeof setInterval> | undefined;
+export function startHistoryAutoPurge(): void {
+	if (autoPurgeTimer !== undefined) return;
+	const purge = async () => {
+		try {
+			if ((await loadSettings()).historyAutoPurge) await purgeExpiredHistory();
+		} catch (error) {
+			console.warn("[History] Could not purge expired media", error);
+		}
+	};
+	void purge();
+	autoPurgeTimer = setInterval(() => void purge(), 60 * 60 * 1000);
 }

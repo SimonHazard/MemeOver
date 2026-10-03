@@ -7,6 +7,7 @@ beforeEach(() =>
 		queue: [],
 		reactions: [],
 		skipVersion: 0,
+		currentAuthorId: null,
 		settings: DEFAULT_SETTINGS,
 	}),
 );
@@ -30,6 +31,7 @@ function item(id: string): DisplayQueueItem {
 	};
 }
 test("queue overflow drops the newest", () => {
+	useAppStore.getState().updateSettings({ maxQueuedPerAuthor: 0 });
 	// characterization: full queue rejects item 51, preserving its head.
 	for (let i = 0; i < 51; i++) useAppStore.getState().enqueue(item(String(i)));
 	expect(useAppStore.getState().queue).toHaveLength(50);
@@ -94,4 +96,24 @@ test("reaction admission retains newest", () => {
 	const reactions = useAppStore.getState().reactions;
 	expect(reactions).toHaveLength(30);
 	expect(reactions[29].emoji).toBe("39");
+});
+
+test("store enforces author cap while allowing another author and replay", () => {
+	for (let i = 0; i < 5; i++) useAppStore.getState().enqueue(item(String(i)));
+	expect(useAppStore.getState().queue).toHaveLength(3);
+	useAppStore.getState().enqueue({ ...item("other"), author_id: "b" });
+	useAppStore.getState().enqueue({ ...item("replay"), replayOf: "old" });
+	expect(useAppStore.getState().queue).toHaveLength(5);
+});
+
+test("muting removes queued items and skips current author", () => {
+	useAppStore.getState().enqueue(item("a"));
+	useAppStore.getState().setCurrentAuthorId("a");
+	useAppStore
+		.getState()
+		.updateSettings({ mutedAuthors: [{ id: "a", username: "A", avatarUrl: "", mutedAt: 1 }] });
+	expect(useAppStore.getState().queue).toEqual([]);
+	expect(useAppStore.getState().skipVersion).toBe(1);
+	useAppStore.getState().enqueue(item("next"));
+	expect(useAppStore.getState().queue).toEqual([]);
 });

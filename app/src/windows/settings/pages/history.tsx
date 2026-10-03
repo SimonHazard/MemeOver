@@ -1,22 +1,51 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { Skeleton } from "@memeover/ui/components/ui/skeleton";
+import { Switch } from "@memeover/ui/components/ui/switch";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { AnimatedList } from "@/components/motion/animated-list";
+import { HoldToConfirmButton } from "@/components/motion/hold-to-confirm-button";
 import { useTauriEventVersion } from "@/hooks/useTauriEvent";
 import type { HistoryItem } from "@/shared/history";
-import { clearHistory, loadHistory, replayHistoryItem } from "@/shared/history";
+import {
+	clearHistory,
+	loadHistory,
+	purgeExpiredHistory,
+	replayHistoryItem,
+} from "@/shared/history";
+import { addMutedAuthor, removeMutedAuthor } from "@/shared/muted-authors";
+import { loadSettings, patchSettings, persistSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { HistoryItemCard } from "@/windows/settings/components/history-item";
+import { MutedAuthorsCard } from "../components/muted-authors-card";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HistoryPage() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
+	const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: loadSettings });
+	const { mutate: setAutoPurge, isPending: isSavingPurge } = useMutation({
+		mutationFn: async (historyAutoPurge: boolean) => {
+			await persistSettings({ ...(await loadSettings()), historyAutoPurge });
+			if (historyAutoPurge) await purgeExpiredHistory();
+		},
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ["settings"] });
+			void queryClient.invalidateQueries({ queryKey: ["history"] });
+		},
+		onError: () => toast.error(t("toast.settingsError")),
+	});
+	const { mutate: cleanNow, isPending: isCleaning } = useMutation({
+		mutationFn: () => purgeExpiredHistory(),
+		onSuccess: (count) => {
+			void queryClient.invalidateQueries({ queryKey: ["history"] });
+			toast.success(count ? t("toast.historyPurged", { count }) : t("history.nothingToPurge"));
+		},
+		onError: () => toast.error(t("toast.clearError")),
+	});
 	const overlayAlive = useAppStore((s) => s.overlayHealth === "alive");
 
 	// Increment on every "history-updated" Tauri event — used as a query key suffix
@@ -45,11 +74,47 @@ export function HistoryPage() {
 		mutationFn: clearHistory,
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["history"] });
-			toast.success(t("toast.queueCleared"));
+			toast.success(t("toast.historyCleared"));
 		},
 		onError: () => {
 			toast.error(t("toast.clearError"));
 		},
+	});
+
+	const { mutate: muteAuthor } = useMutation({
+		mutationFn: (item: HistoryItem) =>
+			patchSettings((s) => ({
+				...s,
+				mutedAuthors: addMutedAuthor(
+					s.mutedAuthors,
+					{
+						id: item.author_id,
+						username: item.author_display_name ?? item.author_username,
+						avatarUrl: item.author_avatar_url,
+					},
+					Date.now(),
+				),
+			})),
+		onSuccess: (_settings, item) => {
+			void queryClient.invalidateQueries({ queryKey: ["settings"] });
+			toast.success(
+				t("toast.authorMuted", { name: item.author_display_name ?? item.author_username }),
+				{
+					action: {
+						label: t("toast.undo"),
+						onClick: () => {
+							void patchSettings((s) => ({
+								...s,
+								mutedAuthors: removeMutedAuthor(s.mutedAuthors, item.author_id),
+							}))
+								.then(() => queryClient.invalidateQueries({ queryKey: ["settings"] }))
+								.catch(() => toast.error(t("toast.settingsError")));
+						},
+					},
+				},
+			);
+		},
+		onError: () => toast.error(t("toast.settingsError")),
 	});
 
 	return (
@@ -59,52 +124,63 @@ export function HistoryPage() {
 				<div className="flex items-center justify-between">
 					<h1 className="font-display text-xl tracking-wide">{t("history.title")}</h1>
 					{items.length > 0 && (
-						<NbButton
-							variant="outline"
-							size="sm"
-							className="text-destructive hover:text-destructive gap-1"
-							onClick={() => doClear()}
-						>
-							<Trash2 className="h-3.5 w-3.5" />
-							{t("history.clearAll")}
-						</NbButton>
+						<HoldToConfirmButton
+							label={t("history.clearAll")}
+							onConfirm={() => doClear()}
+							className="text-destructive hover:text-destructive"
+						/>
 					)}
 				</div>
 				<p className="text-sm font-text text-muted-foreground">{t("history.localNote")}</p>
 
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div className="flex items-center gap-3">
+						<Switch
+							id="history-auto-purge"
+							checked={settings?.historyAutoPurge ?? true}
+							disabled={!settings || isSavingPurge}
+							onCheckedChange={setAutoPurge}
+						/>
+						<div>
+							<label htmlFor="history-auto-purge" className="text-sm font-display">
+								{t("history.autoPurge")}
+							</label>
+							<p className="text-xs text-muted-foreground">{t("history.autoPurgeHint")}</p>
+						</div>
+					</div>
+					<NbButton variant="outline" size="sm" disabled={isCleaning} onClick={() => cleanNow()}>
+						{t("history.cleanNow")}
+					</NbButton>
+				</div>
+				<MutedAuthorsCard />
 				<Separator />
 
 				{/* ── Content ── */}
-				{isLoading ? (
-					<div className="space-y-2">
-						{[1, 2, 3, 4, 5].map((i) => (
-							<Skeleton key={i} className="h-16 w-full rounded-lg" />
-						))}
-					</div>
-				) : items.length === 0 ? (
-					<p className="text-center text-muted-foreground py-12 font-text">{t("history.empty")}</p>
-				) : (
-					<motion.div className="space-y-2" layout>
-						<AnimatePresence initial={false}>
-							{items.map((item) => (
-								<motion.div
-									key={`${item.recordedAt}-${item.message_id}`}
-									layout
-									initial={{ opacity: 0, y: -10 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, scale: 0.95 }}
-									transition={{ duration: 0.2, ease: "easeOut" }}
-								>
-									<HistoryItemCard
-										item={item}
-										disabled={!overlayAlive}
-										onReplay={(i) => doReplay(i)}
-									/>
-								</motion.div>
+				<AnimatedList
+					items={items}
+					itemKey={(item) => `${item.recordedAt}-${item.message_id}`}
+					renderItem={(item) => (
+						<HistoryItemCard
+							item={item}
+							onMuteAuthor={muteAuthor}
+							disabled={!overlayAlive}
+							onReplay={(i) => doReplay(i)}
+						/>
+					)}
+					loading={isLoading}
+					skeleton={
+						<div className="space-y-2">
+							{[1, 2, 3, 4, 5].map((i) => (
+								<Skeleton key={i} className="h-16 w-full rounded-lg" />
 							))}
-						</AnimatePresence>
-					</motion.div>
-				)}
+						</div>
+					}
+					empty={
+						<p className="text-center text-muted-foreground py-12 font-text">
+							{t("history.empty")}
+						</p>
+					}
+				/>
 			</div>
 		</div>
 	);

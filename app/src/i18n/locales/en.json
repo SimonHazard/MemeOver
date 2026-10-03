@@ -27,7 +27,9 @@
 		"quickPaste_apply": "Apply",
 		"quickPaste_hint": "Copy the “App setup code” block from /memeover setup or /memeover token.",
 		"save": "Save & connect",
-		"saving": "Saving…"
+		"saving": "Saving…",
+		"tokenRotated": "This server’s token was changed in Discord. Paste the new setup code to reconnect.",
+		"guildUnregistered": "This server was removed from MemeOver. Run /memeover setup in Discord, then paste the new setup code."
 	},
 	"overlay": {
 		"controls": "Overlay controls",
@@ -36,7 +38,10 @@
 		"close": "Close",
 		"dev_preview": "Production preview",
 		"dev_preview_enter": "Enter preview",
-		"dev_preview_exit": "Exit preview"
+		"dev_preview_exit": "Exit preview",
+		"pausedGuild": "Paused by an admin",
+		"pausedGuildUntil": "until {{time}}",
+		"pausedGuildIndefinite": "until resumed"
 	},
 	"actions": {
 		"title": "Actions",
@@ -160,7 +165,10 @@
 		"monitor_single": "Only one screen detected.",
 		"monitor_disconnected": "Previously selected screen is no longer connected — overlay moved to primary.",
 		"monitor_screen": "Screen {{number}}",
-		"monitor_notice": "Screen switching may vary on some multi-monitor setups."
+		"monitor_notice": "Screen switching may vary on some multi-monitor setups.",
+		"maxQueuedPerAuthor": "Pending memes per person",
+		"maxQueuedPerAuthor_unlimited": "Unlimited",
+		"maxQueuedPerAuthor_hint": "Pending memes per person. Replays are not limited."
 	},
 	"onboarding": {
 		"step": "Step {{current}} of {{total}}",
@@ -207,7 +215,12 @@
 		"profileUpdateError": "Could not replace this profile",
 		"profileDeleteError": "Could not delete this profile",
 		"profileImportError": "Import failed. Check that the file is a valid MemeOver profile.",
-		"profileApplyError": "Could not apply this profile"
+		"profileApplyError": "Could not apply this profile",
+		"sessionRevoked": "Disconnected by the bot: new setup code required",
+		"historyPurged": "Removed {{count}} expired media",
+		"authorMuted": "{{name}} hidden on your overlay",
+		"authorUnmuted": "Author shown again",
+		"undo": "Undo"
 	},
 	"tray": {
 		"show": "Show settings",
@@ -338,7 +351,20 @@
 		"replay": "Replay",
 		"back": "Back",
 		"clearAll": "Clear all",
-		"from": "from {{name}}"
+		"from": "from {{name}}",
+		"expired": "Expired",
+		"expiredHint": "This Discord link has expired. Discord media links last about 24 hours.",
+		"autoPurge": "Remove expired media automatically",
+		"autoPurgeHint": "Clean history on startup and every hour.",
+		"cleanNow": "Clean now",
+		"nothingToPurge": "No expired media to remove",
+		"muteAuthor": "Hide this author",
+		"mutedAuthorsTitle": "Hidden authors",
+		"mutedAuthorsHint": "These preferences only affect your overlay.",
+		"unmute": "Show again",
+		"mutedOn": "Hidden on {{date}}",
+		"hideAnonymous": "Hide anonymous /secret memes",
+		"hideAnonymousHint": "Anonymous memes cannot be hidden per author."
 	},
 	"memberCount": {
 		"alone": "Solo",

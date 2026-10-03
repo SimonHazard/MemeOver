@@ -13,8 +13,11 @@ import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Collapsible } from "@/components/motion/collapsible";
+import { StatusLabel } from "@/components/motion/status-label";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { loadSettings, persistSettings } from "@/shared/settings";
+import { useAppStore } from "@/shared/store";
 import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
 import { ConnectionCredentialsFields } from "./connection-fields";
@@ -30,6 +33,8 @@ interface SetupFormProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
+	const wsRevokedReason = useAppStore((s) => s.wsRevokedReason);
+	const lastJoinError = useAppStore((s) => s.lastJoinError);
 	const queryClient = useQueryClient();
 	const { t } = useTranslation();
 
@@ -102,11 +107,20 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 				</div>
 
 				{/* ── WS error alert ── */}
-				{wsStatus === "error" && (
+				<Collapsible open={wsStatus === "error"}>
 					<Alert variant="destructive">
-						<AlertDescription>{t("connection.error")}</AlertDescription>
+						<AlertDescription>
+							{(!wsRevokedReason && lastJoinError) ||
+								t(
+									wsRevokedReason === "TOKEN_ROTATED"
+										? "connection.tokenRotated"
+										: wsRevokedReason === "GUILD_UNREGISTERED"
+											? "connection.guildUnregistered"
+											: "connection.error",
+								)}
+						</AlertDescription>
 					</Alert>
-				)}
+				</Collapsible>
 
 				{/* ── Connection Card ── */}
 				<NbCard>
@@ -119,8 +133,11 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 						<div className="space-y-5">
 							<div className="flex items-center justify-between">
 								<h2 className="font-display text-base tracking-wide">{t("connection.title")}</h2>
-								<NbBadge variant={statusVariant(wsStatus)} className="px-2 py-0.5">
-									{t(`status.${wsStatus}`)}
+								<NbBadge
+									variant={statusVariant(wsStatus)}
+									className="px-2 py-0.5 transition-[color,background-color,border-color] duration-200 ease-out"
+								>
+									<StatusLabel status={wsStatus} label={t(`status.${wsStatus}`)} />
 								</NbBadge>
 							</div>
 

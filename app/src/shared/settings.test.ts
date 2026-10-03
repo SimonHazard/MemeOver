@@ -96,3 +96,30 @@ for (const value of [null, "garbage"])
 		expect(actual).toEqual({ ...DEFAULT_SETTINGS, clientId: actual.clientId });
 		expect(actual.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
 	});
+
+test("history auto purge migration and opt out", () => {
+	expect(normalizeSettings({ schemaVersion: 8 }).historyAutoPurge).toBe(true);
+	expect(normalizeSettings({ historyAutoPurge: false }).historyAutoPurge).toBe(false);
+	expect(normalizeSettings({ schemaVersion: 8 }).schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+	expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain("historyAutoPurge");
+});
+
+test("per author cap migrates and belongs to profiles", () => {
+	expect(normalizeSettings({ schemaVersion: 9 }).maxQueuedPerAuthor).toBe(3);
+	expect(normalizeSettings({ maxQueuedPerAuthor: -5 }).maxQueuedPerAuthor).toBe(0);
+	expect(normalizeSettings({ maxQueuedPerAuthor: 25 }).maxQueuedPerAuthor).toBe(10);
+	expect(normalizeSettings({ maxQueuedPerAuthor: 2.6 }).maxQueuedPerAuthor).toBe(3);
+	expect(pickOverlayProfileSettings({}).maxQueuedPerAuthor).toBe(3);
+	expect(OVERLAY_PROFILE_FIELDS).toContain("maxQueuedPerAuthor");
+});
+
+test("local mute migration sanitizes and stays outside profiles", () => {
+	expect(normalizeSettings({}).mutedAuthors).toEqual([]);
+	expect(normalizeSettings({}).hideAnonymous).toBe(false);
+	const settings = normalizeSettings({
+		mutedAuthors: [null, {}, { id: "a", username: 1 }, { id: "a", username: "A", mutedAt: 3 }],
+	});
+	expect(settings.mutedAuthors).toEqual([{ id: "a", username: "A", avatarUrl: "", mutedAt: 3 }]);
+	expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain("mutedAuthors");
+	expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain("hideAnonymous");
+});

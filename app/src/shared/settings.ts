@@ -9,6 +9,7 @@ import {
 	LEGACY_DEFAULT_WS_URL,
 	type Settings,
 } from "../shared/types";
+import { normalizeMutedAuthors } from "./muted-authors";
 
 // Pre-v2 releases stored textSize as a Tailwind-style key. This table maps those
 // legacy values to their pixel equivalents so users keep a visually identical size
@@ -132,6 +133,18 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	if (typeof out.showBotAppSources !== "boolean") {
 		out.showBotAppSources = false;
 	}
+	// v8 → v9: machine-local history cleanup preference.
+	if (typeof out.historyAutoPurge !== "boolean") out.historyAutoPurge = true;
+	// v9 → v10: pending items per author.
+	out.maxQueuedPerAuthor = clampNumber(
+		out.maxQueuedPerAuthor,
+		0,
+		10,
+		DEFAULT_SETTINGS.maxQueuedPerAuthor,
+	);
+	// v10 → v11: local author preferences.
+	out.mutedAuthors = normalizeMutedAuthors(out.mutedAuthors);
+	if (typeof out.hideAnonymous !== "boolean") out.hideAnonymous = false;
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;
@@ -176,4 +189,11 @@ export async function persistSettings(settings: Settings): Promise<void> {
 	await store.set("settings", settings);
 	await store.save();
 	await emit("settings-changed", settings);
+}
+
+/** Read from disk immediately before editing a machine-local preference. */
+export async function patchSettings(mutator: (settings: Settings) => Settings): Promise<Settings> {
+	const updated = normalizeSettings(mutator(await loadSettings()));
+	await persistSettings(updated);
+	return updated;
 }

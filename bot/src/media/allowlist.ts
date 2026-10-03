@@ -1,3 +1,6 @@
+import { isCdnUrlExpired } from "@memeover/shared";
+
+export { isCdnUrlExpired } from "@memeover/shared";
 export const ALLOWED_MEDIA_HOSTS: ReadonlySet<string> = new Set([
 	"cdn.discordapp.com",
 	"media.discordapp.net",
@@ -29,20 +32,8 @@ export function isAllowedAndFresh(url: string): boolean {
 	try {
 		const parsed = new URL(url);
 		if (!ALLOWED_MEDIA_HOSTS.has(parsed.hostname)) return false;
-		const ex = parsed.searchParams.get("ex");
-		if (ex && parseInt(ex, 16) * 1_000 < Date.now()) return false;
+		if (isCdnUrlExpired(url)) return false;
 		return true;
-	} catch {
-		return false;
-	}
-}
-
-/** Expiry-only check for attachment URLs whose origin Discord has already validated. */
-export function isCdnUrlExpired(url: string): boolean {
-	try {
-		const ex = new URL(url).searchParams.get("ex");
-		if (!ex) return false;
-		return parseInt(ex, 16) * 1_000 < Date.now();
 	} catch {
 		return false;
 	}

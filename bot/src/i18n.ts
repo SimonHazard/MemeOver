@@ -2,6 +2,38 @@ export type BotLocale = "en" | "fr";
 
 export const translations = {
 	en: {
+		"commands.pause.name": "pause",
+		"commands.pause.description": "Pause broadcasts for this server",
+		"commands.pause.duration.name": "duration",
+		"commands.pause.duration.description": "How long to pause broadcasts",
+		"commands.resume.name": "resume",
+		"commands.resume.description": "Resume broadcasts for this server",
+		"pause.successTitle": "Broadcasts paused",
+		"pause.successUntil": "Paused until",
+		"pause.successIndefinite": "Paused until an admin runs /memeover resume",
+		"resume.successTitle": "Broadcasts resumed",
+		"resume.successDescription": "New memes and reactions can appear again.",
+		"resume.notPausedTitle": "Broadcasts are already active",
+		"resume.notPausedDescription": "There is no active pause.",
+		"status.broadcasting": "Broadcasting",
+		"status.broadcastingActive": "Active",
+		"status.broadcastingPausedUntil": "Paused until",
+		"status.broadcastingPausedIndefinite": "Paused until resumed",
+		"secret.pausedTitle": "Server paused",
+		"secret.pausedDescription": "An admin paused broadcasts. Try again after the pause.",
+		"help.pause": "Pause all broadcasts (Manage Server). Events are dropped, not held.",
+		"help.resume": "Resume broadcasts (Manage Server).",
+		"commands.pause.choice.5m": "5 minutes",
+		"commands.pause.choice.15m": "15 minutes",
+		"commands.pause.choice.30m": "30 minutes",
+		"commands.pause.choice.1h": "1 hour",
+		"commands.pause.choice.2h": "2 hours",
+		"commands.pause.choice.indefinite": "Until resumed",
+
+		"evict.tokenRotatedMessage":
+			"This server’s MemeOver token was changed. Paste the new setup code to reconnect.",
+		"evict.guildRemovedMessage":
+			"This server was removed from MemeOver. Run /memeover setup to configure it again.",
 		"commands.memeover.description": "Manage MemeOver for this server",
 		"commands.setup.name": "setup",
 		"commands.setup.description":
@@ -86,10 +118,10 @@ export const translations = {
 		"remove.cancelledTitle": "Removal cancelled",
 		"remove.confirmButton": "Remove server",
 		"remove.confirmDescription":
-			"This will unregister the server from MemeOver. Connected overlays will be rejected on their next reconnect.",
+			"This will unregister the server from MemeOver. Connected overlays will be disconnected immediately.",
 		"remove.confirmTitle": "Confirm server removal",
 		"remove.successDescription":
-			"This server has been removed from MemeOver. All active sessions will be rejected on next reconnect.",
+			"This server has been removed from MemeOver. All connected overlays are disconnected immediately.",
 		"remove.successTitle": "Server removed",
 
 		"rotate.cancelledDescription": "The current connection token is still valid.",
@@ -151,6 +183,40 @@ export const translations = {
 		"token.title": "Your MemeOver connection credentials",
 	},
 	fr: {
+		"commands.pause.name": "pause",
+		"commands.pause.description": "Mettre en pause la diffusion de ce serveur",
+		"commands.pause.duration.name": "duration",
+		"commands.pause.duration.description": "Durée de la pause",
+		"commands.resume.name": "resume",
+		"commands.resume.description": "Reprendre la diffusion de ce serveur",
+		"pause.successTitle": "Diffusion en pause",
+		"pause.successUntil": "En pause jusqu’à",
+		"pause.successIndefinite": "En pause jusqu’à /memeover resume par un administrateur",
+		"resume.successTitle": "Diffusion reprise",
+		"resume.successDescription": "Les nouveaux médias et réactions peuvent de nouveau apparaître.",
+		"resume.notPausedTitle": "La diffusion est déjà active",
+		"resume.notPausedDescription": "Aucune pause en cours.",
+		"status.broadcasting": "Diffusion",
+		"status.broadcastingActive": "Active",
+		"status.broadcastingPausedUntil": "En pause jusqu’à",
+		"status.broadcastingPausedIndefinite": "En pause jusqu’à la reprise",
+		"secret.pausedTitle": "Serveur en pause",
+		"secret.pausedDescription":
+			"Un administrateur a mis la diffusion en pause. Réessayez après la pause.",
+		"help.pause":
+			"Mettre toute la diffusion en pause (Gérer le serveur). Les événements sont ignorés, pas conservés.",
+		"help.resume": "Reprendre la diffusion (Gérer le serveur).",
+		"commands.pause.choice.5m": "5 minutes",
+		"commands.pause.choice.15m": "15 minutes",
+		"commands.pause.choice.30m": "30 minutes",
+		"commands.pause.choice.1h": "1 heure",
+		"commands.pause.choice.2h": "2 heures",
+		"commands.pause.choice.indefinite": "Jusqu’à la reprise",
+
+		"evict.tokenRotatedMessage":
+			"Le jeton MemeOver de ce serveur a changé. Collez le nouveau code de configuration pour vous reconnecter.",
+		"evict.guildRemovedMessage":
+			"Ce serveur a été retiré de MemeOver. Exécutez /memeover setup pour le configurer à nouveau.",
 		"commands.memeover.description": "Gérer MemeOver sur ce serveur",
 		"commands.setup.name": "setup",
 		"commands.setup.description":
@@ -237,10 +303,10 @@ export const translations = {
 		"remove.cancelledTitle": "Retrait annulé",
 		"remove.confirmButton": "Retirer le serveur",
 		"remove.confirmDescription":
-			"Cette action désinscrit le serveur de MemeOver. Les overlays connectés seront rejetés à leur prochaine reconnexion.",
+			"Cette action désinscrit le serveur de MemeOver. Les overlays connectés seront déconnectés immédiatement.",
 		"remove.confirmTitle": "Confirmer le retrait du serveur",
 		"remove.successDescription":
-			"Ce serveur a été retiré de MemeOver. Les sessions actives seront rejetées à la prochaine reconnexion.",
+			"Ce serveur a été retiré de MemeOver. Les overlays connectés sont déconnectés immédiatement.",
 		"remove.successTitle": "Serveur retiré",
 
 		"rotate.cancelledDescription": "Le jeton de connexion actuel reste valide.",

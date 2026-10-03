@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { addToHistory } from "@/shared/history";
+import { shouldLogToHistory } from "@/shared/history-expiry";
 import type { DisplayQueueItem } from "@/shared/types";
 
 /**
@@ -8,7 +9,7 @@ import type { DisplayQueueItem } from "@/shared/types";
  */
 export function useHistoryLogger(current: DisplayQueueItem | null): void {
 	useEffect(() => {
-		if (current === null) return;
+		if (current === null || !shouldLogToHistory(current)) return;
 		// Fire-and-forget: errors are non-critical
 		void addToHistory(current).catch((err) => {
 			console.warn("[History] Failed to log item:", err);

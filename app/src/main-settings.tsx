@@ -1,6 +1,7 @@
 import { MotionConfig } from "framer-motion";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { startHistoryAutoPurge } from "./shared/history";
 import { initSettingsStore } from "./shared/store";
 import { checkForUpdatesInBackground } from "./windows/settings/hooks/useUpdater";
 import { SettingsApp } from "./windows/settings/SettingsApp";
@@ -12,6 +13,7 @@ document.documentElement.classList.toggle("dark", storedTheme !== "light");
 
 // Subscribe to ws-status-changed events emitted by the overlay
 void initSettingsStore();
+startHistoryAutoPurge();
 
 // Ping GitHub for a newer release — flips `updateAvailable` in the store,
 // which the TabNav uses to pulse a badge on the "À propos" tab.

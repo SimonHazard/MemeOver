@@ -72,6 +72,34 @@ export function TimingSoundSection() {
 					</div>
 				)}
 			</form.Field>
+			<form.Field name="maxQueuedPerAuthor">
+				{(field) => (
+					<div className="space-y-3">
+						<div className="flex justify-between">
+							<Label htmlFor="max-queued-per-author" className="font-display tracking-wide text-xs">
+								{t("display.maxQueuedPerAuthor")}
+							</Label>
+							<span className="text-sm text-muted-foreground">
+								{field.state.value === 0
+									? t("display.maxQueuedPerAuthor_unlimited")
+									: field.state.value}
+							</span>
+						</div>
+						<Slider
+							id="max-queued-per-author"
+							aria-label={t("display.maxQueuedPerAuthor")}
+							min={0}
+							max={10}
+							step={1}
+							value={[field.state.value]}
+							onValueChange={([value]) =>
+								field.handleChange(value ?? DEFAULT_SETTINGS.maxQueuedPerAuthor)
+							}
+						/>
+						<p className="text-xs text-muted-foreground">{t("display.maxQueuedPerAuthor_hint")}</p>
+					</div>
+				)}
+			</form.Field>
 		</div>
 	);
 }

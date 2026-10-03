@@ -5,6 +5,7 @@ import {
 	PermissionFlagsBits,
 } from "discord.js";
 import { interactionLocale, t } from "../i18n";
+import { evictGuild } from "../server";
 import { schedulePresenceRefresh } from "../utils/presence";
 import { guildRegistry } from "../utils/registry";
 import { connectionUpdate, notConfiguredUpdate } from "./connection";
@@ -104,6 +105,12 @@ async function handleRemoveComponent(
 	}
 
 	guildRegistry.unregister(id.guildId);
+	evictGuild(
+		id.guildId,
+		"GUILD_UNREGISTERED",
+		t("en", "evict.guildRemovedMessage"),
+		t("en", "cleanup.wsCloseReason"),
+	);
 	schedulePresenceRefresh();
 
 	await interaction.update(
@@ -138,6 +145,7 @@ async function handleRotateComponent(
 		return;
 	}
 
+	evictGuild(id.guildId, "TOKEN_ROTATED", t("en", "evict.tokenRotatedMessage"), "Token rotated");
 	await interaction.update(
 		connectionUpdate({
 			tone: "warning",

@@ -1,3 +1,11 @@
+export interface MutedAuthor {
+	id: string;
+	username: string;
+	avatarUrl: string;
+	mutedAt: number;
+}
+export type { SessionRevocationCode } from "@memeover/shared";
+
 // ─── App-level ────────────────────────────────────────────────────────────────
 import type { MediaEvent, TextEvent } from "@memeover/shared";
 import { DEFAULT_PUBLIC_WS_URL } from "@memeover/shared";
@@ -5,11 +13,15 @@ import { DEFAULT_PUBLIC_WS_URL } from "@memeover/shared";
 /** MediaEvent enriched with a unique per-display ID for React keys / queue dedup */
 export interface MediaQueueItem extends MediaEvent {
 	queueId: string;
+	/** Set on replays; replayed items are not logged again. */
+	replayOf?: string;
 }
 
 /** TextEvent enriched with a unique per-display ID for React keys / queue dedup */
 export interface TextQueueItem extends TextEvent {
 	queueId: string;
+	/** Set on replays; replayed items are not logged again. */
+	replayOf?: string;
 }
 
 /**
@@ -101,6 +113,12 @@ export interface EnabledTypes {
 }
 
 export interface Settings {
+	mutedAuthors: MutedAuthor[];
+	hideAnonymous: boolean;
+	/** Maximum pending items per author, 0 means unlimited. */
+	maxQueuedPerAuthor: number;
+	/** Remove expired Discord media from local history on load and hourly. */
+	historyAutoPurge: boolean;
 	/** Stable local install identifier used by the bot for lightweight activity cleanup. */
 	clientId: string;
 	guildId: string;
@@ -169,6 +187,7 @@ export interface Settings {
 }
 
 export const OVERLAY_PROFILE_FIELDS = [
+	"maxQueuedPerAuthor",
 	"mediaSize",
 	"duration",
 	"volume",
@@ -209,7 +228,7 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 8;
+export const CURRENT_SCHEMA_VERSION = 11;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
@@ -217,6 +236,10 @@ export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
 export const LEGACY_DEFAULT_WS_URL = "ws://localhost:3001/ws";
 
 export const DEFAULT_SETTINGS: Settings = {
+	mutedAuthors: [],
+	hideAnonymous: false,
+	maxQueuedPerAuthor: 3,
+	historyAutoPurge: true,
 	clientId: "",
 	guildId: "",
 	token: "",
