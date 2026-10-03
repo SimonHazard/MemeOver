@@ -11,7 +11,7 @@
     },
     "app": {
       "name": "@memeover/app",
-      "version": "1.6.0",
+      "version": "1.6.2",
       "dependencies": {
         "@base-ui/react": "^1.8.0",
         "@memeover/shared": "workspace:*",
@@ -107,7 +107,7 @@
     },
     "site": {
       "name": "@memeover/site",
-      "version": "1.6.0",
+      "version": "1.6.2",
       "dependencies": {
         "@astrojs/react": "6.0.5",
         "@astrojs/sitemap": "3.7.4",
