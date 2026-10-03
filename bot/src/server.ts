@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import type { SessionRevocationCode } from "@memeover/shared";
+import { JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
 import { SERVER_FEATURES } from "./utils/features";
@@ -202,7 +202,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 				type: "JOIN_ACK",
 				guild_id: msg.guild_id,
 				success: false,
-				error: "Unknown guild — run /memeover setup in your Discord server first",
+				error: JOIN_ACK_ERRORS.unknownGuild,
 			} satisfies ServerMessage),
 		);
 		wsLog.warn({ event: "join_rejected", reason: "unknown_guild" }, "Join rejected: unknown guild");
@@ -216,7 +216,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 				type: "JOIN_ACK",
 				guild_id: msg.guild_id,
 				success: false,
-				error: "Invalid token",
+				error: JOIN_ACK_ERRORS.invalidToken,
 			} satisfies ServerMessage),
 		);
 		wsLog.warn({ event: "join_rejected", reason: "invalid_token" }, "Join rejected: invalid token");

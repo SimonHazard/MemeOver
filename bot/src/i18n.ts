@@ -264,7 +264,7 @@ export const translations = {
 		"common.permissionDeniedDescription":
 			"Vous avez besoin de la permission **Gérer le serveur** pour utiliser cette commande.",
 		"common.permissionDeniedTitle": "Permission refusée",
-		"common.serverId": "🏠 Server ID",
+		"common.serverId": "🏠 ID du serveur",
 		"common.serverOnlyDescription": "Cette commande ne peut être utilisée que dans un serveur.",
 		"common.serverOnlyTitle": "Serveur uniquement",
 		"common.token": "🔑 Jeton",

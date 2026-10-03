@@ -60,7 +60,7 @@ describe("Discord connection helpers", () => {
 		expect(fields.map((field) => field.name)).toEqual([
 			"📺 Écoute",
 			"🤖 Bots & apps",
-			"🏠 Server ID",
+			"🏠 ID du serveur",
 			"🔑 Jeton",
 			"⚡ Code de configuration app",
 		]);

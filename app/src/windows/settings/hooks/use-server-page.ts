@@ -171,7 +171,8 @@ export function useServerPage() {
 			toast.success(t("server.toast.bunInstalled"));
 			invalidateServer();
 		},
-		onError: (error) => toast.error(mutationError(error)),
+		onError: (error) =>
+			toast.error(t("server.toast.bunInstallFailed"), { description: mutationError(error) }),
 	});
 
 	const installMutation = useMutation({
@@ -189,7 +190,8 @@ export function useServerPage() {
 			toast.success(t("server.toast.installed"));
 			invalidateServer();
 		},
-		onError: (error) => toast.error(mutationError(error)),
+		onError: (error) =>
+			toast.error(t("server.toast.installFailed"), { description: mutationError(error) }),
 	});
 
 	const startMutation = useMutation({
@@ -198,7 +200,8 @@ export function useServerPage() {
 			toast.success(t("server.toast.started"));
 			invalidateServer();
 		},
-		onError: (error) => toast.error(mutationError(error)),
+		onError: (error) =>
+			toast.error(t("server.toast.startFailed"), { description: mutationError(error) }),
 	});
 
 	const stopMutation = useMutation({
@@ -207,7 +210,8 @@ export function useServerPage() {
 			toast.success(t("server.toast.stopped"));
 			invalidateServer();
 		},
-		onError: (error) => toast.error(mutationError(error)),
+		onError: (error) =>
+			toast.error(t("server.toast.stopFailed"), { description: mutationError(error) }),
 	});
 
 	const restartMutation = useMutation({
@@ -216,7 +220,8 @@ export function useServerPage() {
 			toast.success(t("server.toast.restarted"));
 			invalidateServer();
 		},
-		onError: (error) => toast.error(mutationError(error)),
+		onError: (error) =>
+			toast.error(t("server.toast.restartFailed"), { description: mutationError(error) }),
 	});
 
 	const detectIpMutation = useMutation({
@@ -226,7 +231,8 @@ export function useServerPage() {
 			toast.success(t("server.toast.ipDetected"));
 			invalidateServer();
 		},
-		onError: (error) => toast.error(mutationError(error)),
+		onError: (error) =>
+			toast.error(t("server.toast.ipDetectFailed"), { description: mutationError(error) }),
 	});
 
 	async function chooseInstallDir() {
