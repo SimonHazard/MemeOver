@@ -128,6 +128,11 @@ GitHub Actions build et deploie l'app, le bot et le site :
 - [App workflow](.github/workflows/app.yml)
 - [Bot workflow](.github/workflows/bot.yml)
 - [Site workflow](.github/workflows/deploy-site.yml)
+- [App release → site refresh](.github/workflows/release-site.yml)
+
+Publier une release `app-v*` déclenche automatiquement le build et le déploiement du site
+sur `main`, avec la version dans le nom du run. Le déploiement attend l’approbation de
+l’environnement `production` ; créer un brouillon de release ne suffit pas.
 
 Le bot peut aussi etre lance avec Docker Compose :
 
@@ -252,6 +257,11 @@ GitHub Actions build and deploy the app, bot and site:
 - [App workflow](.github/workflows/app.yml)
 - [Bot workflow](.github/workflows/bot.yml)
 - [Site workflow](.github/workflows/deploy-site.yml)
+- [App release → site refresh](.github/workflows/release-site.yml)
+
+Publishing an `app-v*` release automatically builds and deploys the site from `main`,
+with the version in the run name. Deployment awaits the `production` environment's
+approval; creating a release draft does not trigger the refresh.
 
 The bot can also run with Docker Compose:
 
