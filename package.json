@@ -13,17 +13,20 @@
     "format": "biome format --write",
     "check": "biome check",
     "check:fix": "biome check --write",
-    "typecheck": "bun run typecheck:bot && bun run typecheck:app && bun run typecheck:shared && bun run typecheck:ui",
+    "typecheck": "bun run typecheck:bot && bun run typecheck:app && bun run typecheck:shared && bun run typecheck:ui && bun run typecheck:browser",
     "typecheck:bot": "bun run --cwd bot typecheck",
     "typecheck:app": "bun run --cwd app typecheck",
     "typecheck:shared": "bun run --cwd shared typecheck",
     "typecheck:ui": "bun run --cwd packages/ui typecheck",
     "test": "bun run test:unit && bun run test:mocked",
     "test:unit": "bun test ./app/src ./bot/src ./shared/src ./site/src ./packages/ui/src --path-ignore-patterns='**/*.mocked.test.ts'",
-    "test:mocked": "bun scripts/run-mocked-tests.ts"
+    "test:mocked": "bun scripts/run-mocked-tests.ts",
+    "test:browser": "playwright test",
+    "typecheck:browser": "bun run --cwd app typecheck:browser"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13",
+    "@playwright/test": "^1.63.0",
     "shadcn": "^4.21.0"
   },
   "overrides": {

@@ -30,3 +30,7 @@ plans/
 
 # Logs
 *.log
+
+# Browser test artifacts
+/test-results/
+/playwright-report/

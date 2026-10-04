@@ -25,11 +25,12 @@ export function TimingSoundSection() {
 							</span>
 						</div>
 						<Slider
+							aria-label={t("display.duration")}
 							min={1}
 							max={30}
 							step={1}
-							value={[field.state.value]}
-							onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.duration)}
+							value={field.state.value}
+							onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.duration)}
 						/>
 					</div>
 				)}
@@ -46,6 +47,7 @@ export function TimingSoundSection() {
 							<p className="text-xs text-muted-foreground">{t("display.syncMediaDuration_hint")}</p>
 						</div>
 						<NbSwitch
+							aria-label={t("display.syncMediaDuration")}
 							checked={field.state.value}
 							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"
@@ -63,11 +65,12 @@ export function TimingSoundSection() {
 							<span className="text-sm text-muted-foreground">{field.state.value}%</span>
 						</div>
 						<Slider
+							aria-label={t("display.volume")}
 							min={0}
 							max={100}
 							step={1}
-							value={[field.state.value]}
-							onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.volume)}
+							value={field.state.value}
+							onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.volume)}
 						/>
 					</div>
 				)}
@@ -91,8 +94,8 @@ export function TimingSoundSection() {
 							min={0}
 							max={10}
 							step={1}
-							value={[field.state.value]}
-							onValueChange={([value]) =>
+							value={field.state.value}
+							onValueChange={(value) =>
 								field.handleChange(value ?? DEFAULT_SETTINGS.maxQueuedPerAuthor)
 							}
 						/>

@@ -1,0 +1,24 @@
+{
+	"extends": "./app/tsconfig.json",
+	"compilerOptions": {
+		"typeRoots": [
+			"./app/node_modules/@types",
+			"./app/node_modules"
+		],
+		"paths": {
+			"@/*": [
+				"./app/src/*"
+			],
+			"@memeover/ui/*": [
+				"./packages/ui/src/*"
+			]
+		}
+	},
+	"include": [
+		"test/browser",
+		"app/test/browser",
+		"playwright.config.ts",
+		"app/src/vite-env.d.ts"
+	],
+	"references": []
+}

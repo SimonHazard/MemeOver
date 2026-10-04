@@ -131,9 +131,20 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 
 	async function handleImport(file: File | undefined) {
 		if (!file) return;
-		const text = await file.text();
-		await importMutation.mutateAsync(text);
-		if (importInputRef.current) importInputRef.current.value = "";
+		try {
+			const text = await file.text();
+			// Event handlers use mutate so errors are handled by onError, without
+			// creating an unhandled rejected promise. Reset even after a bad import
+			// so choosing the same file again triggers another change event.
+			importMutation.mutate(text, {
+				onSettled: () => {
+					if (importInputRef.current) importInputRef.current.value = "";
+				},
+			});
+		} catch {
+			toast.error(t("toast.profileImportError"));
+			if (importInputRef.current) importInputRef.current.value = "";
+		}
 	}
 
 	return (
@@ -154,11 +165,7 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 					/>
 				</div>
 				<div className="flex items-end gap-2">
-					<NbButton
-						type="button"
-						disabled={!canCreate}
-						onClick={() => void createMutation.mutateAsync()}
-					>
+					<NbButton type="button" disabled={!canCreate} onClick={() => createMutation.mutate()}>
 						<Save data-icon="inline-start" aria-hidden="true" />
 						{t("display.profile_save")}
 					</NbButton>
@@ -225,7 +232,7 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 								size="sm"
 								variant="outline"
 								disabled={isBusy}
-								onClick={() => void updateMutation.mutateAsync(profile)}
+								onClick={() => updateMutation.mutate(profile)}
 							>
 								<Upload data-icon="inline-start" aria-hidden="true" />
 								{t("display.profile_update")}

@@ -64,6 +64,8 @@ export function MonitorSelector() {
 			} else {
 				toast.error(t("toast.monitorError"));
 			}
+		} catch {
+			toast.error(t("toast.monitorError"));
 		} finally {
 			setPending(null);
 		}

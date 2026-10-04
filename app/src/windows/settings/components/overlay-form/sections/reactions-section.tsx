@@ -87,6 +87,7 @@ export function ReactionsSection() {
 							<p className="text-xs text-muted-foreground">{t("display.reactions_enabled_hint")}</p>
 						</div>
 						<NbSwitch
+							aria-label={t("display.reactions_enabled")}
 							checked={field.state.value}
 							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"
@@ -150,11 +151,12 @@ export function ReactionsSection() {
 											</span>
 										</div>
 										<Slider
+											aria-label={t("display.reactions_duration")}
 											min={2}
 											max={10}
 											step={1}
-											value={[field.state.value]}
-											onValueChange={([v]) =>
+											value={field.state.value}
+											onValueChange={(v) =>
 												field.handleChange(v ?? DEFAULT_SETTINGS.floatingReactionDuration)
 											}
 										/>
@@ -172,11 +174,12 @@ export function ReactionsSection() {
 											<span className="text-sm text-muted-foreground">{field.state.value}%</span>
 										</div>
 										<Slider
+											aria-label={t("display.reactions_opacity")}
 											min={20}
 											max={100}
 											step={1}
-											value={[field.state.value]}
-											onValueChange={([v]) =>
+											value={field.state.value}
+											onValueChange={(v) =>
 												field.handleChange(v ?? DEFAULT_SETTINGS.floatingReactionOpacity)
 											}
 										/>
@@ -197,11 +200,12 @@ export function ReactionsSection() {
 										</div>
 										<div className="flex items-center gap-3">
 											<Slider
+												aria-label={t("display.reactions_size")}
 												min={REACTION_SIZE_MIN}
 												max={REACTION_SIZE_MAX}
 												step={1}
-												value={[field.state.value]}
-												onValueChange={([v]) =>
+												value={field.state.value}
+												onValueChange={(v) =>
 													field.handleChange(v ?? DEFAULT_SETTINGS.floatingReactionSize)
 												}
 												className="flex-1"

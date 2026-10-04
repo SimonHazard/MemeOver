@@ -33,11 +33,12 @@ export function AppearanceSection() {
 							<span className="text-sm text-muted-foreground">{field.state.value}%</span>
 						</div>
 						<Slider
+							aria-label={t("display.opacity")}
 							min={0}
 							max={100}
 							step={1}
-							value={[field.state.value]}
-							onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.mediaOpacity)}
+							value={field.state.value}
+							onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.mediaOpacity)}
 						/>
 					</div>
 				)}
@@ -54,6 +55,7 @@ export function AppearanceSection() {
 							<p className="text-xs text-muted-foreground">{t("display.bg_enabled_hint")}</p>
 						</div>
 						<NbSwitch
+							aria-label={t("display.bg_enabled")}
 							checked={field.state.value}
 							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"
@@ -98,13 +100,12 @@ export function AppearanceSection() {
 													</span>
 												</div>
 												<Slider
+													aria-label={t("display.bg_opacity")}
 													min={0}
 													max={100}
 													step={1}
-													value={[field.state.value]}
-													onValueChange={([v]) =>
-														field.handleChange(v ?? DEFAULT_SETTINGS.bgOpacity)
-													}
+													value={field.state.value}
+													onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.bgOpacity)}
 												/>
 											</div>
 										)}
@@ -122,13 +123,12 @@ export function AppearanceSection() {
 													</span>
 												</div>
 												<Slider
+													aria-label={t("display.bg_padding")}
 													min={0}
 													max={100}
 													step={1}
-													value={[field.state.value]}
-													onValueChange={([v]) =>
-														field.handleChange(v ?? DEFAULT_SETTINGS.bgPadding)
-													}
+													value={field.state.value}
+													onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.bgPadding)}
 												/>
 											</div>
 										)}
@@ -146,11 +146,12 @@ export function AppearanceSection() {
 													</span>
 												</div>
 												<Slider
+													aria-label={t("display.bg_border_radius")}
 													min={0}
 													max={30}
 													step={1}
-													value={[field.state.value]}
-													onValueChange={([v]) =>
+													value={field.state.value}
+													onValueChange={(v) =>
 														field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderRadius)
 													}
 												/>
@@ -191,11 +192,12 @@ export function AppearanceSection() {
 													</span>
 												</div>
 												<Slider
+													aria-label={t("display.bg_border_width")}
 													min={0}
 													max={20}
 													step={1}
-													value={[field.state.value]}
-													onValueChange={([v]) =>
+													value={field.state.value}
+													onValueChange={(v) =>
 														field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderWidth)
 													}
 												/>
@@ -215,11 +217,12 @@ export function AppearanceSection() {
 													</span>
 												</div>
 												<Slider
+													aria-label={t("display.bg_border_opacity")}
 													min={0}
 													max={100}
 													step={1}
-													value={[field.state.value]}
-													onValueChange={([v]) =>
+													value={field.state.value}
+													onValueChange={(v) =>
 														field.handleChange(v ?? DEFAULT_SETTINGS.bgBorderOpacity)
 													}
 												/>

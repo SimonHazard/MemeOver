@@ -94,6 +94,7 @@ export function MediaTypesSection() {
 							<p className="text-xs text-muted-foreground">{t("display.bot_app_sources_hint")}</p>
 						</div>
 						<NbSwitch
+							aria-label={t("display.bot_app_sources")}
 							checked={field.state.value}
 							onCheckedChange={(checked) => field.handleChange(checked)}
 							className="shrink-0 mt-0.5"

@@ -119,7 +119,7 @@
 		"syncMediaDuration_hint": "Maintient l'overlay ouvert jusqu'à la fin de la vidéo ou de l'audio, sans tenir compte du timer de durée.",
 		"opacity": "Opacité du média",
 		"bg_enabled": "Arrière-plan global",
-		"bg_enabled_hint": "Encadre le contenu (badge auteur + média + légende) dans un conteneur personnalisable.",
+		"bg_enabled_hint": "Encadre le média et sa légende dans un conteneur personnalisable. Le badge auteur conserve son propre fond.",
 		"bg_color": "Couleur de fond",
 		"bg_opacity": "Opacité du fond",
 		"bg_padding": "Espacement intérieur",

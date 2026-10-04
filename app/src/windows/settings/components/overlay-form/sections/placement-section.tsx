@@ -67,11 +67,12 @@ export function PlacementSection({ previewAspect, onPreviewAspectChange }: Place
 								<span className="text-sm text-muted-foreground">{field.state.value}%</span>
 							</div>
 							<Slider
+								aria-label={t("display.size")}
 								min={10}
 								max={90}
 								step={1}
-								value={[field.state.value]}
-								onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.mediaSize)}
+								value={field.state.value}
+								onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.mediaSize)}
 							/>
 							<p className="text-[11px] font-mono text-muted-foreground" aria-live="polite">
 								{t("display.size_readout", {
@@ -103,13 +104,12 @@ export function PlacementSection({ previewAspect, onPreviewAspectChange }: Place
 										</span>
 									</div>
 									<Slider
+										aria-label={t("display.offsetX")}
 										min={-20}
 										max={20}
 										step={1}
-										value={[field.state.value]}
-										onValueChange={([v]) =>
-											field.handleChange(v ?? DEFAULT_SETTINGS.positionOffsetX)
-										}
+										value={field.state.value}
+										onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.positionOffsetX)}
 									/>
 								</div>
 							)}
@@ -128,13 +128,12 @@ export function PlacementSection({ previewAspect, onPreviewAspectChange }: Place
 										</span>
 									</div>
 									<Slider
+										aria-label={t("display.offsetY")}
 										min={-20}
 										max={20}
 										step={1}
-										value={[field.state.value]}
-										onValueChange={([v]) =>
-											field.handleChange(v ?? DEFAULT_SETTINGS.positionOffsetY)
-										}
+										value={field.state.value}
+										onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.positionOffsetY)}
 									/>
 								</div>
 							)}
