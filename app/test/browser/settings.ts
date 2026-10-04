@@ -1,4 +1,5 @@
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import appPackage from "../../package.json";
 import { DEFAULT_SETTINGS } from "../../src/shared/types";
 
 // Isolated browser storage only. No native files, Discord or server processes are touched.
@@ -61,6 +62,10 @@ mockIPC(
 			localStorage.setItem("test-autostart", String(cmd.endsWith("enable")));
 			return null;
 		}
+		if (cmd === "update_tray_labels") {
+			localStorage.setItem("test-tray-labels", JSON.stringify(args));
+			return null;
+		}
 		if (cmd === "server_creator_logs") return [];
 		if (cmd === "server_creator_status")
 			return {
@@ -79,7 +84,7 @@ mockIPC(
 				healthUrl: "http://127.0.0.1:3001/health",
 				localWsUrl: "ws://127.0.0.1:3001/ws",
 			};
-		if (cmd === "plugin:app|version") return "1.6.3";
+		if (cmd === "plugin:app|version") return appPackage.version;
 		if (cmd === "plugin:updater|check") return null;
 		if (cmd === "plugin:window|is_visible") return true;
 		if (cmd === "plugin:window|get_all_windows") return ["settings", "overlay"];

@@ -5,8 +5,8 @@ import { Skeleton } from "@memeover/ui/components/ui/skeleton";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { ConfirmActionButton } from "@/components/confirm-action-button";
 import { AnimatedList } from "@/components/motion/animated-list";
-import { HoldToConfirmButton } from "@/components/motion/hold-to-confirm-button";
 import { useTauriEventVersion } from "@/hooks/useTauriEvent";
 import type { HistoryItem } from "@/shared/history";
 import {
@@ -124,10 +124,12 @@ export function HistoryPage() {
 				<div className="flex items-center justify-between">
 					<h1 className="font-display text-xl tracking-wide">{t("history.title")}</h1>
 					{items.length > 0 && (
-						<HoldToConfirmButton
+						<ConfirmActionButton
 							label={t("history.clearAll")}
+							title={t("history.clearConfirmTitle")}
+							description={t("history.clearConfirmDesc")}
+							confirmLabel={t("history.clearAll")}
 							onConfirm={() => doClear()}
-							className="text-destructive hover:text-destructive"
 						/>
 					)}
 				</div>

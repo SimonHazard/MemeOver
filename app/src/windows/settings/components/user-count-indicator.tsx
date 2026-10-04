@@ -84,6 +84,12 @@ export function UserCountIndicator({ wsStatus }: UserCountIndicatorProps) {
 					{liveState === "offline" && t("memberCount.offline")}
 				</motion.span>
 			</AnimatePresence>
+			{/* The animated parts above are hidden from assistive technology; this is their text. */}
+			<span className="sr-only">
+				{liveState === "active" && t("memberCount.ariaOnline", { count: memberCount })}
+				{liveState === "alone" && t("memberCount.ariaAlone")}
+				{liveState === "offline" && t("memberCount.ariaOffline")}
+			</span>
 		</div>
 	);
 }

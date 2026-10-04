@@ -1,7 +1,7 @@
 import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
 import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
-import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
+import { syncTrayLabels } from "@/i18n/tray";
 
 export function LangToggle() {
 	const { i18n, t } = useTranslation();
@@ -10,12 +10,7 @@ export function LangToggle() {
 	function handleChange([value]: string[]) {
 		if (!value) return;
 		localStorage.setItem("lang", value);
-		void i18n.changeLanguage(value).then(() => {
-			void invoke("update_tray_labels", {
-				showLabel: i18n.t("tray.show"),
-				quitLabel: i18n.t("tray.quit"),
-			});
-		});
+		void i18n.changeLanguage(value).then(() => syncTrayLabels());
 	}
 
 	return (
