@@ -6,15 +6,26 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.6]
+
+### Fixed
+
+- Size the overlay to the full bounds of its monitor instead of maximizing it. Since the Tauri 2.12 update in 1.6.4, a hidden window is only maximized when first shown on Windows, and maximizing never covered the taskbar or menu bar area. The overlay also drops the default window shadow on Windows, which would otherwise draw a 1px border and rounded corners around it.
+- Keep the author badge on screen for tall media: the media height now leaves room for the badge, background and caption, which previously pushed the badge off the top edge at bottom positions.
+
+### Changed
+
+- Add browser regression checks for tall media at centre, top and bottom positions and for the space reserved for the author badge.
+
 ## [1.6.5]
 
 ### Fixed
 
 - Keep author badges visible if their entrance animation is interrupted or disabled.
-- Keep confetti, pop and firework reaction timings valid at the minimum fade-out and maximum fade-in settings.
 
 ### Changed
 
+- Keep confetti, pop and firework keyframe times in increasing order for any fade timing. The built-in reaction timings already produced ordered keyframes, so displayed reactions are unchanged.
 - Extend browser regression checks to production builds, animated popup replacements and interrupted badge entrances.
 
 ## [1.6.4]

@@ -50,7 +50,7 @@ export function sameMonitorPosition(a: OverlayMonitor, b: OverlayMonitor): boole
 export async function restoreOverlayMonitor(saved: OverlayMonitor): Promise<void> {
 	try {
 		// Skip the move if the overlay is already on the correct monitor.
-		// This avoids an unmaximize→maximize flash on every reload (Reload button,
+		// This avoids a hide→resize→show flash on every reload (Reload button,
 		// ensure_overlay_visible, etc.) when the window is already in the right place.
 		const current = await currentMonitor();
 		if (current && sameMonitorPosition(current.position, saved)) {

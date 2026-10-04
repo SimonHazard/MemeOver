@@ -124,3 +124,42 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
 		expect(errors).toEqual([]);
 	});
 }
+
+for (const position of ["center", "top", "bottom", "bottom-left"]) {
+	for (const viewport of [
+		{ width: 1920, height: 1080 },
+		{ width: 1440, height: 900 },
+	]) {
+		test(`tall media keeps the author badge on screen (${position}, ${viewport.width}×${viewport.height})`, async ({
+			page,
+		}) => {
+			await page.emulateMedia({ reducedMotion: "reduce" });
+			await page.setViewportSize(viewport);
+			await page.goto(`/test/browser/overlay.html?portrait&background&position=${position}`);
+			const badge = page.getByText("iXeDay SimoHz", { exact: true }).locator("..");
+			await expect(badge).toBeVisible();
+			// The avatar is an <img> too: the media is the last one.
+			const media = page.locator("#display img").last();
+			await expect(media).toBeVisible();
+			await expect.poll(() => media.evaluate((e) => (e as HTMLImageElement).complete)).toBe(true);
+			const bounds = await badge.evaluate((e) => {
+				const images = document.querySelectorAll("#display img");
+				const content = images[images.length - 1];
+				if (!content) throw new Error("Missing media");
+				const probe = document.getElementById("badge-height-probe");
+				if (!probe) throw new Error("Missing badge height probe");
+				return {
+					badgeTop: e.getBoundingClientRect().top,
+					badgeHeight: e.getBoundingClientRect().height,
+					reservedBadgeHeight: probe.getBoundingClientRect().height,
+					mediaBottom: content.getBoundingClientRect().bottom,
+					height: innerHeight,
+				};
+			});
+			// The height cap must reserve what the badge really renders.
+			expect(Math.abs(bounds.badgeHeight - bounds.reservedBadgeHeight)).toBeLessThanOrEqual(1);
+			expect(bounds.badgeTop).toBeGreaterThanOrEqual(0);
+			expect(bounds.mediaBottom).toBeLessThanOrEqual(bounds.height);
+		});
+	}
+}

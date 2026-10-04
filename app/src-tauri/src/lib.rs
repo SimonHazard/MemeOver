@@ -219,16 +219,47 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Cover the whole monitor with the overlay, including the taskbar / menu bar area.
+///
+/// Explicit bounds instead of `maximize()`: maximizing stops at the work area, and
+/// since tao 0.37 (Tauri 2.12) a window built hidden + maximized is only maximized
+/// when first shown on Windows. The overlay is transparent and click-through, so it
+/// can safely span the full physical bounds of the screen.
+fn fit_overlay_to_monitor(
+    win: &tauri::WebviewWindow,
+    monitor: &tauri::Monitor,
+) -> tauri::Result<()> {
+    let pos = *monitor.position();
+    let size = *monitor.size();
+    // Position first: moving to a monitor with another scale factor may resize
+    // the window, so the final size must be applied afterwards.
+    win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y))?;
+    win.set_size(tauri::PhysicalSize::new(size.width, size.height))?;
+    Ok(())
+}
+
+/// Fit the overlay to the monitor it currently sits on (primary as a fallback).
+fn fit_overlay_to_current_monitor(win: &tauri::WebviewWindow) -> tauri::Result<()> {
+    let monitor = match win.current_monitor()? {
+        Some(monitor) => Some(monitor),
+        None => win.primary_monitor()?,
+    };
+    match monitor {
+        Some(monitor) => fit_overlay_to_monitor(win, &monitor),
+        None => Ok(()),
+    }
+}
+
 /// Move the overlay window to the monitor at the given index (from `available_monitors()`).
 ///
 /// If the overlay is currently visible (e.g. a media item is playing), it is hidden
 /// before the move and restored afterwards. This prevents the intermediate states
-/// (unmaximized → repositioned → resized) from being visible to the user.
+/// (repositioned → resized) from being visible to the user.
 /// `win.hide()` does not trigger the CloseRequested handler, so no
 /// `overlay-health-changed` event is emitted and the webview keeps running.
 ///
-/// Sequence: hide (if visible) → unmaximize → set_position → set_size →
-/// maximize → re-apply native level → show (if was visible).
+/// Sequence: hide (if visible) → set_position → set_size (full monitor bounds) →
+/// re-apply native level → show (if was visible).
 #[tauri::command]
 fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Result<(), String> {
     let win = app
@@ -244,8 +275,6 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
         )
     })?;
 
-    let pos = *monitor.position();
-
     // Remember visibility so we can restore it after the move.
     let was_visible = win.is_visible().unwrap_or(false);
     if was_visible {
@@ -255,16 +284,8 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
     // Run the repositioning steps in a closure so we can guarantee show() is
     // called even if any intermediate step fails — the overlay must never stay
     // permanently hidden due to a positioning error.
-    //
-    // Note: set_size is intentionally omitted. set_position alone is sufficient
-    // to place the window on the target monitor. Calling set_size before
-    // maximize() causes [NSWindow zoom:] to see the window as "already at
-    // maximum size" and toggle back to the user size — breaking the move.
     let move_result = (|| -> Result<(), String> {
-        win.unmaximize().map_err(|e| e.to_string())?;
-        win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y))
-            .map_err(|e| e.to_string())?;
-        win.maximize().map_err(|e| e.to_string())?;
+        fit_overlay_to_monitor(&win, monitor).map_err(|e| e.to_string())?;
         apply_native_overlay_level(&win);
         Ok(())
     })();
@@ -279,7 +300,7 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
 }
 
 /// Toggle the overlay between dev mode (decorated, windowed, opaque) and a
-/// prod-like preview (no decorations, always-on-top, maximized, transparent).
+/// prod-like preview (no decorations, always-on-top, full monitor, transparent).
 /// Only meaningful in debug builds; the frontend gate (`import.meta.env.DEV`)
 /// ensures it is never called from a production bundle.
 #[tauri::command]
@@ -291,7 +312,7 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
     if enabled {
         win.set_decorations(false).map_err(|e| e.to_string())?;
         win.set_always_on_top(true).map_err(|e| e.to_string())?;
-        win.maximize().map_err(|e| e.to_string())?;
+        fit_overlay_to_current_monitor(&win).map_err(|e| e.to_string())?;
         win.set_background_color(Some(tauri::utils::config::Color(0, 0, 0, 0)))
             .map_err(|e| e.to_string())?;
         win.set_ignore_cursor_events(true)
@@ -300,7 +321,9 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
         win.set_ignore_cursor_events(false)
             .map_err(|e| e.to_string())?;
         win.set_background_color(None).map_err(|e| e.to_string())?;
-        win.unmaximize().map_err(|e| e.to_string())?;
+        win.set_size(tauri::LogicalSize::new(800.0, 600.0))
+            .map_err(|e| e.to_string())?;
+        win.center().map_err(|e| e.to_string())?;
         win.set_always_on_top(false).map_err(|e| e.to_string())?;
         win.set_decorations(true).map_err(|e| e.to_string())?;
     }
@@ -367,16 +390,25 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         .always_on_top(false)
         .resizable(true);
 
-    // Prod: transparent fullscreen always-on-top overlay (final behavior).
+    // Prod: transparent always-on-top overlay covering the whole monitor.
+    // Not `maximized`: that stops at the work area (taskbar / menu bar excluded).
     #[cfg(not(debug_assertions))]
     let builder = builder
         .transparent(true)
         .decorations(false)
         .always_on_top(true)
-        .maximized(true)
         .resizable(false);
 
-    builder.build()?;
+    // Windows draws a 1px border (and rounded corners on Windows 11) around
+    // undecorated windows that keep the default shadow, unless they are maximized.
+    #[cfg(all(not(debug_assertions), windows))]
+    let builder = builder.shadow(false);
+
+    #[cfg_attr(debug_assertions, allow(unused_variables))]
+    let win = builder.build()?;
+
+    #[cfg(not(debug_assertions))]
+    fit_overlay_to_current_monitor(&win)?;
 
     Ok(())
 }
