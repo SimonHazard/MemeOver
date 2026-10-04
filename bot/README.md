@@ -45,7 +45,8 @@ bun run dev
 
 ## Configuration
 
-Create a `.env` file at the repository root:
+For `bun run dev:bot`, copy `bot/.env.example` to `bot/.env`, then fill in
+(Docker Compose reads a `.env` at the repository root instead):
 
 ```env
 DISCORD_TOKEN=your_bot_token
