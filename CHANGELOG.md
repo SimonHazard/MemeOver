@@ -6,6 +6,17 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.5]
+
+### Fixed
+
+- Keep author badges visible if their entrance animation is interrupted or disabled.
+- Keep confetti, pop and firework reaction timings valid at the minimum fade-out and maximum fade-in settings.
+
+### Changed
+
+- Extend browser regression checks to production builds, animated popup replacements and interrupted badge entrances.
+
 ## [1.6.4]
 
 ### Added

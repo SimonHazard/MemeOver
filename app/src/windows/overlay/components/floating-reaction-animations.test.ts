@@ -96,3 +96,23 @@ for (const [fadeInPct, fadeOutPct, expected] of [
 		expect(
 			buildReactionKeyframes({ ...reaction, fadeInPct, fadeOutPct }, true).transition.times,
 		).toEqual([...expected]));
+
+for (const animation of ["confetti", "pop", "firework"] as const) {
+	for (const [fadeInPct, fadeOutPct] of [
+		[40, 55],
+		[2, 55],
+		[40, 95],
+	]) {
+		test(`${animation} keeps native keyframe offsets ordered at fade bounds ${fadeInPct}/${fadeOutPct}`, () => {
+			const frames = buildReactionKeyframes(
+				{ ...reaction, animation, fadeInPct, fadeOutPct },
+				false,
+			);
+			for (const transition of Object.values(frames.transition) as { times: number[] }[]) {
+				for (let index = 1; index < transition.times.length; index++) {
+					expect(transition.times[index]).toBeGreaterThan(transition.times[index - 1]);
+				}
+			}
+		});
+	}
+}

@@ -34,3 +34,6 @@ plans/
 # Browser test artifacts
 /test-results/
 /playwright-report/
+
+# Production browser regression fixtures
+app/dist-browser/
