@@ -125,6 +125,18 @@ test("anonymous memes from several senders are all queued", () => {
 	expect(useAppStore.getState().queue).toHaveLength(5);
 });
 
+test("replaying a muted author or hidden anonymous meme is queued", () => {
+	useAppStore.getState().updateSettings({
+		mutedAuthors: [{ id: "a", username: "A", avatarUrl: "", mutedAt: 1 }],
+		hideAnonymous: true,
+	});
+	useAppStore.getState().enqueue(item("live"));
+	expect(useAppStore.getState().queue).toEqual([]);
+	useAppStore.getState().enqueue(item("replay"), { isReplay: true });
+	// "secret" is the sentinel author of anonymous /memeover secret memes.
+	useAppStore.getState().enqueue({ ...item("secret"), author_id: "secret", replayOf: "secret-0" });
+	expect(useAppStore.getState().queue.map((q) => q.queueId)).toEqual(["replay", "secret"]);
+});
 test("muting removes queued items and skips current author", () => {
 	useAppStore.getState().enqueue(item("a"));
 	useAppStore.getState().setCurrentAuthorId("a");
