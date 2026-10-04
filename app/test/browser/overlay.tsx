@@ -1,7 +1,15 @@
 import { MotionConfig } from "framer-motion";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { DEFAULT_SETTINGS, type DisplayQueueItem } from "../../src/shared/types";
+import { useAppStore } from "../../src/shared/store";
+import {
+	DEFAULT_SETTINGS,
+	type DisplayQueueItem,
+	FLOATING_REACTION_ANIMATIONS,
+} from "../../src/shared/types";
+import { FloatingReactions } from "../../src/windows/overlay/components/floating-reactions";
 import { MediaDisplay } from "../../src/windows/overlay/components/media-display";
+import { MediaPopup } from "../../src/windows/overlay/components/media-popup";
 import "../../src/App.css";
 
 const params = new URLSearchParams(location.search);
@@ -30,26 +38,89 @@ const item: DisplayQueueItem = params.has("text")
 			anonymous: params.has("anonymous"),
 			text: "Example caption",
 		};
-const root = document.getElementById("root");
-if (root)
-	createRoot(root).render(
-		<MotionConfig reducedMotion="user">
-			<div id="display" style={{ display: "flex", justifyContent: "center", padding: 40 }}>
-				<MediaDisplay
-					item={item}
-					settings={{
-						...DEFAULT_SETTINGS,
-						bgEnabled: params.has("background"),
-						bgPadding: 16,
-						bgBorderWidth: 2,
-						bgOpacity: 80,
-						bgColor: "#336699",
-						textPosition: "below",
-					}}
+const settings = {
+	...DEFAULT_SETTINGS,
+	bgEnabled: params.has("background"),
+	bgPadding: 16,
+	bgBorderWidth: 2,
+	bgOpacity: 80,
+	bgColor: "#336699",
+	textPosition: "below" as const,
+};
+
+function PopupHarness() {
+	const [visible, setVisible] = useState(true);
+	const [sequence, setSequence] = useState(0);
+	const [exits, setExits] = useState(0);
+	return (
+		<>
+			<button type="button" onClick={() => setVisible(false)}>
+				Hide media
+			</button>
+			<button
+				type="button"
+				onClick={() => {
+					setSequence((n) => n + 1);
+					setVisible(true);
+				}}
+			>
+				Show next media
+			</button>
+			<output id="exits">{exits}</output>
+			<div className="pointer-events-none">
+				<MediaPopup
+					current={{ ...item, queueId: `badge-${sequence}` }}
+					isVisible={visible}
+					settings={settings}
+					onExitComplete={() => setExits((n) => n + 1)}
 					onVideoEnd={() => {}}
 					startTimer={() => {}}
 					onMediaError={() => {}}
 				/>
 			</div>
-		</MotionConfig>,
+		</>
+	);
+}
+
+if (params.has("reactions")) {
+	useAppStore.setState({
+		reactions: FLOATING_REACTION_ANIMATIONS.map((animation, index) => ({
+			id: animation,
+			emoji: "🎉",
+			leftPct: 10 + index * 15,
+			durationMs: 1500,
+			animation,
+			opacityPct: 80,
+			sizeVmin: 6,
+			fadeInPct: 40,
+			fadeOutPct: 55,
+			amplitudeVw: 8,
+			direction: 1,
+			rotationDeg: 24,
+		})),
+	});
+}
+
+const root = document.getElementById("root");
+if (root)
+	createRoot(root).render(
+		<StrictMode>
+			<MotionConfig reducedMotion="user">
+				{params.has("reactions") ? (
+					<FloatingReactions />
+				) : params.has("popup") ? (
+					<PopupHarness />
+				) : (
+					<div id="display" style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+						<MediaDisplay
+							item={item}
+							settings={settings}
+							onVideoEnd={() => {}}
+							startTimer={() => {}}
+							onMediaError={() => {}}
+						/>
+					</div>
+				)}
+			</MotionConfig>
+		</StrictMode>,
 	);

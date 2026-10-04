@@ -149,7 +149,11 @@ export function buildReactionKeyframes(
 	}
 
 	if (reaction.animation === "confetti") {
-		const times = [0, fadeIn, 0.36, 0.62, fadeOut, 1];
+		// Reserve room for each phase between the configurable fades. Native
+		// keyframes reject decreasing offsets (e.g. a 55% fade after a 62% phase).
+		const driftTime = Math.min(fadeOut - 0.02, Math.max(fadeIn + 0.01, 0.36));
+		const settleTime = Math.min(fadeOut - 0.01, Math.max(driftTime + 0.01, 0.62));
+		const times = [0, fadeIn, driftTime, settleTime, fadeOut, 1];
 		const drift = direction * (amp * 2.4);
 		return {
 			initial: { x: "0vw", y: "18vh", opacity: 0, rotate: -rotate * 0.4, scale: 0.82 },
@@ -178,7 +182,7 @@ export function buildReactionKeyframes(
 	}
 
 	if (reaction.animation === "pop") {
-		const times = [0, 0.16, 0.34, 0.68, fadeOut, 1];
+		const times = [0, 0.16, 0.34, Math.min(0.68, fadeOut - 0.01), fadeOut, 1];
 		return {
 			initial: { x: "0vw", y: "6vh", opacity: 0, rotate: 0, scale: 0.35 },
 			animate: {
@@ -203,7 +207,7 @@ export function buildReactionKeyframes(
 	}
 
 	if (reaction.animation === "firework") {
-		const times = [0, 0.22, 0.48, 0.62, fadeOut, 1];
+		const times = [0, 0.22, 0.48, Math.min(0.62, fadeOut - 0.01), fadeOut, 1];
 		const particleTimes = [0, 0.48, 0.7, 1];
 		return {
 			initial: { x: "0vw", y: "20vh", opacity: 0, rotate: 0, scale: 0.72 },

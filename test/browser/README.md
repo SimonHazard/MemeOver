@@ -7,7 +7,10 @@ bun install --frozen-lockfile
 bunx playwright install webkit
 bun run typecheck:browser
 bun run test:browser
+BROWSER_PRODUCTION=1 bun run test:browser
 ```
+
+The production mode compiles the same components with the app Vite config into an ignored `app/dist-browser/` directory and serves them with Vite preview. Normal app builds do not include these fixtures.
 
 The suite starts its own Vite server on port 1429 and runs on Chrome and WebKit.
 Google Chrome must be installed for the `chrome` project. To run one engine:
@@ -25,7 +28,7 @@ clear), connection validation, language/theme, reduced motion and a small window
 First configuration (back/next/finish), screen selection and the About dialog/update check
 are also covered. Failure cases include invalid profile files and failed persistence.
 Overlay rendering tests also check centered author badges, a single badge background,
-text/media with the configurable background on/off, long names and anonymous media.
+text/media with the configurable background on/off, long names and anonymous media, normal/reduced-motion popup entrances, repeated exits and replacements, readable attribution after cancelling or disabling its entrance, and all six reaction presets at the fade bounds.
 
 `app/test/browser/settings.ts` mounts the actual settings application with Tauri's
 official IPC/event mocks. Stores live only in the browser context's localStorage;

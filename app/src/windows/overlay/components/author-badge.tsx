@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@memeover/ui/components/ui/avatar";
-import { DURATION, EASE_OUT } from "@memeover/ui/lib/motion";
+import { DURATION } from "@memeover/ui/lib/motion";
 import { motion, useReducedMotion } from "framer-motion";
+import type { CSSProperties } from "react";
 import { BADGE_ENTER_DELAY_S } from "./overlay-motion";
 
 // Lands just after the media pop has started: the media reads first, then who sent it.
@@ -37,19 +38,18 @@ export function AuthorBadge({
 	const name = displayName ?? username;
 
 	return (
-		<motion.div
+		<div
 			// Sized in em from a viewport-relative base so the badge stays legible from 1080p to 4K.
-			style={{ fontSize: "clamp(12px, 1.5vmin, 22px)", maxWidth }}
-			className="flex min-w-0 items-center gap-[0.45em] self-center
+			style={
+				{
+					fontSize: "clamp(12px, 1.5vmin, 22px)",
+					maxWidth,
+					"--badge-enter-delay": `${BADGE_ENTER_DELAY_S}s`,
+					"--badge-reduced-duration": `${DURATION.reduced}s`,
+				} as CSSProperties
+			}
+			className="overlay-author-badge flex min-w-0 items-center gap-[0.45em] self-center
 			           rounded-full bg-black/65 py-[0.25em] pr-[0.85em] pl-[0.25em]"
-			initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: "translateY(6px)" }}
-			animate={{
-				opacity: 1,
-				transform: "translateY(0px)",
-				transition: reduceMotion
-					? { duration: DURATION.reduced, ease: EASE_OUT }
-					: { duration: 0.22, ease: EASE_OUT, delay: BADGE_ENTER_DELAY_S },
-			}}
 		>
 			<motion.span
 				className="flex shrink-0"
@@ -70,6 +70,6 @@ export function AuthorBadge({
 				</Avatar>
 			</motion.span>
 			<span className="min-w-0 truncate font-semibold text-white leading-none">{name}</span>
-		</motion.div>
+		</div>
 	);
 }

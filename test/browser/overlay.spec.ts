@@ -61,3 +61,66 @@ test("long author names stay inside the content width and anonymous media hides 
 	await expect(page.locator("#display img")).toBeVisible();
 	await expect(page.getByText("iXeDay SimoHz", { exact: true })).toHaveCount(0);
 });
+
+for (const reducedMotion of ["no-preference", "reduce"] as const) {
+	test(`popup badge appears on every item and exits without blocking (${reducedMotion})`, async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+		await page.emulateMedia({ reducedMotion });
+		await page.goto("/test/browser/overlay.html?popup");
+		const badge = page.getByText("iXeDay SimoHz", { exact: true }).locator("..");
+		for (let index = 0; index < 3; index++) {
+			await expect(badge).toBeVisible();
+			await expect.poll(() => badge.evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+			await expect(badge.locator('[data-slot="avatar-image"]')).toBeVisible();
+			await page.getByRole("button", { name: "Hide media" }).click();
+			await expect(badge).toHaveCount(0);
+			await expect(page.locator("#exits")).toHaveText(String(index + 1));
+			await page.getByRole("button", { name: "Show next media" }).click();
+		}
+		// Replace an item while the previous entrance is still running.
+		await page.getByRole("button", { name: "Show next media" }).click();
+		await page.getByRole("button", { name: "Show next media" }).click();
+		await expect(badge).toHaveCount(1);
+		await expect.poll(() => badge.evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+		expect(errors).toEqual([]);
+	});
+}
+
+test("attribution stays readable when its entrance is cancelled or disabled", async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: "no-preference" });
+	await page.goto("/test/browser/overlay.html");
+	const badge = page.getByText("iXeDay SimoHz", { exact: true }).locator("..");
+	await badge.evaluate((e) => {
+		for (const animation of e.getAnimations()) animation.cancel();
+	});
+	await expect.poll(() => badge.evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+	await page.addStyleTag({ content: ".overlay-author-badge { animation: none !important; }" });
+	await page.reload();
+	await page.addStyleTag({ content: ".overlay-author-badge { animation: none !important; }" });
+	await expect.poll(() => badge.evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+});
+
+for (const reducedMotion of ["no-preference", "reduce"] as const) {
+	test(`every reaction renders and completes at fade bounds (${reducedMotion})`, async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+		await page.emulateMedia({ reducedMotion });
+		await page.goto("/test/browser/overlay.html?reactions");
+		const reactions = page.locator("#root > .fixed > .absolute");
+		await expect(reactions).toHaveCount(6);
+		await expect
+			.poll(() =>
+				reactions.evaluateAll(
+					(nodes) => nodes.filter((e) => Number(getComputedStyle(e).opacity) > 0).length,
+				),
+			)
+			.toBe(6);
+		await expect(reactions).toHaveCount(0);
+		expect(errors).toEqual([]);
+	});
+}
