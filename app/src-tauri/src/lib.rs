@@ -124,8 +124,21 @@ fn apply_native_overlay_level(_win: &tauri::WebviewWindow) {}
 
 // ─── Overlay watcher ──────────────────────────────────────────────────────────
 
+/// Physical bounds `(x, y, width, height)`.
+#[cfg_attr(debug_assertions, allow(dead_code))]
+type Bounds = (i32, i32, u32, u32);
+
+/// Whether the watcher should fit the overlay to its monitor again. A maximized
+/// window followed resolution, scaling and monitor changes on its own; explicit
+/// bounds do not, and no window event reports a resolution change. Each monitor
+/// layout gets a single attempt so bounds the OS refuses are not retried forever.
+#[cfg_attr(debug_assertions, allow(dead_code))]
+fn should_refit(window: Bounds, monitor: Bounds, last_attempt: Option<Bounds>) -> bool {
+    window != monitor && last_attempt != Some(monitor)
+}
+
 /// Spawns a long-lived background thread (production only) that reasserts the
-/// overlay's native window level every 2 seconds.
+/// overlay's native window level every 2 seconds and keeps it covering its monitor.
 ///
 /// - Checks `is_visible()` to skip hidden overlays (e.g. after quit_overlay).
 /// - Dispatches the actual platform calls to the main thread via
@@ -135,21 +148,53 @@ fn apply_native_overlay_level(_win: &tauri::WebviewWindow) {}
 fn start_overlay_watcher(app: tauri::AppHandle) {
     std::thread::Builder::new()
         .name("overlay-watcher".into())
-        .spawn(move || loop {
-            std::thread::sleep(std::time::Duration::from_secs(2));
+        .spawn(move || {
+            let mut last_refit: Option<Bounds> = None;
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(2));
 
-            let Some(win) = app.get_webview_window("overlay") else {
-                continue;
-            };
+                let Some(win) = app.get_webview_window("overlay") else {
+                    continue;
+                };
 
-            if !win.is_visible().unwrap_or(false) {
-                continue;
+                if !win.is_visible().unwrap_or(false) {
+                    continue;
+                }
+
+                let refit_to = match (
+                    win.current_monitor(),
+                    win.outer_position(),
+                    win.inner_size(),
+                ) {
+                    (Ok(Some(monitor)), Ok(pos), Ok(size)) => {
+                        let target = (
+                            monitor.position().x,
+                            monitor.position().y,
+                            monitor.size().width,
+                            monitor.size().height,
+                        );
+                        let window = (pos.x, pos.y, size.width, size.height);
+                        if window == target {
+                            last_refit = None;
+                            None
+                        } else if should_refit(window, target, last_refit) {
+                            last_refit = Some(target);
+                            Some(monitor)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                };
+
+                let win_clone = win.clone();
+                let _ = win.run_on_main_thread(move || {
+                    if let Some(monitor) = refit_to {
+                        let _ = fit_overlay_to_monitor(&win_clone, &monitor);
+                    }
+                    apply_native_overlay_level(&win_clone);
+                });
             }
-
-            let win_clone = win.clone();
-            let _ = win.run_on_main_thread(move || {
-                apply_native_overlay_level(&win_clone);
-            });
         })
         .expect("overlay-watcher thread failed to start");
 }
@@ -642,4 +687,40 @@ pub fn run() {
                 auto_update::apply_on_exit(app_handle);
             }
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const FULL_HD: Bounds = (0, 0, 1920, 1080);
+
+    #[test]
+    fn overlay_covering_its_monitor_is_left_alone() {
+        assert!(!should_refit(FULL_HD, FULL_HD, None));
+    }
+
+    #[test]
+    fn resolution_change_refits_the_overlay() {
+        assert!(should_refit(FULL_HD, (0, 0, 2560, 1440), None));
+    }
+
+    #[test]
+    fn overlay_moved_to_another_monitor_refits_there() {
+        // Windows relocates windows from an unplugged monitor without resizing them.
+        let stale = (1920, 0, 2560, 1440);
+        assert!(should_refit(stale, (1920, 0, 1920, 1080), None));
+    }
+
+    #[test]
+    fn refused_bounds_are_not_retried_for_the_same_layout() {
+        let constrained = (0, 25, 1920, 1055);
+        assert!(!should_refit(constrained, FULL_HD, Some(FULL_HD)));
+    }
+
+    #[test]
+    fn a_new_layout_gets_a_new_attempt() {
+        let constrained = (0, 25, 1920, 1055);
+        assert!(should_refit(constrained, (0, 0, 2560, 1440), Some(FULL_HD)));
+    }
 }
