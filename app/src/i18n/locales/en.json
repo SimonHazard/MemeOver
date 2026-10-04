@@ -119,7 +119,7 @@
 		"syncMediaDuration_hint": "Keeps the overlay open until the video or audio finishes, ignoring the duration timer.",
 		"opacity": "Media opacity",
 		"bg_enabled": "Global background",
-		"bg_enabled_hint": "Wraps the content (author badge + media + caption) in a customizable container.",
+		"bg_enabled_hint": "Wraps the media and caption in a customizable container. The author badge keeps its own background.",
 		"bg_color": "Background color",
 		"bg_opacity": "Background opacity",
 		"bg_padding": "Inner padding",

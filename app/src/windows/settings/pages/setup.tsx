@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { loadSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
-import { DEFAULT_SETTINGS } from "@/shared/types";
+import { DEFAULT_SETTINGS, type Settings } from "@/shared/types";
 import { OnboardingWizard } from "@/windows/settings/components/onboarding-wizard";
 import { SetupForm } from "@/windows/settings/components/setup-form/setup-form";
 
@@ -12,14 +12,6 @@ export function SetupPage() {
 		queryKey: ["settings"],
 		queryFn: loadSettings,
 	});
-
-	const wsStatus = useAppStore((s) => s.wsStatus);
-
-	// Show the onboarding wizard when no guild is configured yet.
-	// Once dismissed (skip or finish), localStorage prevents re-showing.
-	const [wizardDismissed, setWizardDismissed] = useState(
-		() => !!localStorage.getItem("onboarding-done"),
-	);
 
 	if (isLoading) {
 		return (
@@ -35,11 +27,20 @@ export function SetupPage() {
 		);
 	}
 
-	const showWizard = !saved?.guildId && !wizardDismissed;
+	return <SetupContent saved={saved ?? DEFAULT_SETTINGS} />;
+}
+
+function SetupContent({ saved }: { saved: Settings }) {
+	const wsStatus = useAppStore((s) => s.wsStatus);
+	// Keep an already-started wizard mounted after saving the connection,
+	// so its final step remains available until the user finishes or skips it.
+	const [showWizard, setShowWizard] = useState(
+		() => !saved.guildId && !localStorage.getItem("onboarding-done"),
+	);
 
 	if (showWizard) {
-		return <OnboardingWizard onComplete={() => setWizardDismissed(true)} />;
+		return <OnboardingWizard onComplete={() => setShowWizard(false)} />;
 	}
 
-	return <SetupForm initialData={saved ?? DEFAULT_SETTINGS} wsStatus={wsStatus} />;
+	return <SetupForm initialData={saved} wsStatus={wsStatus} />;
 }

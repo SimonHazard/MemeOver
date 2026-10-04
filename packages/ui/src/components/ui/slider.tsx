@@ -7,6 +7,8 @@ import { cn } from "@memeover/ui/lib/utils";
 
 function Slider<Value extends number | readonly number[]>({
 	className,
+	"aria-label": ariaLabel,
+	"aria-labelledby": ariaLabelledBy,
 	defaultValue,
 	value,
 	min = 0,
@@ -16,12 +18,14 @@ function Slider<Value extends number | readonly number[]>({
 	const _values = React.useMemo(() => {
 		const current = value ?? defaultValue;
 		if (Array.isArray(current)) return current;
-		return typeof current === "number" ? [current] : [min, max];
+		return typeof current === "number" ? [current] : [min];
 	}, [value, defaultValue, min, max]);
 
 	return (
 		<SliderPrimitive.Root
 			data-slot="slider"
+			aria-label={ariaLabel}
+			aria-labelledby={ariaLabelledBy}
 			defaultValue={defaultValue}
 			value={value}
 			min={min}
@@ -47,6 +51,9 @@ function Slider<Value extends number | readonly number[]>({
 					<SliderPrimitive.Thumb
 						data-slot="slider-thumb"
 						key={index}
+						index={index}
+						aria-label={ariaLabel}
+						aria-labelledby={ariaLabelledBy}
 						className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
 					/>
 				))}

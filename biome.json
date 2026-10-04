@@ -14,7 +14,9 @@
 			"app/src/**",
 			"shared/src/**",
 			"site/src/**",
-			"!**/routeTree.gen.ts"
+			"!**/routeTree.gen.ts",
+			"app/test/browser/**",
+			"playwright.config.ts"
 		]
 	},
 	"formatter": {

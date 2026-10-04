@@ -40,9 +40,8 @@ export function AuthorBadge({
 		<motion.div
 			// Sized in em from a viewport-relative base so the badge stays legible from 1080p to 4K.
 			style={{ fontSize: "clamp(12px, 1.5vmin, 22px)", maxWidth }}
-			className="flex min-w-0 items-center gap-[0.45em] self-start
-			           rounded-full bg-black/65 py-[0.25em] pr-[0.85em] pl-[0.25em]
-			           shadow-[0_2px_10px_rgb(0_0_0/0.35)] ring-1 ring-white/10 backdrop-blur-md"
+			className="flex min-w-0 items-center gap-[0.45em] self-center
+			           rounded-full bg-black/65 py-[0.25em] pr-[0.85em] pl-[0.25em]"
 			initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: "translateY(6px)" }}
 			animate={{
 				opacity: 1,

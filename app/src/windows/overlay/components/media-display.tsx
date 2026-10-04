@@ -136,30 +136,42 @@ export function MediaDisplay({
 			}
 		: {};
 
+	// The author has its own readable pill; the configurable background belongs
+	// only to the content, avoiding two stacked backgrounds around the badge.
+	const authorBadge = (item.type === "TEXT" || !item.anonymous) && (
+		<AuthorBadge
+			authorId={item.author_id}
+			username={item.author_username}
+			displayName={item.author_display_name}
+			avatarUrl={item.author_avatar_url}
+			maxWidth={boxSize}
+		/>
+	);
+	function withBackground(content: React.ReactNode) {
+		return bgEnabled ? (
+			<div style={bgWrapperStyle} className="flex flex-col items-center gap-2">
+				{content}
+			</div>
+		) : (
+			content
+		);
+	}
+
 	// TEXT branch — opacity intentionally not applied: text must stay fully readable
 	if (item.type === "TEXT") {
-		const inner = (
-			<>
-				<AuthorBadge
-					authorId={item.author_id}
-					username={item.author_username}
-					displayName={item.author_display_name}
-					avatarUrl={item.author_avatar_url}
-					maxWidth={boxSize}
-				/>
-				<TextDisplay text={item.text} width={boxSize} textSize={textSize} textColor={textColor} />
-			</>
+		return (
+			<div className="flex flex-col items-center gap-2">
+				{authorBadge}
+				{withBackground(
+					<TextDisplay
+						text={item.text}
+						width={boxSize}
+						textSize={textSize}
+						textColor={textColor}
+					/>,
+				)}
+			</div>
 		);
-
-		if (bgEnabled) {
-			return (
-				<div style={bgWrapperStyle} className="flex flex-col items-center gap-2">
-					{inner}
-				</div>
-			);
-		}
-
-		return <div className="flex flex-col items-center gap-2">{inner}</div>;
 	}
 
 	// MEDIA branch — item is narrowed to MediaQueueItem here
@@ -279,28 +291,16 @@ export function MediaDisplay({
 
 	const mediaContent = (
 		<>
-			{!item.anonymous && (
-				<AuthorBadge
-					authorId={item.author_id}
-					username={item.author_username}
-					displayName={item.author_display_name}
-					avatarUrl={item.author_avatar_url}
-					maxWidth={boxSize}
-				/>
-			)}
 			{textPosition === "above" && inlineCaptionNode}
 			{mediaWithOverlayCaption}
 			{textPosition === "below" && inlineCaptionNode}
 		</>
 	);
 
-	if (bgEnabled) {
-		return (
-			<div style={bgWrapperStyle} className="flex flex-col items-center gap-2">
-				{mediaContent}
-			</div>
-		);
-	}
-
-	return <div className="flex flex-col items-center gap-2">{mediaContent}</div>;
+	return (
+		<div className="flex flex-col items-center gap-2">
+			{authorBadge}
+			{withBackground(mediaContent)}
+		</div>
+	);
 }

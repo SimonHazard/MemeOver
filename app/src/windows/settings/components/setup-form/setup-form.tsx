@@ -130,7 +130,8 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
-							void form.handleSubmit();
+							// Persistence failures are already reported by the mutation toast.
+							void form.handleSubmit().catch(() => {});
 						}}
 					>
 						<div className="space-y-5">

@@ -6,6 +6,20 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.3]
+
+### Fixed
+
+- Center the author badge above content and keep it outside the configurable media background; remove its outer halo.
+- Restore all overlay settings sliders after the Base UI migration, including pointer and keyboard interactions.
+- Remove the duplicate arrow from selection menus and label slider and switch controls for assistive technology.
+- Handle failed profile creation, replacement and imports without unhandled errors; allow retrying the same import file.
+- Keep the first-configuration wizard open through its final step and report failed connection saves and screen changes.
+
+### Changed
+
+- Restore the slight lift and stronger offset shadow on button hover, with a stationary reduced-motion variant.
+
 ## [1.6.2]
 
 ### Changed

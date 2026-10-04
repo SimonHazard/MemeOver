@@ -100,6 +100,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 			toast.success(t("toast.connectionSaved"));
 			advance();
 		},
+		onError: () => toast.error(t("toast.settingsError")),
 	});
 
 	const form = useForm({
@@ -191,7 +192,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 							{([isSubmitting, canSubmit]) => (
 								<NbButton
 									className="flex-1"
-									onClick={() => void form.handleSubmit()}
+									onClick={() => void form.handleSubmit().catch(() => {})}
 									disabled={isSubmitting || !canSubmit}
 								>
 									{isPending ? t("connection.saving") : t("onboarding.next")}

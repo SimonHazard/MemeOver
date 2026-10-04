@@ -65,11 +65,12 @@ export function TextSection() {
 						</div>
 						<div className="flex items-center gap-3">
 							<Slider
+								aria-label={t("display.textSize")}
 								min={TEXT_SIZE_MIN}
 								max={TEXT_SIZE_MAX}
 								step={1}
-								value={[field.state.value]}
-								onValueChange={([v]) => field.handleChange(v ?? DEFAULT_SETTINGS.textSize)}
+								value={field.state.value}
+								onValueChange={(v) => field.handleChange(v ?? DEFAULT_SETTINGS.textSize)}
 								className="flex-1"
 							/>
 							<Input
