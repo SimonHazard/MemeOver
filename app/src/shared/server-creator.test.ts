@@ -4,6 +4,7 @@ import {
 	createFriendSetupCode,
 	createPublicWsUrl,
 	DISCORD_INVITE_PERMISSIONS,
+	isPublicWsUrlConfigured,
 	parseServerSetupCode,
 } from "./server-creator";
 
@@ -50,6 +51,15 @@ describe("server creator helpers", () => {
 		expect(createFriendSetupCode({ guildId: "", token, wsUrl })).toBeNull();
 		expect(createFriendSetupCode({ guildId, token: "", wsUrl })).toBeNull();
 		expect(createFriendSetupCode({ guildId, token, wsUrl: "" })).toBeNull();
+	});
+
+	test("the placeholder public URL is not shared or installed", () => {
+		const placeholder = createPublicWsUrl("", 3001);
+		expect(isPublicWsUrlConfigured(placeholder)).toBe(false);
+		expect(isPublicWsUrlConfigured("  ")).toBe(false);
+		expect(isPublicWsUrlConfigured(createPublicWsUrl("203.0.113.7", 3001))).toBe(true);
+		expect(isPublicWsUrlConfigured("wss://memes.example.com/ws")).toBe(true);
+		expect(createFriendSetupCode({ guildId, token, wsUrl: placeholder })).toBeNull();
 	});
 
 	test("builds parseable friend setup codes", () => {

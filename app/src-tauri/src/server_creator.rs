@@ -110,7 +110,13 @@ fn redact_secrets(line: &str) -> String {
         return line.to_string();
     }
     line.split_whitespace()
-        .map(|part| if should_redact(part) { "[redacted]" } else { part })
+        .map(|part| {
+            if should_redact(part) {
+                "[redacted]"
+            } else {
+                part
+            }
+        })
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -397,9 +403,8 @@ fn install_sync(
 
     // Repair must work after an app restart, when the token only lives in
     // the already-written .env: keep it instead of demanding it again.
-    let keep_existing_env = req.repair
-        && env_path(&root).exists()
-        && req.discord_token.trim().is_empty();
+    let keep_existing_env =
+        req.repair && env_path(&root).exists() && req.discord_token.trim().is_empty();
     if keep_existing_env {
         validate_runtime_request(&req)?;
     } else {
