@@ -1,4 +1,5 @@
 import type { DisplayQueueItem, Settings } from "@/shared/types";
+import type { PreloadResult } from "../media/media-preloader";
 export const MEDIA_SAFETY_DELAY_MS = 2_000;
 export const EXIT_RECOVERY_MS = 1_000;
 export function shouldArmDisplayTimer(
@@ -22,4 +23,8 @@ export function isSkipRequest(skipVersion: number): boolean {
 }
 export function shouldDequeue(current: DisplayQueueItem | null, queueLength: number): boolean {
 	return current === null && queueLength > 0;
+}
+
+export function gateOutcome(result: PreloadResult | "timeout"): "show" | "skip" {
+	return result === "timeout" || result.status === "ready" ? "show" : "skip";
 }

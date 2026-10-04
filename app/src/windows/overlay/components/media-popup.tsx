@@ -20,6 +20,7 @@ const POSITION_CLASSES: Record<OverlayPosition, string> = {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface MediaPopupProps {
+	src?: string;
 	current: DisplayQueueItem | null;
 	isVisible: boolean;
 	settings: Settings;
@@ -32,6 +33,7 @@ interface MediaPopupProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MediaPopup({
+	src,
 	current,
 	isVisible,
 	settings,
@@ -72,6 +74,7 @@ export function MediaPopup({
 						>
 							<MediaDisplay
 								item={current}
+								src={src}
 								settings={settings}
 								onVideoEnd={onVideoEnd}
 								startTimer={startTimer}

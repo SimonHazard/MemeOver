@@ -82,6 +82,7 @@ function OverlayCaption({
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface MediaDisplayProps {
+	src?: string;
 	item: DisplayQueueItem;
 	settings: Settings;
 	onVideoEnd: () => void;
@@ -92,6 +93,7 @@ interface MediaDisplayProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MediaDisplay({
+	src,
 	item,
 	settings,
 	onVideoEnd,
@@ -187,7 +189,7 @@ export function MediaDisplay({
 		if (item.media_type === "video" || videoBackedGif) {
 			return (
 				<video
-					src={item.media_url}
+					src={src ?? item.media_url}
 					autoPlay
 					loop={videoBackedGif}
 					muted={videoBackedGif || settings.volume === 0}
@@ -207,7 +209,7 @@ export function MediaDisplay({
 		if (item.media_type === "image" || item.media_type === "gif") {
 			return (
 				<img
-					src={item.media_url}
+					src={src ?? item.media_url}
 					alt=""
 					onLoad={startTimer}
 					onError={onMediaError}
@@ -230,7 +232,7 @@ export function MediaDisplay({
 					<AudioEqualizer />
 					{/* biome-ignore lint/a11y/useMediaCaption: overlay média */}
 					<audio
-						src={item.media_url}
+						src={src ?? item.media_url}
 						autoPlay
 						className="hidden"
 						onPlay={startTimer}
@@ -252,7 +254,7 @@ export function MediaDisplay({
 		const stickerBox = `${Math.min(settings.mediaSize, STICKER_MAX_VMIN)}vmin`;
 		return (
 			<img
-				src={item.media_url}
+				src={src ?? item.media_url}
 				alt=""
 				onLoad={startTimer}
 				onError={onMediaError}

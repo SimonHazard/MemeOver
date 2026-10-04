@@ -33,7 +33,7 @@ export function OverlayApp() {
 	useOverlayWs();
 
 	// Sequentially display items from the queue with animations
-	const { current, isVisible, onExitComplete, onVideoEnd, startTimer, onMediaError } =
+	const { current, src, isVisible, onExitComplete, onVideoEnd, startTimer, onMediaError } =
 		useMediaDisplay();
 
 	// Persist each displayed item to the history store
@@ -44,6 +44,7 @@ export function OverlayApp() {
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
 			<MediaPopup
 				current={current}
+				src={src}
 				isVisible={isVisible}
 				settings={settings}
 				onExitComplete={onExitComplete}
