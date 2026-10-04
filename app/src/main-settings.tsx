@@ -3,7 +3,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { startHistoryAutoPurge } from "./shared/history";
 import { initSettingsStore } from "./shared/store";
-import { checkForUpdatesInBackground } from "./windows/settings/hooks/useUpdater";
+import {
+	BACKGROUND_UPDATE_INTERVAL_MS,
+	checkForUpdatesInBackground,
+} from "./windows/settings/hooks/useUpdater";
 import { SettingsApp } from "./windows/settings/SettingsApp";
 import "./App.css";
 import "./i18n";
@@ -15,9 +18,11 @@ document.documentElement.classList.toggle("dark", storedTheme !== "light");
 void initSettingsStore();
 startHistoryAutoPurge();
 
-// Ping GitHub for a newer release — flips `updateAvailable` in the store,
-// which the TabNav uses to pulse a badge on the "À propos" tab.
+// Ping GitHub for a newer release — stages it for the next launch when
+// automatic updates are on, and flips `updateAvailable` in the store, which
+// the TabNav uses to pulse a badge on the "À propos" tab.
 void checkForUpdatesInBackground();
+setInterval(() => void checkForUpdatesInBackground(), BACKGROUND_UPDATE_INTERVAL_MS);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 	<React.StrictMode>

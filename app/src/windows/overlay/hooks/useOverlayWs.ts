@@ -52,17 +52,19 @@ export function useOverlayWs(): void {
 	const wsRef = useRef<WebSocket | null>(null);
 	const revokedRef = useRef<SessionRevocationCode | null>(null);
 	const [reconnectNonce, setReconnectNonce] = useState(0);
-	const previousCredentialsRef = useRef({ guildId, token });
+	// A revoked session stays idle until the user points it at different credentials or another bot.
+	const previousCredentialsRef = useRef({ guildId, token, wsUrl });
 	useEffect(() => {
 		const changed =
 			previousCredentialsRef.current.guildId !== guildId ||
-			previousCredentialsRef.current.token !== token;
-		previousCredentialsRef.current = { guildId, token };
+			previousCredentialsRef.current.token !== token ||
+			previousCredentialsRef.current.wsUrl !== wsUrl;
+		previousCredentialsRef.current = { guildId, token, wsUrl };
 		if (changed && revokedRef.current !== null) {
 			revokedRef.current = null;
 			setReconnectNonce((n) => n + 1);
 		}
-	}, [guildId, token]);
+	}, [guildId, token, wsUrl]);
 	const reconnectTimerRef = useRef<number | null>(null);
 
 	// ── Stable event handlers ─────────────────────────────────────────────────

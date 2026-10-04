@@ -15,6 +15,7 @@ import type {
 	FloatingReactionAnimation,
 	OverlayHealth,
 	Settings,
+	StagedUpdate,
 	WsStatus,
 } from "./types";
 import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
@@ -94,6 +95,10 @@ interface AppStore {
 	// True when the Tauri updater has detected a newer release on GitHub
 	updateAvailable: boolean;
 	setUpdateAvailable: (v: boolean) => void;
+
+	// Release downloaded in the background, applied on the next launch
+	stagedUpdate: StagedUpdate | null;
+	setStagedUpdate: (update: StagedUpdate) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -138,7 +143,7 @@ export const useAppStore = create<AppStore>((set) => ({
 				isReplay: opts?.isReplay ?? item.replayOf !== undefined,
 			});
 			if (reason) {
-				if (reason === "author_limit") console.debug("[Queue] Dropped item:", reason);
+				console.debug("[Queue] Dropped item:", reason);
 				return state;
 			}
 			return { queue: [...state.queue, item] };
@@ -194,6 +199,9 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	updateAvailable: false,
 	setUpdateAvailable: (v) => set({ updateAvailable: v }),
+
+	stagedUpdate: null,
+	setStagedUpdate: (update) => set({ stagedUpdate: update, updateAvailable: true }),
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────

@@ -1,6 +1,7 @@
 {
   "name": "memeover",
   "private": true,
+  "packageManager": "bun@1.4.2",
   "workspaces": ["bot", "app", "shared", "packages/ui", "site"],
   "scripts": {
     "dev:app": "bun run --cwd app tauri dev",
@@ -25,9 +26,9 @@
     "typecheck:browser": "bun run --cwd app typecheck:browser"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.13",
+    "@biomejs/biome": "^2.5.15",
     "@playwright/test": "^1.63.0",
-    "shadcn": "^4.21.0"
+    "shadcn": "^4.21.1"
   },
   "overrides": {
     "@babel/core": "7.29.7",

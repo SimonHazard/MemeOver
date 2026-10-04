@@ -1,7 +1,10 @@
+import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { useCallback, useRef, useState } from "react";
+import { loadSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
+import type { StagedUpdate } from "@/shared/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,14 +21,21 @@ export type UpdaterState =
 	| ({ status: "available" } & UpdateMeta)
 	| ({ status: "downloading"; progress: number } & UpdateMeta)
 	| ({ status: "ready-to-install" } & UpdateMeta)
+	/** Downloaded in the background by the auto-updater, applied on the next launch. */
+	| ({ status: "staged" } & UpdateMeta)
 	| { status: "up-to-date" }
 	| { status: "error"; message: string };
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
+function stagedMeta(staged: StagedUpdate): UpdateMeta {
+	return { ...staged, date: null };
+}
+
 export function useUpdater() {
 	const [state, setState] = useState<UpdaterState>({ status: "idle" });
 	const updateRef = useRef<Update | null>(null);
+	const staged = useAppStore((s) => s.stagedUpdate);
 
 	/**
 	 * Checks GitHub for a newer version using the endpoint in tauri.conf.json.
@@ -34,6 +44,11 @@ export function useUpdater() {
 	const checkForUpdates = useCallback(async (): Promise<
 		{ found: true; version: string } | { found: false }
 	> => {
+		const alreadyStaged = useAppStore.getState().stagedUpdate;
+		if (alreadyStaged) {
+			setState({ status: "staged", ...stagedMeta(alreadyStaged) });
+			return { found: false };
+		}
 		setState({ status: "checking" });
 		try {
 			const update = await check();
@@ -117,23 +132,73 @@ export function useUpdater() {
 		}
 	}, []);
 
+	/** Applies the background-staged update now instead of waiting for the next launch. */
+	const restartWithStaged = useCallback(async (): Promise<void> => {
+		try {
+			await invoke("auto_update_restart_now");
+		} catch (err) {
+			setState({
+				status: "error",
+				message: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}, []);
+
 	const reset = useCallback(() => {
 		updateRef.current = null;
 		setState({ status: "idle" });
 	}, []);
 
-	return { state, checkForUpdates, startDownload, installAndRelaunch, reset };
+	// A background stage can finish while this hook is idle (About page already open).
+	const effectiveState: UpdaterState =
+		staged && (state.status === "idle" || state.status === "up-to-date")
+			? { status: "staged", ...stagedMeta(staged) }
+			: state;
+
+	return {
+		state: effectiveState,
+		checkForUpdates,
+		startDownload,
+		installAndRelaunch,
+		restartWithStaged,
+		reset,
+	};
 }
 
 // ─── Background check ────────────────────────────────────────────────────────
 
+/** Re-check cadence for long-running sessions (the app mostly lives in the tray). */
+export const BACKGROUND_UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
 /**
- * Runs a one-shot update check outside of any React component (called from
- * main-settings.tsx on app launch). Flips the shared `updateAvailable` flag
- * in the Zustand store so the TabNav badge can render a pulsing dot on the
- * "À propos" tab without the About page ever being mounted.
+ * Downloads and verifies the latest release in Rust without interrupting the
+ * overlay. It is applied on the next launch (on quit for Windows).
+ * Returns false when staging failed so callers can fall back to a plain check.
+ */
+export async function stageUpdateInBackground(): Promise<boolean> {
+	try {
+		const staged = await invoke<StagedUpdate | null>("auto_update_stage");
+		if (staged) useAppStore.getState().setStagedUpdate(staged);
+		return true;
+	} catch (err) {
+		console.warn("[Updater] Background download failed:", err);
+		return false;
+	}
+}
+
+/**
+ * Runs an update check outside of any React component (called from
+ * main-settings.tsx on launch and periodically). With automatic updates on,
+ * the release is staged for the next launch; otherwise only the shared
+ * `updateAvailable` flag flips so the TabNav pulses a dot on "À propos".
  */
 export async function checkForUpdatesInBackground(): Promise<void> {
+	const autoUpdate = await loadSettings()
+		.then((settings) => settings.autoUpdate)
+		.catch(() => false);
+	if (useAppStore.getState().stagedUpdate) return;
+	// Dev builds keep the manual flow: staging is a no-op in Rust there.
+	if (autoUpdate && import.meta.env.PROD && (await stageUpdateInBackground())) return;
 	try {
 		const update = await check();
 		useAppStore.getState().setUpdateAvailable(update !== null);

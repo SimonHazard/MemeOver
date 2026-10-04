@@ -104,6 +104,13 @@ test("history auto purge migration and opt out", () => {
 	expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain("historyAutoPurge");
 });
 
+test("auto update migration and opt out", () => {
+	expect(normalizeSettings({ schemaVersion: 11 }).autoUpdate).toBe(true);
+	expect(normalizeSettings({ schemaVersion: 11, autoUpdate: false }).autoUpdate).toBe(false);
+	expect(normalizeSettings({ autoUpdate: "yes" }).autoUpdate).toBe(true);
+	expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain("autoUpdate");
+});
+
 test("per author cap migrates and belongs to profiles", () => {
 	expect(normalizeSettings({ schemaVersion: 9 }).maxQueuedPerAuthor).toBe(3);
 	expect(normalizeSettings({ maxQueuedPerAuthor: -5 }).maxQueuedPerAuthor).toBe(0);

@@ -6,6 +6,23 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.4]
+
+### Added
+
+- Automatic updates: new releases download in the background and apply on the next launch (on quit for Windows), with a toggle and a restart-now action in About.
+
+### Fixed
+
+- Preserve newer display settings when applying older overlay profiles.
+- Avoid grouping all anonymous senders under the per-author queue limit.
+- Allow revoked sessions to reconnect after changing the bot URL.
+- Hide the settings window when its close request receives no response.
+
+### Changed
+
+- Update JavaScript and Rust dependencies and require Bun 1.4.2.
+
 ## [1.6.3]
 
 ### Fixed

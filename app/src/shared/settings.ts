@@ -145,6 +145,8 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	// v10 → v11: local author preferences.
 	out.mutedAuthors = normalizeMutedAuthors(out.mutedAuthors);
 	if (typeof out.hideAnonymous !== "boolean") out.hideAnonymous = false;
+	// v11 → v12: machine-local automatic updates, on by default.
+	if (typeof out.autoUpdate !== "boolean") out.autoUpdate = true;
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

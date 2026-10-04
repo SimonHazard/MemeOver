@@ -13,7 +13,7 @@ interface OverlayProfileExport {
 	settingsSchemaVersion: typeof CURRENT_SCHEMA_VERSION;
 	profile: {
 		name: string;
-		settings: OverlayProfileSettings;
+		settings: Partial<OverlayProfileSettings>;
 	};
 }
 
@@ -32,6 +32,30 @@ export function pickOverlayProfileSettings(settings: unknown): OverlayProfileSet
 	}, {} as OverlayProfileSettings);
 }
 
+/**
+ * Validates only the fields a saved or imported profile actually defines. A profile
+ * written before a field existed must not reset that field to its default on apply.
+ */
+export function pickStoredProfileSettings(settings: unknown): Partial<OverlayProfileSettings> {
+	if (!isRecord(settings)) return {};
+	const normalized = pickOverlayProfileSettings(settings);
+	return OVERLAY_PROFILE_FIELDS.reduce(
+		(acc, key) => {
+			if (key in settings) acc[key] = normalized[key] as never;
+			return acc;
+		},
+		{} as Partial<OverlayProfileSettings>,
+	);
+}
+
+/** Completes a stored profile with the current values for the fields it does not define. */
+export function resolveOverlayProfileSettings(
+	stored: Partial<OverlayProfileSettings>,
+	current: OverlayProfileSettings,
+): OverlayProfileSettings {
+	return pickOverlayProfileSettings({ ...current, ...stored });
+}
+
 function normalizeProfile(raw: unknown): OverlayProfile | null {
 	if (!isRecord(raw)) return null;
 	const now = Date.now();
@@ -42,7 +66,7 @@ function normalizeProfile(raw: unknown): OverlayProfile | null {
 	return {
 		id: typeof raw.id === "string" && raw.id.length > 0 ? raw.id : crypto.randomUUID(),
 		name: name.slice(0, 48),
-		settings: pickOverlayProfileSettings(raw.settings),
+		settings: pickStoredProfileSettings(raw.settings),
 		createdAt: typeof raw.createdAt === "number" ? raw.createdAt : now,
 		updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : now,
 	};
@@ -116,7 +140,7 @@ export function serializeOverlayProfile(profile: OverlayProfile): string {
 		settingsSchemaVersion: CURRENT_SCHEMA_VERSION,
 		profile: {
 			name: profile.name,
-			settings: pickOverlayProfileSettings(profile.settings),
+			settings: pickStoredProfileSettings(profile.settings),
 		},
 	};
 	return `${JSON.stringify(payload, null, 2)}\n`;
@@ -143,7 +167,7 @@ export function parseOverlayProfileImport(text: string): OverlayProfile {
 	return {
 		id: crypto.randomUUID(),
 		name: cleanName,
-		settings: pickOverlayProfileSettings(settingsSource),
+		settings: pickStoredProfileSettings(settingsSource),
 		createdAt: now,
 		updatedAt: now,
 	};
