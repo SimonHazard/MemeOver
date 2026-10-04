@@ -1,12 +1,15 @@
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
+    Emitter, Listener, Manager, WebviewUrl, WebviewWindowBuilder,
 };
 #[cfg(not(debug_assertions))]
 use tauri_plugin_autostart::ManagerExt as _;
 
+mod auto_update;
 mod server_creator;
 
 const AUTOSTART_ARG: &str = "--autostart";
@@ -479,13 +482,37 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
 
 // ─── Settings window — check unsaved edits before hiding ──────────────────────
 
+/// How long the settings page has to acknowledge a close request before Rust hides
+/// the window itself (page still loading, crashed or frozen).
+const SETTINGS_CLOSE_ACK_TIMEOUT: Duration = Duration::from_millis(1500);
+
 fn setup_settings_close_behavior(app: &tauri::App) {
     if let Some(win) = app.get_webview_window("settings") {
+        let requested = Arc::new(AtomicU64::new(0));
+        let acknowledged = Arc::new(AtomicU64::new(0));
+        {
+            let requested = requested.clone();
+            let acknowledged = acknowledged.clone();
+            app.listen_any("settings-close-ack", move |_| {
+                acknowledged.store(requested.load(Ordering::SeqCst), Ordering::SeqCst);
+            });
+        }
         let win2 = win.clone();
         win.on_window_event(move |event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
+                let request = requested.fetch_add(1, Ordering::SeqCst) + 1;
                 let _ = win2.emit("settings-close-requested", ());
+                let win3 = win2.clone();
+                let acknowledged = acknowledged.clone();
+                let _ = std::thread::Builder::new()
+                    .name("settings-close-fallback".into())
+                    .spawn(move || {
+                        std::thread::sleep(SETTINGS_CLOSE_ACK_TIMEOUT);
+                        if acknowledged.load(Ordering::SeqCst) < request {
+                            let _ = win3.hide();
+                        }
+                    });
             }
         });
     }
@@ -497,6 +524,7 @@ fn setup_settings_close_behavior(app: &tauri::App) {
 pub fn run() {
     tauri::Builder::default()
         .manage(server_creator::ServerCreatorState::default())
+        .manage(auto_update::AutoUpdateState::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -526,6 +554,8 @@ pub fn run() {
             server_creator::server_creator_restart,
             server_creator::server_creator_logs,
             server_creator::server_creator_public_ip,
+            auto_update::auto_update_stage,
+            auto_update::auto_update_restart_now,
         ])
         .setup(|app| {
             let background_start = launched_from_autostart();
@@ -571,11 +601,13 @@ pub fn run() {
         .expect("error while running tauri application")
         .run(|app_handle, event| {
             // Kill the managed self-hosted bot process so it does not
-            // outlive the app and keep its port bound.
+            // outlive the app and keep its port bound, then apply a staged
+            // Windows update (exits the process when one is pending).
             if let tauri::RunEvent::Exit = event {
                 server_creator::shutdown(
                     &app_handle.state::<server_creator::ServerCreatorState>(),
                 );
+                auto_update::apply_on_exit(app_handle);
             }
         })
 }

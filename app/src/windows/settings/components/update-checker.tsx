@@ -1,5 +1,6 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Button } from "@memeover/ui/components/ui/button";
 import {
 	Dialog,
@@ -14,6 +15,7 @@ import { ScrollArea } from "@memeover/ui/components/ui/scroll-area";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { NB_SHADOW_LG, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowRight,
 	CheckCircle2,
@@ -29,7 +31,12 @@ import type { Components } from "react-markdown";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
 import { Collapsible } from "@/components/motion/collapsible";
-import { type UpdateMeta, useUpdater } from "@/windows/settings/hooks/useUpdater";
+import { loadSettings, patchSettings } from "@/shared/settings";
+import {
+	stageUpdateInBackground,
+	type UpdateMeta,
+	useUpdater,
+} from "@/windows/settings/hooks/useUpdater";
 
 // ─── Markdown components (styled to match the NB design) ─────────────────────
 
@@ -175,9 +182,41 @@ function UpdateDialogContent({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+function AutoUpdateToggle() {
+	const { t } = useTranslation();
+	const queryClient = useQueryClient();
+	const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: loadSettings });
+	const { mutate: setAutoUpdate, isPending } = useMutation({
+		mutationFn: (autoUpdate: boolean) => patchSettings((s) => ({ ...s, autoUpdate })),
+		onSuccess: (updated) => {
+			void queryClient.invalidateQueries({ queryKey: ["settings"] });
+			if (updated.autoUpdate && import.meta.env.PROD) void stageUpdateInBackground();
+		},
+		onError: () => toast.error(t("toast.settingsError")),
+	});
+
+	return (
+		<div className="flex items-center gap-3">
+			<NbSwitch
+				id="auto-update"
+				checked={settings?.autoUpdate ?? true}
+				disabled={!settings || isPending}
+				onCheckedChange={(checked) => setAutoUpdate(checked)}
+			/>
+			<div>
+				<label htmlFor="auto-update" className="text-sm font-display">
+					{t("updater.autoUpdate")}
+				</label>
+				<p className="text-xs text-muted-foreground">{t("updater.autoUpdateHint")}</p>
+			</div>
+		</div>
+	);
+}
+
 export function UpdateChecker() {
 	const { t } = useTranslation();
-	const { state, checkForUpdates, startDownload, installAndRelaunch, reset } = useUpdater();
+	const { state, checkForUpdates, startDownload, installAndRelaunch, restartWithStaged, reset } =
+		useUpdater();
 	const [dialogOpen, setDialogOpen] = useState(false);
 
 	async function handleCheck() {
@@ -203,11 +242,12 @@ export function UpdateChecker() {
 		});
 	}
 
-	// Extract meta for the dialog from the three "rich" states
+	// Extract meta for the dialog from the "rich" states
 	const dialogMeta: UpdateMeta | null =
 		state.status === "available" ||
 		state.status === "downloading" ||
-		state.status === "ready-to-install"
+		state.status === "ready-to-install" ||
+		state.status === "staged"
 			? {
 					version: state.version,
 					currentVersion: state.currentVersion,
@@ -223,6 +263,8 @@ export function UpdateChecker() {
 					<h2 className="font-display text-base tracking-wide">{t("updater.title")}</h2>
 
 					<Separator />
+
+					<AutoUpdateToggle />
 
 					{/* ── Status row ── */}
 					<div className="flex items-center gap-3 min-h-8">
@@ -311,6 +353,20 @@ export function UpdateChecker() {
 							</div>
 						)}
 
+						{/* staged — downloaded in the background, applied on next launch */}
+						{state.status === "staged" && (
+							<div className="flex flex-1 items-center justify-between gap-3">
+								<span className="flex items-center gap-2 text-sm font-text">
+									<CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
+									{t("updater.staged", { version: state.version })}
+								</span>
+								<NbButton size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
+									<Rocket className="size-3.5" aria-hidden="true" />
+									{t("updater.restartNow")}
+								</NbButton>
+							</div>
+						)}
+
 						{/* error */}
 						{state.status === "error" && (
 							<div className="flex flex-1 items-center justify-between gap-3">
@@ -353,9 +409,11 @@ export function UpdateChecker() {
 							meta={dialogMeta}
 							isDownloading={state.status === "downloading"}
 							progress={state.status === "downloading" ? state.progress : 0}
-							isReady={state.status === "ready-to-install"}
+							isReady={state.status === "ready-to-install" || state.status === "staged"}
 							onDownload={handleStartDownload}
-							onInstall={() => void installAndRelaunch()}
+							onInstall={() =>
+								void (state.status === "staged" ? restartWithStaged() : installAndRelaunch())
+							}
 						/>
 					)}
 				</DialogContent>

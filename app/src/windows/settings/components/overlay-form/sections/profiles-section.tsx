@@ -15,6 +15,7 @@ import {
 	importOverlayProfile,
 	loadOverlayProfiles,
 	pickOverlayProfileSettings,
+	resolveOverlayProfileSettings,
 	serializeOverlayProfile,
 	updateOverlayProfile,
 } from "@/shared/profiles";
@@ -108,7 +109,7 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 
 	const applyMutation = useMutation({
 		mutationFn: async (profile: OverlayProfile) => {
-			await onApplyProfile(profile.settings);
+			await onApplyProfile(resolveOverlayProfileSettings(profile.settings, currentSettings));
 			return profile;
 		},
 		onSuccess: (profile) => {

@@ -106,6 +106,25 @@ test("store enforces author cap while allowing another author and replay", () =>
 	expect(useAppStore.getState().queue).toHaveLength(5);
 });
 
+test("anonymous memes from several senders are all queued", () => {
+	for (let i = 0; i < 5; i++)
+		useAppStore.getState().enqueue({
+			type: "MEDIA",
+			queueId: `secret-${i}`,
+			guild_id: "g",
+			channel_id: "c",
+			message_id: `secret-${i}`,
+			author_id: "secret",
+			author_username: "",
+			author_avatar_url: "",
+			media_url: `https://cdn.discordapp.com/attachments/1/2/${i}.png`,
+			media_type: "image",
+			timestamp: 1,
+			anonymous: true,
+		});
+	expect(useAppStore.getState().queue).toHaveLength(5);
+});
+
 test("muting removes queued items and skips current author", () => {
 	useAppStore.getState().enqueue(item("a"));
 	useAppStore.getState().setCurrentAuthorId("a");

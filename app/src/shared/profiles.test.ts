@@ -2,6 +2,8 @@ import { expect, test } from "bun:test";
 import {
 	parseOverlayProfileImport,
 	pickOverlayProfileSettings,
+	pickStoredProfileSettings,
+	resolveOverlayProfileSettings,
 	serializeOverlayProfile,
 } from "./profiles";
 import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, OVERLAY_PROFILE_FIELDS } from "./types";
@@ -45,3 +47,16 @@ test("non-object settings rejected", () =>
 		"Missing profile settings",
 	));
 test("non JSON rejected", () => expect(() => parseOverlayProfileImport("not json")).toThrow());
+test("profile saved before a field existed keeps the current value on apply", () => {
+	const { maxQueuedPerAuthor: _absent, ...legacy } = settings;
+	const imported = parseOverlayProfileImport(JSON.stringify({ name: "Legacy", settings: legacy }));
+	expect("maxQueuedPerAuthor" in imported.settings).toBe(false);
+	const current = { ...settings, maxQueuedPerAuthor: 0, duration: settings.duration + 1 };
+	const applied = resolveOverlayProfileSettings(imported.settings, current);
+	expect(applied.maxQueuedPerAuthor).toBe(0);
+	expect(applied.duration).toBe(settings.duration);
+});
+test("stored profile still validates the fields it defines", () =>
+	expect(pickStoredProfileSettings({ maxQueuedPerAuthor: 99, unknown: 1 })).toEqual({
+		maxQueuedPerAuthor: 10,
+	}));

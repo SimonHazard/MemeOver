@@ -43,11 +43,19 @@ test("different authors independent", () =>
 			opts,
 		),
 	).toBeNull());
-test("anonymous shares secret bucket", () =>
+test("anonymous senders are not capped as one author", () =>
 	expect(
 		canEnqueue(
 			Array.from({ length: 3 }, () => ({ author_id: "secret" })),
-			{ author_id: "secret" },
+			{ author_id: "secret", anonymous: true },
 			opts,
 		),
-	).toBe("author_limit"));
+	).toBeNull());
+test("anonymous still respects global limit", () =>
+	expect(
+		canEnqueue(
+			Array.from({ length: 50 }, () => ({ author_id: "secret" })),
+			{ author_id: "secret", anonymous: true },
+			opts,
+		),
+	).toBe("queue_full"));

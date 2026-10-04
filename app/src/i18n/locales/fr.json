@@ -430,7 +430,11 @@
 		"relaunch": "Relancer et installer",
 		"later": "Plus tard",
 		"downloadNow": "Télécharger et installer",
-		"foundToast": "Mise à jour v{{version}} disponible !"
+		"foundToast": "Mise à jour v{{version}} disponible !",
+		"autoUpdate": "Mises à jour automatiques",
+		"autoUpdateHint": "Les nouvelles versions se téléchargent en arrière-plan et s’appliquent au prochain démarrage.",
+		"staged": "v{{version}} prête — appliquée au prochain démarrage",
+		"restartNow": "Redémarrer maintenant"
 	},
 	"motion": {
 		"holdLabel": "Maintenir pour {{label}}",

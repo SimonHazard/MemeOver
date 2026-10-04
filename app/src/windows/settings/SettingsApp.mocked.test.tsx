@@ -5,7 +5,7 @@ import type { HistoryItem } from "../../shared/history";
 import type { MediaQueueItem } from "../../shared/types";
 import { HistoryItemCard } from "./components/history-item";
 
-// Isolate navigation/native APIs; keep the real settings root and Radix components.
+// Isolate navigation/native APIs; keep the real settings root and Base UI components.
 mock.module("../../routeTree.gen", () => ({ routeTree: {} }));
 let currentItem: HistoryItem;
 mock.module("@tanstack/react-router", () => ({

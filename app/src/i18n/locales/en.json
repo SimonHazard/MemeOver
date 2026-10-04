@@ -430,7 +430,11 @@
 		"relaunch": "Relaunch & Install",
 		"later": "Later",
 		"downloadNow": "Download & Install",
-		"foundToast": "Update v{{version}} is available!"
+		"foundToast": "Update v{{version}} is available!",
+		"autoUpdate": "Automatic updates",
+		"autoUpdateHint": "New versions download in the background and apply on the next launch.",
+		"staged": "v{{version}} ready — applies on the next launch",
+		"restartNow": "Restart now"
 	},
 	"motion": {
 		"holdLabel": "Hold to {{label}}",

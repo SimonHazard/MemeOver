@@ -32,6 +32,13 @@ export type DisplayQueueItem = MediaQueueItem | TextQueueItem;
 
 export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
 
+/** Release downloaded and verified by `auto_update_stage`, applied on the next launch. */
+export interface StagedUpdate {
+	version: string;
+	currentVersion: string;
+	body: string | null;
+}
+
 /** Santé de la fenêtre overlay (alive = existe et visible, closed = détruite) */
 export type OverlayHealth = "alive" | "closed";
 
@@ -119,6 +126,8 @@ export interface Settings {
 	maxQueuedPerAuthor: number;
 	/** Remove expired Discord media from local history on load and hourly. */
 	historyAutoPurge: boolean;
+	/** Download new releases in the background and apply them on the next launch. */
+	autoUpdate: boolean;
 	/** Stable local install identifier used by the bot for lightweight activity cleanup. */
 	clientId: string;
 	guildId: string;
@@ -222,13 +231,14 @@ export type OverlayProfileSettings = Pick<Settings, OverlayProfileField>;
 export interface OverlayProfile {
 	id: string;
 	name: string;
-	settings: OverlayProfileSettings;
+	/** Partial when saved by an older app: absent fields keep the current value on apply. */
+	settings: Partial<OverlayProfileSettings>;
 	createdAt: number;
 	updatedAt: number;
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 11;
+export const CURRENT_SCHEMA_VERSION = 12;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
@@ -240,6 +250,7 @@ export const DEFAULT_SETTINGS: Settings = {
 	hideAnonymous: false,
 	maxQueuedPerAuthor: 3,
 	historyAutoPurge: true,
+	autoUpdate: true,
 	clientId: "",
 	guildId: "",
 	token: "",
