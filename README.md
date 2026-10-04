@@ -56,6 +56,8 @@ dans l'app et fournissez votre propre URL WebSocket.
 | `/memeover bots enabled:<true\|false>` | Gerer le serveur | Autorise ou masque les messages et reactions des bots/apps |
 | `/memeover secret [media] [url] [text]` | Tous | Envoie un media anonyme aux overlays connectes |
 | `/memeover status` | Gerer le serveur | Affiche configuration, salons surveilles, overlays actifs et uptime |
+| `/memeover pause duration:<5m\|15m\|30m\|1h\|2h\|indefinite>` | Gerer le serveur | Met en pause la diffusion; les événements sont ignorés |
+| `/memeover resume` | Gerer le serveur | Reprend la diffusion |
 | `/memeover help` | Tous | Liste les commandes disponibles |
 
 ## Developpement
@@ -185,6 +187,8 @@ mode in the app and provide your own WebSocket URL.
 | `/memeover bots enabled:<true\|false>` | Manage Server | Allow or mute messages and reactions from bots/apps |
 | `/memeover secret [media] [url] [text]` | Everyone | Send an anonymous media item to connected overlays |
 | `/memeover status` | Manage Server | Show configuration, watched channels, active overlays and uptime |
+| `/memeover pause duration:<5m\|15m\|30m\|1h\|2h\|indefinite>` | Manage Server | Pause broadcasts; incoming events are dropped |
+| `/memeover resume` | Manage Server | Resume broadcasts |
 | `/memeover help` | Everyone | List available commands |
 
 ## Development

@@ -6,6 +6,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.7.0]
+
+### Added
+
+- Add privileged `/memeover pause` and `/memeover resume` commands.
+- Persist timed pauses, restore timers after restart and negotiate guild state with overlays.
+- Clear pending media during a pause while allowing the visible item to finish.
+
 ## [1.6.3]
 
 ### Fixed

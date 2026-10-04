@@ -1,5 +1,6 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
+import { isPausedAt, PAUSE_INDEFINITE } from "../../utils/guild-pause";
 import { guildRegistry } from "../../utils/registry";
 import { store } from "../../utils/store";
 import { formatBotAppSources, formatWatchedChannels } from "../connection";
@@ -43,6 +44,14 @@ export async function handleStatus(
 			{
 				name: t(locale, "status.activeOverlays"),
 				value: String(activeOverlays),
+			},
+			{
+				name: t(locale, "status.broadcasting"),
+				value: !isPausedAt(cfg, Date.now())
+					? t(locale, "status.broadcastingActive")
+					: cfg?.paused_until === PAUSE_INDEFINITE
+						? t(locale, "status.broadcastingPausedIndefinite")
+						: `${t(locale, "status.broadcastingPausedUntil")} <t:${Math.floor((cfg?.paused_until ?? 0) / 1000)}:t>`,
 			},
 			{ name: t(locale, "status.uptime"), value: formatUptime(process.uptime()) },
 		]),

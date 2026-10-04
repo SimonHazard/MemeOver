@@ -4,6 +4,7 @@ import { isAllowedAndFresh, isCdnUrlExpired } from "../../media/allowlist";
 import { shouldDispatch } from "../../media/dedup";
 import { detectMediaType, urlPathname } from "../../media/extractor";
 import { broadcastToGuild } from "../../server";
+import { isPausedAt } from "../../utils/guild-pause";
 import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy";
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
@@ -111,6 +112,12 @@ export async function handleSecret(
 		return;
 	}
 
+	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) {
+		await interaction.reply(
+			errorResponse(t(locale, "secret.pausedTitle"), t(locale, "secret.pausedDescription")),
+		);
+		return;
+	}
 	// Media URL dedup key: each interaction has a unique id, so pairing id+url
 	// would never collide. Keying on the URL alone gates anti-spam when the same
 	// meme is resubmitted within the TTL window.

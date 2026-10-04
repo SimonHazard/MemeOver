@@ -241,6 +241,18 @@ export const en = {
 				published: true,
 			},
 			{
+				name: "/memeover pause",
+				description: "Pause broadcasts.",
+				access: "Manage Server",
+				published: false,
+			},
+			{
+				name: "/memeover resume",
+				description: "Resume broadcasts.",
+				access: "Manage Server",
+				published: false,
+			},
+			{
 				name: "/memeover help",
 				description: "List available commands.",
 				access: "Everyone",

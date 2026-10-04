@@ -12,6 +12,8 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
 		["/memeover rotate", t(locale, "help.rotate")],
 		["/memeover remove", t(locale, "help.remove")],
 		["/memeover status", t(locale, "help.status")],
+		["/memeover pause duration:<5m|15m|30m|1h|2h|indefinite>", t(locale, "help.pause")],
+		["/memeover resume", t(locale, "help.resume")],
 		["/memeover help", t(locale, "help.help")],
 	].map(([name, description]) => `**${name}**\n${description}`);
 
