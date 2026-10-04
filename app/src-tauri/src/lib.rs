@@ -20,6 +20,7 @@ const AUTOSTART_ARG: &str = "--autostart";
 /// update their labels whenever the user changes the UI language.
 struct TrayState {
     show_item: Mutex<MenuItem<tauri::Wry>>,
+    hide_item: Mutex<MenuItem<tauri::Wry>>,
     quit_item: Mutex<MenuItem<tauri::Wry>>,
 }
 
@@ -380,11 +381,12 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
 }
 
 /// Update the translatable labels of the tray context menu.
-/// Called from the frontend after every language change.
+/// Called by the settings page at startup and after every language change.
 #[tauri::command]
 fn update_tray_labels(
     state: tauri::State<TrayState>,
     show_label: String,
+    hide_label: String,
     quit_label: String,
 ) -> Result<(), String> {
     state
@@ -392,6 +394,12 @@ fn update_tray_labels(
         .lock()
         .map_err(|_| "TrayState lock poisoned".to_string())?
         .set_text(show_label)
+        .map_err(|e| e.to_string())?;
+    state
+        .hide_item
+        .lock()
+        .map_err(|_| "TrayState lock poisoned".to_string())?
+        .set_text(hide_label)
         .map_err(|e| e.to_string())?;
     state
         .quit_item
@@ -509,6 +517,7 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     // Store handles so the frontend can update labels on language change
     app.manage(TrayState {
         show_item: Mutex::new(show_i),
+        hide_item: Mutex::new(hide_i),
         quit_item: Mutex::new(quit_i),
     });
 
@@ -681,9 +690,7 @@ pub fn run() {
             // outlive the app and keep its port bound, then apply a staged
             // Windows update (exits the process when one is pending).
             if let tauri::RunEvent::Exit = event {
-                server_creator::shutdown(
-                    &app_handle.state::<server_creator::ServerCreatorState>(),
-                );
+                server_creator::shutdown(&app_handle.state::<server_creator::ServerCreatorState>());
                 auto_update::apply_on_exit(app_handle);
             }
         })

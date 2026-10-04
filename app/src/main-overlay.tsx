@@ -10,10 +10,9 @@ import "./App.css";
 
 // Click-through in production only.
 // In dev, the overlay is a normal 800×600 window — click-through
-// would make it impossible to inspect / debug.
+// would make it impossible to inspect / debug. Always-on-top and the native window level
+// are owned by Rust (window builder + overlay watcher).
 if (import.meta.env.PROD) {
-	const win = getCurrentWebviewWindow();
-	void win.setAlwaysOnTop(true);
 	void invoke("set_overlay_click_through", { ignore: true });
 }
 

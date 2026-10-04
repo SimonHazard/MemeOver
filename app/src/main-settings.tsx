@@ -10,9 +10,13 @@ import {
 import { SettingsApp } from "./windows/settings/SettingsApp";
 import "./App.css";
 import "./i18n";
+import { syncTrayLabels } from "./i18n/tray";
 
 const storedTheme = localStorage.getItem("theme") ?? "dark";
 document.documentElement.classList.toggle("dark", storedTheme !== "light");
+
+// The tray menu is created in English before this page loads (also on silent autostart).
+void syncTrayLabels().catch((err) => console.warn("[Tray] Could not translate labels:", err));
 
 // Subscribe to ws-status-changed events emitted by the overlay
 void initSettingsStore();
