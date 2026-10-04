@@ -7,6 +7,7 @@ import { PauseIndicator } from "./components/pause-indicator";
 import { useHistoryLogger } from "./hooks/useHistoryLogger";
 import { useMediaDisplay } from "./hooks/useMediaDisplay";
 import { useOverlayWs } from "./hooks/useOverlayWs";
+import { useTraceDisplayed } from "./hooks/useTraceDisplayed";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ export function OverlayApp() {
 
 	// Persist each displayed item to the history store
 	useHistoryLogger(current);
+	useTraceDisplayed(current);
 
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">

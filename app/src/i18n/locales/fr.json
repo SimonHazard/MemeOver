@@ -432,6 +432,87 @@
 		"downloadNow": "Télécharger et installer",
 		"foundToast": "Mise à jour v{{version}} disponible !"
 	},
+	"diagnostics": {
+		"title": "Pourquoi rien ne s’affiche ?",
+		"run": "Vérifier",
+		"running": "Vérification…",
+		"localTest": "Envoyer un test local",
+		"traceTitle": "Événements récents",
+		"clear": "Effacer",
+		"empty": "Publie un meme dans un salon surveillé et observe cette liste.",
+		"copied": "Commande de configuration copiée",
+		"actionFailed": "L’action n’a pas pu être effectuée.",
+		"hiddenChannels": "Le bot ne voit pas {{count}} salons.",
+		"sourcesServerMuted": "Les messages des bots et applications sont masqués sur le serveur.",
+		"sourcesLocalMuted": "Les messages des bots et applications sont masqués localement.",
+		"sourcesAllowed": "Les messages des bots et applications sont autorisés.",
+		"monitorMissing": "L’écran enregistré est indisponible ; afficher l’overlay utilise l’écran principal.",
+		"silent": "Les audios et vidéos sont muets.",
+		"askResume": "Demande à un administrateur de lancer /memeover resume.",
+		"authorsFiltered": "{{count}} auteurs sont masqués ; les messages anonymes peuvent aussi être masqués.",
+		"rows": {
+			"credentials": "Identifiants de connexion",
+			"connection": "Connexion au bot",
+			"guild": "Serveur enregistré",
+			"channels": "Salons surveillés",
+			"bot-sources": "Messages des bots et applications",
+			"intent": "Accès au contenu des messages",
+			"overlay": "Fenêtre de l’overlay",
+			"display": "Réglages d’affichage",
+			"pause": "Pause du serveur",
+			"muted-authors": "Filtres des auteurs"
+		},
+		"status": {
+			"ok": "OK",
+			"warn": "À vérifier",
+			"fail": "Problème",
+			"unknown": "Inconnu",
+			"pending": "Vérification"
+		},
+		"fixes": {
+			"goto-setup": "Modifier la connexion",
+			"copy-setup-command": "Copier la commande",
+			"open-reauthorize": "Réautoriser le bot",
+			"open-dev-portal": "Portail développeur",
+			"show-overlay": "Afficher l’overlay",
+			"fix-display": "Restaurer l’affichage",
+			"manage-muted": "Gérer les auteurs"
+		},
+		"decisions": {
+			"displayed": "Affiché",
+			"queued": "En file",
+			"reaction_shown": "Réaction affichée",
+			"dropped": "Ignoré"
+		},
+		"reasons": {
+			"invalid_json": "Message illisible",
+			"invalid_schema": "Message incompatible",
+			"overlay_closed": "Overlay fermé",
+			"bot_app_source": "Source bot/application masquée",
+			"media_type_disabled": "Type de média désactivé",
+			"text_disabled": "Texte désactivé",
+			"reactions_disabled": "Réactions désactivées",
+			"other_guild": "Autre serveur",
+			"author_muted": "Auteur masqué",
+			"anonymous_hidden": "Message anonyme masqué",
+			"queue_full": "File pleine",
+			"author_limit": "Limite de l’auteur atteinte",
+			"load_failed": "Échec de chargement du média",
+			"expired_url": "URL du média expirée",
+			"join_rejected": "Connexion refusée",
+			"session_revoked": "Session révoquée",
+			"guild_paused": "Serveur en pause"
+		},
+		"remote": {
+			"pending": "En attente du bot.",
+			"unsupported": "Le bot est trop ancien pour les vérifications distantes.",
+			"offline": "Le bot est déconnecté.",
+			"timeout": "Le bot n’a pas répondu à temps.",
+			"RATE_LIMITED": "Patiente avant une nouvelle vérification.",
+			"NOT_JOINED": "Connecte-toi au serveur d’abord.",
+			"DIAG_UNAVAILABLE": "Les vérifications distantes sont indisponibles."
+		}
+	},
 	"motion": {
 		"holdLabel": "Maintenir pour {{label}}",
 		"holdHint": "Maintiens le bouton, Espace ou Entrée pendant 1,2 seconde. Relâche pour annuler.",

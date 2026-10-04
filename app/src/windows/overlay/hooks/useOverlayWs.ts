@@ -1,10 +1,20 @@
 import type { JoinMessage, SessionRevocationCode } from "@memeover/shared";
-import { emit } from "@tauri-apps/api/event";
+import { DIAG_FEATURE } from "@memeover/shared";
+import { emit, listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fallbackExpiryDelay, isGuildPausedAt } from "@/shared/guild-pause";
+import { buildLocalTestEvent } from "@/shared/local-test";
 import { mutedIdSet } from "@/shared/muted-authors";
+import { type OverlayTraceEntry, traceMetadata } from "@/shared/overlay-trace";
 import { useAppStore } from "@/shared/store";
-import { bindSocket, sendClientMessage, setServerFeatures, unbindSocket } from "../ws-client";
+import {
+	bindSocket,
+	sendClientMessage,
+	sendIfSupported,
+	serverSupports,
+	setServerFeatures,
+	unbindSocket,
+} from "../ws-client";
 
 import { routeServerMessage } from "./route-server-message";
 
@@ -50,6 +60,8 @@ export function useOverlayWs(): void {
 	const overlayHealthRef = useRef(overlayHealth);
 	overlayHealthRef.current = overlayHealth;
 
+	const diagPendingRef = useRef(false);
+	const lastReactionTraceRef = useRef(0);
 	const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
 	const revokedRef = useRef<SessionRevocationCode | null>(null);
@@ -91,12 +103,25 @@ export function useOverlayWs(): void {
 				mutedAuthors: muteRef.current.muted,
 				hideAnonymous: muteRef.current.hideAnonymous,
 			});
+			const trace = (
+				decision: OverlayTraceEntry["decision"],
+				reason?: OverlayTraceEntry["reason"],
+				detail?: string,
+			) =>
+				void emit("overlay-trace", {
+					id: crypto.randomUUID(),
+					at: Date.now(),
+					...traceMetadata(event.data),
+					decision,
+					reason,
+					detail,
+				} satisfies OverlayTraceEntry);
 			switch (action.kind) {
 				case "join_ack":
 					if (action.success) {
 						setServerFeatures(action.features);
-						void emit("ws-join-error", null);
 						void emit("ws-features-changed", action.features ?? []);
+						void emit("ws-join-error", null);
 						revokedRef.current = null;
 						setWsStatus("connected");
 						void emit("ws-status-changed", "connected");
@@ -105,6 +130,7 @@ export function useOverlayWs(): void {
 						void emit("ws-status-changed", "error");
 						console.warn("[WS] JOIN_ACK error:", action.error);
 						void emit("ws-join-error", action.error ?? null);
+						trace("dropped", "join_rejected", action.error);
 					}
 					break;
 				case "enqueue":
@@ -112,8 +138,13 @@ export function useOverlayWs(): void {
 					break;
 				case "reaction":
 					spawnReaction({ emoji: action.emoji, emojiUrl: action.emojiUrl });
+					if (Date.now() - lastReactionTraceRef.current >= 1000) {
+						lastReactionTraceRef.current = Date.now();
+						trace("reaction_shown");
+					}
 					break;
 				case "session_revoked":
+					trace("dropped", "session_revoked");
 					revokedRef.current = action.code;
 					setWsStatus("error");
 					void emit("ws-session-revoked", action.code).then(() =>
@@ -121,6 +152,13 @@ export function useOverlayWs(): void {
 					);
 					break;
 				case "server_error":
+					if (
+						diagPendingRef.current &&
+						["RATE_LIMITED", "NOT_JOINED", "DIAG_UNAVAILABLE"].includes(action.message.code)
+					) {
+						diagPendingRef.current = false;
+						void emit("diag-result", { ok: false, reason: action.message.code });
+					}
 					console.warn("[WS] Server error:", action.message);
 					break;
 				case "guild_state": {
@@ -137,6 +175,10 @@ export function useOverlayWs(): void {
 					}
 					break;
 				}
+				case "diag":
+					diagPendingRef.current = false;
+					void emit("diag-result", { ok: true, diag: action.message });
+					break;
 				case "pong":
 					sendClientMessage({ type: "PONG" });
 					break;
@@ -145,6 +187,7 @@ export function useOverlayWs(): void {
 					void emit("member-count-changed", action.count);
 					break;
 				case "drop":
+					if (action.reason !== "other_guild") trace("dropped", action.reason);
 					if (action.reason === "invalid_json")
 						console.warn("[WS] Failed to parse message:", action.detail);
 					else if (action.reason === "invalid_schema")
@@ -158,6 +201,40 @@ export function useOverlayWs(): void {
 		},
 		[enqueue, spawnReaction, setWsStatus, setMemberCount],
 	);
+
+	useEffect(() => {
+		let disposed = false;
+		const unlisteners: (() => void)[] = [];
+		const add = (promise: Promise<() => void>) =>
+			void promise.then((fn) => {
+				if (disposed) fn();
+				else unlisteners.push(fn);
+			});
+		add(
+			listen("diag-request", () => {
+				if (!serverSupports(DIAG_FEATURE)) {
+					void emit("diag-result", { ok: false, reason: "unsupported" });
+					return;
+				}
+				diagPendingRef.current = sendIfSupported(DIAG_FEATURE, {
+					type: "DIAG_REQUEST",
+					guild_id: credentialsRef.current.guildId,
+				});
+				if (!diagPendingRef.current) void emit("diag-result", { ok: false, reason: "offline" });
+			}),
+		);
+		add(
+			listen("diagnostic-test", () =>
+				onMessage({
+					data: JSON.stringify(buildLocalTestEvent(credentialsRef.current.guildId, Date.now())),
+				} as MessageEvent<string>),
+			),
+		);
+		return () => {
+			disposed = true;
+			for (const fn of unlisteners) fn();
+		};
+	}, [onMessage]);
 
 	const onClose = useCallback(() => {
 		setWsStatus("disconnected");
@@ -213,6 +290,7 @@ export function useOverlayWs(): void {
 				// A retired socket may close after its replacement has already joined.
 				if (disposed || wsRef.current !== ws) return;
 				void emit("ws-features-changed", []);
+				diagPendingRef.current = false;
 				if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);
 				useAppStore.getState().setGuildPausedUntil(null);
 				unbindSocket(ws);
