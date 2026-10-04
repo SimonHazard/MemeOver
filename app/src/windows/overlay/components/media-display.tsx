@@ -2,7 +2,7 @@ import type React from "react";
 import type { DisplayQueueItem, Settings, TextPosition } from "@/shared/types";
 import { isVideoBackedGif } from "../media/media-kind";
 import { AudioEqualizer } from "./audio-equalizer";
-import { AuthorBadge } from "./author-badge";
+import { AUTHOR_BADGE_HEIGHT, AuthorBadge } from "./author-badge";
 import { InlineText, TextDisplay } from "./text-bubble";
 
 const CAPTION_SHADOW = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000";
@@ -11,6 +11,13 @@ const OVERLAY_CAPTION_SHADOW =
 	"-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000";
 // Stickers use fit-box too but capped smaller — Discord sticker assets lose fidelity past ~25vmin.
 const STICKER_MAX_VMIN = 25;
+// Edge positions sit 2rem from the screen border; keep the same room on both sides.
+const VIEWPORT_MARGIN = "4rem";
+// Matches the `gap-2` between the badge, caption and media.
+const STACK_GAP_PX = 8;
+// Inline captions are `line-clamp-2 leading-snug`.
+const CAPTION_LINES = 2;
+const CAPTION_LINE_HEIGHT = 1.375;
 
 export { isVideoBackedGif } from "../media/media-kind";
 
@@ -29,6 +36,39 @@ function overlayAnchorClass(pos: TextPosition): string {
 	if (pos === "overlay-top") return "top-2 left-1/2 -translate-x-1/2";
 	if (pos === "overlay-middle") return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
 	return "bottom-2 left-1/2 -translate-x-1/2"; // overlay-bottom
+}
+
+interface MediaHeightLayout {
+	boxSize: string;
+	hasBadge: boolean;
+	bgEnabled: boolean;
+	bgPadding: number;
+	bgBorderWidth: number;
+	/** Font size of the inline caption in px, or null when there is none. */
+	inlineCaptionSize: number | null;
+}
+
+/**
+ * Caps the media height so the whole stack (author badge, background, caption,
+ * media) fits the screen. The popup is centred, so any overflow would be split
+ * between the top and bottom edges and crop the badge first.
+ */
+export function mediaMaxHeight({
+	boxSize,
+	hasBadge,
+	bgEnabled,
+	bgPadding,
+	bgBorderWidth,
+	inlineCaptionSize,
+}: MediaHeightLayout): string {
+	let reservedPx = 0;
+	if (bgEnabled) reservedPx += 2 * (bgPadding + bgBorderWidth);
+	if (inlineCaptionSize !== null) {
+		reservedPx += Math.ceil(inlineCaptionSize * CAPTION_LINE_HEIGHT * CAPTION_LINES) + STACK_GAP_PX;
+	}
+	if (hasBadge) reservedPx += STACK_GAP_PX;
+	const badge = hasBadge ? ` - ${AUTHOR_BADGE_HEIGHT}` : "";
+	return `min(${boxSize}, calc(100vh - ${VIEWPORT_MARGIN}${badge} - ${reservedPx}px))`;
 }
 
 // ─── Caption variants ─────────────────────────────────────────────────────────
@@ -102,12 +142,6 @@ export function MediaDisplay({
 	// preserving its aspect ratio. vmin (vs vw) keeps the visual size consistent
 	// across monitor orientations and caps height automatically for portrait content.
 	const boxSize = `${settings.mediaSize}vmin`;
-	const fitBoxStyle: React.CSSProperties = {
-		maxWidth: boxSize,
-		maxHeight: boxSize,
-		width: "auto",
-		height: "auto",
-	};
 	const {
 		bgEnabled,
 		bgColor,
@@ -138,7 +172,8 @@ export function MediaDisplay({
 
 	// The author has its own readable pill; the configurable background belongs
 	// only to the content, avoiding two stacked backgrounds around the badge.
-	const authorBadge = (item.type === "TEXT" || !item.anonymous) && (
+	const hasBadge = item.type === "TEXT" || !item.anonymous;
+	const authorBadge = hasBadge && (
 		<AuthorBadge
 			authorId={item.author_id}
 			username={item.author_username}
@@ -181,6 +216,19 @@ export function MediaDisplay({
 	const hasCaption = item.media_type !== "audio" && caption.length > 0;
 	const useOverlay = hasCaption && isOverlayMode(textPosition);
 	const useInlineCaption = hasCaption && !useOverlay;
+	const fitBoxStyle: React.CSSProperties = {
+		maxWidth: boxSize,
+		maxHeight: mediaMaxHeight({
+			boxSize,
+			hasBadge,
+			bgEnabled,
+			bgPadding,
+			bgBorderWidth,
+			inlineCaptionSize: useInlineCaption ? textSize : null,
+		}),
+		width: "auto",
+		height: "auto",
+	};
 
 	const mediaNode = (() => {
 		const videoBackedGif = isVideoBackedGif(item.media_type, item.media_url);

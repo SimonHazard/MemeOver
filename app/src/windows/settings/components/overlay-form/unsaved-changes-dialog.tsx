@@ -7,7 +7,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@memeover/ui/components/ui/dialog";
-import { NB_SHADOW_LG } from "@memeover/ui/lib/nb-classes";
 import { useBlocker } from "@tanstack/react-router";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
@@ -74,10 +73,7 @@ export function UnsavedChangesDialog({ isPending }: { isPending: boolean }) {
 							if (!open && !busy) stay();
 						}}
 					>
-						<DialogContent
-							showCloseButton={false}
-							className={`border-2 border-foreground ${NB_SHADOW_LG} motion-reduce:animate-none`}
-						>
+						<DialogContent showCloseButton={false} className="sm:max-w-lg">
 							<DialogHeader>
 								<DialogTitle>{t("unsavedChanges.title")}</DialogTitle>
 								<DialogDescription>{t("unsavedChanges.description")}</DialogDescription>

@@ -15,6 +15,7 @@ import {
 	Video,
 } from "lucide-react";
 import type React from "react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatTime } from "@/shared/helpers";
 import type { HistoryItem } from "@/shared/history";
@@ -77,6 +78,8 @@ export function HistoryItemCard({
 }: HistoryItemCardProps) {
 	const { t } = useTranslation();
 	const expired = isMediaExpired(item, Date.now());
+	// Base UI tooltips are visual only; screen readers get the expiry hint from here.
+	const expiredHintId = useId();
 	const displayName = item.author_display_name ?? item.author_username;
 	const initials = displayName.charAt(0).toUpperCase();
 
@@ -155,7 +158,14 @@ export function HistoryItemCard({
 				)}
 				{/* ── Replay button ── */}
 				<Tooltip>
-					<TooltipTrigger render={<span tabIndex={expired ? 0 : undefined} />}>
+					<TooltipTrigger
+						render={
+							<span
+								tabIndex={expired ? 0 : undefined}
+								aria-describedby={expired ? expiredHintId : undefined}
+							/>
+						}
+					>
 						<Button
 							variant="outline"
 							size="icon"
@@ -175,6 +185,11 @@ export function HistoryItemCard({
 					</TooltipTrigger>
 					{expired && <TooltipContent>{t("history.expiredHint")}</TooltipContent>}
 				</Tooltip>
+				{expired && (
+					<span id={expiredHintId} className="sr-only">
+						{t("history.expiredHint")}
+					</span>
+				)}
 			</div>
 		</Card>
 	);

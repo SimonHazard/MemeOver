@@ -6,15 +6,39 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.6]
+
+### Fixed
+
+- Size the overlay to the full bounds of its monitor instead of maximizing it. Since the Tauri 2.12 update in 1.6.4, a hidden window is only maximized when first shown on Windows, and maximizing never covered the taskbar or menu bar area. The overlay also drops the default window shadow on Windows, which would otherwise draw a 1px border and rounded corners around it.
+- Fit the overlay to its monitor again within two seconds after a resolution or scaling change, or after its monitor is disconnected.
+- Keep the author badge on screen for tall media: the media height now leaves room for the badge, background and caption, which previously pushed the badge off the top edge at bottom positions.
+- Restore the keyboard behaviour of option groups lost in the 1.6.2 Base UI migration (position grid, text position, preview format, language and media types): the up and down arrows move between options again, and tabbing into a single-choice group focuses the selected option, as in a WAI-ARIA radio group.
+- Keep Enter from saving the overlay form while a slider is focused, as before the 1.6.2 migration.
+- Replace the hold-to-confirm buttons (delete a profile, clear the history from History or About) with a confirmation dialog. Holding a key for a set time is not keyboard accessible (WCAG 2.1.1), and some screen readers and voice control could not confirm at all. The alert dialog focuses Cancel first, closes with Escape and ignores clicks outside it.
+- Give the member count badge a screen-reader description of its state; its visible parts were hidden from assistive technology.
+- Show replays of muted authors and hidden anonymous memes. History confirmed these replays, but the overlay dropped them.
+- Stop accepting the self-hosted server's placeholder public address for installation, progress and friend codes, which pointed friends to the unreachable `YOUR_PUBLIC_IP` host.
+- Translate every tray menu entry, including Hide, from startup instead of only after changing the language.
+- Announce the selected text color, the custom color value and why an expired replay is unavailable to screen readers.
+
+### Changed
+
+- Remove the overlay page's own always-on-top request, which its window permissions rejected; Rust already keeps the overlay on top.
+- Base every dialog on the shadcn base-vega Dialog and Alert Dialog, styled with the MemeOver theme: neo-brutalist frame, display font titles, a lightly blurred backdrop and no zoom or fade under reduced motion.
+- Use formal French ("vous") in the unsaved changes dialog, like the rest of the interface.
+- Remove 18 unused interface translations.
+- Add browser regression checks for tall media at centre, top and bottom positions, the space reserved for the author badge, option-group keyboard focus, slider Enter, confirmation dialogs, tray labels, color, member count and expired replay announcements.
+
 ## [1.6.5]
 
 ### Fixed
 
 - Keep author badges visible if their entrance animation is interrupted or disabled.
-- Keep confetti, pop and firework reaction timings valid at the minimum fade-out and maximum fade-in settings.
 
 ### Changed
 
+- Keep confetti, pop and firework keyframe times in increasing order for any fade timing. The built-in reaction timings already produced ordered keyframes, so displayed reactions are unchanged.
 - Extend browser regression checks to production builds, animated popup replacements and interrupted badge entrances.
 
 ## [1.6.4]

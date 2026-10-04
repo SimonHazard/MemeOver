@@ -82,6 +82,7 @@ export function ColorPicker({ value, onChange, onReset }: ColorPickerProps) {
 										style={{ backgroundColor: swatch }}
 										className={cn(swatchBase, isSelected && swatchSelected)}
 										aria-label={t(SWATCH_LABEL_KEYS[swatch])}
+										aria-pressed={isSelected}
 									/>
 								}
 							>
@@ -121,7 +122,13 @@ export function ColorPicker({ value, onChange, onReset }: ColorPickerProps) {
 								onClick={() => inputRef.current?.click()}
 								style={isCustom ? { backgroundColor: value } : undefined}
 								className={cn(swatchBase, isCustom && swatchSelected)}
-								aria-label={t("display.color_custom")}
+								// Base UI tooltips are visual only: the custom value must be in the name.
+								aria-label={
+									isCustom
+										? `${t("display.color_custom")} ${value.toUpperCase()}`
+										: t("display.color_custom")
+								}
+								aria-pressed={isCustom}
 							/>
 						}
 					>

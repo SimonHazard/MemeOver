@@ -7,8 +7,8 @@ import { Check, Download, Import, Save, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { ConfirmActionButton } from "@/components/confirm-action-button";
 import { AnimatedList } from "@/components/motion/animated-list";
-import { HoldToConfirmButton } from "@/components/motion/hold-to-confirm-button";
 import {
 	createOverlayProfile,
 	deleteOverlayProfile,
@@ -248,9 +248,13 @@ function ProfilesList({ currentSettings, onApplyProfile }: ProfilesListProps) {
 								<Download data-icon="inline-start" aria-hidden="true" />
 								{t("display.profile_export")}
 							</NbButton>
-							<HoldToConfirmButton
+							<ConfirmActionButton
 								disabled={isBusy}
-								label={t("display.profile_delete_named", { name: profile.name })}
+								label={t("display.profile_delete")}
+								ariaLabel={t("display.profile_delete_named", { name: profile.name })}
+								title={t("display.profile_delete_title")}
+								description={t("display.profile_delete_desc", { name: profile.name })}
+								confirmLabel={t("display.profile_delete")}
 								onConfirm={() => deleteMutation.mutate(profile.id)}
 							/>
 						</div>

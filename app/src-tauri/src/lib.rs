@@ -20,6 +20,7 @@ const AUTOSTART_ARG: &str = "--autostart";
 /// update their labels whenever the user changes the UI language.
 struct TrayState {
     show_item: Mutex<MenuItem<tauri::Wry>>,
+    hide_item: Mutex<MenuItem<tauri::Wry>>,
     quit_item: Mutex<MenuItem<tauri::Wry>>,
 }
 
@@ -124,8 +125,21 @@ fn apply_native_overlay_level(_win: &tauri::WebviewWindow) {}
 
 // ─── Overlay watcher ──────────────────────────────────────────────────────────
 
+/// Physical bounds `(x, y, width, height)`.
+#[cfg_attr(debug_assertions, allow(dead_code))]
+type Bounds = (i32, i32, u32, u32);
+
+/// Whether the watcher should fit the overlay to its monitor again. A maximized
+/// window followed resolution, scaling and monitor changes on its own; explicit
+/// bounds do not, and no window event reports a resolution change. Each monitor
+/// layout gets a single attempt so bounds the OS refuses are not retried forever.
+#[cfg_attr(debug_assertions, allow(dead_code))]
+fn should_refit(window: Bounds, monitor: Bounds, last_attempt: Option<Bounds>) -> bool {
+    window != monitor && last_attempt != Some(monitor)
+}
+
 /// Spawns a long-lived background thread (production only) that reasserts the
-/// overlay's native window level every 2 seconds.
+/// overlay's native window level every 2 seconds and keeps it covering its monitor.
 ///
 /// - Checks `is_visible()` to skip hidden overlays (e.g. after quit_overlay).
 /// - Dispatches the actual platform calls to the main thread via
@@ -135,21 +149,53 @@ fn apply_native_overlay_level(_win: &tauri::WebviewWindow) {}
 fn start_overlay_watcher(app: tauri::AppHandle) {
     std::thread::Builder::new()
         .name("overlay-watcher".into())
-        .spawn(move || loop {
-            std::thread::sleep(std::time::Duration::from_secs(2));
+        .spawn(move || {
+            let mut last_refit: Option<Bounds> = None;
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(2));
 
-            let Some(win) = app.get_webview_window("overlay") else {
-                continue;
-            };
+                let Some(win) = app.get_webview_window("overlay") else {
+                    continue;
+                };
 
-            if !win.is_visible().unwrap_or(false) {
-                continue;
+                if !win.is_visible().unwrap_or(false) {
+                    continue;
+                }
+
+                let refit_to = match (
+                    win.current_monitor(),
+                    win.outer_position(),
+                    win.inner_size(),
+                ) {
+                    (Ok(Some(monitor)), Ok(pos), Ok(size)) => {
+                        let target = (
+                            monitor.position().x,
+                            monitor.position().y,
+                            monitor.size().width,
+                            monitor.size().height,
+                        );
+                        let window = (pos.x, pos.y, size.width, size.height);
+                        if window == target {
+                            last_refit = None;
+                            None
+                        } else if should_refit(window, target, last_refit) {
+                            last_refit = Some(target);
+                            Some(monitor)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                };
+
+                let win_clone = win.clone();
+                let _ = win.run_on_main_thread(move || {
+                    if let Some(monitor) = refit_to {
+                        let _ = fit_overlay_to_monitor(&win_clone, &monitor);
+                    }
+                    apply_native_overlay_level(&win_clone);
+                });
             }
-
-            let win_clone = win.clone();
-            let _ = win.run_on_main_thread(move || {
-                apply_native_overlay_level(&win_clone);
-            });
         })
         .expect("overlay-watcher thread failed to start");
 }
@@ -219,16 +265,47 @@ fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Cover the whole monitor with the overlay, including the taskbar / menu bar area.
+///
+/// Explicit bounds instead of `maximize()`: maximizing stops at the work area, and
+/// since tao 0.37 (Tauri 2.12) a window built hidden + maximized is only maximized
+/// when first shown on Windows. The overlay is transparent and click-through, so it
+/// can safely span the full physical bounds of the screen.
+fn fit_overlay_to_monitor(
+    win: &tauri::WebviewWindow,
+    monitor: &tauri::Monitor,
+) -> tauri::Result<()> {
+    let pos = *monitor.position();
+    let size = *monitor.size();
+    // Position first: moving to a monitor with another scale factor may resize
+    // the window, so the final size must be applied afterwards.
+    win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y))?;
+    win.set_size(tauri::PhysicalSize::new(size.width, size.height))?;
+    Ok(())
+}
+
+/// Fit the overlay to the monitor it currently sits on (primary as a fallback).
+fn fit_overlay_to_current_monitor(win: &tauri::WebviewWindow) -> tauri::Result<()> {
+    let monitor = match win.current_monitor()? {
+        Some(monitor) => Some(monitor),
+        None => win.primary_monitor()?,
+    };
+    match monitor {
+        Some(monitor) => fit_overlay_to_monitor(win, &monitor),
+        None => Ok(()),
+    }
+}
+
 /// Move the overlay window to the monitor at the given index (from `available_monitors()`).
 ///
 /// If the overlay is currently visible (e.g. a media item is playing), it is hidden
 /// before the move and restored afterwards. This prevents the intermediate states
-/// (unmaximized → repositioned → resized) from being visible to the user.
+/// (repositioned → resized) from being visible to the user.
 /// `win.hide()` does not trigger the CloseRequested handler, so no
 /// `overlay-health-changed` event is emitted and the webview keeps running.
 ///
-/// Sequence: hide (if visible) → unmaximize → set_position → set_size →
-/// maximize → re-apply native level → show (if was visible).
+/// Sequence: hide (if visible) → set_position → set_size (full monitor bounds) →
+/// re-apply native level → show (if was visible).
 #[tauri::command]
 fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Result<(), String> {
     let win = app
@@ -244,8 +321,6 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
         )
     })?;
 
-    let pos = *monitor.position();
-
     // Remember visibility so we can restore it after the move.
     let was_visible = win.is_visible().unwrap_or(false);
     if was_visible {
@@ -255,16 +330,8 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
     // Run the repositioning steps in a closure so we can guarantee show() is
     // called even if any intermediate step fails — the overlay must never stay
     // permanently hidden due to a positioning error.
-    //
-    // Note: set_size is intentionally omitted. set_position alone is sufficient
-    // to place the window on the target monitor. Calling set_size before
-    // maximize() causes [NSWindow zoom:] to see the window as "already at
-    // maximum size" and toggle back to the user size — breaking the move.
     let move_result = (|| -> Result<(), String> {
-        win.unmaximize().map_err(|e| e.to_string())?;
-        win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y))
-            .map_err(|e| e.to_string())?;
-        win.maximize().map_err(|e| e.to_string())?;
+        fit_overlay_to_monitor(&win, monitor).map_err(|e| e.to_string())?;
         apply_native_overlay_level(&win);
         Ok(())
     })();
@@ -279,7 +346,7 @@ fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) -> Resul
 }
 
 /// Toggle the overlay between dev mode (decorated, windowed, opaque) and a
-/// prod-like preview (no decorations, always-on-top, maximized, transparent).
+/// prod-like preview (no decorations, always-on-top, full monitor, transparent).
 /// Only meaningful in debug builds; the frontend gate (`import.meta.env.DEV`)
 /// ensures it is never called from a production bundle.
 #[tauri::command]
@@ -291,7 +358,7 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
     if enabled {
         win.set_decorations(false).map_err(|e| e.to_string())?;
         win.set_always_on_top(true).map_err(|e| e.to_string())?;
-        win.maximize().map_err(|e| e.to_string())?;
+        fit_overlay_to_current_monitor(&win).map_err(|e| e.to_string())?;
         win.set_background_color(Some(tauri::utils::config::Color(0, 0, 0, 0)))
             .map_err(|e| e.to_string())?;
         win.set_ignore_cursor_events(true)
@@ -300,7 +367,9 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
         win.set_ignore_cursor_events(false)
             .map_err(|e| e.to_string())?;
         win.set_background_color(None).map_err(|e| e.to_string())?;
-        win.unmaximize().map_err(|e| e.to_string())?;
+        win.set_size(tauri::LogicalSize::new(800.0, 600.0))
+            .map_err(|e| e.to_string())?;
+        win.center().map_err(|e| e.to_string())?;
         win.set_always_on_top(false).map_err(|e| e.to_string())?;
         win.set_decorations(true).map_err(|e| e.to_string())?;
     }
@@ -312,11 +381,12 @@ fn toggle_overlay_preview_mode(app: tauri::AppHandle, enabled: bool) -> Result<(
 }
 
 /// Update the translatable labels of the tray context menu.
-/// Called from the frontend after every language change.
+/// Called by the settings page at startup and after every language change.
 #[tauri::command]
 fn update_tray_labels(
     state: tauri::State<TrayState>,
     show_label: String,
+    hide_label: String,
     quit_label: String,
 ) -> Result<(), String> {
     state
@@ -324,6 +394,12 @@ fn update_tray_labels(
         .lock()
         .map_err(|_| "TrayState lock poisoned".to_string())?
         .set_text(show_label)
+        .map_err(|e| e.to_string())?;
+    state
+        .hide_item
+        .lock()
+        .map_err(|_| "TrayState lock poisoned".to_string())?
+        .set_text(hide_label)
         .map_err(|e| e.to_string())?;
     state
         .quit_item
@@ -367,16 +443,25 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         .always_on_top(false)
         .resizable(true);
 
-    // Prod: transparent fullscreen always-on-top overlay (final behavior).
+    // Prod: transparent always-on-top overlay covering the whole monitor.
+    // Not `maximized`: that stops at the work area (taskbar / menu bar excluded).
     #[cfg(not(debug_assertions))]
     let builder = builder
         .transparent(true)
         .decorations(false)
         .always_on_top(true)
-        .maximized(true)
         .resizable(false);
 
-    builder.build()?;
+    // Windows draws a 1px border (and rounded corners on Windows 11) around
+    // undecorated windows that keep the default shadow, unless they are maximized.
+    #[cfg(all(not(debug_assertions), windows))]
+    let builder = builder.shadow(false);
+
+    #[cfg_attr(debug_assertions, allow(unused_variables))]
+    let win = builder.build()?;
+
+    #[cfg(not(debug_assertions))]
+    fit_overlay_to_current_monitor(&win)?;
 
     Ok(())
 }
@@ -432,6 +517,7 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     // Store handles so the frontend can update labels on language change
     app.manage(TrayState {
         show_item: Mutex::new(show_i),
+        hide_item: Mutex::new(hide_i),
         quit_item: Mutex::new(quit_i),
     });
 
@@ -604,10 +690,44 @@ pub fn run() {
             // outlive the app and keep its port bound, then apply a staged
             // Windows update (exits the process when one is pending).
             if let tauri::RunEvent::Exit = event {
-                server_creator::shutdown(
-                    &app_handle.state::<server_creator::ServerCreatorState>(),
-                );
+                server_creator::shutdown(&app_handle.state::<server_creator::ServerCreatorState>());
                 auto_update::apply_on_exit(app_handle);
             }
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const FULL_HD: Bounds = (0, 0, 1920, 1080);
+
+    #[test]
+    fn overlay_covering_its_monitor_is_left_alone() {
+        assert!(!should_refit(FULL_HD, FULL_HD, None));
+    }
+
+    #[test]
+    fn resolution_change_refits_the_overlay() {
+        assert!(should_refit(FULL_HD, (0, 0, 2560, 1440), None));
+    }
+
+    #[test]
+    fn overlay_moved_to_another_monitor_refits_there() {
+        // Windows relocates windows from an unplugged monitor without resizing them.
+        let stale = (1920, 0, 2560, 1440);
+        assert!(should_refit(stale, (1920, 0, 1920, 1080), None));
+    }
+
+    #[test]
+    fn refused_bounds_are_not_retried_for_the_same_layout() {
+        let constrained = (0, 25, 1920, 1055);
+        assert!(!should_refit(constrained, FULL_HD, Some(FULL_HD)));
+    }
+
+    #[test]
+    fn a_new_layout_gets_a_new_attempt() {
+        let constrained = (0, 25, 1920, 1055);
+        assert!(should_refit(constrained, (0, 0, 2560, 1440), Some(FULL_HD)));
+    }
 }

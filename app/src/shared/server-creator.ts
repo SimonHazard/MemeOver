@@ -37,11 +37,22 @@ export interface ServerInstallResult {
 	publicWsUrl: string;
 }
 
+const PUBLIC_HOST_PLACEHOLDER = "YOUR_PUBLIC_IP";
+
 export function createPublicWsUrl(ipOrHost: string, port: number): string {
 	const host = ipOrHost.trim();
-	if (!host) return `ws://YOUR_PUBLIC_IP:${port}/ws`;
+	if (!host) return `ws://${PUBLIC_HOST_PLACEHOLDER}:${port}/ws`;
 	if (host.startsWith("ws://") || host.startsWith("wss://")) return host;
 	return `ws://${host}:${port}/ws`;
+}
+
+/**
+ * The default URL only names a placeholder host: written to the bot's PUBLIC_WS_URL or
+ * shared with friends, it would hand out connection codes nobody can reach.
+ */
+export function isPublicWsUrlConfigured(url: string): boolean {
+	const trimmed = url.trim();
+	return trimmed.length > 0 && !trimmed.includes(PUBLIC_HOST_PLACEHOLDER);
 }
 
 export function createFriendSetupCode({
@@ -53,7 +64,7 @@ export function createFriendSetupCode({
 	token: string;
 	wsUrl: string;
 }): string | null {
-	if (!guildId || !token || !wsUrl) return null;
+	if (!guildId || !token || !isPublicWsUrlConfigured(wsUrl)) return null;
 	return buildConnectionCode({ guildId, token, wsUrl });
 }
 

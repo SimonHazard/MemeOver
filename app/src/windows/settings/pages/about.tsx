@@ -9,7 +9,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { Bug, ExternalLink, FileText, Scale, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { HoldToConfirmButton } from "@/components/motion/hold-to-confirm-button";
+import { ConfirmActionButton } from "@/components/confirm-action-button";
 import { clearHistory } from "@/shared/history";
 import { FullscreenInfoDialog } from "@/windows/settings/components/fullscreen-info-dialog";
 import { LangToggle } from "@/windows/settings/components/lang-toggle";
@@ -102,8 +102,11 @@ export function AboutPage() {
 									<Scale className="size-3.5" aria-hidden="true" />
 									{t("about.legalNotice")}
 								</NbButton>
-								<HoldToConfirmButton
+								<ConfirmActionButton
 									label={t("about.clearLocalHistory")}
+									title={t("history.clearConfirmTitle")}
+									description={t("history.clearConfirmDesc")}
+									confirmLabel={t("about.clearLocalHistory")}
 									onConfirm={() => void handleClearLocalHistory()}
 								/>
 							</div>

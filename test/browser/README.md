@@ -22,7 +22,7 @@ bun run test:browser --project=webkit
 Coverage includes every overlay slider, keyboard and pointer input, bounds,
 save/reload, switches, selection menus, text and media toggles, color controls,
 accordion panels, tab activation, dialog focus/escape, button hover/reduced motion, disabled controls,
-tooltips, scrolling, progress width, avatar fallback, toasts, hold confirmation,
+tooltips, scrolling, progress width, avatar fallback, toasts, confirmation dialogs,
 profiles (create/replace/apply/import/export/delete), history (replay/mute/unmute/
 clear), connection validation, language/theme, reduced motion and a small window.
 First configuration (back/next/finish), screen selection and the About dialog/update check

@@ -6,7 +6,9 @@ import {
 	DEFAULT_SETTINGS,
 	type DisplayQueueItem,
 	FLOATING_REACTION_ANIMATIONS,
+	type OverlayPosition,
 } from "../../src/shared/types";
+import { AUTHOR_BADGE_HEIGHT } from "../../src/windows/overlay/components/author-badge";
 import { FloatingReactions } from "../../src/windows/overlay/components/floating-reactions";
 import { MediaDisplay } from "../../src/windows/overlay/components/media-display";
 import { MediaPopup } from "../../src/windows/overlay/components/media-popup";
@@ -32,9 +34,13 @@ const item: DisplayQueueItem = params.has("text")
 			...author,
 			type: "MEDIA",
 			media_type: "image",
-			media_url: svg(
-				'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#777"/></svg>',
-			),
+			media_url: params.has("portrait")
+				? svg(
+						'<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280"><rect width="720" height="1280" fill="#777"/></svg>',
+					)
+				: svg(
+						'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#777"/></svg>',
+					),
 			anonymous: params.has("anonymous"),
 			text: "Example caption",
 		};
@@ -47,6 +53,8 @@ const settings = {
 	bgColor: "#336699",
 	textPosition: "below" as const,
 };
+// `?position=` renders the real full-screen popup with the largest media size.
+const position = params.get("position") as OverlayPosition | null;
 
 function PopupHarness() {
 	const [visible, setVisible] = useState(true);
@@ -108,6 +116,20 @@ if (root)
 			<MotionConfig reducedMotion="user">
 				{params.has("reactions") ? (
 					<FloatingReactions />
+				) : position ? (
+					<div id="display">
+						{/* Measures the height the layout reserves for the badge. */}
+						<div id="badge-height-probe" style={{ height: AUTHOR_BADGE_HEIGHT }} />
+						<MediaPopup
+							current={item}
+							isVisible
+							settings={{ ...settings, position, mediaSize: 90 }}
+							onExitComplete={() => {}}
+							onVideoEnd={() => {}}
+							startTimer={() => {}}
+							onMediaError={() => {}}
+						/>
+					</div>
 				) : params.has("popup") ? (
 					<PopupHarness />
 				) : (

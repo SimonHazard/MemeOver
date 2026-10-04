@@ -6,6 +6,11 @@ import { BADGE_ENTER_DELAY_S } from "./overlay-motion";
 
 // Lands just after the media pop has started: the media reads first, then who sent it.
 
+// Sized in em from a viewport-relative base so the badge stays legible from 1080p to 4K.
+export const AUTHOR_BADGE_FONT_SIZE = "clamp(12px, 1.5vmin, 22px)";
+/** Rendered badge height: 1.6em avatar + 2 × 0.25em vertical padding. */
+export const AUTHOR_BADGE_HEIGHT = `calc(2.1 * ${AUTHOR_BADGE_FONT_SIZE})`;
+
 // Discord's default avatar palette — a familiar colour while the avatar loads (or if it fails).
 const FALLBACK_COLORS = ["#5865F2", "#757E8A", "#3BA55C", "#FAA61A", "#ED4245", "#EB459F"] as const;
 
@@ -39,10 +44,9 @@ export function AuthorBadge({
 
 	return (
 		<div
-			// Sized in em from a viewport-relative base so the badge stays legible from 1080p to 4K.
 			style={
 				{
-					fontSize: "clamp(12px, 1.5vmin, 22px)",
+					fontSize: AUTHOR_BADGE_FONT_SIZE,
 					maxWidth,
 					"--badge-enter-delay": `${BADGE_ENTER_DELAY_S}s`,
 					"--badge-reduced-duration": `${DURATION.reduced}s`,

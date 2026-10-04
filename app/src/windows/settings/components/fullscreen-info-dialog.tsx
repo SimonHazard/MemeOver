@@ -9,7 +9,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@memeover/ui/components/ui/dialog";
-import { NB_SHADOW_LG, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
+import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { Gamepad2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -28,10 +28,7 @@ export function FullscreenInfoDialog() {
 				{t("notice.show_info")}
 			</DialogTrigger>
 
-			<DialogContent
-				showCloseButton={false}
-				className={`border-2 border-foreground ${NB_SHADOW_LG}`}
-			>
+			<DialogContent showCloseButton={false}>
 				<DialogHeader>
 					<div className="flex items-center gap-3">
 						<div
@@ -39,9 +36,7 @@ export function FullscreenInfoDialog() {
 						>
 							<Gamepad2 className="size-4 text-primary-foreground" />
 						</div>
-						<DialogTitle className="font-display tracking-wide text-base">
-							{t("notice.fullscreen_title")}
-						</DialogTitle>
+						<DialogTitle>{t("notice.fullscreen_title")}</DialogTitle>
 					</div>
 				</DialogHeader>
 

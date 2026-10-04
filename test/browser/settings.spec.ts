@@ -98,7 +98,9 @@ test("switches, select, text inputs, toggles, color controls and save", async ({
 	const textSize = page.locator('input[type="number"]').last();
 	await textSize.fill("32");
 	await textSize.blur();
-	await page.getByRole("button", { name: "Red", exact: true }).last().click();
+	const red = page.getByRole("button", { name: "Red", exact: true }).last();
+	await red.click();
+	await expect(red).toHaveAttribute("aria-pressed", "true");
 	await page.getByRole("button", { name: "Save", exact: true }).first().click();
 	await expect.poll(async () => (await settings(page)).textColor).toBe("#ef4444");
 	expect((await settings(page)).textSize).toBe(32);
@@ -149,7 +151,7 @@ test("navigation, language, theme, history and dashboard controls", async ({ pag
 	await expect.poll(() => page.locator("html").getAttribute("class")).not.toBe(before);
 });
 
-test("profiles create, replace, apply, export, import and hold-to-delete", async ({ page }) => {
+test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {
 	await overlay(page);
 	await page.getByLabel("Profile Name", { exact: true }).fill("Browser profile");
 	await page.getByRole("button", { name: "Create", exact: true }).click();
@@ -181,16 +183,14 @@ test("profiles create, replace, apply, export, import and hold-to-delete", async
 		buffer: Buffer.from(JSON.stringify({ name: "Imported profile", settings: { mediaSize: 55 } })),
 	});
 	await expect(page.getByText("Imported profile", { exact: true })).toBeVisible();
-	const remove = page.getByRole("button", { name: "Hold to Delete profile Imported profile" });
-	await remove.scrollIntoViewIfNeeded();
-	await remove.focus();
-	await page.keyboard.down("Space");
-	await page.waitForTimeout(1350);
-	await page.keyboard.up("Space");
+	await page.getByRole("button", { name: "Delete profile Imported profile", exact: true }).click();
+	const dialog = page.getByRole("alertdialog", { name: "Delete this profile?" });
+	await expect(dialog).toContainText("“Imported profile” will be removed");
+	await dialog.getByRole("button", { name: "Delete", exact: true }).click();
 	await expect(page.getByText("Imported profile", { exact: true })).toBeHidden();
 });
 
-test("history replay, author mute/unmute, switches and hold-to-clear", async ({ page }) => {
+test("history replay, author mute/unmute, switches and confirmed clear", async ({ page }) => {
 	await page.goto("/test/browser/settings.html");
 	await page.evaluate(() =>
 		localStorage.setItem(
@@ -222,12 +222,9 @@ test("history replay, author mute/unmute, switches and hold-to-clear", async ({ 
 	const purge = page.getByRole("switch", { name: "Remove expired media automatically" });
 	await purge.click();
 	await expect.poll(async () => (await settings(page)).historyAutoPurge).toBe(false);
-	const clear = page.getByRole("button", { name: "Hold to Clear all" });
-	await clear.scrollIntoViewIfNeeded();
-	await clear.focus();
-	await page.keyboard.down("Space");
-	await page.waitForTimeout(1350);
-	await page.keyboard.up("Space");
+	await page.getByRole("button", { name: "Clear all", exact: true }).click();
+	const dialog = page.getByRole("alertdialog", { name: "Clear local history?" });
+	await dialog.getByRole("button", { name: "Clear all", exact: true }).click();
 	await expect(page.getByText("Test history message", { exact: true })).toBeHidden();
 });
 
@@ -334,4 +331,164 @@ test("about compatibility dialog and update check", async ({ page }) => {
 	await expect(trigger).toBeFocused();
 	await page.getByRole("button", { name: "Check for updates", exact: true }).click();
 	await expect(page.getByText("You have the latest version", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Clear local history", exact: true }).click();
+	const confirm = page.getByRole("alertdialog", { name: "Clear local history?" });
+	await expect(confirm.getByRole("button", { name: "Cancel", exact: true })).toBeFocused();
+	await confirm.getByRole("button", { name: "Cancel", exact: true }).click();
+	await expect(confirm).toBeHidden();
+});
+
+test("toggle groups keep the Radix keyboard model: pressed tab stop and vertical arrows", async ({
+	page,
+}) => {
+	await overlay(page);
+	const grid = page
+		.getByRole("group")
+		.filter({ has: page.getByLabel("Top left", { exact: true }) });
+	await expect(grid.getByLabel("Center", { exact: true })).toHaveAttribute("aria-pressed", "true");
+	// Enter the grid from the element before it: focus lands on the saved position.
+	await grid.getByLabel("Top left", { exact: true }).focus();
+	await page.keyboard.press("Shift+Tab");
+	await page.keyboard.press("Tab");
+	await expect(grid.getByLabel("Center", { exact: true })).toBeFocused();
+	// Space on the entry tab stop must not change the saved position.
+	await page.keyboard.press("Space");
+	await expect(grid.getByLabel("Center", { exact: true })).toHaveAttribute("aria-pressed", "true");
+	await page.keyboard.press("ArrowDown");
+	await expect(grid.getByLabel("Middle right", { exact: true })).toBeFocused();
+	// Base UI's own navigation continues from the item focused by ArrowDown.
+	await page.keyboard.press("ArrowRight");
+	await expect(grid.getByLabel("Bottom left", { exact: true })).toBeFocused();
+	await page.keyboard.press("ArrowUp");
+	await page.keyboard.press("ArrowUp");
+	await expect(grid.getByLabel("Center", { exact: true })).toBeFocused();
+	// Wraps like the horizontal arrows.
+	await page.keyboard.press("End");
+	await page.keyboard.press("ArrowDown");
+	await expect(grid.getByLabel("Top left", { exact: true })).toBeFocused();
+});
+
+test("tray labels follow the interface language from startup", async ({ page }) => {
+	await page.goto("/test/browser/settings.html");
+	const tray = () =>
+		page.evaluate(() => JSON.parse(localStorage.getItem("test-tray-labels") ?? "null"));
+	await expect.poll(tray).toEqual({
+		showLabel: "Show settings",
+		hideLabel: "Hide settings",
+		quitLabel: "Quit",
+	});
+	await page.getByRole("button", { name: "About", exact: true }).click();
+	await page.getByRole("button", { name: "Français" }).click();
+	await expect.poll(tray).toEqual({
+		showLabel: "Afficher les paramètres",
+		hideLabel: "Masquer les paramètres",
+		quitLabel: "Quitter",
+	});
+});
+
+test("custom text color is announced with its value", async ({ page }) => {
+	await overlay(page);
+	await page.locator('input[type="color"]').last().fill("#123abc");
+	const custom = page.getByRole("button", { name: "Custom color #123ABC", exact: true });
+	await expect(custom).toHaveAttribute("aria-pressed", "true");
+});
+
+test("expired replay explains itself to screen readers", async ({ page }) => {
+	// Seed before the app starts: the startup purge is asynchronous and would race a later
+	// write. Missing settings fields are filled by normalizeSettings, like an older file.
+	await page.addInitScript(() => {
+		localStorage.setItem(
+			"test-store:settings.json",
+			JSON.stringify({
+				settings: {
+					clientId: "browser-test-client",
+					guildId: "123456789012345678",
+					token: "test-only-token",
+					historyAutoPurge: false,
+				},
+			}),
+		);
+		localStorage.setItem(
+			"test-store:history.json",
+			JSON.stringify({
+				history: [
+					{
+						type: "MEDIA",
+						queueId: "expired-item",
+						guild_id: "123456789012345678",
+						channel_id: "1",
+						message_id: "1",
+						author_id: "123456789012345678",
+						author_username: "Test Author",
+						author_avatar_url: "",
+						media_type: "image",
+						// `ex` is the Discord signature expiry (hex seconds): long past.
+						media_url: "https://cdn.discordapp.com/attachments/1/2/old.png?ex=00000001&is=0&hm=0",
+						timestamp: Date.now(),
+						recordedAt: Date.now(),
+					},
+				],
+			}),
+		);
+	});
+	await page.goto("/test/browser/settings.html");
+	await page.getByRole("button", { name: "History", exact: true }).click();
+	await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeDisabled();
+	const wrapper = page.locator("span[tabindex='0'][aria-describedby]");
+	await expect(wrapper).toHaveCount(1);
+	await expect(wrapper).toHaveAccessibleDescription(
+		"This Discord link has expired. Discord media links last about 24 hours.",
+	);
+});
+
+test("member count badge exposes its state to assistive technology", async ({ page }) => {
+	await page.goto("/test/browser/settings.html");
+	// The visible badge parts are aria-hidden; the state is read from screen-reader text.
+	await expect(page.getByText("Not connected to the bot", { exact: true })).toHaveCount(1);
+	await expect(page.getByText("offline", { exact: true })).toHaveAttribute("aria-hidden", "true");
+});
+
+test("multiple-choice toggle groups keep the toolbar tab stop", async ({ page }) => {
+	await overlay(page);
+	const images = page.getByRole("button", { name: "Images", exact: true });
+	const gifs = page.getByRole("button", { name: "GIFs", exact: true });
+	await images.click();
+	await expect(images).toHaveAttribute("aria-pressed", "false");
+	await expect(gifs).toHaveAttribute("aria-pressed", "true");
+	// Leave the group from the item just used, then come back with the keyboard: the tab
+	// stop stays on that item (APG toolbar) instead of jumping to the first pressed one.
+	await page.keyboard.press("Shift+Tab");
+	await page.keyboard.press("Tab");
+	await expect(images).toBeFocused();
+});
+
+test("toggle groups wrapped in tooltips keep the same keyboard model", async ({ page }) => {
+	await overlay(page);
+	const bottom = page.getByRole("button", { name: "Overlay bottom", exact: true });
+	const middle = page.getByRole("button", { name: "Overlay middle", exact: true });
+	await expect(bottom).toHaveAttribute("aria-pressed", "true");
+	// Enter the text position group from the element before it.
+	await page.getByRole("button", { name: "Above", exact: true }).focus();
+	await page.keyboard.press("Shift+Tab");
+	await page.keyboard.press("Tab");
+	await expect(bottom).toBeFocused();
+	await page.keyboard.press("ArrowUp");
+	await expect(middle).toBeFocused();
+	await page.keyboard.press("ArrowDown");
+	await expect(bottom).toBeFocused();
+});
+
+test("Enter on a slider does not submit the overlay form", async ({ page }) => {
+	await overlay(page);
+	const slider = page.locator('[data-slot="slider"] input[type="range"]').first();
+	await slider.focus();
+	await page.keyboard.press("ArrowRight");
+	const save = page.getByRole("button", { name: "Save", exact: true }).first();
+	await expect(save).toBeEnabled();
+	await page.keyboard.press("Enter");
+	await expect(save).toBeEnabled();
+	expect((await settings(page)).mediaSize).toBe(60);
+	// Saving stays an explicit action.
+	await save.click();
+	await expect.poll(async () => (await settings(page)).mediaSize).toBe(61);
 });

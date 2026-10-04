@@ -13,7 +13,7 @@ import {
 import { Progress } from "@memeover/ui/components/ui/progress";
 import { ScrollArea } from "@memeover/ui/components/ui/scroll-area";
 import { Separator } from "@memeover/ui/components/ui/separator";
-import { NB_SHADOW_LG, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
+import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -110,9 +110,7 @@ function UpdateDialogContent({
 	return (
 		<>
 			<DialogHeader>
-				<DialogTitle className="font-display tracking-wide text-base">
-					{t("updater.dialogTitle", { version: meta.version })}
-				</DialogTitle>
+				<DialogTitle>{t("updater.dialogTitle", { version: meta.version })}</DialogTitle>
 			</DialogHeader>
 
 			{/* Version comparison */}
@@ -402,7 +400,7 @@ export function UpdateChecker() {
 			>
 				<DialogContent
 					showCloseButton={state.status !== "downloading"}
-					className={`border-2 border-foreground ${NB_SHADOW_LG} sm:max-w-xl gap-5`}
+					className="sm:max-w-xl gap-5"
 				>
 					{dialogMeta && (
 						<UpdateDialogContent

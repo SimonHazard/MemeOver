@@ -5,6 +5,7 @@ export default defineConfig({
 		// ── ui components ────────────────────────────────────────────────────
 		"components/ui/accordion": "src/components/ui/accordion.tsx",
 		"components/ui/alert": "src/components/ui/alert.tsx",
+		"components/ui/alert-dialog": "src/components/ui/alert-dialog.tsx",
 		"components/ui/avatar": "src/components/ui/avatar.tsx",
 		"components/ui/badge": "src/components/ui/badge.tsx",
 		"components/ui/button": "src/components/ui/button.tsx",

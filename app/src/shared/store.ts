@@ -129,18 +129,23 @@ export const useAppStore = create<AppStore>((set) => ({
 	queue: [],
 	enqueue: (item, opts) =>
 		set((state) => {
-			const mutedReason = muteDropReason(
-				item,
-				mutedIdSet(state.settings.mutedAuthors),
-				state.settings.hideAnonymous,
-			);
+			const isReplay = opts?.isReplay ?? item.replayOf !== undefined;
+			// Muting filters what arrives from Discord. A replay is an explicit local action
+			// (the History page confirms it was queued), so it is not filtered.
+			const mutedReason = isReplay
+				? null
+				: muteDropReason(
+						item,
+						mutedIdSet(state.settings.mutedAuthors),
+						state.settings.hideAnonymous,
+					);
 			if (mutedReason) {
 				return state;
 			}
 			const reason = canEnqueue(state.queue, item, {
 				maxQueue: MAX_QUEUE_SIZE,
 				maxPerAuthor: state.settings.maxQueuedPerAuthor,
-				isReplay: opts?.isReplay ?? item.replayOf !== undefined,
+				isReplay,
 			});
 			if (reason) {
 				console.debug("[Queue] Dropped item:", reason);

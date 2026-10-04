@@ -10,6 +10,7 @@ import {
 	createFriendSetupCode,
 	createPublicWsUrl,
 	DISCORD_DEVELOPER_PORTAL_URL,
+	isPublicWsUrlConfigured,
 	parseServerSetupCode,
 	SERVER_CREATOR_DEFAULT_PORT,
 	serverCreatorInstall,
@@ -111,7 +112,7 @@ export function useServerPage() {
 	const progress = useMemo(() => {
 		const checks = [
 			!!discordToken && !!inviteUrl,
-			!!installDir && !!publicWsUrl,
+			!!installDir && isPublicWsUrlConfigured(publicWsUrl),
 			!!status?.installed && !!status?.configured,
 			!!status?.running || !!status?.healthy,
 			!!guildId && !!guildToken,
@@ -139,7 +140,12 @@ export function useServerPage() {
 		},
 		{
 			title: t("server.steps.configure"),
-			state: installDir && publicWsUrl ? "done" : discordToken ? "active" : "idle",
+			state:
+				installDir && isPublicWsUrlConfigured(publicWsUrl)
+					? "done"
+					: discordToken
+						? "active"
+						: "idle",
 		},
 		{
 			title: t("server.steps.install"),
@@ -275,7 +281,7 @@ export function useServerPage() {
 		!installDir ||
 		!discordToken ||
 		!inviteUrl ||
-		!publicWsUrl ||
+		!isPublicWsUrlConfigured(publicWsUrl) ||
 		installMutation.isPending ||
 		installBunMutation.isPending;
 

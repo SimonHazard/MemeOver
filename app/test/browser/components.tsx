@@ -43,7 +43,7 @@ import { MotionConfig } from "framer-motion";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
-import { HoldToConfirmButton } from "../../src/components/motion/hold-to-confirm-button";
+import { ConfirmActionButton } from "../../src/components/confirm-action-button";
 import { ColorPicker } from "../../src/windows/settings/components/color-picker";
 import "../../src/App.css";
 import "../../src/i18n";
@@ -62,9 +62,11 @@ function App() {
 					<NbButton disabled>Disabled action</NbButton>
 					<NbButton size="lg">Large action</NbButton>
 					<output id="clicks">{clicks}</output>
-					<HoldToConfirmButton
+					<ConfirmActionButton
 						label="Delete"
-						holdMs={250}
+						title="Delete this item?"
+						description="The item will be removed."
+						confirmLabel="Delete item"
 						onConfirm={() => setClicks((c) => c + 10)}
 					/>
 					<Label htmlFor="input">Name</Label>

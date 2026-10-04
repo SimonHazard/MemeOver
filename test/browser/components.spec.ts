@@ -99,13 +99,7 @@ test("shared primitives work with pointer, keyboard, disabled states and focus",
 	await expect(page.locator('[data-slot="avatar-fallback"]')).toHaveText("AB");
 	await page.getByRole("button", { name: "Show toast" }).click();
 	await expect(page.getByText("Toast works", { exact: true })).toBeVisible();
-	const hold = page.getByRole("button", { name: "Hold to Delete" });
-	await hold.scrollIntoViewIfNeeded();
-	await hold.focus();
-	await page.keyboard.down("Space");
-	await page.waitForTimeout(350);
-	await page.keyboard.up("Space");
-	await expect(page.locator("#clicks")).toHaveText("11");
+	await expect(page.locator("#clicks")).toHaveText("1");
 	expect(errors).toEqual([]);
 });
 
@@ -147,4 +141,43 @@ test("button hover lifts both sizes and respects reduced motion", async ({ page 
 			})
 			.toBe(0);
 	}
+});
+
+test("destructive actions ask for confirmation in an alert dialog", async ({ page }) => {
+	await page.goto("/test/browser/components.html");
+	const clicks = page.locator("#clicks");
+	const trigger = page.getByRole("button", { name: "Delete", exact: true });
+	const dialog = page.getByRole("alertdialog", { name: "Delete this item?" });
+	const cancel = dialog.getByRole("button", { name: "Cancel", exact: true });
+	const confirm = dialog.getByRole("button", { name: "Delete item", exact: true });
+	// Opening focuses Cancel, the safe choice.
+	await trigger.click();
+	await expect(dialog).toBeVisible();
+	await expect(dialog).toHaveAccessibleDescription("The item will be removed.");
+	await expect(cancel).toBeFocused();
+	// An outside click does not dismiss an alert dialog; Escape cancels.
+	await page.mouse.click(5, 5);
+	await expect(dialog).toBeVisible();
+	await page.keyboard.press("Escape");
+	await expect(dialog).toBeHidden();
+	await expect(trigger).toBeFocused();
+	await expect(clicks).toHaveText("0");
+	// Cancel closes without confirming.
+	await trigger.click();
+	await cancel.click();
+	await expect(dialog).toBeHidden();
+	await expect(clicks).toHaveText("0");
+	// Keyboard confirmation.
+	await trigger.focus();
+	await page.keyboard.press("Enter");
+	await expect(cancel).toBeFocused();
+	await page.keyboard.press("Tab");
+	await expect(confirm).toBeFocused();
+	await page.keyboard.press("Enter");
+	await expect(dialog).toBeHidden();
+	await expect(clicks).toHaveText("10");
+	// Pointer confirmation.
+	await trigger.click();
+	await confirm.click();
+	await expect(clicks).toHaveText("20");
 });
