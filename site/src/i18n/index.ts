@@ -43,15 +43,15 @@ export function getLangFromUrl(url: URL): Locale {
 	return "en";
 }
 
-export function getLocalizedPath(lang: Locale, path: string): string {
-	if (lang === "en") return path;
-	return `/${lang}${path}`;
+// Cloudflare serves directory pages at `/page/` and 307-redirects `/page`; hreflang and internal
+// links must target the final URL or search engines ignore the alternate pair.
+function withTrailingSlash(path: string): string {
+	return path.endsWith("/") ? path : `${path}/`;
 }
 
-const localizedPagePairs = [
-	["/", "/fr/"],
-	["/legal", "/fr/legal"],
-] as const;
+export function getLocalizedPath(lang: Locale, path: string): string {
+	return withTrailingSlash(lang === "en" ? path : `/${lang}${path}`);
+}
 
 function normalizePathname(pathname: string): string {
 	if (pathname === "/") return pathname;
@@ -60,14 +60,7 @@ function normalizePathname(pathname: string): string {
 
 export function getAlternateLocalePath(pathname: string): string {
 	const normalized = normalizePathname(pathname);
-	for (const [enPath, frPath] of localizedPagePairs) {
-		if (normalized === normalizePathname(enPath)) return frPath;
-		if (normalized === normalizePathname(frPath)) return enPath;
-	}
-
-	if (normalized.startsWith("/fr/")) {
-		return normalized.slice(3) || "/";
-	}
-
-	return getLocalizedPath("fr", normalized === "/" ? "/" : normalized);
+	if (normalized === "/fr") return "/";
+	if (normalized.startsWith("/fr/")) return withTrailingSlash(normalized.slice(3));
+	return getLocalizedPath("fr", normalized);
 }

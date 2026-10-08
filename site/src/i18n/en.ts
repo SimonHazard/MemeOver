@@ -1,8 +1,8 @@
 export const en = {
 	meta: {
-		title: "MemeOver — Send memes to your friends' screen, live from Discord",
+		title: "MemeOver",
 		description:
-			"MemeOver brings Discord images, GIFs, videos, audio, reactions and text directly onto your friends' screens with a customizable desktop overlay.",
+			"Memes, GIFs, videos and sounds from Discord pop up live on your friends' screens with a standalone desktop overlay. Free and open source.",
 		imageAlt: "MemeOver desktop overlay for Discord memes, GIFs, videos, audio and reactions.",
 	},
 	nav: {
@@ -13,13 +13,14 @@ export const en = {
 		github: "GitHub",
 	},
 	hero: {
-		badge: "Open Source",
+		badge: "Free & open source",
 		title: "MemeOver",
+		subtitle: "Overlay inspired by Cacabox's LiveChat",
 		tagline: "Send memes to your friends' screen, live from Discord.",
 		description:
-			"Turn a Discord channel into a shared live overlay for images, GIFs, videos, audio, reactions and text. MemeOver is built for game nights, watch parties and friend groups that like a little controlled chaos.",
-		cta_download: "Download",
-		cta_invite: "Invite Bot",
+			"Turn a Discord channel into a live chat overlay: images, GIFs, videos, audio, reactions and text pop up on every connected friend's screen. MemeOver is built for game nights, watch parties and friend groups that like a little controlled chaos.",
+		cta_download: "Download the app",
+		cta_invite: "Add the bot to Discord",
 	},
 	howItWorks: {
 		title: "How it works",
@@ -27,12 +28,14 @@ export const en = {
 			{
 				icon: "bot",
 				title: "Install the bot",
-				description: "Add MemeOver to the Discord server where your group already hangs out.",
+				description:
+					"A server admin adds MemeOver to Discord and runs /memeover setup once to register the server.",
 			},
 			{
 				icon: "download",
 				title: "Get the app",
-				description: "Each friend installs the desktop app and joins the shared overlay.",
+				description:
+					"Each participant installs the desktop app and connects it with the code from /memeover token.",
 			},
 			{
 				icon: "send",
@@ -134,7 +137,17 @@ export const en = {
 	download: {
 		title: "Download",
 		description:
-			"Download the MemeOver desktop app for your platform, then invite the Discord bot when your server is ready.",
+			"MemeOver is set up in two steps: the bot is added to the Discord server once, then each participant installs the desktop app.",
+		botStepTitle: "Add the bot to your server",
+		botStepDescription:
+			"Done once by a member with the Manage Server permission, who then runs /memeover setup.",
+		botStepCta: "Add the bot to Discord",
+		commandsLink: "See all commands",
+		appStepTitle: "Install the app",
+		appStepDescription:
+			"Each participant installs the app for their system, runs /memeover token in Discord and pastes the connection code.",
+		detected: "Your system",
+		otherFormats: "Other formats:",
 		windows: "Windows",
 		windowsFormats: ".exe / .msi",
 		macos: "macOS",
@@ -151,6 +164,11 @@ export const en = {
 				question: "What is MemeOver?",
 				answer:
 					"MemeOver is an open-source Discord overlay that sends images, GIFs, videos, audio clips, reactions and short text from a Discord channel to connected desktop screens.",
+			},
+			{
+				question: "Is MemeOver inspired by Cacabox's LiveChat?",
+				answer:
+					"Yes, MemeOver is an independent project inspired by their LiveChat. The original LiveChat ran through OBS and was built for streamers; MemeOver is a standalone app, so no stream is needed: the overlay appears directly on each participant's screen.",
 			},
 			{
 				question: "Do all friends need the desktop app?",
@@ -171,6 +189,11 @@ export const en = {
 				question: "Can I send a meme anonymously?",
 				answer:
 					"Use /memeover secret. The overlay hides the author badge; this is not anonymity from Discord or the bot operator.",
+			},
+			{
+				question: "Is MemeOver built with AI?",
+				answer:
+					"Partly. The project started in June 2024 without AI and went through many different approaches: a Go bot, an Electron overlay later replaced by Tauri, then a bot rewritten in TypeScript with Bun. The product already existed when I started using AI. It simply helped me add new features and consolidate the product.",
 			},
 		],
 	},

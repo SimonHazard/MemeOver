@@ -21,9 +21,9 @@ const links = [
 	{ href: homeAnchorHref("#how-it-works"), label: t(lang, "nav.howItWorks") },
 	{ href: homeAnchorHref("#use-cases"), label: t(lang, "nav.useCases") },
 	{ href: homeAnchorHref("#features"), label: t(lang, "nav.features") },
-	{ href: homeAnchorHref("#download"), label: t(lang, "nav.download") },
 	{ href: "https://github.com/SimonHazard/MemeOver", label: t(lang, "nav.github") },
 ];
+// Download stays out of `links`: the desktop and mobile menus each render it as their CTA button.
 const downloadHref = homeAnchorHref("#download");
 ---
 

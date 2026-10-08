@@ -2,9 +2,9 @@ import type { Translations } from "./en";
 
 export const fr: Translations = {
 	meta: {
-		title: "MemeOver — Envoie des mèmes sur l'écran de tes amis, en direct depuis Discord",
+		title: "MemeOver",
 		description:
-			"MemeOver affiche les images, GIFs, vidéos, sons, réactions et textes Discord directement sur l'écran de tes amis avec un overlay desktop personnalisable.",
+			"Tes mèmes, GIFs, vidéos et sons Discord s'affichent en direct sur l'écran de tes amis grâce à une application desktop autonome. Gratuit et open source.",
 		imageAlt: "Overlay desktop MemeOver pour mèmes, GIFs, vidéos, sons et réactions Discord.",
 	},
 	nav: {
@@ -15,13 +15,14 @@ export const fr: Translations = {
 		github: "GitHub",
 	},
 	hero: {
-		badge: "Open Source",
+		badge: "Gratuit et open source",
 		title: "MemeOver",
+		subtitle: "Overlay inspiré du LiveChat de la Cacabox",
 		tagline: "Envoie des mèmes sur l'écran de tes amis, en direct depuis Discord.",
 		description:
-			"Transforme un salon Discord en overlay partagé pour images, GIFs, vidéos, sons, réactions et textes. MemeOver est pensé pour les soirées jeu, les watch parties et les groupes qui aiment le chaos bien réglé.",
-		cta_download: "Télécharger",
-		cta_invite: "Inviter le Bot",
+			"Transforme un salon Discord en LiveChat : images, GIFs, vidéos, sons, réactions et textes s'affichent en overlay sur l'écran de chaque ami connecté. Pensé pour les soirées jeu, les watch parties et les groupes qui aiment le chaos bien réglé.",
+		cta_download: "Télécharger l'application",
+		cta_invite: "Ajouter le bot à Discord",
 	},
 	howItWorks: {
 		title: "Comment ça marche",
@@ -29,12 +30,14 @@ export const fr: Translations = {
 			{
 				icon: "bot",
 				title: "Installe le bot",
-				description: "Ajoute MemeOver au serveur Discord où ton groupe se retrouve déjà.",
+				description:
+					"Un administrateur ajoute MemeOver au serveur Discord et lance une fois /memeover setup pour l'enregistrer.",
 			},
 			{
 				icon: "download",
 				title: "Télécharge l'app",
-				description: "Chaque ami installe l'app desktop et rejoint l'overlay partagé.",
+				description:
+					"Chaque participant installe l'app desktop et la connecte avec le code obtenu via /memeover token.",
 			},
 			{
 				icon: "send",
@@ -140,7 +143,17 @@ export const fr: Translations = {
 	download: {
 		title: "Télécharger",
 		description:
-			"Télécharge l'app desktop MemeOver pour ta plateforme, puis invite le bot Discord quand ton serveur est prêt.",
+			"MemeOver s'installe en deux étapes : le bot est ajouté une fois au serveur Discord, puis chaque participant installe l'application desktop.",
+		botStepTitle: "Ajouter le bot au serveur",
+		botStepDescription:
+			"À faire une seule fois par un membre ayant la permission Gérer le serveur, qui lance ensuite /memeover setup.",
+		botStepCta: "Ajouter le bot à Discord",
+		commandsLink: "Voir toutes les commandes",
+		appStepTitle: "Installer l'application",
+		appStepDescription:
+			"Chaque participant installe l'application pour son système, lance /memeover token dans Discord et colle le code de connexion.",
+		detected: "Ton système",
+		otherFormats: "Autres formats :",
 		windows: "Windows",
 		windowsFormats: ".exe / .msi",
 		macos: "macOS",
@@ -157,6 +170,11 @@ export const fr: Translations = {
 				question: "C'est quoi MemeOver ?",
 				answer:
 					"MemeOver est un overlay Discord open source qui envoie images, GIFs, vidéos, sons, réactions et textes courts depuis un salon Discord vers les écrans desktop connectés.",
+			},
+			{
+				question: "MemeOver est-il inspiré du LiveChat de la Cacabox ?",
+				answer:
+					"Oui, MemeOver est un projet indépendant inspiré de leur LiveChat. Le LiveChat d'origine fonctionnait avec OBS et s'adressait aux streamers ; MemeOver est une application autonome : pas besoin de streamer, l'overlay s'affiche directement sur l'écran de chaque participant.",
 			},
 			{
 				question: "Est-ce que chaque ami doit installer l'app desktop ?",
@@ -177,6 +195,11 @@ export const fr: Translations = {
 				question: "Puis-je envoyer un meme anonymement ?",
 				answer:
 					"Utilise /memeover secret. L’overlay masque le badge auteur ; cela ne garantit pas l’anonymat auprès de Discord ou de l’opérateur du bot.",
+			},
+			{
+				question: "MemeOver est-il développé avec l'IA ?",
+				answer:
+					"En partie. Le projet a démarré en juin 2024, sans IA, et il est passé par beaucoup de solutions différentes : un bot en Go, un overlay en Electron puis en Tauri, et enfin un bot réécrit en TypeScript avec Bun. Le produit existait déjà quand j'ai commencé à utiliser l'IA. Elle m'a simplement permis d'ajouter de nouvelles fonctionnalités et de consolider le produit.",
 			},
 		],
 	},

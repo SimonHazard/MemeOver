@@ -1,7 +1,7 @@
 ---
-import { createDiscordInviteUrl } from "@memeover/shared";
 import type { Locale } from "@/i18n";
 import { getLocalizedPath, getTranslations } from "@/i18n";
+import { botInviteHref as inviteHref } from "@/lib/bot-invite";
 
 interface Props {
 	lang: Locale;
@@ -10,11 +10,8 @@ interface Props {
 const { lang } = Astro.props;
 const dict = getTranslations(lang);
 
-const botClientId = import.meta.env.PUBLIC_BOT_CLIENT_ID;
-const inviteHref = botClientId
-	? createDiscordInviteUrl(botClientId, false, { integrationType: 0 })
-	: null;
-const legalHref = lang === "fr" ? "/fr/legal" : "/legal";
+const legalHref = getLocalizedPath(lang, "/legal");
+const downloadHref = `${getLocalizedPath(lang, "/")}#download`;
 ---
 
 <footer class="border-t-2 border-foreground bg-card py-10 px-4">
@@ -35,9 +32,7 @@ const legalHref = lang === "fr" ? "/fr/legal" : "/legal";
 			</a>
 			<span class="text-foreground/20">·</span>
 			<a
-				href="https://github.com/SimonHazard/MemeOver/releases/latest"
-				target="_blank"
-				rel="noopener noreferrer"
+				href={downloadHref}
 				class="transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
 			>
 				{dict.nav.download}
