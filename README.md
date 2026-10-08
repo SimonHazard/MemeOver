@@ -5,7 +5,9 @@
 **Send memes to your friends' screen, live from Discord.**
 
 MemeOver is a desktop overlay app and Discord bot that lets a group share images,
-GIFs, videos, audio, reactions and text directly on each other's screens.
+GIFs, videos, audio, reactions and text directly on each other's screens. Inspired by
+Cacabox's LiveChat, which ran through OBS for streamers, MemeOver is a standalone app
+that works without streaming.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/SimonHazard/MemeOver)](https://github.com/SimonHazard/MemeOver/releases/latest)
@@ -20,6 +22,9 @@ GIFs, videos, audio, reactions and text directly on each other's screens.
 <summary><b>Version francaise</b></summary>
 
 ## Ce que fait MemeOver
+
+Projet inspire du LiveChat de la Cacabox, qui fonctionnait avec OBS pour les streamers :
+MemeOver est une application autonome qui fonctionne sans streamer.
 
 - Affiche les medias envoyes depuis Discord directement en overlay.
 - Prend en charge images, GIFs, videos, audio, stickers, textes et reactions.

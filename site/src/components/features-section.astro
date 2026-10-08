@@ -57,7 +57,8 @@ const LeadIcon = iconMap[leadFeature.icon] ?? Zap;
 				<div class="absolute right-6 top-6 flex size-16 items-center justify-center rounded-2xl border-2 border-foreground bg-primary text-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)]">
 					<LeadIcon className="size-7" aria-hidden="true" />
 				</div>
-				<div class="flex min-h-64 max-w-lg flex-col justify-end gap-4 pt-24">
+				<!-- pb-14 keeps the description above the decorative tiles (tallest reaches 80px into the card). -->
+				<div class="flex min-h-64 max-w-lg flex-col justify-end gap-4 pt-24 pb-14">
 					<h3 class="text-balance font-display text-3xl tracking-wide">
 						{leadFeature.title}
 					</h3>

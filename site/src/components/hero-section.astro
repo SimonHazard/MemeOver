@@ -1,7 +1,7 @@
 ---
-import { createDiscordInviteUrl } from "@memeover/shared";
 import type { Locale } from "@/i18n";
 import { t } from "@/i18n";
+import { botInviteHref } from "@/lib/bot-invite";
 import HeroAnimation from "./hero-animation.tsx";
 
 interface Props {
@@ -9,11 +9,6 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-
-const botClientId = import.meta.env.PUBLIC_BOT_CLIENT_ID;
-const inviteHref = botClientId
-	? createDiscordInviteUrl(botClientId, false, { integrationType: 0 })
-	: null;
 ---
 
 <section class="relative flex min-h-[calc(100dvh-3rem)] items-center justify-center overflow-hidden px-4 pb-12 pt-28">
@@ -27,11 +22,12 @@ const inviteHref = botClientId
 		client:load
 		badge={t(lang, "hero.badge")}
 		title={t(lang, "hero.title")}
+		subtitle={t(lang, "hero.subtitle")}
 		tagline={t(lang, "hero.tagline")}
 		description={t(lang, "hero.description")}
 		ctaDownload={t(lang, "hero.cta_download")}
 		ctaInvite={t(lang, "hero.cta_invite")}
-		downloadHref="https://github.com/SimonHazard/MemeOver/releases/latest"
-		inviteHref={inviteHref}
+		downloadHref="#download"
+		inviteHref={botInviteHref}
 	/>
 </section>

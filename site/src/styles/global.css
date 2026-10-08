@@ -121,6 +121,30 @@
 		opacity: 1;
 		translate: 0 0;
 	}
+	/* Hero entrance runs from the static HTML, without waiting for React hydration. */
+	.hero-pop,
+	.hero-rise {
+		animation: 450ms var(--ease-out) calc(100ms + var(--hero-step, 0) * 120ms) both;
+	}
+	.hero-pop {
+		animation-name: hero-pop;
+	}
+	.hero-rise {
+		animation-name: hero-rise;
+	}
+}
+@keyframes hero-pop {
+	from {
+		opacity: 0;
+		scale: 0.8;
+		rotate: -3deg;
+	}
+}
+@keyframes hero-rise {
+	from {
+		opacity: 0;
+		translate: 0 24px;
+	}
 }
 @media (prefers-reduced-motion: reduce) {
 	.mobile-menu-panel {

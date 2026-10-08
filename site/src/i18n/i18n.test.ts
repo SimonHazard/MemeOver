@@ -27,17 +27,21 @@ test("URL language", () => {
 	expect(getLangFromUrl(new URL("https://x/fr/legal"))).toBe("fr");
 	expect(getLangFromUrl(new URL("https://x/legal"))).toBe("en");
 });
-test("localized path", () => {
-	expect(getLocalizedPath("en", "/legal")).toBe("/legal");
-	expect(getLocalizedPath("fr", "/legal")).toBe("/fr/legal");
+test("localized path targets the final trailing-slash URL", () => {
+	expect(getLocalizedPath("en", "/")).toBe("/");
+	expect(getLocalizedPath("fr", "/")).toBe("/fr/");
+	expect(getLocalizedPath("en", "/legal")).toBe("/legal/");
+	expect(getLocalizedPath("fr", "/legal")).toBe("/fr/legal/");
 });
 for (const [path, other] of [
 	["/", "/fr/"],
 	["/fr/", "/"],
-	["/legal", "/fr/legal"],
-	["/fr/legal", "/legal"],
-	["/legal/", "/fr/legal"],
-	["/foo", "/fr/foo"],
+	["/fr", "/"],
+	["/legal", "/fr/legal/"],
+	["/fr/legal", "/legal/"],
+	["/legal/", "/fr/legal/"],
+	["/fr/commands/", "/commands/"],
+	["/foo", "/fr/foo/"],
 ])
 	test(`alternate ${path}`, () => expect(getAlternateLocalePath(path)).toBe(other));
 test("unknown locale falls back to English", () =>
