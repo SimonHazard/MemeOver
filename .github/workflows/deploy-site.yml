@@ -87,13 +87,15 @@ jobs:
           PUBLIC_BOT_CLIENT_ID: ${{ vars.PUBLIC_BOT_CLIENT_ID }}
         run: bun run build
 
-      # Conservé 1 jour : juste le temps que les jobs deploy s'en servent.
+      # Couvre les approbations production différées et les relances de déploiement.
+      # Après expiration, relancer tous les jobs pour reconstruire l'artefact.
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: site-dist
           path: site/dist
-          retention-days: 1
+          retention-days: 30
+          if-no-files-found: error
 
   # ── 2. Deploy — Production (push ou dispatch sur main) ────────────────────────
   # Protégé par l'environment GitHub "production" : requiert une approbation
