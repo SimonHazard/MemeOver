@@ -18,7 +18,7 @@ const pageTitle = title ?? t(lang, "meta.title");
 const pageDescription = description ?? t(lang, "meta.description");
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 const alternateLocaleUrl = new URL(getAlternateLocalePath(Astro.url.pathname), Astro.site);
-const ogImage = new URL("/social-card.png", Astro.site);
+const ogImage = new URL("/memeover-discord-banner.png", Astro.site);
 const ogImageAlt = t(lang, "meta.imageAlt");
 const siteUrl = new URL("/", Astro.site);
 const englishUrl = lang === "en" ? canonicalUrl : alternateLocaleUrl;
@@ -44,7 +44,6 @@ const structuredData = [
 		codeRepository: githubUrl,
 		inLanguage: ["en", "fr"],
 		image: ogImage.toString(),
-		screenshot: ogImage.toString(),
 		featureList: dict.features.items.map((item) => item.title),
 		author: {
 			"@type": "Person",
@@ -116,8 +115,8 @@ const structuredData = [
 		<meta property="og:title" content={pageTitle} />
 		<meta property="og:description" content={pageDescription} />
 		<meta property="og:image" content={ogImage} />
-		<meta property="og:image:width" content="1200" />
-		<meta property="og:image:height" content="630" />
+		<meta property="og:image:width" content="960" />
+		<meta property="og:image:height" content="540" />
 		<meta property="og:image:alt" content={ogImageAlt} />
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:site_name" content="MemeOver" />
