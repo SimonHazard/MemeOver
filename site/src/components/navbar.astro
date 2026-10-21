@@ -1,7 +1,6 @@
 ---
 import type { Locale } from "@/i18n";
 import { getAlternateLocalePath, getLocalizedPath, t } from "@/i18n";
-import { communityDiscordHref } from "@/lib/community";
 import MobileMenu from "./mobile-menu.tsx";
 import ThemeToggle from "./theme-toggle.tsx";
 
@@ -23,7 +22,6 @@ const links = [
 	{ href: homeAnchorHref("#use-cases"), label: t(lang, "nav.useCases") },
 	{ href: homeAnchorHref("#features"), label: t(lang, "nav.features") },
 	{ href: "https://github.com/SimonHazard/MemeOver", label: t(lang, "nav.github") },
-	{ href: communityDiscordHref, label: t(lang, "nav.discord") },
 ];
 // Download stays out of `links`: the desktop and mobile menus each render it as their CTA button.
 const downloadHref = homeAnchorHref("#download");
@@ -41,7 +39,7 @@ const downloadHref = homeAnchorHref("#download");
 		</a>
 
 		<!-- Desktop nav -->
-		<nav class="hidden xl:flex items-center gap-5" aria-label="Main navigation">
+		<nav class="hidden lg:flex items-center gap-5" aria-label="Main navigation">
 			{links.map((link) => (
 				<a
 					href={link.href}
@@ -69,7 +67,7 @@ const downloadHref = homeAnchorHref("#download");
 			<!-- Desktop download CTA -->
 			<a
 				href={downloadHref}
-				class="hidden items-center rounded-lg border-2 border-foreground bg-primary px-4 py-2 font-display text-sm tracking-wide text-primary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[3px_3px_0px_0px_var(--nb-shadow)] motion-safe:active:translate-x-0.5 motion-safe:active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background xl:inline-flex"
+				class="hidden items-center rounded-lg border-2 border-foreground bg-primary px-4 py-2 font-display text-sm tracking-wide text-primary-foreground shadow-[2px_2px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[3px_3px_0px_0px_var(--nb-shadow)] motion-safe:active:translate-x-0.5 motion-safe:active:translate-y-0.5 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
 			>
 				{t(lang, "nav.download")}
 			</a>

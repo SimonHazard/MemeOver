@@ -11,7 +11,6 @@ export const en = {
 		features: "Features",
 		download: "Download",
 		github: "GitHub",
-		discord: "Discord",
 	},
 	hero: {
 		badge: "Free & open source",
@@ -203,13 +202,14 @@ export const en = {
 		description:
 			"MemeOver is open source under the MIT license. You can inspect it, host it yourself, report issues and shape what comes next.",
 		viewOnGithub: "View on GitHub",
+		joinDiscord: "Join the Discord",
 		reportBug: "Report a bug",
 		supportOnKofi: "Support on Ko-fi",
 		contribute:
 			"Fork the repo, open a PR — every contribution matters. Check out the issues for ideas!",
 	},
 	footer: {
-		community: "Discord community",
+		community: "Discord",
 		madeWith: "Made with ❤️ by",
 		author: "Simon Hazard",
 		license: "MIT License",

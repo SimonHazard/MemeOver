@@ -1,7 +1,8 @@
 ---
-import { Bug, Coffee, GitFork } from "lucide-react";
+import { Bug, Coffee, GitFork, MessageCircle } from "lucide-react";
 import type { Locale } from "@/i18n";
 import { getTranslations } from "@/i18n";
+import { communityDiscordHref } from "@/lib/community";
 
 interface Props {
 	lang: Locale;
@@ -23,21 +24,30 @@ const dict = getTranslations(lang);
 			{dict.openSource.contribute}
 		</p>
 
-		<div class="flex flex-wrap items-center justify-center gap-4">
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
 			<a
 				href="https://github.com/SimonHazard/MemeOver"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				<GitFork className="size-5" aria-hidden="true" />
 				{dict.openSource.viewOnGithub}
 			</a>
 			<a
+				href={communityDiscordHref}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#5865F2] text-white font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] ease-out duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+			>
+				<MessageCircle className="size-5 shrink-0" aria-hidden="true" />
+				{dict.openSource.joinDiscord}
+			</a>
+			<a
 				href="https://github.com/SimonHazard/MemeOver/issues"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-card text-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-card text-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,translate] duration-200 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				<Bug className="size-5" aria-hidden="true" />
 				{dict.openSource.reportBug}
@@ -46,7 +56,7 @@ const dict = getTranslations(lang);
 				href="https://ko-fi.com/simonhazard"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:bg-primary-500 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+				class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-display tracking-wide text-base border-2 border-foreground shadow-[3px_3px_0px_0px_var(--nb-shadow)] transition-[box-shadow,transform,background-color] duration-200 hover:bg-primary-500 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] active:shadow-none motion-safe:active:translate-x-0.75 motion-safe:active:translate-y-0.75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				<Coffee className="size-5" aria-hidden="true" />
 				{dict.openSource.supportOnKofi}
