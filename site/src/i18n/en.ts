@@ -3,7 +3,7 @@ export const en = {
 		title: "MemeOver",
 		description:
 			"Memes, GIFs, videos and sounds from Discord pop up live on your friends' screens with a standalone desktop overlay. Free and open source.",
-		imageAlt: "MemeOver desktop overlay for Discord memes, GIFs, videos, audio and reactions.",
+		imageAlt: "MemeOver banner: images, GIFs, videos, audio, reactions and text from Discord.",
 	},
 	nav: {
 		howItWorks: "How it works",

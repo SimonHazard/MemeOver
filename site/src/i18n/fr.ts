@@ -5,7 +5,7 @@ export const fr: Translations = {
 		title: "MemeOver",
 		description:
 			"Tes mèmes, GIFs, vidéos et sons Discord s'affichent en direct sur l'écran de tes amis grâce à une application desktop autonome. Gratuit et open source.",
-		imageAlt: "Overlay desktop MemeOver pour mèmes, GIFs, vidéos, sons et réactions Discord.",
+		imageAlt: "Bannière MemeOver : images, GIFs, vidéos, sons, réactions et texte depuis Discord.",
 	},
 	nav: {
 		howItWorks: "Comment ça marche",
