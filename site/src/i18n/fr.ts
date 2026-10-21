@@ -13,6 +13,7 @@ export const fr: Translations = {
 		features: "Fonctionnalités",
 		download: "Télécharger",
 		github: "GitHub",
+		discord: "Discord",
 	},
 	hero: {
 		badge: "Gratuit et open source",
@@ -214,6 +215,7 @@ export const fr: Translations = {
 			"Fork le repo, ouvre une PR — chaque contribution compte. Jette un œil aux issues pour des idées !",
 	},
 	footer: {
+		community: "Communauté Discord",
 		madeWith: "Fait avec ❤️ par",
 		author: "Simon Hazard",
 		license: "Licence MIT",

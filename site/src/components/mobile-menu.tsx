@@ -33,7 +33,7 @@ export default function MobileMenu({
 	}, [open]);
 
 	return (
-		<div className="lg:hidden" data-open={open}>
+		<div className="xl:hidden" data-open={open}>
 			<button
 				type="button"
 				onClick={() => setOpen(!open)}

@@ -11,6 +11,7 @@ export const en = {
 		features: "Features",
 		download: "Download",
 		github: "GitHub",
+		discord: "Discord",
 	},
 	hero: {
 		badge: "Free & open source",
@@ -208,6 +209,7 @@ export const en = {
 			"Fork the repo, open a PR — every contribution matters. Check out the issues for ideas!",
 	},
 	footer: {
+		community: "Discord community",
 		madeWith: "Made with ❤️ by",
 		author: "Simon Hazard",
 		license: "MIT License",

@@ -2,6 +2,7 @@
 import type { Locale } from "@/i18n";
 import { getLocalizedPath, getTranslations } from "@/i18n";
 import { botInviteHref as inviteHref } from "@/lib/bot-invite";
+import { communityDiscordHref } from "@/lib/community";
 
 interface Props {
 	lang: Locale;
@@ -29,6 +30,15 @@ const downloadHref = `${getLocalizedPath(lang, "/")}#download`;
 				class="transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
 			>
 				GitHub
+			</a>
+			<span class="text-foreground/20">·</span>
+			<a
+				href={communityDiscordHref}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="transition-colors duration-200 hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+			>
+				{dict.footer.community}
 			</a>
 			<span class="text-foreground/20">·</span>
 			<a
