@@ -6,6 +6,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.8.0]
+
+### Added
+
+- Show a Sonner toast on the overlay when another user connects to the same server. Connection notifications are enabled by default and can be turned off or placed in any of the four corners from display settings and profiles.
+- Ignore the initial member count, departures and repeated counts so opening or reconnecting the app does not announce existing users. Hide connection toasts when the overlay is closed or notifications are disabled.
+
 ## [1.7.1]
 
 ### Changed

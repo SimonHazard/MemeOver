@@ -1,6 +1,8 @@
+import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import { MotionConfig } from "framer-motion";
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
+import i18n from "../../src/i18n";
 import { useAppStore } from "../../src/shared/store";
 import {
 	DEFAULT_SETTINGS,
@@ -9,9 +11,11 @@ import {
 	type OverlayPosition,
 } from "../../src/shared/types";
 import { AUTHOR_BADGE_HEIGHT } from "../../src/windows/overlay/components/author-badge";
+import { ConnectionNotifications } from "../../src/windows/overlay/components/connection-notifications";
 import { FloatingReactions } from "../../src/windows/overlay/components/floating-reactions";
 import { MediaDisplay } from "../../src/windows/overlay/components/media-display";
 import { MediaPopup } from "../../src/windows/overlay/components/media-popup";
+import { useOverlayWs } from "../../src/windows/overlay/hooks/useOverlayWs";
 import "../../src/App.css";
 
 const params = new URLSearchParams(location.search);
@@ -109,12 +113,61 @@ if (params.has("reactions")) {
 	});
 }
 
+function NotificationsHarness() {
+	useOverlayWs();
+	const count = useAppStore((s) => s.memberCount);
+	const status = useAppStore((s) => s.wsStatus);
+	const enabled = useAppStore((s) => s.settings.connectionNotificationsEnabled);
+	return (
+		<>
+			<output id="connection-state">
+				{status}:{count}
+			</output>
+			<button
+				type="button"
+				onClick={() =>
+					useAppStore.getState().updateSettings({ connectionNotificationsEnabled: !enabled })
+				}
+			>
+				Toggle notifications
+			</button>
+			<button type="button" onClick={() => useAppStore.getState().setOverlayHealth("closed")}>
+				Hide overlay
+			</button>
+			<button type="button" onClick={() => useAppStore.getState().setOverlayHealth("alive")}>
+				Show overlay
+			</button>
+			<ConnectionNotifications />
+		</>
+	);
+}
+
+if (params.has("notifications")) {
+	mockWindows("overlay");
+	mockIPC(() => null, { shouldMockEvents: true });
+	void i18n.changeLanguage(params.get("lang") ?? "en");
+	useAppStore.setState({
+		overlayHealth: "alive",
+		settings: {
+			...DEFAULT_SETTINGS,
+			guildId: "123456789012345678",
+			token: "test-token",
+			clientId: "notification-test-client",
+			wsUrl: "ws://notifications.test/ws",
+			connectionNotificationPosition: (params.get("corner") ??
+				"bottom-right") as typeof DEFAULT_SETTINGS.connectionNotificationPosition,
+		},
+	});
+}
+
 const root = document.getElementById("root");
 if (root)
 	createRoot(root).render(
 		<StrictMode>
 			<MotionConfig reducedMotion="user">
-				{params.has("reactions") ? (
+				{params.has("notifications") ? (
+					<NotificationsHarness />
+				) : params.has("reactions") ? (
 					<FloatingReactions />
 				) : position ? (
 					<div id="display">

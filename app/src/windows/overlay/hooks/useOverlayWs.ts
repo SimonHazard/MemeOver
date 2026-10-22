@@ -4,8 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fallbackExpiryDelay, isGuildPausedAt } from "@/shared/guild-pause";
 import { mutedIdSet } from "@/shared/muted-authors";
 import { useAppStore } from "@/shared/store";
+import {
+	dismissConnectionNotification,
+	showConnectionNotification,
+} from "../components/connection-notifications";
 import { bindSocket, sendClientMessage, setServerFeatures, unbindSocket } from "../ws-client";
 
+import { newlyConnectedCount } from "./connection-notification";
 import { routeServerMessage } from "./route-server-message";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -51,6 +56,7 @@ export function useOverlayWs(): void {
 	overlayHealthRef.current = overlayHealth;
 
 	const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const memberCountRef = useRef<number | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
 	const revokedRef = useRef<SessionRevocationCode | null>(null);
 	const [reconnectNonce, setReconnectNonce] = useState(0);
@@ -72,6 +78,8 @@ export function useOverlayWs(): void {
 	// ── Stable event handlers ─────────────────────────────────────────────────
 
 	const onOpen = useCallback(() => {
+		memberCountRef.current = null;
+		dismissConnectionNotification();
 		setWsStatus("connecting");
 		const join: JoinMessage = {
 			type: "JOIN",
@@ -117,6 +125,8 @@ export function useOverlayWs(): void {
 					spawnReaction({ emoji: action.emoji, emojiUrl: action.emojiUrl });
 					break;
 				case "session_revoked":
+					memberCountRef.current = null;
+					dismissConnectionNotification();
 					revokedRef.current = action.code;
 					setWsStatus("error");
 					void emit("ws-session-revoked", action.code).then(() =>
@@ -143,10 +153,21 @@ export function useOverlayWs(): void {
 				case "pong":
 					sendClientMessage({ type: "PONG" });
 					break;
-				case "member_count":
+				case "member_count": {
+					const state = useAppStore.getState();
+					const count = newlyConnectedCount(
+						memberCountRef.current,
+						action.count,
+						state.settings.connectionNotificationsEnabled,
+						state.overlayHealth,
+					);
+					// Always advance the baseline, including while notifications are disabled.
+					memberCountRef.current = action.count;
+					if (count > 0) showConnectionNotification(count);
 					setMemberCount(action.count);
 					void emit("member-count-changed", action.count);
 					break;
+				}
 				case "drop":
 					if (action.reason === "invalid_json")
 						console.warn("[WS] Failed to parse message:", action.detail);
@@ -163,11 +184,14 @@ export function useOverlayWs(): void {
 	);
 
 	const onClose = useCallback(() => {
+		memberCountRef.current = null;
+		dismissConnectionNotification();
 		setWsStatus("disconnected");
 		void emit("ws-status-changed", "disconnected");
 	}, [setWsStatus]);
 
 	const onError = useCallback(() => {
+		dismissConnectionNotification();
 		setWsStatus("error");
 		void emit("ws-status-changed", "error");
 	}, [setWsStatus]);
@@ -232,6 +256,8 @@ export function useOverlayWs(): void {
 		connect();
 
 		return () => {
+			memberCountRef.current = null;
+			dismissConnectionNotification();
 			disposed = true;
 			if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);
 			useAppStore.getState().setGuildPausedUntil(null);

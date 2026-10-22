@@ -6,6 +6,7 @@ import { FullscreenCompatibilityNotice } from "./fullscreen-compatibility-notice
 import { AppearanceSection } from "./sections/appearance-section";
 import { FormActions } from "./sections/form-actions";
 import { MediaTypesSection } from "./sections/media-types-section";
+import { NotificationsSection } from "./sections/notifications-section";
 import { OverlayControls } from "./sections/overlay-controls";
 import { PlacementSection } from "./sections/placement-section";
 import { ProfilesSection } from "./sections/profiles-section";
@@ -62,6 +63,10 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 
 								<NbCard>
 									<TimingSoundSection />
+								</NbCard>
+
+								<NbCard>
+									<NotificationsSection />
 								</NbCard>
 
 								<NbCard>

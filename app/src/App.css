@@ -155,3 +155,9 @@
 		animation-delay: 0s;
 	}
 }
+
+/* Connection notifications remain passive on the click-through overlay. */
+.overlay-connection-toaster,
+.overlay-connection-toaster [data-sonner-toast] {
+	pointer-events: none !important;
+}

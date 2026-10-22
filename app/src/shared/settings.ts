@@ -1,6 +1,8 @@
 import { emit } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";
 import {
+	CONNECTION_NOTIFICATION_POSITIONS,
+	type ConnectionNotificationPosition,
 	CURRENT_SCHEMA_VERSION,
 	DEFAULT_SETTINGS,
 	DEFAULT_WS_URL,
@@ -147,6 +149,17 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	if (typeof out.hideAnonymous !== "boolean") out.hideAnonymous = false;
 	// v11 → v12: machine-local automatic updates, on by default.
 	if (typeof out.autoUpdate !== "boolean") out.autoUpdate = true;
+	// v12 → v13: overlay connection toasts, enabled by default.
+	if (typeof out.connectionNotificationsEnabled !== "boolean") {
+		out.connectionNotificationsEnabled = DEFAULT_SETTINGS.connectionNotificationsEnabled;
+	}
+	if (
+		!CONNECTION_NOTIFICATION_POSITIONS.includes(
+			out.connectionNotificationPosition as ConnectionNotificationPosition,
+		)
+	) {
+		out.connectionNotificationPosition = DEFAULT_SETTINGS.connectionNotificationPosition;
+	}
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

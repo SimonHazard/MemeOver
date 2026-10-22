@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { FLOATING_REACTION_PRESETS, type Settings } from "@/shared/types";
+import {
+	CONNECTION_NOTIFICATION_POSITIONS,
+	FLOATING_REACTION_PRESETS,
+	type Settings,
+} from "@/shared/types";
 
 const OVERLAY_POSITIONS = [
 	"center",
@@ -22,6 +26,8 @@ const TEXT_POSITIONS = [
 ] as const;
 
 export const OverlaySettingsSchema = z.object({
+	connectionNotificationsEnabled: z.boolean(),
+	connectionNotificationPosition: z.enum(CONNECTION_NOTIFICATION_POSITIONS),
 	maxQueuedPerAuthor: z.number().int().min(0).max(10),
 	mediaSize: z.number().min(10).max(90),
 	duration: z.number().min(1).max(30),
@@ -62,6 +68,8 @@ export type OverlaySettingsValues = z.infer<typeof OverlaySettingsSchema>;
 
 export function extractDefaults(s: Settings): OverlaySettingsValues {
 	return {
+		connectionNotificationsEnabled: s.connectionNotificationsEnabled,
+		connectionNotificationPosition: s.connectionNotificationPosition,
 		maxQueuedPerAuthor: s.maxQueuedPerAuthor,
 		mediaSize: s.mediaSize,
 		duration: s.duration,

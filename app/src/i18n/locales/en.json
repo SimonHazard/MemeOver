@@ -34,6 +34,8 @@
 		"guildUnregistered": "This server was removed from MemeOver. Run /memeover setup in Discord, then paste the new setup code."
 	},
 	"overlay": {
+		"userConnected_one": "A user connected",
+		"userConnected_other": "{{count}} users connected",
 		"controls": "Overlay controls",
 		"show": "Show",
 		"reload": "Reload",
@@ -52,6 +54,10 @@
 		"queueSizeLabel_other": "pending"
 	},
 	"display": {
+		"group_notifications": "Connection notifications",
+		"group_notifications_hint": "Show a toast when another user connects to this server.",
+		"connection_notifications_enabled": "Notify when a user connects",
+		"connection_notification_position": "Notification position",
 		"size": "Media size",
 		"duration": "Display duration",
 		"duration_unit": "s",

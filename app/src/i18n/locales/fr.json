@@ -34,6 +34,8 @@
 		"guildUnregistered": "Ce serveur a été retiré de MemeOver. Exécutez /memeover setup dans Discord, puis collez le nouveau code de configuration."
 	},
 	"overlay": {
+		"userConnected_one": "Un utilisateur s’est connecté",
+		"userConnected_other": "{{count}} utilisateurs se sont connectés",
 		"controls": "Contrôles de l'overlay",
 		"show": "Afficher",
 		"reload": "Recharger",
@@ -52,6 +54,10 @@
 		"queueSizeLabel_other": "en attente"
 	},
 	"display": {
+		"group_notifications": "Notifications de connexion",
+		"group_notifications_hint": "Affiche un toast lorsqu’un autre utilisateur se connecte à ce serveur.",
+		"connection_notifications_enabled": "Notifier la connexion d’un utilisateur",
+		"connection_notification_position": "Position des notifications",
 		"size": "Taille du média",
 		"duration": "Durée d'affichage",
 		"duration_unit": "s",

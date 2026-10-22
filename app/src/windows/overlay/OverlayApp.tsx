@@ -1,6 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/shared/store";
+import { ConnectionNotifications } from "./components/connection-notifications";
 import { FloatingReactions } from "./components/floating-reactions";
 import { MediaPopup } from "./components/media-popup";
 import { useHistoryLogger } from "./hooks/useHistoryLogger";
@@ -50,6 +51,7 @@ export function OverlayApp() {
 			/>
 
 			<FloatingReactions />
+			<ConnectionNotifications />
 
 			{/* ── DEV badge (always visible in dev, not only in preview) ── */}
 			{import.meta.env.DEV && (

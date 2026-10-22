@@ -1,7 +1,51 @@
 import { describe, expect, test } from "bun:test";
 import { pickOverlayProfileSettings } from "./profiles";
 import { normalizeSettings } from "./settings";
-import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, OVERLAY_PROFILE_FIELDS } from "./types";
+import {
+	CONNECTION_NOTIFICATION_POSITIONS,
+	CURRENT_SCHEMA_VERSION,
+	DEFAULT_SETTINGS,
+	OVERLAY_PROFILE_FIELDS,
+} from "./types";
+
+test("connection notifications migrate on, preserve opt out and validate all four corners", () => {
+	expect(normalizeSettings({ schemaVersion: 12 })).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		connectionNotificationsEnabled: true,
+		connectionNotificationPosition: "bottom-right",
+	});
+	for (const position of CONNECTION_NOTIFICATION_POSITIONS) {
+		expect(
+			normalizeSettings({
+				connectionNotificationsEnabled: false,
+				connectionNotificationPosition: position,
+			}),
+		).toMatchObject({
+			connectionNotificationsEnabled: false,
+			connectionNotificationPosition: position,
+		});
+	}
+	for (const position of ["top-center", "center", null, 42]) {
+		expect(
+			normalizeSettings({
+				connectionNotificationsEnabled: "false",
+				connectionNotificationPosition: position,
+			}),
+		).toMatchObject({
+			connectionNotificationsEnabled: true,
+			connectionNotificationPosition: "bottom-right",
+		});
+	}
+	expect(
+		pickOverlayProfileSettings({
+			connectionNotificationsEnabled: false,
+			connectionNotificationPosition: "top-left",
+		}),
+	).toMatchObject({
+		connectionNotificationsEnabled: false,
+		connectionNotificationPosition: "top-left",
+	});
+});
 
 describe("settings normalization", () => {
 	test("defaults bot/app sources to hidden during migration", () => {
