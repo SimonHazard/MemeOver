@@ -224,3 +224,48 @@
 	--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 	--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
+
+/* Sonner keeps its stacking and gestures; surfaces follow MemeOver's theme. */
+[data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] {
+	background: var(--popover);
+	color: var(--popover-foreground);
+	border: 2px solid var(--foreground);
+	border-radius: 0;
+	box-shadow: 4px 4px 0 var(--nb-shadow);
+	font-family: var(--font-sans);
+	gap: 12px;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] [data-icon] {
+	width: 28px;
+	height: 28px;
+	flex-shrink: 0;
+	justify-content: center;
+	margin: 0;
+	border: 2px solid var(--foreground);
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-type="error"] [data-icon] {
+	background: var(--destructive);
+	color: var(--background);
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] [data-description] {
+	color: var(--muted-foreground);
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] [data-button] {
+	border: 2px solid var(--foreground);
+	border-radius: 0;
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] [data-close-button] {
+	border: 2px solid var(--foreground);
+	border-radius: 0;
+	background: var(--popover);
+	color: var(--popover-foreground);
+}

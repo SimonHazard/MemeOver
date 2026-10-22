@@ -1,5 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
+import { useLanguageSync } from "@/i18n/use-language-sync";
 import { useAppStore } from "@/shared/store";
 import { ConnectionNotifications } from "./components/connection-notifications";
 import { FloatingReactions } from "./components/floating-reactions";
@@ -11,6 +12,7 @@ import { useOverlayWs } from "./hooks/useOverlayWs";
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function OverlayApp() {
+	useLanguageSync();
 	const { settings } = useAppStore();
 
 	// Dev-only: simulated production background
@@ -20,11 +22,22 @@ export function OverlayApp() {
 		if (!import.meta.env.DEV) return;
 		// Store the unlisten fn once the promise resolves so cleanup is synchronous.
 		let unlistenFn: (() => void) | undefined;
-		void listen<boolean>("overlay-dev-preview", (e) => setDevPreview(e.payload)).then((fn) => {
-			unlistenFn = fn;
-		});
+		let disposed = false;
+		void listen<boolean>("overlay-dev-preview", (e) => {
+			if (!disposed) setDevPreview(e.payload);
+		})
+			.then((fn) => {
+				if (disposed) return fn();
+				else unlistenFn = fn;
+			})
+			.catch((error) => console.warn("[Overlay] Could not subscribe to dev preview", error));
 		return () => {
-			unlistenFn?.();
+			disposed = true;
+			if (unlistenFn) {
+				void Promise.resolve(unlistenFn()).catch((error) =>
+					console.warn("[Overlay] Could not unsubscribe from dev preview", error),
+				);
+			}
 		};
 	}, []);
 

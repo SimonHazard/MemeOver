@@ -47,6 +47,30 @@ test("connection notifications migrate on, preserve opt out and validate all fou
 	});
 });
 
+test("connection notification duration migrates to four seconds and validates saved values", () => {
+	expect(normalizeSettings({ schemaVersion: 13 })).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		connectionNotificationDuration: 4,
+	});
+	for (const [saved, expected] of [
+		[1, 1],
+		[30, 30],
+		[8, 8],
+		[0, 1],
+		[-5, 1],
+		[60, 30],
+		[6.6, 7],
+		[null, 4],
+		["8", 4],
+		[Number.NaN, 4],
+		[Number.POSITIVE_INFINITY, 4],
+	] as const) {
+		expect(
+			normalizeSettings({ connectionNotificationDuration: saved }).connectionNotificationDuration,
+		).toBe(expected);
+	}
+});
+
 describe("settings normalization", () => {
 	test("defaults bot/app sources to hidden during migration", () => {
 		const settings = normalizeSettings({

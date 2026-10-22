@@ -58,6 +58,7 @@
 		"group_notifications_hint": "Affiche un toast lorsqu’un autre utilisateur se connecte à ce serveur.",
 		"connection_notifications_enabled": "Notifier la connexion d’un utilisateur",
 		"connection_notification_position": "Position des notifications",
+		"connection_notification_duration": "Durée des notifications",
 		"size": "Taille du média",
 		"duration": "Durée d'affichage",
 		"duration_unit": "s",

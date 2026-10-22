@@ -28,6 +28,7 @@ const TEXT_POSITIONS = [
 export const OverlaySettingsSchema = z.object({
 	connectionNotificationsEnabled: z.boolean(),
 	connectionNotificationPosition: z.enum(CONNECTION_NOTIFICATION_POSITIONS),
+	connectionNotificationDuration: z.number().int().min(1).max(30),
 	maxQueuedPerAuthor: z.number().int().min(0).max(10),
 	mediaSize: z.number().min(10).max(90),
 	duration: z.number().min(1).max(30),
@@ -70,6 +71,7 @@ export function extractDefaults(s: Settings): OverlaySettingsValues {
 	return {
 		connectionNotificationsEnabled: s.connectionNotificationsEnabled,
 		connectionNotificationPosition: s.connectionNotificationPosition,
+		connectionNotificationDuration: s.connectionNotificationDuration,
 		maxQueuedPerAuthor: s.maxQueuedPerAuthor,
 		mediaSize: s.mediaSize,
 		duration: s.duration,

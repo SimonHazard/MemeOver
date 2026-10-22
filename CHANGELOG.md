@@ -11,7 +11,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added
 
 - Show a Sonner toast on the overlay when another user connects to the same server. Connection notifications are enabled by default and can be turned off or placed in any of the four corners from display settings and profiles.
+- Adjust connection notification duration from 1 to 30 seconds (4 seconds by default), save it in display profiles, and choose the notification corner from a Select.
 - Ignore the initial member count, departures and repeated counts so opening or reconnecting the app does not announce existing users. Hide connection toasts when the overlay is closed or notifications are disabled.
+
+### Fixed
+
+- Keep connection toasts in sync with the app's language and light/dark theme across windows, including a toast already on screen. Without a saved theme, follow the system theme. Release preference listeners on unmount, including native subscriptions that finish registering after cleanup.
 
 ## [1.7.1]
 

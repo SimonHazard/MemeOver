@@ -60,3 +60,18 @@ test("stored profile still validates the fields it defines", () =>
 	expect(pickStoredProfileSettings({ maxQueuedPerAuthor: 99, unknown: 1 })).toEqual({
 		maxQueuedPerAuthor: 10,
 	}));
+
+test("notification duration survives profile export and old profiles preserve the current duration", () => {
+	const custom = { ...profile, settings: { ...settings, connectionNotificationDuration: 12 } };
+	expect(
+		parseOverlayProfileImport(serializeOverlayProfile(custom)).settings
+			.connectionNotificationDuration,
+	).toBe(12);
+	const { connectionNotificationDuration: _absent, ...legacy } = settings;
+	const imported = parseOverlayProfileImport(JSON.stringify({ name: "Legacy", settings: legacy }));
+	expect(imported.settings).not.toHaveProperty("connectionNotificationDuration");
+	expect(
+		resolveOverlayProfileSettings(imported.settings, custom.settings)
+			.connectionNotificationDuration,
+	).toBe(12);
+});

@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { startHistoryAutoPurge } from "./shared/history";
 import { initSettingsStore } from "./shared/store";
+import { getTheme } from "./shared/theme";
 import {
 	BACKGROUND_UPDATE_INTERVAL_MS,
 	checkForUpdatesInBackground,
@@ -12,8 +13,7 @@ import "./App.css";
 import "./i18n";
 import { syncTrayLabels } from "./i18n/tray";
 
-const storedTheme = localStorage.getItem("theme") ?? "dark";
-document.documentElement.classList.toggle("dark", storedTheme !== "light");
+document.documentElement.classList.toggle("dark", getTheme() === "dark");
 
 // The tray menu is created in English before this page loads (also on silent autostart).
 void syncTrayLabels().catch((err) => console.warn("[Tray] Could not translate labels:", err));

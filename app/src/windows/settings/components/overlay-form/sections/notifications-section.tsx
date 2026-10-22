@@ -1,16 +1,27 @@
 import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
 import { Label } from "@memeover/ui/components/ui/label";
-import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
-import { NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@memeover/ui/components/ui/select";
+import { Slider } from "@memeover/ui/components/ui/slider";
 import { cn } from "@memeover/ui/lib/utils";
 import { useTranslation } from "react-i18next";
-import { CONNECTION_NOTIFICATION_POSITIONS } from "@/shared/types";
+import { CONNECTION_NOTIFICATION_POSITIONS, DEFAULT_SETTINGS } from "@/shared/types";
 import { SectionHeader } from "../components/section-header";
 import { useOverlayFormContext } from "../form-hook";
 
 export function NotificationsSection() {
 	const form = useOverlayFormContext();
 	const { t } = useTranslation();
+	const positions = CONNECTION_NOTIFICATION_POSITIONS.map((value) => ({
+		value,
+		label: t(`display.position_${value.replace("-", "_")}`),
+	}));
 
 	return (
 		<div className="flex flex-col gap-5">
@@ -37,34 +48,70 @@ export function NotificationsSection() {
 			</form.Field>
 			<form.Subscribe selector={(s) => s.values.connectionNotificationsEnabled}>
 				{(enabled) => (
-					<form.Field name="connectionNotificationPosition">
-						{(field) => (
-							<fieldset disabled={!enabled} className="flex flex-col gap-3 disabled:opacity-50">
-								<legend className="mb-3 font-display tracking-wide text-xs">
-									{t("display.connection_notification_position")}
-								</legend>
-								<ToggleGroup
-									aria-label={t("display.connection_notification_position")}
-									disabled={!enabled}
-									value={[field.state.value]}
-									onValueChange={([value]) => {
-										if (value) field.handleChange(value);
-									}}
-									className="grid w-full grid-cols-2 gap-2"
-								>
-									{CONNECTION_NOTIFICATION_POSITIONS.map((position) => (
-										<ToggleGroupItem
-											key={position}
-											value={position}
-											className={cn(NB_TOGGLE_ITEM, "w-full")}
+					<>
+						<form.Field name="connectionNotificationDuration">
+							{(field) => (
+								<div className={cn("flex flex-col gap-3", !enabled && "opacity-50")}>
+									<div className="flex justify-between gap-4">
+										<Label
+											htmlFor="connection-notification-duration"
+											className="font-display tracking-wide text-xs"
 										>
-											{t(`display.position_${position.replace("-", "_")}`)}
-										</ToggleGroupItem>
-									))}
-								</ToggleGroup>
-							</fieldset>
-						)}
-					</form.Field>
+											{t("display.connection_notification_duration")}
+										</Label>
+										<span className="text-sm text-muted-foreground">
+											{field.state.value} {t("display.duration_unit")}
+										</span>
+									</div>
+									<Slider
+										id="connection-notification-duration"
+										aria-label={t("display.connection_notification_duration")}
+										disabled={!enabled}
+										min={1}
+										max={30}
+										step={1}
+										value={field.state.value}
+										onValueChange={(value) =>
+											field.handleChange(value ?? DEFAULT_SETTINGS.connectionNotificationDuration)
+										}
+									/>
+								</div>
+							)}
+						</form.Field>
+						<form.Field name="connectionNotificationPosition">
+							{(field) => (
+								<div className={cn("flex flex-col gap-3", !enabled && "opacity-50")}>
+									<Label
+										htmlFor="connection-notification-position"
+										className="font-display tracking-wide text-xs"
+									>
+										{t("display.connection_notification_position")}
+									</Label>
+									<Select
+										items={positions}
+										disabled={!enabled}
+										value={field.state.value}
+										onValueChange={(value) => {
+											if (value) field.handleChange(value);
+										}}
+									>
+										<SelectTrigger id="connection-notification-position" className="w-full">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectGroup>
+												{positions.map(({ value, label }) => (
+													<SelectItem key={value} value={value}>
+														{label}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+								</div>
+							)}
+						</form.Field>
+					</>
 				)}
 			</form.Subscribe>
 		</div>

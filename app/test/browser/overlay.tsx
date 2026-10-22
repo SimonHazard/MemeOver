@@ -3,6 +3,7 @@ import { MotionConfig } from "framer-motion";
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import i18n from "../../src/i18n";
+import { useLanguageSync } from "../../src/i18n/use-language-sync";
 import { useAppStore } from "../../src/shared/store";
 import {
 	DEFAULT_SETTINGS,
@@ -114,6 +115,7 @@ if (params.has("reactions")) {
 }
 
 function NotificationsHarness() {
+	useLanguageSync();
 	useOverlayWs();
 	const count = useAppStore((s) => s.memberCount);
 	const status = useAppStore((s) => s.wsStatus);
@@ -142,10 +144,25 @@ function NotificationsHarness() {
 	);
 }
 
+function NotificationsLifecycleHarness() {
+	const [mounted, setMounted] = useState(true);
+	return (
+		<>
+			<button type="button" onClick={() => setMounted((value) => !value)}>
+				{mounted ? "Unmount notifications" : "Remount notifications"}
+			</button>
+			{mounted && <NotificationsHarness />}
+		</>
+	);
+}
+
 if (params.has("notifications")) {
+	document.documentElement.dataset.window = "overlay";
 	mockWindows("overlay");
 	mockIPC(() => null, { shouldMockEvents: true });
-	void i18n.changeLanguage(params.get("lang") ?? "en");
+	const language = params.get("lang") ?? localStorage.getItem("lang") ?? "en";
+	localStorage.setItem("lang", language);
+	void i18n.changeLanguage(language);
 	useAppStore.setState({
 		overlayHealth: "alive",
 		settings: {
@@ -156,6 +173,9 @@ if (params.has("notifications")) {
 			wsUrl: "ws://notifications.test/ws",
 			connectionNotificationPosition: (params.get("corner") ??
 				"bottom-right") as typeof DEFAULT_SETTINGS.connectionNotificationPosition,
+			connectionNotificationDuration: Number(
+				params.get("duration") ?? DEFAULT_SETTINGS.connectionNotificationDuration,
+			),
 		},
 	});
 }
@@ -166,7 +186,7 @@ if (root)
 		<StrictMode>
 			<MotionConfig reducedMotion="user">
 				{params.has("notifications") ? (
-					<NotificationsHarness />
+					<NotificationsLifecycleHarness />
 				) : params.has("reactions") ? (
 					<FloatingReactions />
 				) : position ? (

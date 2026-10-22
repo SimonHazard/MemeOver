@@ -160,6 +160,13 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	) {
 		out.connectionNotificationPosition = DEFAULT_SETTINGS.connectionNotificationPosition;
 	}
+	// v13 → v14: configurable connection toast duration, in seconds.
+	out.connectionNotificationDuration = clampNumber(
+		out.connectionNotificationDuration,
+		1,
+		30,
+		DEFAULT_SETTINGS.connectionNotificationDuration,
+	);
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;
