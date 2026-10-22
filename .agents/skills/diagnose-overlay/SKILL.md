@@ -11,6 +11,6 @@ description: Investigate a MemeOver overlay that connects but displays nothing u
 
 3. Check Message Content Intent, guild registration, watched channels, bot/app source policies, enabled media types, local author filters, expired URLs and exclusive-fullscreen games.
 
-4. Inspect `app/src/windows/overlay/hooks/route-server-message.ts` and the diagnostics panel if present; distinguish a routing drop from queue, preload and playback failures.
+4. Inspect `app/src/windows/overlay/hooks/route-server-message.ts` and `useMediaDisplay.ts`; distinguish a routing drop from queue and playback failures.
 
 5. Report exact observed evidence and missing platform/Discord proof; never mutate live registry data to diagnose a source issue.

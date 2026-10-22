@@ -67,6 +67,8 @@ dans l'app et fournissez votre propre URL WebSocket.
 
 ## Developpement
 
+Les [idées produit](docs/feature-ideas.md) restent hors du périmètre à développer tant qu'elles ne font pas l'objet d'une demande explicite.
+
 ### Prerequis
 
 - [Bun](https://bun.sh/) 1.4.2+ (WebSocket test shutdown requires this runtime)
@@ -197,6 +199,8 @@ mode in the app and provide your own WebSocket URL.
 | `/memeover help` | Everyone | List available commands |
 
 ## Development
+
+The [product ideas](docs/feature-ideas.md) remain outside the implementation scope until explicitly requested.
 
 ### Prerequisites
 

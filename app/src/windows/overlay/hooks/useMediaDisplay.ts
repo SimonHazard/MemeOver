@@ -117,7 +117,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		);
 	}, [current, setCurrentAuthorId]);
 
-	// Admit the current queue head immediately; preloading is introduced separately.
+	// Admit the current queue head immediately.
 	useEffect(() => {
 		if (guildPaused || overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
 		const next = queue[0];
