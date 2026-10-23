@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.7.1]
+
+### Changed
+
+- Remove the admin pause banner from the overlay. Pause status remains visible in settings.
+
 ## [1.7.0]
 
 ### Added

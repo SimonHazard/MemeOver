@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useAppStore } from "@/shared/store";
 import { FloatingReactions } from "./components/floating-reactions";
 import { MediaPopup } from "./components/media-popup";
-import { PauseIndicator } from "./components/pause-indicator";
 import { useHistoryLogger } from "./hooks/useHistoryLogger";
 import { useMediaDisplay } from "./hooks/useMediaDisplay";
 import { useOverlayWs } from "./hooks/useOverlayWs";
@@ -51,7 +50,6 @@ export function OverlayApp() {
 			/>
 
 			<FloatingReactions />
-			<PauseIndicator />
 
 			{/* ── DEV badge (always visible in dev, not only in preview) ── */}
 			{import.meta.env.DEV && (
