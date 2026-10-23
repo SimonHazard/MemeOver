@@ -28,7 +28,6 @@ interface UseMediaDisplayReturn {
 
 export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Granular selectors — avoids re-rendering on unrelated store changes
-	const guildPaused = useAppStore((s) => s.guildPaused);
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
 	const setCurrentAuthorId = useAppStore((s) => s.setCurrentAuthorId);
@@ -117,16 +116,17 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		);
 	}, [current, setCurrentAuthorId]);
 
-	// Admit the current queue head immediately.
+	// Admit the current queue head immediately. A guild pause empties the queue and drops
+	// server events upstream, so only explicit history replays can be admitted while paused.
 	useEffect(() => {
-		if (guildPaused || overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
+		if (overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
 		const next = queue[0];
 		if (!next) return;
 		dequeue();
 		currentRef.current = next;
 		setCurrent(next);
 		setIsVisible(true);
-	}, [queue, current, dequeue, guildPaused, overlayHealth]);
+	}, [queue, current, dequeue, overlayHealth]);
 
 	// ── Effect 4: Safety fallback ─────────────────────────────────────────────
 	// TEXT items have no DOM event to call startTimer → fire immediately (delay=0).

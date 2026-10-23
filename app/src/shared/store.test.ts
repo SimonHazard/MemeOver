@@ -161,3 +161,14 @@ test("guild pause clears waiting items but does not skip the visible item", () =
 	store.setGuildPausedUntil(null);
 	expect(useAppStore.getState().guildPaused).toBe(false);
 });
+
+test("history replays queue normally during a guild pause", () => {
+	const store = useAppStore.getState();
+	store.setGuildPausedUntil(Date.now() + 60_000);
+	try {
+		store.enqueue(item("replay"), { isReplay: true });
+		expect(useAppStore.getState().queue.map((queued) => queued.queueId)).toEqual(["replay"]);
+	} finally {
+		store.setGuildPausedUntil(null);
+	}
+});

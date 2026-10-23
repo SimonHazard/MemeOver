@@ -13,6 +13,7 @@ export type DropReason =
 	| "invalid_json"
 	| "invalid_schema"
 	| "overlay_closed"
+	| "guild_paused"
 	| "bot_app_source"
 	| "media_type_disabled"
 	| "text_disabled"
@@ -26,6 +27,8 @@ export interface RouteContext {
 	enabledTypes: EnabledTypes;
 	floatingReactionsEnabled: boolean;
 	guildId: string;
+	/** Server events are dropped while paused; local history replays are not routed here. */
+	guildPaused?: boolean;
 	mutedAuthors?: ReadonlySet<string>;
 	hideAnonymous?: boolean;
 }
@@ -60,6 +63,7 @@ export function routeServerMessage(raw: string, ctx: RouteContext): OverlayActio
 		anonymous?: boolean;
 	}): DropReason | null => {
 		if (ctx.overlayHealth === "closed") return "overlay_closed";
+		if (ctx.guildPaused) return "guild_paused";
 		const muted = muteDropReason(msg, ctx.mutedAuthors ?? new Set(), ctx.hideAnonymous ?? false);
 		if (muted) return muted;
 		if (msg.source === "bot_app" && !ctx.showBotAppSources) return "bot_app_source";

@@ -73,6 +73,17 @@ test("pause, preserved registration, resume and already-active response", async 
 		guildRegistry.unregister(guild);
 	}
 });
+test("unknown pause duration answers without pausing", async () => {
+	guildRegistry.register(guild, null);
+	try {
+		const pause = interaction("pause", true, "3h");
+		await handlePause(pause.value, guild);
+		expect(pause.replies).toHaveLength(1);
+		expect(guildRegistry.getConfig(guild)?.paused_until).toBeNull();
+	} finally {
+		guildRegistry.unregister(guild);
+	}
+});
 test("expiry resumes and removal prevents late broadcasts", async () => {
 	guildRegistry.register(guild, null);
 	applyGuildPause(guild, Date.now() + 15);

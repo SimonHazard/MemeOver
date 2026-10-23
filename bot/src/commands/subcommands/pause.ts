@@ -8,7 +8,7 @@ import {
 } from "../../utils/guild-pause";
 import { applyGuildPause } from "../../utils/guild-pause-timers";
 import { notConfiguredResponse } from "../connection";
-import { successResponse } from "../response-panel";
+import { errorResponse, successResponse } from "../response-panel";
 export async function handlePause(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
@@ -16,7 +16,16 @@ export async function handlePause(
 	const locale = interactionLocale(interaction);
 	const choice = interaction.options.getString("duration", true);
 	// biome-ignore lint/suspicious/noPrototypeBuiltins: the project targets ES2020, before Object.hasOwn.
-	if (!Object.prototype.hasOwnProperty.call(PAUSE_CHOICES, choice)) return;
+	if (!Object.prototype.hasOwnProperty.call(PAUSE_CHOICES, choice)) {
+		// Discord enforces registered choices; a stale command definition must still get an answer.
+		await interaction.reply(
+			errorResponse(
+				t(locale, "pause.invalidDurationTitle"),
+				t(locale, "pause.invalidDurationDescription"),
+			),
+		);
+		return;
+	}
 	const until = resolvePausedUntil(choice as PauseChoice, Date.now());
 	if (!applyGuildPause(guildId, until)) {
 		await interaction.reply(notConfiguredResponse(locale));

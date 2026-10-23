@@ -90,6 +90,7 @@ export function useOverlayWs(): void {
 				enabledTypes: enabledTypesRef.current,
 				floatingReactionsEnabled: reactionsEnabledRef.current,
 				guildId: credentialsRef.current.guildId,
+				guildPaused: useAppStore.getState().guildPaused,
 				mutedAuthors: muteRef.current.muted,
 				hideAnonymous: muteRef.current.hideAnonymous,
 			});
