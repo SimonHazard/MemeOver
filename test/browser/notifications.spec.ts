@@ -93,7 +93,7 @@ for (const corner of ["top-left", "top-right", "bottom-left", "bottom-right"]) {
 	});
 }
 
-test("connection notifications ignore snapshots, departures, reconnects, duplicates and other guilds", async ({
+test("arrivals after departures notify, while snapshots, duplicate counts and other guilds stay silent", async ({
 	page,
 }) => {
 	const connection = await notifications(page, "lang=fr");
@@ -104,10 +104,10 @@ test("connection notifications ignore snapshots, departures, reconnects, duplica
 	connection.count(7);
 	await expect(page.locator("#connection-state")).toHaveText("connected:7");
 	await expect(toast).toHaveCount(0);
-	// The departed peer coming back within the grace window is a reconnect, not an arrival.
+	// A departure cannot identify the next arrival: a different user may join immediately.
 	connection.count(8);
 	await expect(page.locator("#connection-state")).toHaveText("connected:8");
-	await expect(toast).toHaveCount(0);
+	await expect(toast).toHaveText("Un utilisateur s’est connecté");
 	connection.count(9);
 	await expect(toast).toHaveText("Un utilisateur s’est connecté");
 	connection.count(11);

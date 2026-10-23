@@ -17,7 +17,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Fixed
 
 - Keep connection toasts in sync with the app's language and light/dark theme across windows, including a toast already on screen. Without a saved theme, follow the system theme. Release preference listeners on unmount, including native subscriptions that finish registering after cleanup.
-- Do not announce a user whose overlay reconnects within 15 seconds. The bot (1.6.1) now counts distinct app installs, so a replacement socket is not counted twice while the stale one awaits heartbeat eviction.
+- The bot (1.6.1) counts distinct app installs, so a replacement socket is not counted twice while the stale one awaits heartbeat eviction. A new arrival immediately after another user's departure is still announced; a reconnect after a full disconnect may also be announced.
 
 ## [1.7.1]
 

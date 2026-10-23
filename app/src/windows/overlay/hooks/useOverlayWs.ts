@@ -162,7 +162,6 @@ export function useOverlayWs(): void {
 					const { tracker, announce } = newlyConnectedCount(
 						connectionsRef.current,
 						action.count,
-						Date.now(),
 						state.settings.connectionNotificationsEnabled,
 						state.overlayHealth,
 					);
