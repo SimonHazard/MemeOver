@@ -116,7 +116,8 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 		);
 	}, [current, setCurrentAuthorId]);
 
-	// Admit the current queue head immediately; preloading is introduced separately.
+	// Admit the current queue head immediately. A guild pause empties the queue and drops
+	// server events upstream, so only explicit history replays can be admitted while paused.
 	useEffect(() => {
 		if (overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
 		const next = queue[0];

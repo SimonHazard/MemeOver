@@ -19,6 +19,7 @@ export type {
 	ClientMessage,
 	ErrorCode,
 	ErrorMessage,
+	GuildStateMessage,
 	JoinAckMessage,
 	JoinMessage,
 	LeaveMessage,

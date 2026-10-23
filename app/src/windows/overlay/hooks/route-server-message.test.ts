@@ -69,7 +69,22 @@ for (const make of [media, text, reaction]) {
 			route({ ...make(), source: "bot_app" }, ctx({ mutedAuthors: new Set(["a"]) })),
 		).toMatchObject({ reason: "author_muted" });
 	});
+	test(`guild pause drops server events behind the closed gate: ${make().type}`, () => {
+		expect(route(make(), ctx({ guildPaused: true }))).toMatchObject({ reason: "guild_paused" });
+		expect(route(make(), ctx({ guildPaused: true, overlayHealth: "closed" }))).toMatchObject({
+			reason: "overlay_closed",
+		});
+		expect(route(make(), ctx({ guildPaused: false })).kind).not.toBe("drop");
+	});
 }
+test("guild state still routes while paused so resume is received", () => {
+	expect(
+		route(
+			{ type: "GUILD_STATE", guild_id: common.guild_id, paused_until: null },
+			ctx({ guildPaused: true }),
+		),
+	).toEqual({ kind: "guild_state", pausedUntil: null });
+});
 const types = ["image", "gif", "video", "audio", "sticker"] as const;
 for (const disabled of types)
 	test(`only ${disabled} disabled`, () => {

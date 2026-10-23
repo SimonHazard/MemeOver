@@ -15,6 +15,7 @@ mock.module("./utils/config", () => ({
 mock.module("./utils/logger", () => ({ logger: pino({ level: "silent" }) }));
 const { guildRegistry } = await import("./utils/registry");
 const { createServer, broadcastToGuild, evictGuild } = await import("./server");
+const { applyGuildPause } = await import("./utils/guild-pause-timers");
 let server: ReturnType<typeof startServer>;
 const clients: TestClient[] = [];
 const guildId = "123456789012345678";
@@ -41,7 +42,7 @@ async function joined() {
 	const c = await client();
 	expect(await joinGuild(c, guildId, token)).toMatchObject({
 		success: true,
-		features: [],
+		features: ["guild_state"],
 	});
 	expect(await c.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
 	return c;
@@ -90,10 +91,43 @@ test("JOIN is idempotent", async () => {
 	const c = await joined();
 	expect(await joinGuild(c, guildId, token)).toMatchObject({
 		success: true,
-		features: [],
+		features: ["guild_state"],
 	});
 	c.send("not json");
 	expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
+});
+test("pause reaches two sockets, repeated JOIN and reconnect, then resumes", async () => {
+	const first = await joined(),
+		second = await client();
+	await joinGuild(second, guildId, token);
+	const until = Number.MAX_SAFE_INTEGER;
+	try {
+		applyGuildPause(guildId, until);
+		for (const c of [first, second])
+			expect(await c.next((m) => m.type === "GUILD_STATE")).toEqual({
+				type: "GUILD_STATE",
+				guild_id: guildId,
+				paused_until: until,
+			});
+		// Inspect the handshake explicitly; joinGuild normally consumes GUILD_STATE.
+		for (const c of [first, await client()]) {
+			c.send({ type: "JOIN", guild_id: guildId, token });
+			expect(await c.next((m) => m.type === "JOIN_ACK")).toMatchObject({ success: true });
+			expect(await c.next((m) => m.type === "GUILD_STATE")).toMatchObject({ paused_until: until });
+		}
+		applyGuildPause(guildId, null);
+		for (const c of [first, second])
+			expect(await c.next((m) => m.type === "GUILD_STATE")).toMatchObject({ paused_until: null });
+		applyGuildPause(guildId, Date.now() + 30);
+		for (const c of [first, second]) {
+			expect(await c.next((m) => m.type === "GUILD_STATE")).toMatchObject({
+				paused_until: expect.any(Number),
+			});
+			expect(await c.next((m) => m.type === "GUILD_STATE")).toMatchObject({ paused_until: null });
+		}
+	} finally {
+		applyGuildPause(guildId, null);
+	}
 });
 test("member counts follow second join, close, leave", async () => {
 	const first = await joined(),

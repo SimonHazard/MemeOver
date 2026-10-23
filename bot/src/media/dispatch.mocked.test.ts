@@ -294,3 +294,24 @@ test("reaction quota rejects broadcast", async () => {
 	await dispatchReaction(makeReaction(), makeUser(false) as User);
 	expect(broadcasts).toEqual([]);
 });
+
+test("paused guild drops text, media and reactions before admission", async () => {
+	pausedUntil = Date.now() + 60_000;
+	dispatchMedia(makeMessage({}), true);
+	dispatchMedia(
+		makeMessage({
+			attachments: new Map([
+				["a", { contentType: "image/png", url: "https://cdn.discordapp.com/a.png" }],
+			]),
+		}),
+		true,
+	);
+	await dispatchReaction(makeReaction(), makeUser(false) as User);
+	expect(broadcasts).toHaveLength(0);
+	expect(canBroadcastReaction).not.toHaveBeenCalled();
+});
+test("expired guild pause allows broadcasts", () => {
+	pausedUntil = Date.now() - 1;
+	dispatchMedia(makeMessage({}), true);
+	expect(broadcasts).toHaveLength(1);
+});

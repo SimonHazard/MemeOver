@@ -148,3 +148,27 @@ test("muting removes queued items and skips current author", () => {
 	useAppStore.getState().enqueue(item("next"));
 	expect(useAppStore.getState().queue).toEqual([]);
 });
+
+test("guild pause clears waiting items but does not skip the visible item", () => {
+	const store = useAppStore.getState();
+	store.setGuildPausedUntil(null);
+	store.enqueue(item("pause"));
+	const skip = useAppStore.getState().skipVersion;
+	store.setGuildPausedUntil(Date.now() + 60_000);
+	expect(useAppStore.getState().queue).toHaveLength(0);
+	expect(useAppStore.getState().guildPaused).toBe(true);
+	expect(useAppStore.getState().skipVersion).toBe(skip);
+	store.setGuildPausedUntil(null);
+	expect(useAppStore.getState().guildPaused).toBe(false);
+});
+
+test("history replays queue normally during a guild pause", () => {
+	const store = useAppStore.getState();
+	store.setGuildPausedUntil(Date.now() + 60_000);
+	try {
+		store.enqueue(item("replay"), { isReplay: true });
+		expect(useAppStore.getState().queue.map((queued) => queued.queueId)).toEqual(["replay"]);
+	} finally {
+		store.setGuildPausedUntil(null);
+	}
+});

@@ -7,7 +7,7 @@ description: Add a supported MemeOver media host consistently across bot validat
 
 1. Read [AGENTS.md](../../../AGENTS.md) and verify the real media delivery host from official provider documentation.
 
-2. Add exact allowed hostnames in `bot/src/media/allowlist.ts`; update `img-src` and `media-src` in `app/src-tauri/tauri.conf.json`, and `connect-src` when fetched by the preloader.
+2. Add exact allowed hostnames in `bot/src/media/allowlist.ts`; update `img-src` and `media-src` in `app/src-tauri/tauri.conf.json`.
 
 3. Update `bot/src/media/extractor.ts` and its tests; cover lookalike hosts, actual media forms and expiry where applicable.
 

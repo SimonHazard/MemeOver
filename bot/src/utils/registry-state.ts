@@ -1,5 +1,7 @@
 export interface GuildConfig {
 	token: string;
+	/** Epoch ms; MAX_SAFE_INTEGER means until resume, null means active. */
+	paused_until: number | null;
 	/** Empty channel_ids = all channels allowed */
 	channel_ids: string[];
 	/** When true, messages/reactions from bots, apps, and webhooks are broadcast. */
@@ -36,6 +38,7 @@ function normalizeConfig(raw: unknown, now: number): GuildConfig | null {
 
 	return {
 		token: raw.token,
+		paused_until: numberOrNull(raw.paused_until),
 		channel_ids,
 		allow_bot_app_sources:
 			typeof raw.allow_bot_app_sources === "boolean" ? raw.allow_bot_app_sources : false,
@@ -67,6 +70,9 @@ export function normalizeRegistry(
 
 		if (
 			!isRecord(rawConfig) ||
+			("paused_until" in rawConfig &&
+				rawConfig.paused_until !== null &&
+				numberOrNull(rawConfig.paused_until) === null) ||
 			!Array.isArray(rawConfig.channel_ids) ||
 			rawConfig.channel_ids.some((id) => typeof id !== "string") ||
 			typeof rawConfig.allow_bot_app_sources !== "boolean" ||

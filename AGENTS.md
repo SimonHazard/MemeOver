@@ -31,7 +31,7 @@ Local bot development reads `bot/.env`; Docker Compose reads the root `.env`.
 ### Media host
 
 1. Update `ALLOWED_MEDIA_HOSTS` in `bot/src/media/allowlist.ts`.
-2. Update app CSP `img-src`/`media-src` in `app/src-tauri/tauri.conf.json`; add `connect-src` when the preloader fetches the host.
+2. Update app CSP `img-src`/`media-src` in `app/src-tauri/tauri.conf.json` for the host.
 3. Update `bot/src/media/extractor.ts`, with extraction and host validation tests.
 
 ### Protocol message
@@ -82,3 +82,5 @@ Bot has an independent version. Release tags are `app-vX.Y.Z`.
 Preserve pre-existing changes and exclude them from unrelated commits.
 Never edit `.env*`, `**/data/guilds.json`, `app/src-tauri/target/` or `.claude/settings.local.json` during ordinary source work.
 Project skills live under `.agents/skills` with `.claude/skills` and `.agent/skills` symlinks; vendored skill metadata stays in `skills-lock.json`.
+
+Product ideas in `docs/feature-ideas.md` are not implementation plans. Require an explicit user request before implementing them.

@@ -1,5 +1,6 @@
 import type { MessageReaction, PartialMessageReaction, PartialUser, User } from "discord.js";
 import { broadcastToGuild } from "../server";
+import { isPausedAt } from "../utils/guild-pause";
 import { canBroadcastReaction } from "../utils/reaction-rate-limit";
 import { guildRegistry } from "../utils/registry";
 import type { ReactionEvent } from "../utils/types";
@@ -23,6 +24,7 @@ export async function dispatchReaction(
 
 	const source = classifyReactionSource(user);
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
+	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) return;
 	if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
 	if (!canBroadcastReaction(guildId)) return;
 

@@ -2,6 +2,7 @@ import { startBot } from "./bot";
 import { registerCommands } from "./commands/commands";
 import { createServer } from "./server";
 import { config } from "./utils/config";
+import { rearmAllGuildPauses } from "./utils/guild-pause-timers";
 import { logger } from "./utils/logger";
 import { guildRegistry } from "./utils/registry";
 import { store } from "./utils/store";
@@ -21,6 +22,8 @@ app.listen(config.wsPort, () => {
 		`WebSocket server running at ws://localhost:${config.wsPort}/ws`,
 	);
 });
+
+rearmAllGuildPauses();
 
 // 4. Start the Discord bot, then register slash commands
 startBot()
