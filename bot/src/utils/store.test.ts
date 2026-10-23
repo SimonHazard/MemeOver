@@ -36,6 +36,24 @@ test("joined count deduplicates sockets across rooms", () => {
 	store.joinGuild(id, `${id}-2`);
 	expect(store.getJoinedClientCount()).toBe(before + 1);
 });
+test("presence counts one install per client_id and legacy sockets individually", () => {
+	const guild = crypto.randomUUID();
+	const stale = client(),
+		replacement = client(),
+		other = client(),
+		legacy = client();
+	for (const id of [stale, replacement, other, legacy]) store.joinGuild(id, guild);
+	store.setClientId(stale, "install-a");
+	store.setClientId(replacement, "install-a");
+	store.setClientId(other, "install-b");
+	store.setClientId(legacy, undefined);
+	expect(store.getGuildMembers(guild).size).toBe(4);
+	expect(store.getGuildPresenceCount(guild)).toBe(3);
+	store.removeClient(stale);
+	expect(store.getGuildPresenceCount(guild)).toBe(3);
+	store.removeClient(replacement);
+	expect(store.getGuildPresenceCount(guild)).toBe(2);
+});
 test("unknown room returns an unstored empty set", () => {
 	const id = crypto.randomUUID();
 	store.getGuildMembers(id).add("x");

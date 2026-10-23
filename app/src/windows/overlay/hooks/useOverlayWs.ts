@@ -10,7 +10,11 @@ import {
 } from "../components/connection-notifications";
 import { bindSocket, sendClientMessage, setServerFeatures, unbindSocket } from "../ws-client";
 
-import { newlyConnectedCount } from "./connection-notification";
+import {
+	type ConnectionTracker,
+	INITIAL_CONNECTION_TRACKER,
+	newlyConnectedCount,
+} from "./connection-notification";
 import { routeServerMessage } from "./route-server-message";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -56,7 +60,7 @@ export function useOverlayWs(): void {
 	overlayHealthRef.current = overlayHealth;
 
 	const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const memberCountRef = useRef<number | null>(null);
+	const connectionsRef = useRef<ConnectionTracker>(INITIAL_CONNECTION_TRACKER);
 	const wsRef = useRef<WebSocket | null>(null);
 	const revokedRef = useRef<SessionRevocationCode | null>(null);
 	const [reconnectNonce, setReconnectNonce] = useState(0);
@@ -78,7 +82,7 @@ export function useOverlayWs(): void {
 	// ── Stable event handlers ─────────────────────────────────────────────────
 
 	const onOpen = useCallback(() => {
-		memberCountRef.current = null;
+		connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 		dismissConnectionNotification();
 		setWsStatus("connecting");
 		const join: JoinMessage = {
@@ -125,7 +129,7 @@ export function useOverlayWs(): void {
 					spawnReaction({ emoji: action.emoji, emojiUrl: action.emojiUrl });
 					break;
 				case "session_revoked":
-					memberCountRef.current = null;
+					connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 					dismissConnectionNotification();
 					revokedRef.current = action.code;
 					setWsStatus("error");
@@ -155,15 +159,15 @@ export function useOverlayWs(): void {
 					break;
 				case "member_count": {
 					const state = useAppStore.getState();
-					const count = newlyConnectedCount(
-						memberCountRef.current,
+					const { tracker, announce } = newlyConnectedCount(
+						connectionsRef.current,
 						action.count,
+						Date.now(),
 						state.settings.connectionNotificationsEnabled,
 						state.overlayHealth,
 					);
-					// Always advance the baseline, including while notifications are disabled.
-					memberCountRef.current = action.count;
-					if (count > 0) showConnectionNotification(count);
+					connectionsRef.current = tracker;
+					if (announce > 0) showConnectionNotification(announce);
 					setMemberCount(action.count);
 					void emit("member-count-changed", action.count);
 					break;
@@ -184,7 +188,7 @@ export function useOverlayWs(): void {
 	);
 
 	const onClose = useCallback(() => {
-		memberCountRef.current = null;
+		connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 		dismissConnectionNotification();
 		setWsStatus("disconnected");
 		void emit("ws-status-changed", "disconnected");
@@ -256,7 +260,7 @@ export function useOverlayWs(): void {
 		connect();
 
 		return () => {
-			memberCountRef.current = null;
+			connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 			dismissConnectionNotification();
 			disposed = true;
 			if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);

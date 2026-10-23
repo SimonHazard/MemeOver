@@ -142,6 +142,24 @@ test("member counts follow second join, close, leave", async () => {
 	first.send("not json");
 	expect(await first.next()).toMatchObject({ code: "PARSE_ERROR" });
 });
+test("a reconnecting install keeps the member count while its stale socket lingers", async () => {
+	const first = await joined();
+	const install = "install-reconnecting";
+	const stale = await client(),
+		replacement = await client();
+	for (const socket of [stale, replacement]) {
+		socket.send({ type: "JOIN", guild_id: guildId, token, client_id: install });
+		expect(await socket.next((m) => m.type === "JOIN_ACK")).toMatchObject({ success: true });
+	}
+	expect(await first.next((m) => m.type === "MEMBER_COUNT_UPDATE")).toMatchObject({ count: 2 });
+	expect(await first.next((m) => m.type === "MEMBER_COUNT_UPDATE")).toMatchObject({ count: 2 });
+	stale.close();
+	await stale.closed;
+	expect(await first.next((m) => m.type === "MEMBER_COUNT_UPDATE")).toMatchObject({ count: 2 });
+	replacement.close();
+	await replacement.closed;
+	expect(await first.next((m) => m.type === "MEMBER_COUNT_UPDATE")).toMatchObject({ count: 1 });
+});
 for (const [input, code] of [
 	["not json", "PARSE_ERROR"],
 	[{ type: "NOPE" }, "VALIDATION_ERROR"],

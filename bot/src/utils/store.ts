@@ -66,8 +66,26 @@ export const store = {
 		return clients.get(wsId);
 	},
 
+	setClientId(wsId: string, clientId: string | undefined): void {
+		const client = clients.get(wsId);
+		if (client && clientId) client.client_id = clientId;
+	},
+
 	getGuildMembers(guildId: string): Set<string> {
 		return guildRooms.get(guildId) ?? new Set();
+	},
+
+	/**
+	 * Distinct app installs in a guild. A half-open socket awaiting heartbeat eviction and its
+	 * replacement count once; legacy clients without a client_id count per socket.
+	 */
+	getGuildPresenceCount(guildId: string): number {
+		const installs = new Set<string>();
+		for (const wsId of guildRooms.get(guildId) ?? []) {
+			const clientId = clients.get(wsId)?.client_id;
+			installs.add(clientId ? `client:${clientId}` : `ws:${wsId}`);
+		}
+		return installs.size;
 	},
 
 	isClientInGuild(wsId: string, guildId: string): boolean {

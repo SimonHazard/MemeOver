@@ -31,6 +31,11 @@ async function notifications(page: Page, query = "") {
 		count(count: number, guild = guildId) {
 			socket.send(JSON.stringify({ type: "MEMBER_COUNT_UPDATE", guild_id: guild, count }));
 		},
+		pause(pausedUntil: number | null) {
+			socket.send(
+				JSON.stringify({ type: "GUILD_STATE", guild_id: guildId, paused_until: pausedUntil }),
+			);
+		},
 		close: () => socket.close(),
 		revoke: () =>
 			socket.send(JSON.stringify({ type: "ERROR", code: "TOKEN_ROTATED", message: "Revoked" })),
@@ -61,7 +66,7 @@ for (const corner of ["top-left", "top-right", "bottom-left", "bottom-right"]) {
 				};
 			})
 			.toEqual({ x: 24, y: 24 });
-		await page.screenshot({ path: `/tmp/memeover-toast-${testInfo.project.name}-${corner}.png` });
+		await page.screenshot({ path: testInfo.outputPath(`toast-${corner}.png`) });
 		expect(await toast.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
 		expect(await toast.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s");
 		await expect(toast).toHaveCount(0, { timeout: 6000 });
@@ -70,7 +75,25 @@ for (const corner of ["top-left", "top-right", "bottom-left", "bottom-right"]) {
 	});
 }
 
-test("connection notifications ignore snapshots, departures, duplicates and other guilds", async ({
+for (const corner of ["top-left", "top-right", "bottom-left", "bottom-right"]) {
+	test(`a ${corner} connection toast works during a pause without a pause banner`, async ({
+		page,
+	}) => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		const connection = await notifications(page, `corner=${corner}`);
+		connection.pause(Number.MAX_SAFE_INTEGER);
+		await expect(page.locator("#connection-state")).toHaveAttribute("data-guild-paused", "true");
+		const pause = page.getByText("Paused by an admin");
+		await expect(pause).toHaveCount(0);
+		connection.count(9);
+		const toast = page.locator("[data-sonner-toast]");
+		await expect(toast).toHaveText("A user connected");
+		await expect(pause).toHaveCount(0);
+		expect(connection.errors).toEqual([]);
+	});
+}
+
+test("connection notifications ignore snapshots, departures, reconnects, duplicates and other guilds", async ({
 	page,
 }) => {
 	const connection = await notifications(page, "lang=fr");
@@ -81,9 +104,13 @@ test("connection notifications ignore snapshots, departures, duplicates and othe
 	connection.count(7);
 	await expect(page.locator("#connection-state")).toHaveText("connected:7");
 	await expect(toast).toHaveCount(0);
+	// The departed peer coming back within the grace window is a reconnect, not an arrival.
 	connection.count(8);
+	await expect(page.locator("#connection-state")).toHaveText("connected:8");
+	await expect(toast).toHaveCount(0);
+	connection.count(9);
 	await expect(toast).toHaveText("Un utilisateur s’est connecté");
-	connection.count(10);
+	connection.count(11);
 	await expect(toast).toHaveCount(1);
 	await expect(toast).toHaveText("2 utilisateurs se sont connectés");
 	connection.close();
@@ -223,7 +250,7 @@ for (const theme of ["light", "dark"] as const) {
 			const box = await toast.boundingBox();
 			if (!box) throw new Error("Missing visible connection toast");
 			await page.screenshot({
-				path: `/tmp/memeover-toast-${testInfo.project.name}-${theme}-${label}.png`,
+				path: testInfo.outputPath(`toast-${theme}-${label}.png`),
 				omitBackground: true,
 				clip: { x: box.x - 12, y: box.y - 12, width: box.width + 28, height: box.height + 28 },
 			});

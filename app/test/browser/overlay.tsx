@@ -120,9 +120,10 @@ function NotificationsHarness() {
 	const count = useAppStore((s) => s.memberCount);
 	const status = useAppStore((s) => s.wsStatus);
 	const enabled = useAppStore((s) => s.settings.connectionNotificationsEnabled);
+	const paused = useAppStore((s) => s.guildPaused);
 	return (
 		<>
-			<output id="connection-state">
+			<output id="connection-state" data-guild-paused={paused}>
 				{status}:{count}
 			</output>
 			<button
