@@ -83,8 +83,14 @@ Docker Compose is available from the repository root:
 docker compose up -d --build
 ```
 
-Runtime data is stored in `data/guilds.json` locally, or in the `bot-data`
-volume when using Docker Compose.
+Runtime data is stored in the SQLite database `data/memeover.db` locally, or in the
+`bot-data` volume when using Docker Compose. On first start, an existing `data/guilds.json`
+is imported and renamed to `guilds.json.migrated`; an unreadable file stops startup instead
+of starting with an empty registry.
+
+The database runs in WAL mode: while the bot is running, recent writes may still live in
+`memeover.db-wal`. Copy all `memeover.db*` files together, or take a consistent snapshot with
+`VACUUM INTO`.
 
 ## Checks
 
