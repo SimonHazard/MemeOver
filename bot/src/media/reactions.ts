@@ -1,7 +1,7 @@
 import type { MessageReaction, PartialMessageReaction, PartialUser, User } from "discord.js";
 import { broadcastToGuild } from "../server";
 import { isPausedAt } from "../utils/guild-pause";
-import { canBroadcastReaction } from "../utils/reaction-rate-limit";
+import { canBroadcastReaction, canFetchReaction } from "../utils/reaction-rate-limit";
 import { guildRegistry } from "../utils/registry";
 import type { ReactionEvent } from "../utils/types";
 import { classifyReactionSource, sourceField } from "./source";
@@ -18,21 +18,26 @@ export async function dispatchReaction(
 	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
 	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) return;
 	if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
-	if (!canBroadcastReaction(guildId)) return;
 
 	// Partials fire for messages older than the bot's cache. Fetching costs a REST call, so it
 	// only happens once every in-memory gate has passed (most reactions come from unwatched guilds).
 	if (reaction.partial) {
+		if (!canFetchReaction(guildId)) return;
 		try {
 			await reaction.fetch();
 		} catch {
 			return;
 		}
+		// Guild settings may have changed while Discord was responding.
+		if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
+		if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) return;
+		if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
 	}
 
 	const emojiId = reaction.emoji.id;
 	const emojiName = reaction.emoji.name;
 	if (!emojiName && !emojiId) return;
+	if (!canBroadcastReaction(guildId)) return;
 
 	const emoji_url =
 		emojiId !== null

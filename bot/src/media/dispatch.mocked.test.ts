@@ -27,6 +27,7 @@ const getConfig = mock((guildId: string) => {
 	};
 });
 const canBroadcastReaction = mock(() => true);
+const canFetchReaction = mock(() => true);
 
 mock.module("../server", () => ({
 	broadcastToGuild: mock((guildId: string, event: Record<string, unknown>) => {
@@ -43,6 +44,7 @@ mock.module("../utils/registry", () => ({
 
 mock.module("../utils/reaction-rate-limit", () => ({
 	canBroadcastReaction,
+	canFetchReaction,
 }));
 
 const { dispatchMedia, hasNewEmbedMedia, isEmbedResolutionUpdate } = await import("./dispatcher");
@@ -116,6 +118,7 @@ beforeEach(() => {
 	isChannelAllowed.mockClear();
 	getConfig.mockClear();
 	canBroadcastReaction.mockClear();
+	canFetchReaction.mockClear();
 });
 
 describe("bot/app source dispatch gates", () => {
@@ -288,14 +291,14 @@ test("partial reaction outside a watched channel never reaches the Discord API",
 	expect(fetch).not.toHaveBeenCalled();
 	expect(broadcasts).toEqual([]);
 });
-test("partial reaction in a paused or rate-limited guild never reaches the Discord API", async () => {
+test("partial reaction in a paused or fetch-rate-limited guild never reaches Discord", async () => {
 	const paused = makePartialReaction();
 	pausedUntil = Date.now() + 60_000;
 	await dispatchReaction(paused.reaction, makeUser(false) as User);
 	pausedUntil = null;
 
 	const limited = makePartialReaction();
-	canBroadcastReaction.mockReturnValueOnce(false);
+	canFetchReaction.mockReturnValueOnce(false);
 	await dispatchReaction(limited.reaction, makeUser(false) as User);
 
 	expect(paused.fetch).not.toHaveBeenCalled();
