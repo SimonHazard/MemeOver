@@ -1,35 +1,31 @@
 import { Toaster } from "@memeover/ui/components/ui/sonner";
 import { cn } from "@memeover/ui/lib/utils";
 import { Users } from "lucide-react";
-import { useEffect } from "react";
+import { type CSSProperties, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useAppStore } from "@/shared/store";
 import { useResolvedTheme } from "@/shared/theme";
 
 const TOASTER_ID = "overlay-connections";
-let activeToastId: string | number | undefined;
 
-function ConnectionMessage({ count }: { count: number }) {
+function ConnectionMessage({ count, messageKey }: { count: number; messageKey: string }) {
 	const { t } = useTranslation();
-	return t("overlay.userConnected", { count });
+	return t(messageKey, { count });
 }
 
 export function dismissConnectionNotification() {
-	if (activeToastId === undefined) return;
-	toast.dismiss(activeToastId);
-	activeToastId = undefined;
+	for (const notification of toast.getToasts()) {
+		if ("toasterId" in notification && notification.toasterId === TOASTER_ID)
+			toast.dismiss(notification.id);
+	}
 }
 
-export function showConnectionNotification(count: number) {
-	activeToastId = toast(<ConnectionMessage count={count} />, {
-		id: activeToastId,
+export function showConnectionNotification(count: number, messageKey = "overlay.userConnected") {
+	toast(<ConnectionMessage count={count} messageKey={messageKey} />, {
 		toasterId: TOASTER_ID,
-		icon: <Users className="size-5 shrink-0" aria-hidden="true" />,
+		icon: <Users className="size-4 shrink-0" aria-hidden="true" />,
 		duration: useAppStore.getState().settings.connectionNotificationDuration * 1000,
-		onAutoClose: ({ id }) => {
-			if (activeToastId === id) activeToastId = undefined;
-		},
 	});
 }
 
@@ -53,9 +49,11 @@ export function ConnectionNotifications() {
 			theme={theme}
 			position={position}
 			className={cn("overlay-connection-toaster pointer-events-none", theme === "dark" && "dark")}
+			style={{ "--width": "300px", opacity: 0.8 } as CSSProperties}
 			containerAriaLabel={t("display.group_notifications")}
 			hotkey={[]}
-			visibleToasts={1}
+			expand
+			visibleToasts={3}
 			offset={24}
 			mobileOffset={24}
 		/>

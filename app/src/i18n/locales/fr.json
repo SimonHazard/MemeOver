@@ -442,5 +442,25 @@
 		"stay": "Continuer à modifier",
 		"discard": "Abandonner",
 		"saveAndLeave": "Sauvegarder et continuer"
+	},
+	"devOverlay": {
+		"title": "Banc de test local de l’overlay",
+		"hint": "Développement local uniquement, sans bot. Les arrivées affichent le vrai toast ; les départs affichent un toast de test local. Le média fixe suit les réglages enregistrés et n’est jamais ajouté à l’historique.",
+		"start": "Démarrer la simulation",
+		"stop": "Arrêter la simulation",
+		"showFirst": "Affichez d’abord l’overlay pour utiliser le banc de test.",
+		"peers_one": "{{count}} utilisateur simulé",
+		"peers_other": "{{count}} utilisateurs simulés",
+		"join": "Connecter un utilisateur",
+		"leave": "Déconnecter un utilisateur",
+		"userDisconnected_one": "Un utilisateur s’est déconnecté",
+		"userDisconnected_other": "{{count}} utilisateurs se sont déconnectés",
+		"media": "Exemple fixe",
+		"image": "Image fixe",
+		"text": "Texte fixe",
+		"none": "Masquer l’exemple",
+		"sampleText": "Aperçu local de l’overlay : modifiez les réglages d’affichage, puis enregistrez. Ce texte reste à l’écran.",
+		"sampleCaption": "Exemple local — les réglages d’affichage enregistrés s’appliquent ici.",
+		"error": "Impossible d’envoyer la commande de test local."
 	}
 }

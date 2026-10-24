@@ -109,16 +109,40 @@ test("arrivals after departures notify, while snapshots, duplicate counts and ot
 	await expect(page.locator("#connection-state")).toHaveText("connected:8");
 	await expect(toast).toHaveText("Un utilisateur s’est connecté");
 	connection.count(9);
-	await expect(toast).toHaveText("Un utilisateur s’est connecté");
+	await expect(toast).toHaveText([
+		"Un utilisateur s’est connecté",
+		"Un utilisateur s’est connecté",
+	]);
 	connection.count(11);
-	await expect(toast).toHaveCount(1);
-	await expect(toast).toHaveText("2 utilisateurs se sont connectés");
+	await expect(toast).toHaveText([
+		"2 utilisateurs se sont connectés",
+		"Un utilisateur s’est connecté",
+		"Un utilisateur s’est connecté",
+	]);
 	connection.close();
 	await expect(toast).toHaveCount(0);
 	await expect(page.locator("#connection-state")).toHaveText("connected:8", { timeout: 6000 });
 	await expect(toast).toHaveCount(0);
 	connection.count(9);
 	await expect(toast).toHaveText("Un utilisateur s’est connecté");
+	expect(connection.errors).toEqual([]);
+});
+
+test("successive arrival toasts each keep their own lifetime", async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: "reduce" });
+	const connection = await notifications(page, "duration=3");
+	const toasts = page.locator("[data-sonner-toast]");
+	connection.count(9);
+	await expect(toasts).toHaveCount(1);
+	await page.waitForTimeout(1400);
+	connection.count(10);
+	await expect(toasts).toHaveText(["A user connected", "A user connected"]);
+	const firstToast = toasts.last();
+	const firstElement = await firstToast.elementHandle();
+	await expect(toasts).toHaveCount(1, { timeout: 2200 });
+	expect(await firstElement?.evaluate((element) => element.isConnected)).toBe(false);
+	await expect(toasts).toHaveText("A user connected");
+	await expect(toasts).toHaveCount(0, { timeout: 2200 });
 	expect(connection.errors).toEqual([]);
 });
 
@@ -228,7 +252,7 @@ for (const theme of ["light", "dark"] as const) {
 		await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
 		const connection = await notifications(page, "lang=fr");
 		const toaster = page.locator("[data-sonner-toaster]");
-		const toast = page.locator("[data-sonner-toast]");
+		const toast = page.locator("[data-sonner-toast]").first();
 		connection.count(9);
 		await expect(toast).toHaveText("Un utilisateur s’est connecté");
 		await expect(toaster).toHaveAttribute("data-sonner-theme", theme);

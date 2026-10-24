@@ -1,5 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLanguageSync } from "@/i18n/use-language-sync";
 import { useAppStore } from "@/shared/store";
 import { ConnectionNotifications } from "./components/connection-notifications";
@@ -11,9 +11,20 @@ import { useOverlayWs } from "./hooks/useOverlayWs";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const OverlayTestRuntime = import.meta.env.DEV
+	? lazy(() => import("@/dev/overlay-test-runtime"))
+	: null;
+
+function LiveOverlayMedia() {
+	useOverlayWs();
+	const display = useMediaDisplay();
+	const settings = useAppStore((s) => s.settings);
+	useHistoryLogger(display.current);
+	return <MediaPopup {...display} settings={settings} />;
+}
+
 export function OverlayApp() {
 	useLanguageSync();
-	const { settings } = useAppStore();
 
 	// Dev-only: simulated production background
 	const [devPreview, setDevPreview] = useState(false);
@@ -41,27 +52,17 @@ export function OverlayApp() {
 		};
 	}, []);
 
-	// Connect to the bot WebSocket and feed the display queue
-	useOverlayWs();
-
-	// Sequentially display items from the queue with animations
-	const { current, isVisible, onExitComplete, onVideoEnd, startTimer, onMediaError } =
-		useMediaDisplay();
-
-	// Persist each displayed item to the history store
-	useHistoryLogger(current);
-
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
-			<MediaPopup
-				current={current}
-				isVisible={isVisible}
-				settings={settings}
-				onExitComplete={onExitComplete}
-				onVideoEnd={onVideoEnd}
-				startTimer={startTimer}
-				onMediaError={onMediaError}
-			/>
+			{OverlayTestRuntime ? (
+				<Suspense fallback={null}>
+					<OverlayTestRuntime>
+						<LiveOverlayMedia />
+					</OverlayTestRuntime>
+				</Suspense>
+			) : (
+				<LiveOverlayMedia />
+			)}
 
 			<FloatingReactions />
 			<ConnectionNotifications />

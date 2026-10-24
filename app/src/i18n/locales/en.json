@@ -442,5 +442,25 @@
 		"stay": "Keep editing",
 		"discard": "Discard",
 		"saveAndLeave": "Save and continue"
+	},
+	"devOverlay": {
+		"title": "Local overlay test bench",
+		"hint": "Local development only, without a bot. Arrivals show the real toast; departures show a local test toast. The fixed sample follows saved display settings and is never added to history.",
+		"start": "Start simulation",
+		"stop": "Stop simulation",
+		"showFirst": "Show the overlay first to use the test bench.",
+		"peers_one": "{{count}} simulated user",
+		"peers_other": "{{count}} simulated users",
+		"join": "Connect a user",
+		"leave": "Disconnect a user",
+		"userDisconnected_one": "A user disconnected",
+		"userDisconnected_other": "{{count}} users disconnected",
+		"media": "Fixed sample",
+		"image": "Fixed image",
+		"text": "Fixed text",
+		"none": "Hide sample",
+		"sampleText": "Local overlay preview: change your display settings, then save. This text stays on screen.",
+		"sampleCaption": "Local sample — saved display settings apply here.",
+		"error": "Could not send the local test command."
 	}
 }

@@ -1,5 +1,5 @@
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { Settings } from "@/shared/types";
 import type { PreviewAspect } from "../position-preview";
 import { FullscreenCompatibilityNotice } from "./fullscreen-compatibility-notice";
@@ -21,6 +21,10 @@ export interface OverlayFormProps {
 	initialData: Settings;
 }
 
+const OverlayTestControls = import.meta.env.DEV
+	? lazy(() => import("@/dev/overlay-test-controls"))
+	: null;
+
 export function OverlayForm({ initialData }: OverlayFormProps) {
 	const { form, isPending, saveAndApplyValues } = useOverlayForm(initialData);
 	// Default to portrait — the project's primary audience shares TikTok/Reels content.
@@ -36,6 +40,11 @@ export function OverlayForm({ initialData }: OverlayFormProps) {
 				<NbCard>
 					<OverlayControls />
 				</NbCard>
+				{OverlayTestControls && (
+					<Suspense fallback={null}>
+						<OverlayTestControls />
+					</Suspense>
+				)}
 
 				{/* ── Settings form ── */}
 				<form

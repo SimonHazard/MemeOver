@@ -161,3 +161,17 @@
 .overlay-connection-toaster [data-sonner-toast] {
 	pointer-events: none !important;
 }
+
+/* Compact overlay notifications; settings toasts keep the shared dimensions. */
+[data-sonner-toaster].overlay-connection-toaster [data-sonner-toast][data-styled="true"] {
+	padding: 10px 12px;
+	font-size: 12px;
+	gap: 8px;
+}
+
+[data-sonner-toaster].overlay-connection-toaster
+	[data-sonner-toast][data-styled="true"]
+	[data-icon] {
+	width: 24px;
+	height: 24px;
+}
