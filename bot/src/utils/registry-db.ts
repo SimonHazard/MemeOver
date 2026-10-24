@@ -6,7 +6,7 @@ import { type GuildConfig, normalizeRegistry, type Registry } from "./registry-s
 const log = logger.child({ module: "registry" });
 
 /** Bump together with a new step in `migrate` whenever the table shape changes. */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 interface GuildRow {
 	guild_id: string;
@@ -46,6 +46,9 @@ function migrate(db: Database): void {
 				) STRICT
 			`);
 		}
+		if (version < 2) {
+			db.run("CREATE TABLE registry_migrations (name TEXT PRIMARY KEY) STRICT");
+		}
 		db.run(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 	})();
 }
@@ -56,10 +59,15 @@ function migrate(db: Database): void {
  */
 export function openRegistryDatabase(file: string): Database {
 	const db = new Database(file, { create: true, strict: true });
-	db.run("PRAGMA journal_mode = WAL");
-	db.run("PRAGMA synchronous = FULL");
-	migrate(db);
-	return db;
+	try {
+		db.run("PRAGMA journal_mode = WAL");
+		db.run("PRAGMA synchronous = FULL");
+		migrate(db);
+		return db;
+	} catch (err) {
+		db.close();
+		throw err;
+	}
 }
 
 // ─── Rows ─────────────────────────────────────────────────────────────────────
@@ -117,27 +125,41 @@ export function deleteGuild(db: Database, guildId: string): void {
 // ─── Legacy import ────────────────────────────────────────────────────────────
 
 /**
- * One-time import of the pre-SQLite `guilds.json`, renamed to `.migrated` afterwards. It only runs
- * while the table is empty, so a JSON file left behind never overwrites newer rows. Unreadable
- * JSON throws: starting empty would silently drop every registered guild.
+ * Check for the pre-SQLite `guilds.json` once, then leave SQLite authoritative even when empty.
+ * The marker commits with the imported rows, before the best-effort rename to `.migrated`.
+ * Unreadable JSON throws and rolls back, so a repaired file can be imported on the next start.
  * Returns the number of imported guilds, or null when there was nothing to import.
  */
 export function importLegacyRegistry(db: Database, legacyFile: string): number | null {
-	if (!existsSync(legacyFile)) return null;
+	const legacyExists = existsSync(legacyFile);
+	const imported = db
+		.transaction(() => {
+			if (db.query("SELECT name FROM registry_migrations WHERE name = 'legacy_json'").get()) {
+				return null;
+			}
 
-	const rows = db.query<{ count: number }, []>("SELECT COUNT(*) AS count FROM guilds").get();
-	if ((rows?.count ?? 0) > 0) {
-		log.warn(
-			{ event: "registry_legacy_ignored" },
-			"Legacy guilds.json ignored: the SQLite registry already has guilds",
-		);
+			const rows = db.query<{ count: number }, []>("SELECT COUNT(*) AS count FROM guilds").get();
+			let count: number | null = null;
+			if (legacyExists && (rows?.count ?? 0) === 0) {
+				const legacy = normalizeRegistry(JSON.parse(readFileSync(legacyFile, "utf-8"))).value;
+				for (const [guildId, cfg] of Object.entries(legacy)) writeGuild(db, guildId, cfg);
+				count = Object.keys(legacy).length;
+			}
+
+			db.run("INSERT INTO registry_migrations (name) VALUES ('legacy_json')");
+			return count;
+		})
+		.immediate();
+
+	if (imported === null) {
+		if (legacyExists) {
+			log.warn(
+				{ event: "registry_legacy_ignored" },
+				"Legacy guilds.json ignored: the SQLite registry is already initialized",
+			);
+		}
 		return null;
 	}
-
-	const legacy = normalizeRegistry(JSON.parse(readFileSync(legacyFile, "utf-8"))).value;
-	db.transaction(() => {
-		for (const [guildId, cfg] of Object.entries(legacy)) writeGuild(db, guildId, cfg);
-	})();
 
 	try {
 		renameSync(legacyFile, `${legacyFile}.migrated`);
@@ -147,5 +169,5 @@ export function importLegacyRegistry(db: Database, legacyFile: string): number |
 			"Imported guilds.json but could not rename it",
 		);
 	}
-	return Object.keys(legacy).length;
+	return imported;
 }

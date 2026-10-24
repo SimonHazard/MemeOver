@@ -9,7 +9,7 @@ import {
 	readRegistry,
 	writeGuild,
 } from "./registry-db";
-import { type GuildConfig, UNIQUE_CLIENT_ID_LIMIT } from "./registry-state";
+import { type GuildConfig, type Registry, UNIQUE_CLIENT_ID_LIMIT } from "./registry-state";
 
 export type { GuildConfig, Registry } from "./registry-state";
 
@@ -35,15 +35,20 @@ export function createGuildRegistry(dataDir: string) {
 	mkdirSync(dataDir, { recursive: true });
 	const db = openRegistryDatabase(path.join(dataDir, REGISTRY_DB));
 
-	const imported = importLegacyRegistry(db, path.join(dataDir, LEGACY_REGISTRY_FILE));
-	if (imported !== null) {
-		log.info(
-			{ event: "registry_legacy_imported", guilds: imported },
-			"Imported guilds.json into the SQLite registry",
-		);
+	let registry: Registry;
+	try {
+		const imported = importLegacyRegistry(db, path.join(dataDir, LEGACY_REGISTRY_FILE));
+		if (imported !== null) {
+			log.info(
+				{ event: "registry_legacy_imported", guilds: imported },
+				"Imported guilds.json into the SQLite registry",
+			);
+		}
+		registry = readRegistry(db);
+	} catch (err) {
+		db.close();
+		throw err;
 	}
-
-	const registry = readRegistry(db);
 
 	function commit(guildId: string, cfg: GuildConfig): void {
 		writeGuild(db, guildId, cfg);
