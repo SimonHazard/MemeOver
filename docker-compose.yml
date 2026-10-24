@@ -27,7 +27,7 @@ services:
     ports:
       - "${WS_PORT:-3001}:${WS_PORT:-3001}"
     volumes:
-      # Persistance du registre des guildes (data/guilds.json)
+      # Persistance du registre des guildes (data/memeover.db, SQLite WAL)
       - bot-data:/app/data
     restart: unless-stopped
     healthcheck:
