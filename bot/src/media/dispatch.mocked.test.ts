@@ -45,7 +45,7 @@ mock.module("../utils/reaction-rate-limit", () => ({
 	canBroadcastReaction,
 }));
 
-const { dispatchMedia, hasNewEmbedMedia } = await import("./dispatcher");
+const { dispatchMedia, hasNewEmbedMedia, isEmbedResolutionUpdate } = await import("./dispatcher");
 const { dispatchReaction } = await import("./reactions");
 
 function makeAuthor(bot: boolean): Pick<User, "bot" | "displayAvatarURL" | "id" | "username"> {
@@ -257,6 +257,57 @@ test("new embed pathname detection", () => {
 			}),
 		),
 	).toBe(false);
+});
+test("embed resolution update requires a cached message without embeds", () => {
+	const resolved = makeMessage({
+		content: "https://tenor.com/view/cat-123",
+		embeds: [{ video: { url: "https://media.tenor.com/abc/cat.mp4" } }],
+	});
+	const cachedBefore = makeMessage({ content: "https://tenor.com/view/cat-123" });
+	const uncachedBefore = Object.assign(makeMessage({ content: "" }), { partial: true });
+	const alreadyEmbedded = makeMessage({
+		content: "https://tenor.com/view/cat-123",
+		embeds: [{ video: { url: "https://media.tenor.com/abc/cat.mp4" } }],
+	});
+
+	expect(isEmbedResolutionUpdate(cachedBefore, resolved)).toBe(true);
+	// Edits of messages that fell out of the cache must not rebroadcast old media.
+	expect(isEmbedResolutionUpdate(uncachedBefore, resolved)).toBe(false);
+	expect(isEmbedResolutionUpdate(alreadyEmbedded, resolved)).toBe(false);
+});
+function makePartialReaction(): { reaction: MessageReaction; fetch: ReturnType<typeof mock> } {
+	const reaction = makeReaction();
+	const fetch = mock(async () => reaction);
+	Object.assign(reaction, { partial: true, fetch });
+	return { reaction, fetch };
+}
+test("partial reaction outside a watched channel never reaches the Discord API", async () => {
+	const { reaction, fetch } = makePartialReaction();
+	Object.assign(reaction.message, { guildId: "unregistered-guild" });
+	await dispatchReaction(reaction, makeUser(false) as User);
+	expect(fetch).not.toHaveBeenCalled();
+	expect(broadcasts).toEqual([]);
+});
+test("partial reaction in a paused or rate-limited guild never reaches the Discord API", async () => {
+	const paused = makePartialReaction();
+	pausedUntil = Date.now() + 60_000;
+	await dispatchReaction(paused.reaction, makeUser(false) as User);
+	pausedUntil = null;
+
+	const limited = makePartialReaction();
+	canBroadcastReaction.mockReturnValueOnce(false);
+	await dispatchReaction(limited.reaction, makeUser(false) as User);
+
+	expect(paused.fetch).not.toHaveBeenCalled();
+	expect(limited.fetch).not.toHaveBeenCalled();
+	expect(broadcasts).toEqual([]);
+});
+test("partial reaction in a watched channel is fetched once, then broadcast", async () => {
+	const { reaction, fetch } = makePartialReaction();
+	await dispatchReaction(reaction, makeUser(false) as User);
+	expect(fetch).toHaveBeenCalledTimes(1);
+	expect(broadcasts).toHaveLength(1);
+	expect(broadcasts[0].event).toMatchObject({ type: "REACTION", emoji: "fire" });
 });
 test("partial reaction fetch failure ignored", async () => {
 	const reaction = makeReaction();

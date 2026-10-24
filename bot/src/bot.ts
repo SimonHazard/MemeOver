@@ -3,13 +3,14 @@ import {
 	Events,
 	GatewayIntentBits,
 	type Message,
+	Options,
 	type PartialMessage,
 	Partials,
 } from "discord.js";
 import { handleInteraction } from "./commands/commands";
 import { errorResponse } from "./commands/response-panel";
 import { interactionLocale, t } from "./i18n";
-import { dispatchMedia, hasNewEmbedMedia } from "./media/dispatcher";
+import { dispatchMedia, isEmbedResolutionUpdate } from "./media/dispatcher";
 import { dispatchReaction } from "./media/reactions";
 import { startGuildCleanupScheduler } from "./utils/cleanup";
 import { config } from "./utils/config";
@@ -32,6 +33,17 @@ const discordClient = new Client({
 	// Required so we receive reactionAdd for messages that aren't in the cache
 	// (e.g. anything older than the bot's current uptime).
 	partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+	// The bot reads every message of every guild it is in, but only needs one on create and for
+	// the few seconds before Discord resolves its Tenor/Giphy embeds. The default (200 messages
+	// per channel, never swept) grows with uptime and guild count.
+	makeCache: Options.cacheWithLimits({
+		...Options.DefaultMakeCacheSettings,
+		MessageManager: 25,
+	}),
+	sweepers: {
+		...Options.DefaultSweeperSettings,
+		messages: { interval: 5 * 60, lifetime: 30 * 60 },
+	},
 });
 
 discordClient.on(Events.ClientReady, (c) => {
@@ -50,9 +62,7 @@ discordClient.on(Events.MessageCreate, (message: Message) => {
 discordClient.on(
 	Events.MessageUpdate,
 	(oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage) => {
-		const hadEmbeds = oldMessage.embeds.length > 0;
-		const hasEmbeds = newMessage.embeds.length > 0;
-		if (!hadEmbeds && hasEmbeds && hasNewEmbedMedia(newMessage)) {
+		if (isEmbedResolutionUpdate(oldMessage, newMessage)) {
 			dispatchMedia(newMessage, false);
 		}
 	},
