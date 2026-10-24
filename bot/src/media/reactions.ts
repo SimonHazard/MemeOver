@@ -10,15 +10,7 @@ export async function dispatchReaction(
 	reaction: MessageReaction | PartialMessageReaction,
 	user: User | PartialUser,
 ): Promise<void> {
-	// Partials fire for messages older than the bot's uptime; fetch hydrates `.message` / `.emoji`.
-	if (reaction.partial) {
-		try {
-			await reaction.fetch();
-		} catch {
-			return;
-		}
-	}
-
+	// Partial messages still carry their guild and channel ids from the gateway payload.
 	const { guildId, channelId, id: messageId } = reaction.message;
 	if (!guildId || !channelId) return;
 
@@ -27,6 +19,16 @@ export async function dispatchReaction(
 	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) return;
 	if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
 	if (!canBroadcastReaction(guildId)) return;
+
+	// Partials fire for messages older than the bot's cache. Fetching costs a REST call, so it
+	// only happens once every in-memory gate has passed (most reactions come from unwatched guilds).
+	if (reaction.partial) {
+		try {
+			await reaction.fetch();
+		} catch {
+			return;
+		}
+	}
 
 	const emojiId = reaction.emoji.id;
 	const emojiName = reaction.emoji.name;
