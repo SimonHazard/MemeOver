@@ -8,7 +8,7 @@
 - **Settings window**: the desktop window for connection, display and server configuration.
 - **Profile**: a named snapshot of `OVERLAY_PROFILE_FIELDS`, excluding connection credentials and machine preferences.
 - **Guild room**: the bot's per-guild set of joined WebSocket clients in `bot/src/utils/store.ts`.
-- **Registry**: persisted guild configuration in `data/guilds.json`, relative to the bot working directory (or `MEMEOVER_DATA_DIR` for isolated tests).
+- **Registry**: persisted guild configuration in the SQLite database `data/memeover.db` (WAL), relative to the bot working directory (or `MEMEOVER_DATA_DIR` for isolated tests). Reads are served from memory; a legacy `data/guilds.json` is imported once on first start and renamed to `guilds.json.migrated`.
 - **Source `bot_app`**: messages and reactions originating from bots/apps, controlled by the server's `/memeover bots` policy and the client's display preference.
 - **Anonymous media**: `/memeover secret` media with `anonymous: true`; attribution is hidden.
 - **Server creator**: the app's guided installer and managed process for a self-hosted bot.
