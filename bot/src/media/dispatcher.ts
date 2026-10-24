@@ -153,3 +153,18 @@ export function hasNewEmbedMedia(message: Message | PartialMessage): boolean {
 		return url !== undefined && !contentPathnames.has(urlPathname(url));
 	});
 }
+
+/**
+ * Whether a messageUpdate is Discord resolving a Tenor/Giphy embed seconds after the post.
+ * An uncached (partial) old message has no embeds to compare against, so an edit of an older
+ * message would look like a fresh embed and rebroadcast media long after it was posted.
+ */
+export function isEmbedResolutionUpdate(
+	oldMessage: Message | PartialMessage,
+	newMessage: Message | PartialMessage,
+): boolean {
+	if (oldMessage.partial) return false;
+	return (
+		oldMessage.embeds.length === 0 && newMessage.embeds.length > 0 && hasNewEmbedMedia(newMessage)
+	);
+}
