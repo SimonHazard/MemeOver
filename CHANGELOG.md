@@ -6,6 +6,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+### Fixed
+
+- Bot (1.6.3): filter reactions before calling Discord, then recheck the watched channel, pause and bot-source settings after the response. Limit Discord fetches and outgoing reactions independently to 10 per guild per second so delayed responses cannot flood the overlay.
+
+### Changed
+
+- Bot (1.6.3): cap the message cache at 25 messages per channel and sweep messages older than 30 minutes every 5 minutes. Ignore embed updates without a cached previous message to avoid replaying old media.
+
 ## [1.8.0]
 
 ### Added

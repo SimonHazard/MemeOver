@@ -59,7 +59,7 @@
     },
     "bot": {
       "name": "@memeover/bot",
-      "version": "1.6.2",
+      "version": "1.6.3",
       "dependencies": {
         "@logtail/pino": "^0.5.12",
         "@memeover/shared": "workspace:*",
