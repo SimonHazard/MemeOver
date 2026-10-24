@@ -1,7 +1,75 @@
 import { describe, expect, test } from "bun:test";
 import { pickOverlayProfileSettings } from "./profiles";
 import { normalizeSettings } from "./settings";
-import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, OVERLAY_PROFILE_FIELDS } from "./types";
+import {
+	CONNECTION_NOTIFICATION_POSITIONS,
+	CURRENT_SCHEMA_VERSION,
+	DEFAULT_SETTINGS,
+	OVERLAY_PROFILE_FIELDS,
+} from "./types";
+
+test("connection notifications migrate on, preserve opt out and validate all four corners", () => {
+	expect(normalizeSettings({ schemaVersion: 12 })).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		connectionNotificationsEnabled: true,
+		connectionNotificationPosition: "bottom-right",
+	});
+	for (const position of CONNECTION_NOTIFICATION_POSITIONS) {
+		expect(
+			normalizeSettings({
+				connectionNotificationsEnabled: false,
+				connectionNotificationPosition: position,
+			}),
+		).toMatchObject({
+			connectionNotificationsEnabled: false,
+			connectionNotificationPosition: position,
+		});
+	}
+	for (const position of ["top-center", "center", null, 42]) {
+		expect(
+			normalizeSettings({
+				connectionNotificationsEnabled: "false",
+				connectionNotificationPosition: position,
+			}),
+		).toMatchObject({
+			connectionNotificationsEnabled: true,
+			connectionNotificationPosition: "bottom-right",
+		});
+	}
+	expect(
+		pickOverlayProfileSettings({
+			connectionNotificationsEnabled: false,
+			connectionNotificationPosition: "top-left",
+		}),
+	).toMatchObject({
+		connectionNotificationsEnabled: false,
+		connectionNotificationPosition: "top-left",
+	});
+});
+
+test("connection notification duration migrates to four seconds and validates saved values", () => {
+	expect(normalizeSettings({ schemaVersion: 13 })).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		connectionNotificationDuration: 4,
+	});
+	for (const [saved, expected] of [
+		[1, 1],
+		[30, 30],
+		[8, 8],
+		[0, 1],
+		[-5, 1],
+		[60, 30],
+		[6.6, 7],
+		[null, 4],
+		["8", 4],
+		[Number.NaN, 4],
+		[Number.POSITIVE_INFINITY, 4],
+	] as const) {
+		expect(
+			normalizeSettings({ connectionNotificationDuration: saved }).connectionNotificationDuration,
+		).toBe(expected);
+	}
+});
 
 describe("settings normalization", () => {
 	test("defaults bot/app sources to hidden during migration", () => {

@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS } from "../../src/shared/types";
 // Isolated browser storage only. No native files, Discord or server processes are touched.
 const onboarding = new URLSearchParams(location.search).has("onboarding");
 if (!onboarding) localStorage.setItem("onboarding-done", "1");
-localStorage.setItem("lang", "en");
+if (!localStorage.getItem("lang")) localStorage.setItem("lang", "en");
 const paths = new Map<number, string>();
 const monitor = {
 	name: "Test display",

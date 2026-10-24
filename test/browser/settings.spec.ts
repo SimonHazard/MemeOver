@@ -30,7 +30,7 @@ test("all settings sliders support pointer, keyboard, bounds and persistence", a
 	for (const trigger of await page.locator('[data-slot="accordion-trigger"]').all())
 		await trigger.click();
 	const sliders = page.locator('[data-slot="slider"]');
-	await expect(sliders).toHaveCount(16);
+	await expect(sliders).toHaveCount(17);
 	for (const slider of await sliders.all()) {
 		const input = slider.locator('input[type="range"]');
 		await slider.scrollIntoViewIfNeeded();
@@ -232,7 +232,7 @@ test("small window, dark theme and reduced motion keep controls and dialogs usab
 	page,
 }) => {
 	await page.setViewportSize({ width: 800, height: 600 });
-	await page.emulateMedia({ reducedMotion: "reduce" });
+	await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
 	await overlay(page);
 	await expect(page.locator("html")).toHaveClass(/dark/);
 	await page.getByRole("slider", { name: "Media size", exact: true }).focus();

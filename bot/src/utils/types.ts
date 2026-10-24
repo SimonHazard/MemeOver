@@ -39,4 +39,6 @@ export interface ClientState {
 	ws_id: string;
 	ws_ref: WSConnection;
 	joined_guilds: Set<string>;
+	/** Stable app install id from JOIN, shared by a reconnecting install's old and new sockets. */
+	client_id?: string;
 }

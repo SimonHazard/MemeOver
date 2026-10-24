@@ -20,10 +20,10 @@ const metricsTokenBuf = config.metricsToken ? Buffer.from(config.metricsToken) :
 
 // ─── Broadcast ────────────────────────────────────────────────────────────────
 
-/** Sends MEMBER_COUNT_UPDATE to every client in the guild with the current member count. */
+/** Sends MEMBER_COUNT_UPDATE to every socket in the guild with the distinct install count. */
 function broadcastMemberCount(guildId: string): void {
 	const memberIds = [...store.getGuildMembers(guildId)];
-	const count = memberIds.length;
+	const count = store.getGuildPresenceCount(guildId);
 	const payload = JSON.stringify({
 		type: "MEMBER_COUNT_UPDATE",
 		guild_id: guildId,
@@ -253,6 +253,7 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 	}
 
 	store.joinGuild(ws.id, msg.guild_id);
+	store.setClientId(ws.id, msg.client_id);
 	ws.send(
 		JSON.stringify({
 			type: "JOIN_ACK",

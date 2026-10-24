@@ -34,6 +34,8 @@
 		"guildUnregistered": "Ce serveur a été retiré de MemeOver. Exécutez /memeover setup dans Discord, puis collez le nouveau code de configuration."
 	},
 	"overlay": {
+		"userConnected_one": "Un utilisateur s’est connecté",
+		"userConnected_other": "{{count}} utilisateurs se sont connectés",
 		"controls": "Contrôles de l'overlay",
 		"show": "Afficher",
 		"reload": "Recharger",
@@ -52,6 +54,11 @@
 		"queueSizeLabel_other": "en attente"
 	},
 	"display": {
+		"group_notifications": "Notifications de connexion",
+		"group_notifications_hint": "Affiche un toast lorsqu’un autre utilisateur se connecte à ce serveur.",
+		"connection_notifications_enabled": "Notifier la connexion d’un utilisateur",
+		"connection_notification_position": "Position des notifications",
+		"connection_notification_duration": "Durée des notifications",
 		"size": "Taille du média",
 		"duration": "Durée d'affichage",
 		"duration_unit": "s",
@@ -435,5 +442,25 @@
 		"stay": "Continuer à modifier",
 		"discard": "Abandonner",
 		"saveAndLeave": "Sauvegarder et continuer"
+	},
+	"devOverlay": {
+		"title": "Banc de test local de l’overlay",
+		"hint": "Développement local uniquement, sans bot. Les arrivées affichent le vrai toast ; les départs affichent un toast de test local. Le média fixe suit les réglages enregistrés et n’est jamais ajouté à l’historique.",
+		"start": "Démarrer la simulation",
+		"stop": "Arrêter la simulation",
+		"showFirst": "Affichez d’abord l’overlay pour utiliser le banc de test.",
+		"peers_one": "{{count}} utilisateur simulé",
+		"peers_other": "{{count}} utilisateurs simulés",
+		"join": "Connecter un utilisateur",
+		"leave": "Déconnecter un utilisateur",
+		"userDisconnected_one": "Un utilisateur s’est déconnecté",
+		"userDisconnected_other": "{{count}} utilisateurs se sont déconnectés",
+		"media": "Exemple fixe",
+		"image": "Image fixe",
+		"text": "Texte fixe",
+		"none": "Masquer l’exemple",
+		"sampleText": "Aperçu local de l’overlay : modifiez les réglages d’affichage, puis enregistrez. Ce texte reste à l’écran.",
+		"sampleCaption": "Exemple local — les réglages d’affichage enregistrés s’appliquent ici.",
+		"error": "Impossible d’envoyer la commande de test local."
 	}
 }

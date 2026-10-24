@@ -34,6 +34,8 @@
 		"guildUnregistered": "This server was removed from MemeOver. Run /memeover setup in Discord, then paste the new setup code."
 	},
 	"overlay": {
+		"userConnected_one": "A user connected",
+		"userConnected_other": "{{count}} users connected",
 		"controls": "Overlay controls",
 		"show": "Show",
 		"reload": "Reload",
@@ -52,6 +54,11 @@
 		"queueSizeLabel_other": "pending"
 	},
 	"display": {
+		"group_notifications": "Connection notifications",
+		"group_notifications_hint": "Show a toast when another user connects to this server.",
+		"connection_notifications_enabled": "Notify when a user connects",
+		"connection_notification_position": "Notification position",
+		"connection_notification_duration": "Notification duration",
 		"size": "Media size",
 		"duration": "Display duration",
 		"duration_unit": "s",
@@ -435,5 +442,25 @@
 		"stay": "Keep editing",
 		"discard": "Discard",
 		"saveAndLeave": "Save and continue"
+	},
+	"devOverlay": {
+		"title": "Local overlay test bench",
+		"hint": "Local development only, without a bot. Arrivals show the real toast; departures show a local test toast. The fixed sample follows saved display settings and is never added to history.",
+		"start": "Start simulation",
+		"stop": "Stop simulation",
+		"showFirst": "Show the overlay first to use the test bench.",
+		"peers_one": "{{count}} simulated user",
+		"peers_other": "{{count}} simulated users",
+		"join": "Connect a user",
+		"leave": "Disconnect a user",
+		"userDisconnected_one": "A user disconnected",
+		"userDisconnected_other": "{{count}} users disconnected",
+		"media": "Fixed sample",
+		"image": "Fixed image",
+		"text": "Fixed text",
+		"none": "Hide sample",
+		"sampleText": "Local overlay preview: change your display settings, then save. This text stays on screen.",
+		"sampleCaption": "Local sample — saved display settings apply here.",
+		"error": "Could not send the local test command."
 	}
 }

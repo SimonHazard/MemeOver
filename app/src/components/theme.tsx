@@ -1,10 +1,9 @@
 import { EASE_OUT } from "@memeover/ui/lib/motion";
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect } from "react";
 import { flushSync } from "react-dom";
+import { saveTheme, type Theme, useResolvedTheme } from "@/shared/theme";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type Theme = "light" | "dark";
 
 interface ThemeCtx {
 	theme: Theme;
@@ -23,17 +22,17 @@ export const useTheme = () => useContext(ThemeContext);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-function getInitialTheme(): Theme {
-	return localStorage.getItem("theme") === "light" ? "light" : "dark";
-}
-
 /**
  * Wraps children with a theme context.
  * The initial class on `<html>` is applied by main-settings.tsx before React mounts;
  * toggleTheme synchronously updates the DOM class + localStorage.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-	const [theme, setTheme] = useState<Theme>(getInitialTheme);
+	const theme = useResolvedTheme();
+
+	useEffect(() => {
+		document.documentElement.classList.toggle("dark", theme === "dark");
+	}, [theme]);
 
 	const toggleTheme = (origin?: { x: number; y: number }) => {
 		const next = theme === "dark" ? "light" : "dark",
@@ -43,8 +42,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 			applied = true;
 			root.classList.add("theme-switching");
 			root.classList.toggle("dark", next === "dark");
-			localStorage.setItem("theme", next);
-			setTheme(next);
+			saveTheme(next);
 			requestAnimationFrame(() =>
 				requestAnimationFrame(() => root.classList.remove("theme-switching")),
 			);

@@ -1,6 +1,8 @@
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useLanguageSync } from "@/i18n/use-language-sync";
 import { useAppStore } from "@/shared/store";
+import { ConnectionNotifications } from "./components/connection-notifications";
 import { FloatingReactions } from "./components/floating-reactions";
 import { MediaPopup } from "./components/media-popup";
 import { useHistoryLogger } from "./hooks/useHistoryLogger";
@@ -9,8 +11,20 @@ import { useOverlayWs } from "./hooks/useOverlayWs";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const OverlayTestRuntime = import.meta.env.DEV
+	? lazy(() => import("@/dev/overlay-test-runtime"))
+	: null;
+
+function LiveOverlayMedia() {
+	useOverlayWs();
+	const display = useMediaDisplay();
+	const settings = useAppStore((s) => s.settings);
+	useHistoryLogger(display.current);
+	return <MediaPopup {...display} settings={settings} />;
+}
+
 export function OverlayApp() {
-	const { settings } = useAppStore();
+	useLanguageSync();
 
 	// Dev-only: simulated production background
 	const [devPreview, setDevPreview] = useState(false);
@@ -19,37 +33,39 @@ export function OverlayApp() {
 		if (!import.meta.env.DEV) return;
 		// Store the unlisten fn once the promise resolves so cleanup is synchronous.
 		let unlistenFn: (() => void) | undefined;
-		void listen<boolean>("overlay-dev-preview", (e) => setDevPreview(e.payload)).then((fn) => {
-			unlistenFn = fn;
-		});
+		let disposed = false;
+		void listen<boolean>("overlay-dev-preview", (e) => {
+			if (!disposed) setDevPreview(e.payload);
+		})
+			.then((fn) => {
+				if (disposed) return fn();
+				else unlistenFn = fn;
+			})
+			.catch((error) => console.warn("[Overlay] Could not subscribe to dev preview", error));
 		return () => {
-			unlistenFn?.();
+			disposed = true;
+			if (unlistenFn) {
+				void Promise.resolve(unlistenFn()).catch((error) =>
+					console.warn("[Overlay] Could not unsubscribe from dev preview", error),
+				);
+			}
 		};
 	}, []);
 
-	// Connect to the bot WebSocket and feed the display queue
-	useOverlayWs();
-
-	// Sequentially display items from the queue with animations
-	const { current, isVisible, onExitComplete, onVideoEnd, startTimer, onMediaError } =
-		useMediaDisplay();
-
-	// Persist each displayed item to the history store
-	useHistoryLogger(current);
-
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
-			<MediaPopup
-				current={current}
-				isVisible={isVisible}
-				settings={settings}
-				onExitComplete={onExitComplete}
-				onVideoEnd={onVideoEnd}
-				startTimer={startTimer}
-				onMediaError={onMediaError}
-			/>
+			{OverlayTestRuntime ? (
+				<Suspense fallback={null}>
+					<OverlayTestRuntime>
+						<LiveOverlayMedia />
+					</OverlayTestRuntime>
+				</Suspense>
+			) : (
+				<LiveOverlayMedia />
+			)}
 
 			<FloatingReactions />
+			<ConnectionNotifications />
 
 			{/* ── DEV badge (always visible in dev, not only in preview) ── */}
 			{import.meta.env.DEV && (

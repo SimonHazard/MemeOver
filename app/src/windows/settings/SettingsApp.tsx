@@ -4,6 +4,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect } from "react";
+import { useLanguageSync } from "@/i18n/use-language-sync";
 import { routeTree } from "@/routeTree.gen";
 import { requestSettingsClose } from "./settings-close";
 
@@ -24,6 +25,7 @@ declare module "@tanstack/react-router" {
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export function SettingsApp() {
+	useLanguageSync();
 	useEffect(() => {
 		if (!isTauri()) return;
 		const win = getCurrentWindow();

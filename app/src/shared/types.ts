@@ -119,7 +119,20 @@ export interface EnabledTypes {
 	sticker: boolean;
 }
 
+export const CONNECTION_NOTIFICATION_POSITIONS = [
+	"top-left",
+	"top-right",
+	"bottom-left",
+	"bottom-right",
+] as const;
+export type ConnectionNotificationPosition = (typeof CONNECTION_NOTIFICATION_POSITIONS)[number];
+
 export interface Settings {
+	/** Show a toast when another overlay connects to this server. */
+	connectionNotificationsEnabled: boolean;
+	connectionNotificationPosition: ConnectionNotificationPosition;
+	/** Connection toast display duration, in seconds. */
+	connectionNotificationDuration: number;
 	mutedAuthors: MutedAuthor[];
 	hideAnonymous: boolean;
 	/** Maximum pending items per author, 0 means unlimited. */
@@ -196,6 +209,9 @@ export interface Settings {
 }
 
 export const OVERLAY_PROFILE_FIELDS = [
+	"connectionNotificationsEnabled",
+	"connectionNotificationPosition",
+	"connectionNotificationDuration",
 	"maxQueuedPerAuthor",
 	"mediaSize",
 	"duration",
@@ -238,7 +254,7 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 12;
+export const CURRENT_SCHEMA_VERSION = 14;
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
@@ -246,6 +262,9 @@ export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
 export const LEGACY_DEFAULT_WS_URL = "ws://localhost:3001/ws";
 
 export const DEFAULT_SETTINGS: Settings = {
+	connectionNotificationsEnabled: true,
+	connectionNotificationPosition: "bottom-right",
+	connectionNotificationDuration: 4,
 	mutedAuthors: [],
 	hideAnonymous: false,
 	maxQueuedPerAuthor: 3,

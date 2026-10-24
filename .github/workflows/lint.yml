@@ -60,6 +60,28 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run test
 
+  browser-test:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Install Chrome, WebKit and system dependencies
+        run: bun run playwright install --with-deps chrome webkit
+      - name: Test production browser fixtures
+        run: bun run test:browser
+        env:
+          BROWSER_PRODUCTION: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-failures
+          path: test-results/
+          retention-days: 7
+
   rust-test:
     name: Rust tests
     runs-on: ubuntu-latest
