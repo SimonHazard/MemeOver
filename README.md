@@ -135,7 +135,6 @@ GitHub Actions vérifie le projet, prépare les releases de l’application et d
 
 - [CI](.github/workflows/ci.yml)
 - [App release](.github/workflows/app-release.yml)
-- [Bot](.github/workflows/bot.yml)
 - [Site deploy](.github/workflows/site-deploy.yml)
 - [Site refresh after an app release](.github/workflows/site-refresh.yml)
 
@@ -143,6 +142,8 @@ La CI vérifie le code, les typages et les tests rapides pour chaque PR. Elle co
 l’app et le site et lance les tests longs selon les fichiers modifiés. Le contrôle
 `status` regroupe les résultats, y compris le build Docker du bot, et doit être configuré
 comme obligatoire avant fusion. Le build Docker de validation ne publie aucune image.
+Sur `main`, le job `bot-image` publie l’image GHCR seulement après la réussite de `status`.
+Les runners Ubuntu de CI utilisent 24.04 et les actions JavaScript utilisent Node 24.
 Les PR externes et Dependabot exécutent uniquement la CI, sans preview ni déploiement
 Cloudflare. Les previews sont réservées aux PR internes au dépôt.
 
@@ -285,7 +286,6 @@ GitHub Actions checks the project, prepares app releases and deploys the site:
 
 - [CI](.github/workflows/ci.yml)
 - [App release](.github/workflows/app-release.yml)
-- [Bot](.github/workflows/bot.yml)
 - [Site deploy](.github/workflows/site-deploy.yml)
 - [Site refresh after an app release](.github/workflows/site-refresh.yml)
 
@@ -294,6 +294,8 @@ and runs longer tests according to the changed files. Configure the aggregate `s
 check, including the bot Docker build, as required before merging. The validation Docker
 build does not publish an image. External and Dependabot PRs run CI only, without
 Cloudflare previews or deployments. Previews are limited to PRs within this repository.
+On `main`, `bot-image` publishes the GHCR image only after `status` succeeds.
+Ubuntu CI runners use 24.04 and JavaScript actions use Node 24.
 
 Publishing an `app-v*` release automatically builds and deploys the site from `main`,
 with the version in the run name. Creating a release draft does not trigger this refresh.

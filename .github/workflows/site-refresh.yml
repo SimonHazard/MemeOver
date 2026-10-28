@@ -14,10 +14,10 @@ jobs:
   dispatch:
     name: dispatch
     if: startsWith(github.event.release.tag_name, 'app-v')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Dispatch site deployment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9.0.0
         with:
           script: |
             const tag = context.payload.release.tag_name;

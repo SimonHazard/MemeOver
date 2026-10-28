@@ -22,12 +22,12 @@ concurrency:
 
 jobs:
   version:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.read.outputs.version }}
       released: ${{ steps.read.outputs.released }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
@@ -61,7 +61,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       # ── Dépendances système (Linux uniquement) ────────────────────────────────
       - name: Install Linux system dependencies
@@ -83,7 +83,7 @@ jobs:
           bun-version-file: package.json
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: |
             ~/.bun/install/cache

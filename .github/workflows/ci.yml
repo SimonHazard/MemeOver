@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       # Merge groups run everything; PRs and main pushes use the same filters.
       app: ${{ github.event_name == 'merge_group' || steps.filter.outputs.app == 'true' || steps.dependencies.outputs.changed == 'true' }}
@@ -26,12 +26,12 @@ jobs:
       site: ${{ github.event_name == 'merge_group' || steps.filter.outputs.site == 'true' || steps.dependencies.outputs.changed == 'true' }}
       docker: ${{ github.event_name == 'merge_group' || steps.filter.outputs.docker == 'true' || steps.dependencies.outputs.changed == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
       - id: filter
         if: github.event_name != 'merge_group'
-        uses: dorny/paths-filter@v3.0.4
+        uses: dorny/paths-filter@v4.0.3
         with:
           filters: |
             app:
@@ -95,13 +95,13 @@ jobs:
           JS
 
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -115,13 +115,13 @@ jobs:
   app:
     needs: changes
     if: needs.changes.outputs.app == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -131,7 +131,7 @@ jobs:
         run: bun run --cwd app build
       - id: pw
         run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
@@ -139,7 +139,7 @@ jobs:
       - run: bun run test:browser
         env:
           BROWSER_PRODUCTION: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         if: failure()
         with:
           name: browser-test-failures
@@ -153,21 +153,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: ubuntu, os: ubuntu-latest, cmd: "cargo test --manifest-path app/src-tauri/Cargo.toml" }
+          - { name: ubuntu, os: ubuntu-24.04, cmd: "cargo test --manifest-path app/src-tauri/Cargo.toml" }
           - { name: windows, os: windows-latest, cmd: "cargo check --manifest-path app/src-tauri/Cargo.toml" }
           - { name: macos, os: macos-latest, cmd: "cargo check --manifest-path app/src-tauri/Cargo.toml" }
     name: rust (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - if: matrix.os == 'ubuntu-latest'
+      - uses: actions/checkout@v7.0.1
+      - if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev pkg-config
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -184,16 +184,16 @@ jobs:
   site:
     needs: changes
     if: needs.changes.outputs.site == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: "22"
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -209,12 +209,12 @@ jobs:
   docker:
     needs: changes
     if: needs.changes.outputs.docker == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.4.1
       - name: Build bot image without publishing
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7.4.0
         with:
           context: .
           file: Dockerfile.bot
@@ -225,7 +225,7 @@ jobs:
   status:
     if: always()
     needs: [changes, checks, app, rust, site, docker]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Require successful checks and every selected build
         env:
@@ -239,3 +239,38 @@ jobs:
             (.site.result == "success" or (.site.result == "skipped" and .changes.outputs.site != "true")) and
             (.docker.result == "success" or (.docker.result == "skipped" and .changes.outputs.docker != "true"))
           '
+
+  bot-image:
+    needs: [changes, status]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.docker == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/memeover-bot
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/setup-buildx-action@v4.4.1
+      - name: Publish verified bot image
+        uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          file: Dockerfile.bot
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=bot
+          cache-to: type=gha,mode=max,scope=bot
