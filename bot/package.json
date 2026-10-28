@@ -1,6 +1,6 @@
 {
 	"name": "@memeover/bot",
-	"version": "1.6.4",
+	"version": "1.6.5",
 	"scripts": {
 		"dev": "bun run --watch src/index.ts",
 		"typecheck": "tsc --noEmit",

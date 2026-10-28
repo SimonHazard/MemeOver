@@ -133,15 +133,15 @@ site/         Site web Astro
 
 GitHub Actions build et deploie l'app, le bot et le site :
 
-- [Lint workflow](.github/workflows/lint.yml)
-- [App workflow](.github/workflows/app.yml)
-- [Bot workflow](.github/workflows/bot.yml)
-- [Site workflow](.github/workflows/deploy-site.yml)
-- [App release → site refresh](.github/workflows/release-site.yml)
+- [CI](.github/workflows/ci.yml)
+- [App release](.github/workflows/app-release.yml)
+- [Bot](.github/workflows/bot.yml)
+- [Site deploy](.github/workflows/site-deploy.yml)
+- [Site refresh after an app release](.github/workflows/site-refresh.yml)
 
 Publier une release `app-v*` déclenche automatiquement le build et le déploiement du site
-sur `main`, avec la version dans le nom du run. Le déploiement attend l’approbation de
-l’environnement `production` ; créer un brouillon de release ne suffit pas.
+depuis `main`, avec la version dans le nom du run. Créer un brouillon de release
+ne déclenche pas ce rafraîchissement.
 
 Le bot peut aussi etre lance avec Docker Compose :
 
@@ -266,15 +266,14 @@ site/         Astro website
 
 GitHub Actions build and deploy the app, bot and site:
 
-- [Lint workflow](.github/workflows/lint.yml)
-- [App workflow](.github/workflows/app.yml)
-- [Bot workflow](.github/workflows/bot.yml)
-- [Site workflow](.github/workflows/deploy-site.yml)
-- [App release → site refresh](.github/workflows/release-site.yml)
+- [CI](.github/workflows/ci.yml)
+- [App release](.github/workflows/app-release.yml)
+- [Bot](.github/workflows/bot.yml)
+- [Site deploy](.github/workflows/site-deploy.yml)
+- [Site refresh after an app release](.github/workflows/site-refresh.yml)
 
 Publishing an `app-v*` release automatically builds and deploys the site from `main`,
-with the version in the run name. Deployment awaits the `production` environment's
-approval; creating a release draft does not trigger the refresh.
+with the version in the run name. Creating a release draft does not trigger this refresh.
 
 The bot can also run with Docker Compose:
 

@@ -13,6 +13,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- App/site (1.8.1), bot (1.6.5): consolidate CI into one workflow with path-filtered browser, Rust and Astro checks, all TypeScript checks and an aggregate `status` gate. Pin Bun in these workflows to the repository version, limit app bundling to new versions on main, and rename the site deployment workflows.
 - Bot (1.6.4): extend both disconnected-server cleanup thresholds from 24 to 48 hours. Explain configuration deletion and the single-client rule in cleanup notices and retention documentation.
 - Bot (1.6.3): cap the message cache at 25 messages per channel and sweep messages older than 30 minutes every 5 minutes. Ignore embed updates without a cached previous message to avoid replaying old media.
 
