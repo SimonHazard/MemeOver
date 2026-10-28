@@ -12,7 +12,7 @@ import { errorResponse } from "./commands/response-panel";
 import { interactionLocale, t } from "./i18n";
 import { dispatchMedia, isEmbedResolutionUpdate } from "./media/dispatcher";
 import { dispatchReaction } from "./media/reactions";
-import { startGuildCleanupScheduler } from "./utils/cleanup";
+import { startGuildCleanupScheduler, unregisterRemovedGuild } from "./utils/cleanup";
 import { config } from "./utils/config";
 import { normalizeBotLoginError } from "./utils/discord-intents";
 import { logger } from "./utils/logger";
@@ -50,6 +50,11 @@ discordClient.on(Events.ClientReady, (c) => {
 	log.info({ event: "ready", tag: c.user.tag }, `Logged in as ${c.user.tag}`);
 	attachPresenceClient(c);
 	startGuildCleanupScheduler(c);
+});
+
+// discord.js emits GuildUnavailable for outages and GuildDelete for actual removal.
+discordClient.on(Events.GuildDelete, (guild) => {
+	unregisterRemovedGuild(guild.id);
 });
 
 // New messages — include text caption

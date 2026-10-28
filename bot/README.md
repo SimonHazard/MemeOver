@@ -12,7 +12,7 @@ a lightweight WebSocket server.
 - Sends supported Discord media, stickers, text and reactions to connected desktop apps.
 - Supports anonymous media pushes with `/memeover secret`.
 - Exposes `/health` and optional bearer-protected `/metrics` HTTP endpoints.
-- Cleans up inactive or single-client server registrations after 24 hours.
+- Removes disconnected server registrations after 48 hours of inactivity, or once they are 48 hours old if at most one client has ever connected; also removes them as soon as the bot is removed from the server.
 
 ## Discord Commands
 

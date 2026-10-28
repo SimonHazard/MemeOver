@@ -11,9 +11,9 @@ import { store } from "./store";
 const log = logger.child({ module: "cleanup" });
 
 const CLEANUP_CHECK_INTERVAL_MS = 60 * 60 * 1000;
-const CLEANUP_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+const CLEANUP_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 
-type CleanupReason = "inactive_24h" | "single_unique_client";
+type CleanupReason = "inactive_48h" | "single_unique_client";
 
 interface SendableTextChannel {
 	readonly id: string;
@@ -59,12 +59,16 @@ function getCleanupNotice(locale: string | null | undefined): MessageCreateOptio
 	});
 }
 
-function cleanupReason(guildId: string, cfg: GuildConfig, now: number): CleanupReason | null {
+export function cleanupReason(
+	guildId: string,
+	cfg: GuildConfig,
+	now: number,
+): CleanupReason | null {
 	const activeClients = store.getGuildMembers(guildId).size;
 	const inactiveSince = cfg.last_active_at ?? cfg.registered_at;
 
 	if (activeClients === 0 && now - inactiveSince >= CLEANUP_THRESHOLD_MS) {
-		return "inactive_24h";
+		return "inactive_48h";
 	}
 
 	if (
@@ -157,6 +161,24 @@ function closeGuildConnections(guildId: string): void {
 	);
 }
 
+/** Delete a removed guild's registration before logging out its overlays. */
+export function unregisterRemovedGuild(guildId: string): boolean {
+	if (!guildRegistry.getConfig(guildId)) return false;
+	guildRegistry.unregister(guildId);
+	const evicted = evictGuild(
+		guildId,
+		"GUILD_UNREGISTERED",
+		t("en", "guildRemoved.wsMessage"),
+		t("en", "guildRemoved.wsCloseReason"),
+	);
+	schedulePresenceRefresh();
+	log.warn(
+		{ ...discordRefLogFields({ guildId }), event: "guild_removed_unregistered", evicted },
+		"Bot removed from guild; registration deleted",
+	);
+	return true;
+}
+
 export async function runGuildCleanup(client: Client, now = Date.now()): Promise<void> {
 	if (cleanupRunning) return;
 	cleanupRunning = true;
@@ -171,6 +193,15 @@ export async function runGuildCleanup(client: Client, now = Date.now()): Promise
 
 			const activeClients = store.getGuildMembers(guildId).size;
 			await postCleanupNotice(client, guildId, currentConfig);
+			// Discord requests yield: an overlay may reconnect or the registration may be replaced.
+			const latestConfig = guildRegistry.getConfig(guildId);
+			if (
+				!latestConfig ||
+				latestConfig.token !== currentConfig.token ||
+				cleanupReason(guildId, latestConfig, Date.now()) !== reason
+			) {
+				continue;
+			}
 			guildRegistry.unregister(guildId);
 			closeGuildConnections(guildId);
 			schedulePresenceRefresh();
