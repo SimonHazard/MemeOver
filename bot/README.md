@@ -31,6 +31,10 @@ a lightweight WebSocket server.
 
 ## Development
 
+Use stable Bun 1.4.2 or newer. CI and Docker use exactly 1.4.2. The app's Server tab
+checks this minimum before installing or starting the bot; its Bun installer installs
+1.4.2 when no compatible version is found.
+
 From the repository root:
 
 ```bash
@@ -82,6 +86,10 @@ Docker Compose is available from the repository root:
 ```bash
 docker compose up -d --build
 ```
+
+For an update, run `git pull --ff-only`, rebuild with the command above, then check
+`docker compose ps` and `docker compose logs --tail=100 bot`. CI builds the Docker
+image on relevant pull requests without publishing it. This does not deploy the VPS.
 
 Runtime data is stored in the SQLite database `data/memeover.db` locally, or in the
 `bot-data` volume when using Docker Compose. On first start, an existing `data/guilds.json`

@@ -71,7 +71,7 @@ Les [idées produit](docs/feature-ideas.md) restent hors du périmètre à déve
 
 ### Prerequis
 
-- [Bun](https://bun.sh/) 1.4.2+ (WebSocket test shutdown requires this runtime)
+- [Bun](https://bun.sh/) 1.4.2+ (CI et Docker utilisent 1.4.2 ; l’application vérifie ce minimum pour le bot local)
 - [Rust](https://www.rust-lang.org/)
 
 ### Installation
@@ -131,7 +131,7 @@ site/         Site web Astro
 
 ## Deploiement
 
-GitHub Actions build et deploie l'app, le bot et le site :
+GitHub Actions vérifie le projet, prépare les releases de l’application et déploie le site :
 
 - [CI](.github/workflows/ci.yml)
 - [App release](.github/workflows/app-release.yml)
@@ -141,7 +141,8 @@ GitHub Actions build et deploie l'app, le bot et le site :
 
 La CI vérifie le code, les typages et les tests rapides pour chaque PR. Elle construit
 l’app et le site et lance les tests longs selon les fichiers modifiés. Le contrôle
-`status` regroupe les résultats et doit être configuré comme obligatoire avant fusion.
+`status` regroupe les résultats, y compris le build Docker du bot, et doit être configuré
+comme obligatoire avant fusion. Le build Docker de validation ne publie aucune image.
 Les PR externes et Dependabot exécutent uniquement la CI, sans preview ni déploiement
 Cloudflare. Les previews sont réservées aux PR internes au dépôt.
 
@@ -149,11 +150,21 @@ Publier une release `app-v*` déclenche automatiquement le build et le déploiem
 depuis `main`, avec la version dans le nom du run. Créer un brouillon de release
 ne déclenche pas ce rafraîchissement.
 
+Avant de préparer une release, `bun run check:versions` vérifie les versions app/Tauri/site
+et les versions des workspaces dans les lockfiles. La distribution Linux est construite
+sur Ubuntu 22.04 ; cette base fixe le minimum de compilation visé, sans garantir toutes
+les distributions Linux.
+
 Le bot peut aussi etre lance avec Docker Compose :
 
 ```bash
 docker compose up -d --build
 ```
+
+Le déploiement du bot reste manuel : `git pull --ff-only`, la commande Compose ci-dessus,
+puis `docker compose ps` et `docker compose logs --tail=100 bot`. Le bot lancé depuis
+l’onglet Serveur utilise les sources et une version stable de Bun 1.4.2 ou plus récente ;
+« Installer Bun » installe 1.4.2 si aucune version compatible n’est trouvée.
 
 ## Licence
 
@@ -210,7 +221,7 @@ The [product ideas](docs/feature-ideas.md) remain outside the implementation sco
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) 1.4.2+ (WebSocket test shutdown requires this runtime)
+- [Bun](https://bun.sh/) 1.4.2+ (CI and Docker use 1.4.2; the app checks this minimum for the local bot)
 - [Rust](https://www.rust-lang.org/)
 
 ### Install
@@ -270,7 +281,7 @@ site/         Astro website
 
 ## Deployment
 
-GitHub Actions build and deploy the app, bot and site:
+GitHub Actions checks the project, prepares app releases and deploys the site:
 
 - [CI](.github/workflows/ci.yml)
 - [App release](.github/workflows/app-release.yml)
@@ -280,17 +291,27 @@ GitHub Actions build and deploy the app, bot and site:
 
 CI checks formatting, types and fast tests for every PR. It builds the app and site
 and runs longer tests according to the changed files. Configure the aggregate `status`
-check as required before merging. External and Dependabot PRs run CI only, without
+check, including the bot Docker build, as required before merging. The validation Docker
+build does not publish an image. External and Dependabot PRs run CI only, without
 Cloudflare previews or deployments. Previews are limited to PRs within this repository.
 
 Publishing an `app-v*` release automatically builds and deploys the site from `main`,
 with the version in the run name. Creating a release draft does not trigger this refresh.
+
+Before preparing a release, `bun run check:versions` checks app/Tauri/site versions and
+workspace versions in the lockfiles. Linux releases are built on Ubuntu 22.04; this fixes
+the intended build baseline without guaranteeing support for every Linux distribution.
 
 The bot can also run with Docker Compose:
 
 ```bash
 docker compose up -d --build
 ```
+
+Bot deployment stays manual: `git pull --ff-only`, the Compose command above, then
+`docker compose ps` and `docker compose logs --tail=100 bot`. The Server tab runs the bot
+from source with a stable Bun 1.4.2 or newer; "Install Bun" installs 1.4.2 when no
+compatible version is found.
 
 ## License
 

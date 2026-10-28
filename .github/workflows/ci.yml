@@ -24,6 +24,7 @@ jobs:
       app: ${{ github.event_name == 'merge_group' || steps.filter.outputs.app == 'true' || steps.dependencies.outputs.changed == 'true' }}
       rust: ${{ github.event_name == 'merge_group' || steps.filter.outputs.rust == 'true' || steps.dependencies.outputs.changed == 'true' }}
       site: ${{ github.event_name == 'merge_group' || steps.filter.outputs.site == 'true' || steps.dependencies.outputs.changed == 'true' }}
+      docker: ${{ github.event_name == 'merge_group' || steps.filter.outputs.docker == 'true' || steps.dependencies.outputs.changed == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,6 +60,17 @@ jobs:
               - '.github/workflows/ci.yml'
             dependencies:
               - 'bun.lock'
+            docker:
+              - 'bot/**'
+              - 'shared/**'
+              - 'Dockerfile.bot'
+              - '.dockerignore'
+              - 'docker-compose.yml'
+              - 'package.json'
+              - 'app/package.json'
+              - 'packages/ui/package.json'
+              - 'site/package.json'
+              - '.github/workflows/ci.yml'
       - uses: oven-sh/setup-bun@v2
         if: steps.filter.outputs.dependencies == 'true'
         with:
@@ -96,6 +108,7 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       - run: bunx biome ci --reporter=github
+      - run: bun run check:versions
       - run: bun run typecheck
       - run: bun run test
 
@@ -193,9 +206,25 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           PUBLIC_BOT_CLIENT_ID: ${{ vars.PUBLIC_BOT_CLIENT_ID }}
 
+  docker:
+    needs: changes
+    if: needs.changes.outputs.docker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build bot image without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.bot
+          push: false
+          cache-from: type=gha,scope=bot
+          cache-to: type=gha,mode=max,scope=bot
+
   status:
     if: always()
-    needs: [changes, checks, app, rust, site]
+    needs: [changes, checks, app, rust, site, docker]
     runs-on: ubuntu-latest
     steps:
       - name: Require successful checks and every selected build
@@ -207,5 +236,6 @@ jobs:
             .checks.result == "success" and
             (.app.result == "success" or (.app.result == "skipped" and .changes.outputs.app != "true")) and
             (.rust.result == "success" or (.rust.result == "skipped" and .changes.outputs.rust != "true")) and
-            (.site.result == "success" or (.site.result == "skipped" and .changes.outputs.site != "true"))
+            (.site.result == "success" or (.site.result == "skipped" and .changes.outputs.site != "true")) and
+            (.docker.result == "success" or (.docker.result == "skipped" and .changes.outputs.docker != "true"))
           '

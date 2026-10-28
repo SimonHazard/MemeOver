@@ -9,12 +9,26 @@ on:
       - "bot/**"
       - "shared/**"
       - "Dockerfile.bot"
+      - ".dockerignore"
+      - "docker-compose.yml"
+      - "package.json"
+      - "bun.lock"
+      - "app/package.json"
+      - "packages/ui/package.json"
+      - "site/package.json"
       - ".github/workflows/bot.yml"
   pull_request:
     paths:
       - "bot/**"
       - "shared/**"
       - "Dockerfile.bot"
+      - ".dockerignore"
+      - "docker-compose.yml"
+      - "package.json"
+      - "bun.lock"
+      - "app/package.json"
+      - "packages/ui/package.json"
+      - "site/package.json"
       - ".github/workflows/bot.yml"
 
 permissions:
@@ -33,7 +47,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4
@@ -97,5 +111,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # Cache des couches Docker dans le cache GitHub Actions (GHA)
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=bot
+          cache-to: type=gha,mode=max,scope=bot

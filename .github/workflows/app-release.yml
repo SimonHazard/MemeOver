@@ -7,6 +7,10 @@ on:
       - "app/**"
       - "packages/ui/**"
       - "shared/**"
+      - "package.json"
+      - "bun.lock"
+      - "site/package.json"
+      - "scripts/check-versions.ts"
       - ".github/workflows/app-release.yml"
 
 permissions:
@@ -24,6 +28,11 @@ jobs:
       released: ${{ steps.read.outputs.released }}
     steps:
       - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Verify synchronized versions
+        run: bun run check:versions
       - id: read
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +53,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: ubuntu, os: ubuntu-latest, args: "" }
+          # Keep the Linux release baseline compatible with Ubuntu 22.04 and newer.
+          - { name: ubuntu, os: ubuntu-22.04, args: "" }
           - { name: windows, os: windows-latest, args: "" }
           - { name: macos, os: macos-latest, args: "--target universal-apple-darwin" }
     name: tauri (${{ matrix.name }})
@@ -55,7 +65,7 @@ jobs:
 
       # ── Dépendances système (Linux uniquement) ────────────────────────────────
       - name: Install Linux system dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \

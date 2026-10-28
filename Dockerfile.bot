@@ -1,7 +1,7 @@
 # Dockerfile.bot
 
 # ── Stage 1 : install ──────────────────────────────────────────────────────────
-FROM oven/bun:1-alpine AS installer
+FROM oven/bun:1.4.2-alpine AS installer
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY site/package.json ./site/
 RUN bun install --frozen-lockfile
 
 # ── Stage 2 : runtime ──────────────────────────────────────────────────────────
-FROM oven/bun:1-alpine AS runner
+FROM oven/bun:1.4.2-alpine AS runner
 
 WORKDIR /app
 

@@ -1,6 +1,9 @@
 {
 	"name": "@memeover/bot",
 	"version": "1.6.5",
+	"engines": {
+		"bun": ">=1.4.2"
+	},
 	"scripts": {
 		"dev": "bun run --watch src/index.ts",
 		"typecheck": "tsc --noEmit",

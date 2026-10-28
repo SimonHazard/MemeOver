@@ -14,6 +14,8 @@ use std::{
 use tauri::{AppHandle, Manager};
 
 const REPO_URL: &str = "https://github.com/SimonHazard/MemeOver";
+// Keep aligned with package.json's packageManager and Dockerfile.bot.
+const MIN_BUN_VERSION: &str = "1.4.2";
 const LOG_LIMIT: usize = 500;
 const INSTALL_METADATA_FILE: &str = ".memeover-server-creator.json";
 const INSTALL_METADATA_MANAGED_BY: &str = "memeover-server-creator";
@@ -242,24 +244,43 @@ fn bun_candidate_path() -> Option<PathBuf> {
     }
 }
 
-fn bun_command() -> Option<String> {
-    if command_exists("bun") {
-        return Some("bun".to_string());
-    }
+fn bun_release_version(version: &str) -> Option<(u64, u64, u64)> {
+    let mut parts = version.trim().split('+').next()?.split('.');
+    let release = (
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+    );
+    parts.next().is_none().then_some(release)
+}
 
-    let candidate = bun_candidate_path()?;
-    if new_command(&candidate)
-        .arg("--version")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
-    {
-        Some(candidate.to_string_lossy().to_string())
-    } else {
-        None
-    }
+fn bun_version_supported(version: &str) -> bool {
+    matches!(
+        (bun_release_version(version), bun_release_version(MIN_BUN_VERSION)),
+        (Some(version), Some(minimum)) if version >= minimum
+    )
+}
+
+fn bun_command() -> Option<String> {
+    let candidates = std::iter::once("bun".to_string())
+        .chain(bun_candidate_path().map(|path| path.to_string_lossy().into_owned()));
+    candidates.into_iter().find(|candidate| {
+        new_command(candidate)
+            .arg("--version")
+            .stderr(Stdio::null())
+            .output()
+            .map(|output| {
+                output.status.success()
+                    && bun_version_supported(&String::from_utf8_lossy(&output.stdout))
+            })
+            .unwrap_or(false)
+    })
+}
+
+fn require_bun() -> Result<String, String> {
+    bun_command().ok_or_else(|| {
+        format!("Bun {MIN_BUN_VERSION} or newer is required. Use Install Bun in the Server tab.")
+    })
 }
 
 fn append_bun_path(command: &mut Command) {
@@ -417,7 +438,7 @@ fn install_sync(
     if has_package_json {
         ensure_managed_install(&root)?;
     }
-    let bun = bun_command().ok_or_else(|| "Bun is not installed yet".to_string())?;
+    let bun = require_bun()?;
 
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
 
@@ -521,7 +542,10 @@ fn status_sync(
 
 fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
     if bun_command().is_some() {
-        push_log(state, "Bun is already installed");
+        push_log(
+            state,
+            format!("Bun {MIN_BUN_VERSION} or newer is already installed"),
+        );
         return Ok(());
     }
 
@@ -533,7 +557,9 @@ fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
-            "irm https://bun.com/install.ps1 | iex",
+            &format!(
+                "& ([scriptblock]::Create((irm https://bun.com/install.ps1))) -Version {MIN_BUN_VERSION}"
+            ),
         ],
         None,
     )?;
@@ -542,15 +568,20 @@ fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
     run_logged(
         state,
         "sh",
-        &["-c", "curl -fsSL https://bun.com/install | bash"],
+        &[
+            "-c",
+            &format!("curl -fsSL https://bun.com/install | bash -s bun-v{MIN_BUN_VERSION}"),
+        ],
         None,
     )?;
 
     if bun_command().is_some() {
-        push_log(state, "Bun installed");
+        push_log(state, format!("Bun {MIN_BUN_VERSION} installed"));
         Ok(())
     } else {
-        Err("Bun installer finished, but bun was not found".to_string())
+        Err(format!(
+            "Bun installer finished, but Bun {MIN_BUN_VERSION} or newer was not found"
+        ))
     }
 }
 
@@ -570,7 +601,7 @@ fn start_sync(
         return Err("Server is not installed yet".to_string());
     }
     ensure_managed_install(&root)?;
-    let bun = bun_command().ok_or_else(|| "Bun is not installed yet".to_string())?;
+    let bun = require_bun()?;
 
     // Run the entry file directly instead of `bun run start`: the start
     // script spawns a nested bun, and `Child::kill` would only reach the
@@ -750,6 +781,33 @@ pub async fn server_creator_public_ip(
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn standalone_requires_a_supported_bun_release() {
+        for version in [
+            "1.4.2",
+            "1.4.3",
+            "1.4.10",
+            "1.5.0",
+            "2.0.0",
+            " 1.4.2\n",
+            "1.4.2+build",
+        ] {
+            assert!(bun_version_supported(version), "should accept {version}");
+        }
+        for version in [
+            "1.3.12",
+            "1.4.1",
+            "0.9.0",
+            "1.4.2-canary",
+            "1.4",
+            "1.4.2.1",
+            "",
+            "unknown",
+        ] {
+            assert!(!bun_version_supported(version), "should reject {version}");
+        }
+    }
 
     fn unique_temp_root(name: &str) -> PathBuf {
         let nanos = SystemTime::now()

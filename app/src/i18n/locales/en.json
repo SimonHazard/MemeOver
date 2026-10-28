@@ -296,8 +296,8 @@
 		"install": {
 			"title": "Install server",
 			"desc": "MemeOver downloads the server source, writes configuration, and installs dependencies.",
-			"bun": "Install Bun",
-			"bunReady": "Bun ready",
+			"bun": "Install Bun 1.4.2",
+			"bunReady": "Bun 1.4.2+ ready",
 			"install": "Install",
 			"installing": "Installing…",
 			"repair": "Repair",

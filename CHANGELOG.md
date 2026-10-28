@@ -8,12 +8,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App (1.8.1): require stable Bun 1.4.2 or newer for app-managed bots, offer the pinned installer when the installed runtime is unsupported, and keep compatible newer versions.
 - Bot (1.6.4): delete a server's configuration and revoke overlay sessions when the bot is removed from Discord. Preserve configurations when an overlay reconnects, recent activity is recorded or setup is replaced while a cleanup notice is being sent.
 - Bot (1.6.3): filter reactions before calling Discord, then recheck the watched channel, pause and bot-source settings after the response. Limit Discord fetches and outgoing reactions independently to 10 per guild per second so delayed responses cannot flood the overlay.
 
 ### Changed
 
 - App/site (1.8.1), bot (1.6.5): consolidate CI into one workflow with fast checks, path-filtered app builds/browser tests, Rust checks, Astro checks/site builds, and an aggregate `status` gate that requires every selected job to succeed. Ignore workspace version-only lockfile changes when selecting expensive jobs; keep real dependency changes fully checked. Restrict Cloudflare previews to internal PRs, excluding forks and Dependabot. Pin Bun in these workflows to the repository version, limit app bundling to new versions on main, and rename the site deployment workflows.
+- App/site (1.8.1), bot (1.6.5): validate bot Docker builds before merging, pin the bot image and remaining CI workflow to Bun 1.4.2, exclude private files and generated artifacts from Docker contexts, check product/workspace versions before releases, and build Linux releases on Ubuntu 22.04.
 - Bot (1.6.4): extend both disconnected-server cleanup thresholds from 24 to 48 hours. Explain configuration deletion and the single-client rule in cleanup notices and retention documentation.
 - Bot (1.6.3): cap the message cache at 25 messages per channel and sweep messages older than 30 minutes every 5 minutes. Ignore embed updates without a cached previous message to avoid replaying old media.
 
