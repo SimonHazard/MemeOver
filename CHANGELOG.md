@@ -8,10 +8,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- Bot (1.6.4): delete a server's configuration and revoke overlay sessions when the bot is removed from Discord. Preserve configurations when an overlay reconnects, recent activity is recorded or setup is replaced while a cleanup notice is being sent.
 - Bot (1.6.3): filter reactions before calling Discord, then recheck the watched channel, pause and bot-source settings after the response. Limit Discord fetches and outgoing reactions independently to 10 per guild per second so delayed responses cannot flood the overlay.
 
 ### Changed
 
+- Bot (1.6.4): extend both disconnected-server cleanup thresholds from 24 to 48 hours. Explain configuration deletion and the single-client rule in cleanup notices and retention documentation.
 - Bot (1.6.3): cap the message cache at 25 messages per channel and sweep messages older than 30 minutes every 5 minutes. Ignore embed updates without a cached previous message to avoid replaying old media.
 
 ## [1.8.0]
