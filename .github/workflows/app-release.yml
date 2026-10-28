@@ -1,58 +1,54 @@
-name: App Build
+name: app-release
 
-# Déclenché sur PR et push quand des fichiers de l'app changent.
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "app/**"
       - "packages/ui/**"
       - "shared/**"
-      - ".github/workflows/app.yml"
-  pull_request:
-    paths:
-      - "app/**"
-      - "packages/ui/**"
-      - "shared/**"
-      - ".github/workflows/app.yml"
+      - ".github/workflows/app-release.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-release
+  cancel-in-progress: false
 
 jobs:
-  build:
-    name: Tauri — ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      released: ${{ steps.read.outputs.released }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(jq -r .version app/package.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "app-v$version" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "app-v$version" > /dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "app-v$version already exists; nothing to build" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
 
+  tauri:
+    needs: version
+    if: needs.version.outputs.released == 'false'
     strategy:
-      # Ne pas annuler Linux si Windows ou macOS échoue (builds longs et indépendants)
       fail-fast: false
       matrix:
         include:
-          # ── Linux ────────────────────────────────────────────────────────────
-          - os: ubuntu-latest
-            tauri_args: ""
-            artifact_path: |
-              app/src-tauri/target/release/bundle/deb/*.deb
-              app/src-tauri/target/release/bundle/appimage/*.AppImage
-            artifact_name: memeover-linux
-
-          # ── macOS (universal binary : M1 + Intel dans un seul .dmg) ─────────
-          - os: macos-latest
-            tauri_args: "--target universal-apple-darwin"
-            artifact_path: |
-              app/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-              app/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
-            artifact_name: memeover-macos
-
-          # ── Windows ──────────────────────────────────────────────────────────
-          - os: windows-latest
-            tauri_args: ""
-            artifact_path: |
-              app/src-tauri/target/release/bundle/msi/*.msi
-              app/src-tauri/target/release/bundle/nsis/*.exe
-            artifact_name: memeover-windows
-
+          - { name: ubuntu, os: ubuntu-latest, args: "" }
+          - { name: windows, os: windows-latest, args: "" }
+          - { name: macos, os: macos-latest, args: "--target universal-apple-darwin" }
+    name: tauri (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,7 +70,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4
@@ -110,19 +106,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: app
-          args: ${{ matrix.tauri_args }}
-          tagName: ${{ github.ref == 'refs/heads/main' && 'app-v__VERSION__' || '' }}
-          releaseName: ${{ github.ref == 'refs/heads/main' && 'App v__VERSION__' || '' }}
+          args: ${{ matrix.args }}
+          tagName: app-v__VERSION__
+          releaseName: App v__VERSION__
           releaseDraft: true
           includeUpdaterJson: true
           updaterJsonPreferNsis: true
-
-      # ── Upload des artifacts ──────────────────────────────────────────────────
-      # PR : 7 jours (pour review) — merge main : 30 jours (release candidates)
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}-${{ github.sha }}
-          path: ${{ matrix.artifact_path }}
-          retention-days: ${{ github.ref == 'refs/heads/main' && 30 || 7 }}
-          if-no-files-found: error

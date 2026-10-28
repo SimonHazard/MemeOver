@@ -1,14 +1,14 @@
-name: Site — Deploy
+name: site-deploy
 run-name: >-
-  ${{ inputs.release_tag && format('Site — release {0}', inputs.release_tag) ||
-      format('Site — {0} ({1})', github.event_name, github.ref_name) }}
+  ${{ inputs.release_tag && format('site-deploy: release {0}', inputs.release_tag) ||
+      format('site-deploy: {0} ({1})', github.event_name, github.ref_name) }}
 
 # Permissions minimales par défaut sur le GITHUB_TOKEN pour tous les jobs.
-# Le job deploy-preview surcharge avec pull-requests: write pour poster le commentaire.
+# Le job preview surcharge avec pull-requests: write pour poster le commentaire.
 permissions:
   contents: read
 
-# La publication d’une release lance ce workflow sur main via release-site.yml.
+# La publication d’une release lance ce workflow sur main via site-refresh.yml.
 # Push main et PR : reconstruire quand le site ou l'UI partagée change.
 on:
   workflow_dispatch:
@@ -26,7 +26,7 @@ on:
       - "shared/**"
       - "bun.lock"
       - "package.json"
-      - ".github/workflows/deploy-site.yml"
+      - ".github/workflows/site-deploy.yml"
   pull_request:
     paths:
       - "site/**"
@@ -34,7 +34,7 @@ on:
       - "shared/**"
       - "bun.lock"
       - "package.json"
-      - ".github/workflows/deploy-site.yml"
+      - ".github/workflows/site-deploy.yml"
 
 # Les previews obsolètes sont annulées ; la production termine le déploiement en cours.
 # Push et release partagent la même file de production sur main.
@@ -47,14 +47,14 @@ jobs:
   # Compile le site et uploade l'artefact dist/ pour les jobs suivants.
   # Séparer build / deploy permet de ne pas reconstruire si seul le deploy échoue.
   build:
-    name: Build
+    name: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Astro 7 requiert Node >=22.12.0 — ubuntu-latest embarque Node 20 par défaut.
+      # Astro 7 requiert Node >=22.12.0 ; ubuntu-latest embarque Node 20 par défaut.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -63,7 +63,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4
@@ -78,7 +78,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       # PUBLIC_BOT_CLIENT_ID est une variable Astro inlinée au build time.
-      # Elle doit être déclarée dans Settings → Variables (pas Secrets) du repo
+      # Elle doit être déclarée dans Settings : Variables (pas Secrets) du repo
       # car elle n'est pas sensible (préfixe PUBLIC_ = exposée côté client).
       - name: Build site
         working-directory: site
@@ -97,11 +97,11 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-  # ── 2. Deploy — Production (push ou dispatch sur main) ────────────────────────
+  # ── 2. Deploy: Production (push ou dispatch sur main) ────────────────────────
   # Protégé par l'environment GitHub "production" : requiert une approbation
   # manuelle si des required reviewers sont configurés.
-  deploy-production:
-    name: Deploy → Production
+  production:
+    name: production
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
@@ -116,20 +116,20 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       # Installe les deps (dont wrangler) depuis le lockfile exact.
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # On récupère le dist/ pré-compilé — pas besoin de rebuilder.
+      # On récupère le dist/ pré-compilé ; pas besoin de rebuilder.
       - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
           name: site-dist
           path: site/dist
 
-      # wranglerVersion: "" → l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
+      # wranglerVersion: "" : l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
@@ -139,14 +139,14 @@ jobs:
           wranglerVersion: ""
           command: deploy
 
-  # ── 3. Deploy — Preview (pull requests) ──────────────────────────────────────
+  # ── 3. Deploy: Preview (pull requests) ──────────────────────────────────────
   # Déployé sur le worker "memeover-site-preview" (env.preview dans wrangler.toml).
   # Un commentaire est posté/mis à jour sur la PR avec l'URL de preview.
   #
   # Limitation : les PRs depuis un fork n'ont pas accès aux secrets (sécurité GitHub).
   # Ce workflow est conçu pour des PRs depuis le même repo.
-  deploy-preview:
-    name: Deploy → Preview
+  preview:
+    name: preview
     needs: build
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -164,7 +164,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       # Installe les deps (dont wrangler) depuis le lockfile exact.
       - name: Install dependencies
@@ -176,7 +176,7 @@ jobs:
           name: site-dist
           path: site/dist
 
-      # wranglerVersion: "" → l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
+      # wranglerVersion: "" : l'action utilise le binaire déjà installé (node_modules/.bin/wrangler).
       - name: Deploy to Cloudflare Workers (preview)
         id: deploy
         uses: cloudflare/wrangler-action@v3
@@ -199,7 +199,7 @@ jobs:
               '',
               `**URL :** ${deploymentUrl}`,
               '',
-              `Commit : \`${sha}\` — mis à jour automatiquement à chaque push sur cette PR.`,
+              `Commit : \`${sha}\`, mis à jour automatiquement à chaque push sur cette PR.`,
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
