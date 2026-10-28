@@ -100,9 +100,12 @@ const description =
 		<section>
 			<h2>Conservation et suppression</h2>
 			<p>
-				La configuration d'un serveur reste stockée jusqu'à l'utilisation de
-				<code>/memeover remove</code> par un gestionnaire du serveur ou jusqu'à une demande de
-				suppression. Les événements Discord temps réel sont transmis aux overlays connectés et ne
+				La configuration d'un serveur est supprimée lorsqu'un gestionnaire du serveur lance
+				<code>/memeover remove</code> ou lorsque le bot est retiré du serveur. Le bot hébergé supprime
+				également la configuration des serveurs sans overlay connecté après 48 heures sans activité
+				d'overlay, ou dès que la configuration atteint cet âge si au plus un client s'est connecté
+				depuis sa création. Les demandes de suppression sont également honorées.
+				Les événements Discord temps réel sont transmis aux overlays connectés et ne
 				sont pas volontairement stockés par le bot hébergé après diffusion. L'historique de replay
 				reste localement sur votre appareil jusqu'à effacement.
 			</p>

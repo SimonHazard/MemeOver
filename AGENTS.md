@@ -73,12 +73,26 @@ Every animation needs a reduced-motion path; avoid decorative motion for keyboar
 The media `0.3 → 1` entrance and its 0.28 s / 0.2-bounce spring are product decisions: preserve them.
 New published UI modules need an entry in `packages/ui/tsup.config.ts`.
 
+## Pull requests and versions
+
+Every PR must include a version bump before it is opened, including draft PRs and PRs prepared for the user to open. Fix a missing bump when updating an existing PR.
+
+- Review the full PR diff against the latest target branch and choose the bump from its actual impact, not its size or title. Use the highest required level for each affected product.
+- **Minor** (`x.y.z → x.(y+1).0`): new user-facing functionality or a significant feature that preserves compatibility. Example: `1.6.3 → 1.7.0`.
+- **Patch** (`x.y.z → x.y.(z+1)`): bug fixes, minor adjustments, performance/security fixes, refactors and package updates. A dependency's own major bump does not automatically make MemeOver's bump major.
+- **Major** (`x.y.z → (x+1).0.0`): an intentional compatibility break in MemeOver (protocol, configuration or supported usage). Explain the break and migration in the PR.
+- Documentation, CI, tests and tooling-only PRs still require a patch for the relevant product; repository-wide-only work bumps both app and bot.
+- Keep app and bot independent: bot changes and their supporting documentation bump the bot; app/site changes bump the app/site stream. Shared code or dependencies bump every product they actually affect.
+- App versions stay synchronized in `app/package.json`, `app/src-tauri/{Cargo.toml,Cargo.lock,tauri.conf.json}` and `site/package.json`. Bot version lives in `bot/package.json`. Synchronize the corresponding workspace versions in `bun.lock`; avoid unrelated dependency changes.
+- Bump once per PR, not once per commit or review round. An adequate bump already in the PR satisfies the rule. After a rebase or another PR's merge, recheck that the version is still above the target branch and matches the final scope; recompute it if necessary.
+- Before opening or handing off the PR, verify the version diff and lockfile consistency, add a factual `CHANGELOG.md` entry for product changes, and state the old/new versions and the reason in the PR description.
+
+A version bump does not authorize a push, tag or release. App release tags remain `app-vX.Y.Z`.
+
 ## Conventions and boundaries
 
 Biome uses tabs, double quotes, 100 columns. `packages/ui/src` is outside the root Biome include list: match its style manually.
 Use conventional commits and squash merges. Do not push, tag, publish or open PRs without authorization.
-App versions stay synchronized in `app/package.json`, `app/src-tauri/{Cargo.toml,Cargo.lock,tauri.conf.json}` and `site/package.json`.
-Bot has an independent version. Release tags are `app-vX.Y.Z`.
 Preserve pre-existing changes and exclude them from unrelated commits.
 Never edit `.env*`, `**/data/` (guild registry `memeover.db*`, legacy `guilds.json*`), `app/src-tauri/target/` or `.claude/settings.local.json` during ordinary source work.
 Project skills live under `.agents/skills` with `.claude/skills` and `.agent/skills` symlinks; vendored skill metadata stays in `skills-lock.json`.

@@ -94,8 +94,11 @@ const description = "Terms of use, privacy, and legal information for MemeOver."
 		<section>
 			<h2>Retention And Deletion</h2>
 			<p>
-				Server configuration stays stored until a server manager runs <code>/memeover remove</code>
-				or a deletion request is sent. Realtime Discord events are forwarded to connected overlays
+				Server configuration is deleted when a server manager runs <code>/memeover remove</code>
+				or the bot is removed from the server. The hosted bot also deletes disconnected server
+				configurations after 48 hours without overlay activity, or once the configuration is that
+				old if at most one client has ever connected. Deletion requests are also honoured.
+				Realtime Discord events are forwarded to connected overlays
 				and are not intentionally stored by the hosted bot after delivery. Local replay history
 				stays on your device until cleared.
 			</p>

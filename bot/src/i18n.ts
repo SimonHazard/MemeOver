@@ -91,11 +91,14 @@ export const translations = {
 		"bot.genericError": "An error occurred.",
 
 		"cleanup.notice":
-			"Due to inactivity, MemeOver is no longer watching the configured channels. To configure MemeOver again, use `/memeover setup` in this server.",
-		"cleanup.noticeTitle": "MemeOver paused",
+			"MemeOver deleted this server’s configuration: either no overlay has been active for 48 hours, or the registration is at least 48 hours old and at most one client has ever connected. A server manager can run `/memeover setup` to configure it again.",
+		"cleanup.noticeTitle": "MemeOver disconnected from this server",
 		"cleanup.wsMessage":
-			"This server was removed from MemeOver due to inactivity. Run /memeover setup to configure it again.",
+			"This server’s MemeOver configuration expired under the 48-hour retention policy. Ask a server manager to run /memeover setup, then paste the new setup code.",
 		"cleanup.wsCloseReason": "Guild removed",
+		"guildRemoved.wsMessage":
+			"MemeOver was removed from this Discord server, so its configuration was deleted. Ask a server manager to add the bot again and run /memeover setup.",
+		"guildRemoved.wsCloseReason": "Bot removed from guild",
 
 		"help.description":
 			"MemeOver streams the media posted in your Discord channels to a desktop overlay. Configure the bot below, then enter your credentials in the MemeOver app.",
@@ -277,11 +280,14 @@ export const translations = {
 		"bot.genericError": "Une erreur est survenue.",
 
 		"cleanup.notice":
-			"Suite à une période d'inactivité, les canaux configurés ne sont plus écoutés par MemeOver. Pour reconfigurer MemeOver, utilisez `/memeover setup` dans ce serveur.",
-		"cleanup.noticeTitle": "MemeOver en pause",
+			"MemeOver a supprimé la configuration de ce serveur : soit aucun overlay n’a été actif depuis 48 heures, soit la configuration a au moins 48 heures et au plus un client s’est connecté depuis sa création. Un gestionnaire du serveur peut lancer `/memeover setup` pour le reconfigurer.",
+		"cleanup.noticeTitle": "MemeOver déconnecté de ce serveur",
 		"cleanup.wsMessage":
-			"Ce serveur a été retiré de MemeOver pour inactivité. Lancez /memeover setup pour le configurer à nouveau.",
+			"La configuration MemeOver de ce serveur a expiré selon la règle de conservation de 48 heures. Demandez à un gestionnaire du serveur de lancer /memeover setup, puis collez le nouveau code de configuration.",
 		"cleanup.wsCloseReason": "Serveur retiré",
+		"guildRemoved.wsMessage":
+			"MemeOver a été retiré de ce serveur Discord : sa configuration a été supprimée. Demandez à un gestionnaire du serveur de réinviter le bot et de lancer /memeover setup.",
+		"guildRemoved.wsCloseReason": "Bot retiré du serveur",
 
 		"help.description":
 			"MemeOver envoie les médias postés dans vos salons Discord vers un overlay desktop. Configurez le bot ci-dessous, puis entrez vos identifiants dans l'app MemeOver.",
