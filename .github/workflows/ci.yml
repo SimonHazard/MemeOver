@@ -20,37 +20,69 @@ jobs:
       pull-requests: read
     runs-on: ubuntu-latest
     outputs:
-      # On push and merge_group, run everything. On pull requests, filter by changed paths.
-      browser: ${{ github.event_name != 'pull_request' || steps.filter.outputs.browser == 'true' }}
-      rust: ${{ github.event_name != 'pull_request' || steps.filter.outputs.rust == 'true' }}
-      site: ${{ github.event_name != 'pull_request' || steps.filter.outputs.site == 'true' }}
+      # Merge groups run everything; PRs and main pushes use the same filters.
+      app: ${{ github.event_name == 'merge_group' || steps.filter.outputs.app == 'true' || steps.dependencies.outputs.changed == 'true' }}
+      rust: ${{ github.event_name == 'merge_group' || steps.filter.outputs.rust == 'true' || steps.dependencies.outputs.changed == 'true' }}
+      site: ${{ github.event_name == 'merge_group' || steps.filter.outputs.site == 'true' || steps.dependencies.outputs.changed == 'true' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - id: filter
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'merge_group'
         uses: dorny/paths-filter@v3.0.4
         with:
           filters: |
-            browser:
+            app:
               - 'app/**'
               - 'packages/ui/**'
               - 'shared/**'
               - 'test/browser/**'
               - 'playwright.config.ts'
               - 'tsconfig.browser.json'
-              - 'bun.lock'
+              - 'package.json'
+              - 'bunfig.toml'
+              - 'scripts/**'
               - '.github/workflows/ci.yml'
             rust:
               - 'app/src-tauri/**'
+              - 'package.json'
+              - 'bunfig.toml'
               - '.github/workflows/ci.yml'
             site:
               - 'site/**'
               - 'packages/ui/**'
               - 'shared/**'
-              - 'bun.lock'
+              - 'package.json'
+              - 'bunfig.toml'
+              - 'scripts/**'
               - '.github/workflows/ci.yml'
+            dependencies:
+              - 'bun.lock'
+      - uses: oven-sh/setup-bun@v2
+        if: steps.filter.outputs.dependencies == 'true'
+        with:
+          bun-version-file: package.json
+      # A workspace version bump alone does not change dependencies.
+      - id: dependencies
+        if: steps.filter.outputs.dependencies == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          bun - <<'JS'
+          import { appendFileSync, readFileSync } from "node:fs";
+          const base = Bun.spawnSync(["git", "show", `${process.env.BASE_SHA}:bun.lock`]);
+          const dependencies = (text) => {
+            const lock = Bun.JSON5.parse(text);
+            for (const workspace of Object.values(lock.workspaces)) delete workspace.version;
+            return JSON.stringify(lock);
+          };
+          const changed = base.exitCode !== 0 ||
+            dependencies(base.stdout.toString()) !== dependencies(readFileSync("bun.lock", "utf8"));
+          appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+          JS
 
-  biome:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,40 +96,12 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       - run: bunx biome ci --reporter=github
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-      - run: bun install --frozen-lockfile
       - run: bun run typecheck
-
-  unit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-      - run: bun install --frozen-lockfile
       - run: bun run test
 
-  browser:
+  app:
     needs: changes
-    if: needs.changes.outputs.browser == 'true'
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,6 +114,8 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
+      - name: Build app frontend
+        run: bun run --cwd app build
       - id: pw
         run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
@@ -181,17 +187,25 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       - run: bun run --cwd site check
+      - name: Build site without deploying
+        run: bun run build:site
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PUBLIC_BOT_CLIENT_ID: ${{ vars.PUBLIC_BOT_CLIENT_ID }}
 
   status:
     if: always()
-    needs: [changes, biome, typecheck, unit, browser, rust, site]
+    needs: [changes, checks, app, rust, site]
     runs-on: ubuntu-latest
     steps:
-      - name: Fail if any needed job failed or was cancelled (skipped is fine)
+      - name: Require successful checks and every selected build
         env:
           NEEDS: ${{ toJSON(needs) }}
         run: |
-          echo "$NEEDS"
-          if echo "$NEEDS" | jq -e '[.[] | .result] | any(. == "failure" or . == "cancelled")' > /dev/null; then
-            exit 1
-          fi
+          echo "$NEEDS" | jq -e '
+            .changes.result == "success" and
+            .checks.result == "success" and
+            (.app.result == "success" or (.app.result == "skipped" and .changes.outputs.app != "true")) and
+            (.rust.result == "success" or (.rust.result == "skipped" and .changes.outputs.rust != "true")) and
+            (.site.result == "success" or (.site.result == "skipped" and .changes.outputs.site != "true"))
+          '

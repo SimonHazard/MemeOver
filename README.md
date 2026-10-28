@@ -139,6 +139,12 @@ GitHub Actions build et deploie l'app, le bot et le site :
 - [Site deploy](.github/workflows/site-deploy.yml)
 - [Site refresh after an app release](.github/workflows/site-refresh.yml)
 
+La CI vérifie le code, les typages et les tests rapides pour chaque PR. Elle construit
+l’app et le site et lance les tests longs selon les fichiers modifiés. Le contrôle
+`status` regroupe les résultats et doit être configuré comme obligatoire avant fusion.
+Les PR externes et Dependabot exécutent uniquement la CI, sans preview ni déploiement
+Cloudflare. Les previews sont réservées aux PR internes au dépôt.
+
 Publier une release `app-v*` déclenche automatiquement le build et le déploiement du site
 depuis `main`, avec la version dans le nom du run. Créer un brouillon de release
 ne déclenche pas ce rafraîchissement.
@@ -271,6 +277,11 @@ GitHub Actions build and deploy the app, bot and site:
 - [Bot](.github/workflows/bot.yml)
 - [Site deploy](.github/workflows/site-deploy.yml)
 - [Site refresh after an app release](.github/workflows/site-refresh.yml)
+
+CI checks formatting, types and fast tests for every PR. It builds the app and site
+and runs longer tests according to the changed files. Configure the aggregate `status`
+check as required before merging. External and Dependabot PRs run CI only, without
+Cloudflare previews or deployments. Previews are limited to PRs within this repository.
 
 Publishing an `app-v*` release automatically builds and deploys the site from `main`,
 with the version in the run name. Creating a release draft does not trigger this refresh.

@@ -61,7 +61,7 @@ Root `test:unit` discovers tests under app/bot/shared/site/packages UI.
 Name suites using `mock.module` `*.mocked.test.ts`: `scripts/run-mocked-tests.ts` runs each in its own process.
 Add meaningful tests for changed behavior, not snapshots of class strings.
 `test/setup.ts` isolates environment, local storage and registry data. Never use live guild data in tests.
-CI (`.github/workflows/ci.yml`) always runs Biome, all typechecks and Bun tests; browser, Rust and Astro checks are filtered by changed inputs on pull requests and run in full on main pushes and merge groups. `status` is the single check to require in branch rules. Local success is not remote CI proof.
+CI (`.github/workflows/ci.yml`) always runs Biome, all typechecks and Bun tests in `checks`. App frontend builds/browser tests, native Rust checks and Astro checks/site builds are filtered by changed inputs on PRs and main pushes; merge groups run everything. Real dependency changes run all groups; workspace version-only lockfile changes do not. `status` must pass before merging; configure it as the sole required check. Fork and Dependabot PRs never run site deployment jobs. Local success is not remote CI proof.
 
 ## Design and motion
 
