@@ -8,6 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App (1.8.5): bundle Sonner's stylesheet so overlay connection toasts keep their corner position and 300 px width in release builds. The overlay's inline first-paint style made Tauri add a CSP nonce, which blocked Sonner's runtime style injection and left toasts full-width at the top of the screen.
 - App (1.8.3): install dependencies and start app-managed bots with the exact validated Bun executable when several Bun installations coexist. Keep nested bot commands on the selected runtime.
 - App/site (1.8.2): wait for successful main CI before preparing draft app releases, and build and tag the exact commit validated by that CI.
 - App (1.8.1): require stable Bun 1.4.2 or newer for app-managed bots, offer the pinned installer when the installed runtime is unsupported, and keep compatible newer versions.
