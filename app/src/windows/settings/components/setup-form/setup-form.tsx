@@ -17,7 +17,7 @@ import { Collapsible } from "@/components/motion/collapsible";
 import { StatusLabel } from "@/components/motion/status-label";
 import { reloadOverlay, statusVariant } from "@/shared/helpers";
 import { joinErrorKey } from "@/shared/join-error";
-import { loadSettings, persistSettings } from "@/shared/settings";
+import { patchSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { DEFAULT_WS_URL, type Settings, type WsStatus } from "@/shared/types";
 import { UserCountIndicator } from "@/windows/settings/components/user-count-indicator";
@@ -63,11 +63,7 @@ export function SetupForm({ initialData, wsStatus }: SetupFormProps) {
 
 	const { mutateAsync: save } = useMutation({
 		mutationFn: async (values: SetupValues) => {
-			const current = await queryClient.fetchQuery({
-				queryKey: ["settings"],
-				queryFn: loadSettings,
-			});
-			await persistSettings({ ...current, ...values });
+			await patchSettings((s) => ({ ...s, ...values }));
 		},
 		onSuccess: async () => {
 			void queryClient.invalidateQueries({ queryKey: ["settings"] });
