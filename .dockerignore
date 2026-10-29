@@ -6,11 +6,18 @@
 .claude
 .codex
 .aws
+**/.ssh
+**/.gnupg
 **/.env*
 **/*.pem
 **/*.key
 **/*.p12
 **/*.pfx
+**/*.crt
+**/*.cer
+**/*.der
+**/*.jks
+**/*.keystore
 
 # Installed dependencies and generated files
 **/node_modules
@@ -28,6 +35,10 @@
 **/data
 **/memeover.db*
 **/guilds.json*
+**/backups
+**/*.bak
+**/*.backup
+**/*~
 plans
 test-results
 playwright-report

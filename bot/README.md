@@ -87,9 +87,32 @@ Docker Compose is available from the repository root:
 docker compose up -d --build
 ```
 
-For an update, run `git pull --ff-only`, rebuild with the command above, then check
-`docker compose ps` and `docker compose logs --tail=100 bot`. CI builds the Docker
-image on relevant pull requests without publishing it. This does not deploy the VPS.
+Updates stay manual, using the existing Compose checkout and project on `main`:
+
+1. Confirm the tracked working tree is clean (`git status --short`) and the intended
+   revision on `main` has passed CI. Preserve the local root `.env` and `bot-data` volume.
+2. Run `git pull --ff-only origin main`, then record `git rev-parse HEAD` privately.
+   Verify CI succeeded for that exact revision before continuing, including if `main`
+   advanced after the first check.
+3. Run `docker compose up -d --build bot`. If supported by the installed Compose
+   version, add `--wait --wait-timeout 180` to wait for Docker health.
+4. Check `docker compose ps` and `docker compose logs --tail=100 bot` locally. Then
+   run a Discord command, connect an overlay and confirm media delivery. A healthy
+   container or a successful `/health` response alone does not prove Discord login
+   or overlay delivery. Keep logs and diagnostics private; they can contain credentials,
+   setup codes, guild identifiers and infrastructure details.
+
+Keep the same Compose project and volume identity across updates. Never use
+`docker compose down -v` for an update: it deletes the persistent volume. If a check
+fails, diagnose locally and redeploy an identified prior revision when compatible.
+Reverting code or an image does not undo a database migration; assess schema
+compatibility before reverting a future release that changes the database.
+
+A failed build normally leaves the previous container running, but startup can fail
+after replacement and cause downtime. Source builds use host CPU and disk, so keep
+enough free space and retain a usable recovery image. CI validates Docker builds on
+relevant pull requests without publishing them; the GHCR image published on `main`
+is not consumed by this Compose source-build procedure. CI does not deploy the VPS.
 
 Runtime data is stored in the SQLite database `data/memeover.db` locally, or in the
 `bot-data` volume when using Docker Compose. On first start, an existing `data/guilds.json`

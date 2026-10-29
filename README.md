@@ -169,8 +169,17 @@ Le bot peut aussi etre lance avec Docker Compose :
 docker compose up -d --build
 ```
 
-Le déploiement du bot reste manuel : `git pull --ff-only`, la commande Compose ci-dessus,
-puis `docker compose ps` et `docker compose logs --tail=100 bot`. Le bot lancé depuis
+Le déploiement du bot reste manuel, depuis le projet Compose existant sur `main` :
+vérifiez que l’arbre suivi est propre, puis lancez `git pull --ff-only origin main`
+et confirmez la réussite de la CI pour la révision obtenue avant
+`docker compose up -d --build bot`. Vérifiez ensuite `docker compose ps`, les logs
+localement et une commande Discord avec diffusion dans un overlay ; `/health` seul
+ne valide pas ce parcours. Préservez le `.env` local et le volume `bot-data` :
+n’utilisez jamais `docker compose down -v` pour une mise à jour. Gardez les logs et
+diagnostics privés. La [procédure détaillée](bot/README.md#production) couvre aussi
+le retour à une version précédente et les sauvegardes SQLite.
+
+Le bot lancé depuis
 l’onglet Serveur utilise les sources et une version stable de Bun 1.4.2 ou plus récente ;
 « Installer Bun » installe 1.4.2 si aucune version compatible n’est trouvée.
 
@@ -324,8 +333,16 @@ The bot can also run with Docker Compose:
 docker compose up -d --build
 ```
 
-Bot deployment stays manual: `git pull --ff-only`, the Compose command above, then
-`docker compose ps` and `docker compose logs --tail=100 bot`. The Server tab runs the bot
+Bot deployment stays manual, from the existing Compose project on `main`: confirm the
+tracked working tree is clean, run `git pull --ff-only origin main`, and verify CI
+succeeded for the resulting revision before `docker compose up -d --build bot`.
+Then check `docker compose ps`, inspect logs locally, and test a Discord command with
+media delivery to an overlay; `/health` alone does not validate that journey. Preserve
+the local `.env` and `bot-data` volume: never use `docker compose down -v` for an update.
+Keep logs and diagnostics private. The [detailed procedure](bot/README.md#production)
+also covers reverting to a previous revision and SQLite backups.
+
+The Server tab runs the bot
 from source with a stable Bun 1.4.2 or newer; "Install Bun" installs 1.4.2 when no
 compatible version is found.
 

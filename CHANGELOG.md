@@ -16,6 +16,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- Bot (1.6.6): exclude local certificates and backups from Docker build contexts, and document manual source updates with revision checks, Discord/overlay verification and persistent-volume safeguards.
 - App/site (1.8.1), bot (1.6.5): consolidate CI into one workflow with fast checks, path-filtered app builds/browser tests, Rust checks, Astro checks/site builds, and an aggregate `status` gate that requires every selected job to succeed. Ignore workspace version-only lockfile changes when selecting expensive jobs; keep real dependency changes fully checked. Restrict Cloudflare previews to internal PRs, excluding forks and Dependabot. Pin Bun in these workflows to the repository version, limit app bundling to new versions on main, and rename the site deployment workflows.
 - App/site (1.8.1), bot (1.6.5): validate bot Docker builds before merging, pin the bot image and remaining CI workflow to Bun 1.4.2, exclude private files and generated artifacts from Docker contexts, check product/workspace versions before releases, and build Linux releases on Ubuntu 22.04.
 - App/site (1.8.1), bot (1.6.5): migrate workflow actions to Node 24, pin Ubuntu CI runners to 24.04, and replace the duplicate Bot CI workflow with GHCR publication after the main CI status succeeds.
