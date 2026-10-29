@@ -6,10 +6,14 @@ import {
 } from "discord.js";
 import { interactionLocale, t } from "../i18n";
 import { evictGuild } from "../server";
+import { discordRefLogFields, logHash } from "../utils/log-privacy";
+import { logger } from "../utils/logger";
 import { schedulePresenceRefresh } from "../utils/presence";
 import { guildRegistry } from "../utils/registry";
 import { connectionUpdate, notConfiguredUpdate } from "./connection";
 import { errorResponse, panelUpdate } from "./response-panel";
+
+const log = logger.child({ module: "component-actions" });
 
 type ComponentCommand = "remove" | "rotate";
 type ComponentAction = "confirm" | "cancel";
@@ -105,11 +109,20 @@ async function handleRemoveComponent(
 	}
 
 	guildRegistry.unregister(id.guildId);
-	evictGuild(
+	const evicted = evictGuild(
 		id.guildId,
 		"GUILD_UNREGISTERED",
 		t("en", "evict.guildRemovedMessage"),
 		t("en", "cleanup.wsCloseReason"),
+	);
+	log.info(
+		{
+			event: "admin_remove",
+			...discordRefLogFields({ guildId: id.guildId }),
+			actor: logHash(interaction.user.id),
+			evicted,
+		},
+		"Guild removed",
 	);
 	schedulePresenceRefresh();
 
@@ -145,7 +158,21 @@ async function handleRotateComponent(
 		return;
 	}
 
-	evictGuild(id.guildId, "TOKEN_ROTATED", t("en", "evict.tokenRotatedMessage"), "Token rotated");
+	const evicted = evictGuild(
+		id.guildId,
+		"TOKEN_ROTATED",
+		t("en", "evict.tokenRotatedMessage"),
+		"Token rotated",
+	);
+	log.info(
+		{
+			event: "admin_rotate",
+			...discordRefLogFields({ guildId: id.guildId }),
+			actor: logHash(interaction.user.id),
+			evicted,
+		},
+		"Guild token rotated",
+	);
 	await interaction.update(
 		connectionUpdate({
 			tone: "warning",

@@ -1,6 +1,7 @@
 import {
 	Client,
 	Events,
+	GatewayCloseCodes,
 	GatewayIntentBits,
 	type Message,
 	Options,
@@ -14,7 +15,11 @@ import { dispatchMedia, isEmbedResolutionUpdate } from "./media/dispatcher";
 import { dispatchReaction } from "./media/reactions";
 import { startGuildCleanupScheduler, unregisterRemovedGuild } from "./utils/cleanup";
 import { config } from "./utils/config";
-import { normalizeBotLoginError } from "./utils/discord-intents";
+import { markShardLost, markShardReady } from "./utils/discord-gateway";
+import {
+	DISCORD_MESSAGE_CONTENT_INTENT_ERROR,
+	normalizeBotLoginError,
+} from "./utils/discord-intents";
 import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
 import { attachPresenceClient } from "./utils/presence";
@@ -100,11 +105,19 @@ discordClient.on(Events.Warn, (warning) => {
 discordClient.on(Events.ShardError, (err, shardId) => {
 	log.warn({ event: "shard_error", err, shard_id: shardId }, "Discord shard error");
 });
+// discord.js emits ShardDisconnect only for close codes it will not recover from (token,
+// intents, sharding); ordinary drops go through ShardReconnecting. /health reports it.
 discordClient.on(Events.ShardDisconnect, (close, shardId) => {
-	log.warn(
+	markShardLost(shardId, close.code);
+	log.error(
 		{ event: "shard_disconnect", shard_id: shardId, close_code: close.code },
-		"Discord shard disconnected",
+		close.code === GatewayCloseCodes.DisallowedIntents
+			? DISCORD_MESSAGE_CONTENT_INTENT_ERROR
+			: "Discord closed the gateway permanently; fix the bot token or intents, then restart",
 	);
+});
+discordClient.on(Events.ShardReady, (shardId) => {
+	markShardReady(shardId);
 });
 
 // Slash commands
