@@ -261,42 +261,51 @@ fn bun_version_supported(version: &str) -> bool {
     )
 }
 
-fn bun_command() -> Option<String> {
-    let candidates = std::iter::once("bun".to_string())
-        .chain(bun_candidate_path().map(|path| path.to_string_lossy().into_owned()));
-    candidates.into_iter().find(|candidate| {
-        new_command(candidate)
-            .arg("--version")
-            .stderr(Stdio::null())
-            .output()
-            .map(|output| {
-                output.status.success()
-                    && bun_version_supported(&String::from_utf8_lossy(&output.stdout))
-            })
-            .unwrap_or(false)
-    })
+fn bun_command_from(search_path: &OsStr, fallback: Option<PathBuf>) -> Option<PathBuf> {
+    let executable = if cfg!(windows) { "bun.exe" } else { "bun" };
+    let candidates = env::split_paths(search_path)
+        .map(|dir| dir.join(executable))
+        .chain(fallback);
+    // Keep the exact binary we checked: a relative name can resolve to another
+    // installation after changing the child's PATH or working directory.
+    candidates
+        .filter_map(|path| path.canonicalize().ok())
+        .find(|candidate| {
+            new_command(candidate)
+                .arg("--version")
+                .stderr(Stdio::null())
+                .output()
+                .map(|output| {
+                    output.status.success()
+                        && bun_version_supported(&String::from_utf8_lossy(&output.stdout))
+                })
+                .unwrap_or(false)
+        })
 }
 
-fn require_bun() -> Result<String, String> {
+fn bun_command() -> Option<PathBuf> {
+    bun_command_from(
+        &env::var_os("PATH").unwrap_or_default(),
+        bun_candidate_path(),
+    )
+}
+
+fn require_bun() -> Result<PathBuf, String> {
     bun_command().ok_or_else(|| {
         format!("Bun {MIN_BUN_VERSION} or newer is required. Use Install Bun in the Server tab.")
     })
 }
 
-fn append_bun_path(command: &mut Command) {
-    let Some(candidate) = bun_candidate_path() else {
+fn append_bun_path(command: &mut Command, bun: &Path, search_path: &OsStr) {
+    let Some(bin_dir) = bun.parent() else {
         return;
     };
-    let Some(bin_dir) = candidate.parent() else {
-        return;
-    };
-    let current = env::var_os("PATH").unwrap_or_default();
-    let mut paths = env::split_paths(&current).collect::<Vec<_>>();
-    if !paths.iter().any(|p| p == bin_dir) {
-        paths.insert(0, bin_dir.to_path_buf());
-        if let Ok(path) = env::join_paths(paths) {
-            command.env("PATH", path);
-        }
+    let mut paths = env::split_paths(search_path)
+        .filter(|path| path != bin_dir)
+        .collect::<Vec<_>>();
+    paths.insert(0, bin_dir.to_path_buf());
+    if let Ok(path) = env::join_paths(paths) {
+        command.env("PATH", path);
     }
 }
 
@@ -345,17 +354,22 @@ fn prune_child(state: &ServerCreatorState) -> Result<bool, String> {
 
 fn run_logged(
     state: &ServerCreatorState,
-    program: &str,
+    program: impl AsRef<OsStr>,
     args: &[&str],
     cwd: Option<&Path>,
 ) -> Result<(), String> {
-    push_log(state, format!("Running: {} {}", program, args.join(" ")));
+    let program = program.as_ref();
+    let display_program = program.to_string_lossy();
+    push_log(
+        state,
+        format!("Running: {} {}", display_program, args.join(" ")),
+    );
 
     let output = new_command(program)
         .args(args)
         .current_dir(cwd.unwrap_or_else(|| Path::new(".")))
         .output()
-        .map_err(|e| format!("Failed to run {program}: {e}"))?;
+        .map_err(|e| format!("Failed to run {display_program}: {e}"))?;
 
     for line in String::from_utf8_lossy(&output.stdout).lines() {
         push_log(state, line);
@@ -369,7 +383,7 @@ fn run_logged(
     } else {
         Err(format!(
             "{} failed with exit code {}",
-            program,
+            display_program,
             output.status.code().unwrap_or(-1)
         ))
     }
@@ -531,7 +545,7 @@ fn status_sync(
         installed: package_json_path(&root).exists(),
         configured: env_path(&root).exists(),
         bun_available: bun_path.is_some(),
-        bun_path,
+        bun_path: bun_path.map(|path| path.to_string_lossy().into_owned()),
         git_available: command_exists("git"),
         running,
         healthy: health_check(ws_port),
@@ -606,14 +620,14 @@ fn start_sync(
     // Run the entry file directly instead of `bun run start`: the start
     // script spawns a nested bun, and `Child::kill` would only reach the
     // outer one, leaving the actual bot alive.
-    let mut command = new_command(bun);
+    let mut command = new_command(&bun);
     command
         .args(["run", "src/index.ts"])
         .current_dir(&bot)
         .env("NODE_ENV", "production")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    append_bun_path(&mut command);
+    append_bun_path(&mut command, &bun, &env::var_os("PATH").unwrap_or_default());
 
     let mut child = command
         .spawn()
@@ -818,6 +832,82 @@ mod tests {
             "memeover-server-creator-{name}-{}-{nanos}",
             std::process::id()
         ))
+    }
+
+    #[cfg(unix)]
+    fn create_synthetic_bun(bin_dir: &Path, version: &str) -> PathBuf {
+        use std::os::unix::fs::PermissionsExt;
+
+        fs::create_dir_all(bin_dir).expect("bin directory should be created");
+        let executable = bin_dir.join("bun");
+        fs::write(
+            &executable,
+            format!(
+                "#!/bin/sh\nif [ \"$1\" = --version ]; then\nprintf '%s\\n' '{version}'\nelse\nprintf '%s %s\\n' '{version}' \"$1\"\nif [ \"$1\" = run ]; then bun --version; fi\nfi\n"
+            ),
+        )
+        .expect("synthetic Bun should be written");
+        fs::set_permissions(&executable, fs::Permissions::from_mode(0o755))
+            .expect("synthetic Bun should be executable");
+        executable.canonicalize().unwrap()
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn validated_bun_is_used_for_install_and_start_with_an_older_home_installation() {
+        let root = unique_temp_root("bun-two-installations");
+        let supported = create_synthetic_bun(&root.join("path-bin"), "1.4.2");
+        let old_home = create_synthetic_bun(&root.join("home/.bun/bin"), "1.3.12");
+        let search_path = env::join_paths([supported.parent().unwrap()]).unwrap();
+        let selected = bun_command_from(&search_path, Some(old_home.clone()))
+            .expect("the supported PATH installation should be selected");
+        assert_eq!(selected, supported);
+        assert!(selected.is_absolute());
+
+        // Changing cwd must not change the executable used by installation.
+        let state = ServerCreatorState::default();
+        run_logged(&state, &selected, &["install"], old_home.parent()).unwrap();
+        assert!(state
+            .logs
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|line| line == "1.4.2 install"));
+
+        // Even with an older runtime first, the bot and its nested commands use
+        // the validated installation. No process-wide PATH or HOME is changed.
+        let child_path =
+            env::join_paths([old_home.parent().unwrap(), supported.parent().unwrap()]).unwrap();
+        let mut command = new_command(&selected);
+        command
+            .args(["run", "src/index.ts"])
+            .current_dir(old_home.parent().unwrap());
+        append_bun_path(&mut command, &selected, &child_path);
+        let output = command.output().expect("selected Bun should start");
+        assert!(output.status.success());
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            "1.4.2 run\n1.4.2\n"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn bun_resolution_checks_fallback_and_rejects_unsupported_installations() {
+        let root = unique_temp_root("bun-fallback");
+        let unsupported = create_synthetic_bun(&root.join("path-bin"), "1.3.12");
+        let fallback = create_synthetic_bun(&root.join("home/.bun/bin"), "1.4.3");
+        let search_path = env::join_paths([unsupported.parent().unwrap()]).unwrap();
+
+        assert_eq!(
+            bun_command_from(&search_path, Some(fallback.clone())),
+            Some(fallback)
+        );
+        assert_eq!(bun_command_from(&search_path, Some(unsupported)), None);
+
+        fs::remove_dir_all(root).unwrap();
     }
 
     fn create_synthetic_package_json(root: &Path) {
