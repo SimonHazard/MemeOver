@@ -63,6 +63,8 @@ Add meaningful tests for changed behavior, not snapshots of class strings.
 `test/setup.ts` isolates environment, local storage and registry data. Never use live guild data in tests.
 CI (`.github/workflows/ci.yml`) always runs Biome, version consistency, all typechecks and Bun tests in `checks`. App frontend builds/browser tests, native Rust checks, Astro checks/site builds and bot Docker builds are filtered by changed inputs on PRs and main pushes; merge groups run everything. Real dependency changes run all groups; workspace version-only lockfile changes do not. Docker validation never publishes an image; the separate `bot-image` job publishes to GHCR only on main after `status` succeeds. `status` must pass before merging; configure it as the sole required check. Fork and Dependabot PRs never run site deployment jobs. CI Ubuntu runners use 24.04; Linux release bundles use 22.04. Local success is not remote CI proof.
 
+`app-release` runs after `ci` completes successfully for a push to `main` in this repository. Check out `github.event.workflow_run.head_sha` for version checks and every release build, and use the same SHA for the release tag. PR, failed and cancelled CI runs must not prepare releases; existing versions remain skipped.
+
 ## Design and motion
 
 Preserve the existing neo-brutalist system: shared `NB_*` classes, strong borders, offset shadows and display typography.

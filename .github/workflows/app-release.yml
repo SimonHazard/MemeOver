@@ -1,20 +1,13 @@
 name: app-release
 
 on:
-  push:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
     branches: [main]
-    paths:
-      - "app/**"
-      - "packages/ui/**"
-      - "shared/**"
-      - "package.json"
-      - "bun.lock"
-      - "site/package.json"
-      - "scripts/check-versions.ts"
-      - ".github/workflows/app-release.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: app-release
@@ -22,12 +15,19 @@ concurrency:
 
 jobs:
   version:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.read.outputs.version }}
       released: ${{ steps.read.outputs.released }}
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
@@ -49,6 +49,8 @@ jobs:
   tauri:
     needs: version
     if: needs.version.outputs.released == 'false'
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -62,6 +64,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       # ── Dépendances système (Linux uniquement) ────────────────────────────────
       - name: Install Linux system dependencies
@@ -118,6 +122,7 @@ jobs:
           projectPath: app
           args: ${{ matrix.args }}
           tagName: app-v__VERSION__
+          releaseCommitish: ${{ github.event.workflow_run.head_sha }}
           releaseName: App v__VERSION__
           releaseDraft: true
           includeUpdaterJson: true

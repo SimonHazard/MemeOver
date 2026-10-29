@@ -151,6 +151,11 @@ Publier une release `app-v*` déclenche automatiquement le build et le déploiem
 depuis `main`, avec la version dans le nom du run. Créer un brouillon de release
 ne déclenche pas ce rafraîchissement.
 
+Après la réussite complète de `ci` pour un push sur `main`, `app-release` prépare une
+release brouillon uniquement si la version n’existe pas déjà. Les builds et le tag
+utilisent le commit exact validé par cette CI, même si `main` avance entre-temps.
+Une CI en échec ou annulée et les CI de PR ne déclenchent aucun build de release.
+
 Avant de préparer une release, `bun run check:versions` vérifie les versions app/Tauri/site
 et les versions des workspaces dans les lockfiles. La distribution Linux est construite
 sur Ubuntu 22.04 ; cette base fixe le minimum de compilation visé, sans garantir toutes
@@ -299,6 +304,11 @@ Ubuntu CI runners use 24.04 and JavaScript actions use Node 24.
 
 Publishing an `app-v*` release automatically builds and deploys the site from `main`,
 with the version in the run name. Creating a release draft does not trigger this refresh.
+
+After `ci` fully succeeds for a push to `main`, `app-release` prepares a draft release
+only if the version does not already exist. Builds and the tag use the exact commit
+validated by that CI, even if `main` advances in the meantime. Failed or cancelled CI
+runs and pull request CI runs do not trigger release builds.
 
 Before preparing a release, `bun run check:versions` checks app/Tauri/site versions and
 workspace versions in the lockfiles. Linux releases are built on Ubuntu 22.04; this fixes
