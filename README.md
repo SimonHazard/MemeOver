@@ -150,6 +150,8 @@ Cloudflare. Les previews sont réservées aux PR internes au dépôt.
 Publier une release `app-v*` déclenche automatiquement le build et le déploiement du site
 depuis `main`, avec la version dans le nom du run. Créer un brouillon de release
 ne déclenche pas ce rafraîchissement.
+Le déploiement attend une approbation manuelle si des reviewers obligatoires sont
+configurés sur l’environnement GitHub `production`.
 
 Après la réussite complète de `ci` pour un push sur `main`, `app-release` prépare une
 release brouillon uniquement si la version n’existe pas déjà. Les builds et le tag
@@ -304,6 +306,8 @@ Ubuntu CI runners use 24.04 and JavaScript actions use Node 24.
 
 Publishing an `app-v*` release automatically builds and deploys the site from `main`,
 with the version in the run name. Creating a release draft does not trigger this refresh.
+Deployment waits for manual approval if required reviewers are configured on the
+GitHub `production` environment.
 
 After `ci` fully succeeds for a push to `main`, `app-release` prepares a draft release
 only if the version does not already exist. Builds and the tag use the exact commit
