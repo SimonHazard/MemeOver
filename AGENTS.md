@@ -98,5 +98,6 @@ Use conventional commits and squash merges. Do not push, tag, publish or open PR
 Preserve pre-existing changes and exclude them from unrelated commits.
 Never edit `.env*`, `**/data/` (guild registry `memeover.db*`, legacy `guilds.json*`), `app/src-tauri/target/` or `.claude/settings.local.json` during ordinary source work.
 Project skills live under `.agents/skills` with `.claude/skills` and `.agent/skills` symlinks; vendored skill metadata stays in `skills-lock.json`.
+Claude Code hooks in `.claude/settings.json` guard edits and common shell writes to protected paths, format files named by Edit/Write and typecheck touched workspaces when the agent stops. These hooks run only in Claude Code; Codex must enforce the same boundaries through its own workflow. The Bash guard is a command-text heuristic, not a shell parser or sandbox: dynamic paths, Python/Perl writes, `find -delete`/`-exec` and `git clean` are not covered. For Bash edits, explicitly format only your named files with `.claude/hooks/format-touched.sh path/to/file.ts [...]`; it never scans the dirty tree or runs on Stop. Run `bash .claude/hooks/test-hooks.sh` after hook changes, and the `prepare-pr` skill before asking for a review.
 
 Product ideas in `docs/feature-ideas.md` are not implementation plans. Require an explicit user request before implementing them.
