@@ -15,6 +15,7 @@ import { dispatchReaction } from "./media/reactions";
 import { startGuildCleanupScheduler, unregisterRemovedGuild } from "./utils/cleanup";
 import { config } from "./utils/config";
 import { normalizeBotLoginError } from "./utils/discord-intents";
+import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
 import { attachPresenceClient } from "./utils/presence";
 
@@ -73,8 +74,37 @@ discordClient.on(
 	},
 );
 
-discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
-	await dispatchReaction(reaction, user);
+discordClient.on(Events.MessageReactionAdd, (reaction, user) => {
+	dispatchReaction(reaction, user).catch((err: unknown) => {
+		log.error(
+			{
+				event: "reaction_dispatch_failed",
+				err,
+				...discordRefLogFields({
+					guildId: reaction.message.guildId,
+					channelId: reaction.message.channelId,
+					messageId: reaction.message.id,
+				}),
+			},
+			"Reaction dispatch failed",
+		);
+	});
+});
+
+discordClient.on(Events.Error, (err) => {
+	log.error({ event: "client_error", err }, "Discord client error");
+});
+discordClient.on(Events.Warn, (warning) => {
+	log.warn({ event: "client_warning", warning }, "Discord client warning");
+});
+discordClient.on(Events.ShardError, (err, shardId) => {
+	log.warn({ event: "shard_error", err, shard_id: shardId }, "Discord shard error");
+});
+discordClient.on(Events.ShardDisconnect, (close, shardId) => {
+	log.warn(
+		{ event: "shard_disconnect", shard_id: shardId, close_code: close.code },
+		"Discord shard disconnected",
+	);
 });
 
 // Slash commands
@@ -99,4 +129,8 @@ export async function startBot(): Promise<void> {
 	} catch (err) {
 		throw normalizeBotLoginError(err);
 	}
+}
+
+export async function destroyDiscordClient(): Promise<void> {
+	await discordClient.destroy();
 }

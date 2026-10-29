@@ -159,14 +159,6 @@ export function infoResponse(
 	return panelResponse({ tone: "info", title, description, fields });
 }
 
-export function warningResponse(
-	title: string,
-	description?: string,
-	fields?: PanelField[],
-): InteractionReplyOptions {
-	return panelResponse({ tone: "warning", title, description, fields });
-}
-
 export function componentsToJson(response: Pick<InteractionReplyOptions, "components">): unknown[] {
 	return (
 		response.components?.map((component) =>

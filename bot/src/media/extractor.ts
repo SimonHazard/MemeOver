@@ -34,6 +34,29 @@ export function detectMediaType(url: string): MediaType | null {
 	return null;
 }
 
+export const CAPTION_MAX_LENGTH = 140;
+
+export function detectAttachmentMediaType(
+	contentType: string | null | undefined,
+	url: string,
+): MediaType | null {
+	const ct = contentType ?? "";
+	if (ct.startsWith("image/gif")) return "gif";
+	if (ct.startsWith("image/")) return "image";
+	if (ct.startsWith("video/")) return "video";
+	if (ct.startsWith("audio/")) return "audio";
+	return detectMediaType(url);
+}
+
+export function normalizeCaption(raw: string | null | undefined): string | undefined {
+	// Preserve the existing Cc/Cn filtering; format characters (Cf) are retained.
+	const text = raw?.replace(/[\p{Cc}\p{Cn}]/gu, "").trim();
+	if (!text) return undefined;
+	return text.length > CAPTION_MAX_LENGTH
+		? `${text.slice(0, CAPTION_MAX_LENGTH).trimEnd()}…`
+		: text;
+}
+
 // ─── Extraction ───────────────────────────────────────────────────────────────
 
 /**
@@ -46,14 +69,7 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 	// 1. File attachments
 	for (const attachment of message.attachments.values()) {
 		if (isCdnUrlExpired(attachment.url)) continue;
-		const ct = attachment.contentType ?? "";
-		let media_type: MediaType | null = null;
-
-		if (ct.startsWith("image/gif")) media_type = "gif";
-		else if (ct.startsWith("image/")) media_type = "image";
-		else if (ct.startsWith("video/")) media_type = "video";
-		else if (ct.startsWith("audio/")) media_type = "audio";
-		else media_type = detectMediaType(attachment.url);
+		const media_type = detectAttachmentMediaType(attachment.contentType, attachment.url);
 
 		if (media_type) {
 			results.push({ url: attachment.url, media_type });
@@ -114,12 +130,7 @@ export function extractStickers(message: Message | PartialMessage): ExtractedMed
 	return results;
 }
 
-/** Extract caption text from a message, stripping out URLs. Truncated to 140 chars. */
+/** Extract caption text from a message, stripping URLs before normalizing. */
 export function extractText(message: Message | PartialMessage): string | undefined {
-	const stripped = (message.content ?? "").replace(/https?:\/\/\S+/g, "").trim();
-	// Strip Unicode control characters (Cc + Cn categories) that could cause
-	// visual spoofing via RTL-override, zero-width joiners, etc.
-	const raw = stripped.replace(/[\p{Cc}\p{Cn}]/gu, "").trim();
-	if (raw.length === 0) return undefined;
-	return raw.length > 140 ? `${raw.slice(0, 140).trimEnd()}…` : raw;
+	return normalizeCaption((message.content ?? "").replace(/https?:\/\/\S+/g, "").trim());
 }

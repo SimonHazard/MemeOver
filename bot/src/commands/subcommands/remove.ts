@@ -1,9 +1,13 @@
 import { ButtonStyle, type ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
+import { discordRefLogFields, logHash } from "../../utils/log-privacy";
+import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
 import { actionButton } from "../component-actions";
 import { notConfiguredResponse } from "../connection";
 import { panelResponse } from "../response-panel";
+
+const log = logger.child({ module: "remove" });
 
 export async function handleRemove(
 	interaction: ChatInputCommandInteraction,
@@ -41,5 +45,13 @@ export async function handleRemove(
 				}),
 			],
 		}),
+	);
+	log.info(
+		{
+			event: "admin_remove_confirmation_requested",
+			...discordRefLogFields({ guildId }),
+			actor: logHash(interaction.user?.id),
+		},
+		"Guild removal confirmation requested",
 	);
 }

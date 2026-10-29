@@ -1,9 +1,9 @@
 import type { MessageReaction, PartialMessageReaction, PartialUser, User } from "discord.js";
 import { broadcastToGuild } from "../server";
-import { isPausedAt } from "../utils/guild-pause";
 import { canBroadcastReaction, canFetchReaction } from "../utils/reaction-rate-limit";
 import { guildRegistry } from "../utils/registry";
 import type { ReactionEvent } from "../utils/types";
+import { admitGuildEvent } from "./admission";
 import { classifyReactionSource, sourceField } from "./source";
 
 export async function dispatchReaction(
@@ -15,9 +15,16 @@ export async function dispatchReaction(
 	if (!guildId || !channelId) return;
 
 	const source = classifyReactionSource(user);
-	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
-	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) return;
-	if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
+	if (
+		admitGuildEvent({
+			channelAllowed: guildRegistry.isChannelAllowed(guildId, channelId),
+			config: guildRegistry.getConfig(guildId),
+			source,
+			now: Date.now(),
+			enforceSourcePolicy: true,
+		}) !== "ok"
+	)
+		return;
 
 	// Partials fire for messages older than the bot's cache. Fetching costs a REST call, so it
 	// only happens once every in-memory gate has passed (most reactions come from unwatched guilds).
@@ -29,9 +36,16 @@ export async function dispatchReaction(
 			return;
 		}
 		// Guild settings may have changed while Discord was responding.
-		if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
-		if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) return;
-		if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
+		if (
+			admitGuildEvent({
+				channelAllowed: guildRegistry.isChannelAllowed(guildId, channelId),
+				config: guildRegistry.getConfig(guildId),
+				source,
+				now: Date.now(),
+				enforceSourcePolicy: true,
+			}) !== "ok"
+		)
+			return;
 	}
 
 	const emojiId = reaction.emoji.id;

@@ -8,6 +8,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- Bot (1.6.8): handle Discord client and reaction errors without an unhandled event, close the Discord connection during shutdown, and record applied administrative changes even when Discord rejects the reply.
+
 - App (1.8.6): preserve concurrent settings edits, validate saved numeric values and colours, and retry overlay connections with increasing delays while showing one error toast per outage.
 
 - App (1.8.5): bundle Sonner's stylesheet so overlay connection toasts keep their corner position and 300 px width in release builds. The overlay's inline first-paint style made Tauri add a CSP nonce, which blocked Sonner's runtime style injection and left toasts full-width at the top of the screen.
