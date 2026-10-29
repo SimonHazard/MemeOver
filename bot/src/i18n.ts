@@ -44,7 +44,8 @@ export const translations = {
 		"commands.setup.channel.description":
 			"Add a specific channel to watch (omit to watch all channels)",
 		"commands.token.name": "token",
-		"commands.token.description": "Show your connection credentials (only visible to you)",
+		"commands.token.description":
+			"Show this server's connection credentials and setup code (only visible to you)",
 		"commands.rotate.name": "rotate",
 		"commands.rotate.description": "Generate a new connection token, invalidating the current one",
 		"commands.remove.name": "remove",
@@ -58,11 +59,13 @@ export const translations = {
 		"commands.secret.media.name": "media",
 		"commands.secret.media.description": "Image, GIF, video or audio file to send anonymously",
 		"commands.secret.url.name": "url",
-		"commands.secret.url.description": "Direct media link (Discord CDN, Tenor, Giphy, Imgur)",
+		"commands.secret.url.description":
+			"Direct media link (Discord CDN, Tenor, Giphy, KLIPY, Imgur)",
 		"commands.secret.text.name": "text",
 		"commands.secret.text.description": "Optional caption displayed with the secret meme",
 		"commands.status.name": "status",
-		"commands.status.description": "Show bot configuration, watched channels, and uptime",
+		"commands.status.description":
+			"Show bot configuration, watched channels, active overlays and uptime",
 		"commands.help.name": "help",
 		"commands.help.description": "List all MemeOver commands and what they do",
 
@@ -112,10 +115,11 @@ export const translations = {
 			"Allow or mute media, text, and reactions posted by Discord bots, apps, and webhooks. Requires **Manage Server**.",
 		"help.setup":
 			"Register this server and get an app setup code. Omit `#channel` to watch all channels, or specify one to add it. Requires **Manage Server**.",
-		"help.status": "Show bot configuration, watched channels, active overlays, and uptime.",
+		"help.status":
+			"Show bot configuration, watched channels, active overlays, and uptime. Requires **Manage Server**.",
 		"help.title": "MemeOver — commands",
 		"help.token":
-			"Display your connection credentials and one-line app setup code (ephemeral, visible only to you).",
+			"Display this server's shared connection credentials and one-line app setup code (ephemeral, visible only to you).",
 		"help.help": "Show this help message.",
 
 		"remove.notConfiguredDescription": "This server is not registered with MemeOver.",
@@ -155,15 +159,15 @@ export const translations = {
 			"Attach a media file or provide a direct URL, then optionally add `text` as the caption.",
 		"secret.mediaRequiredTitle": "Media required",
 		"secret.successDescription":
-			"Your anonymous meme was pushed to every connected overlay in this server. Nobody sees your name.",
+			"Your anonymous meme was pushed to every connected overlay in this server. Your name is not shown on the overlays.",
 		"secret.successDescriptionWithText":
-			"Your anonymous meme and caption were pushed to every connected overlay. Nobody sees your name.",
+			"Your anonymous meme and caption were pushed to every connected overlay. Your name is not shown on the overlays.",
 		"secret.successTitle": "Secret meme sent",
 		"secret.unsupportedTypeDescription":
 			"The media must be an image, GIF, video, or audio file (`.png`, `.jpg`, `.gif`, `.mp4`, `.webm`, `.mp3`, …).",
 		"secret.unsupportedTypeTitle": "Unsupported media type",
 		"secret.urlNotAllowedDescription":
-			"Only links from Discord CDN, Tenor, Giphy, or Imgur are accepted. Paste a direct image/GIF/video URL from one of these hosts.",
+			"Only links from Discord CDN, Tenor, Giphy, KLIPY, or Imgur are accepted. Paste a direct image/GIF/video URL from one of these hosts.",
 		"secret.urlNotAllowedTitle": "URL not allowed",
 
 		"setup.configuredTitle": "MemeOver configured",
@@ -185,7 +189,7 @@ export const translations = {
 		"status.title": "MemeOver status",
 		"status.uptime": "⏱️ Uptime",
 
-		"token.title": "Your MemeOver connection credentials",
+		"token.title": "MemeOver connection credentials for this server",
 	},
 	fr: {
 		"commands.pause.name": "pause",
@@ -231,7 +235,8 @@ export const translations = {
 		"commands.setup.channel.name": "channel",
 		"commands.setup.channel.description": "Ajouter un salon précis à écouter",
 		"commands.token.name": "token",
-		"commands.token.description": "Afficher vos identifiants de connexion",
+		"commands.token.description":
+			"Afficher les identifiants du serveur et le code de configuration (visible par vous seul)",
 		"commands.rotate.name": "rotate",
 		"commands.rotate.description": "Générer un nouveau jeton de connexion",
 		"commands.remove.name": "remove",
@@ -240,17 +245,19 @@ export const translations = {
 		"commands.bots.description": "Autoriser ou masquer les messages et réactions des bots et apps",
 		"commands.bots.enabled.name": "enabled",
 		"commands.bots.enabled.description":
-			"Active pour écouter les bots/apps; désactive pour les masquer",
+			"Activez pour écouter les bots/apps ; désactivez pour les masquer",
 		"commands.secret.name": "secret",
 		"commands.secret.description": "Envoyer un meme anonyme avec une légende optionnelle",
 		"commands.secret.media.name": "media",
 		"commands.secret.media.description": "Image, GIF, vidéo ou audio à envoyer anonymement",
 		"commands.secret.url.name": "url",
-		"commands.secret.url.description": "Lien direct vers un média",
+		"commands.secret.url.description":
+			"Lien direct vers un média (Discord CDN, Tenor, Giphy, KLIPY, Imgur)",
 		"commands.secret.text.name": "text",
 		"commands.secret.text.description": "Légende optionnelle affichée avec le meme",
 		"commands.status.name": "status",
-		"commands.status.description": "Afficher la configuration, les salons et l'uptime",
+		"commands.status.description":
+			"Afficher la configuration, les salons écoutés, les overlays actifs et l'uptime",
 		"commands.help.name": "help",
 		"commands.help.description": "Lister les commandes MemeOver",
 
@@ -302,10 +309,10 @@ export const translations = {
 		"help.setup":
 			"Enregistre ce serveur et fournit un code de configuration app. Omettez `#salon` pour écouter tous les salons, ou indiquez-en un pour l'ajouter. Requiert **Gérer le serveur**.",
 		"help.status":
-			"Affiche la configuration du bot, les salons écoutés, les overlays actifs et l'uptime.",
+			"Affiche la configuration du bot, les salons écoutés, les overlays actifs et l'uptime. Requiert **Gérer le serveur**.",
 		"help.title": "MemeOver — commandes",
 		"help.token":
-			"Affiche vos identifiants et un code de configuration app en une ligne (éphémère, visible uniquement par vous).",
+			"Affiche les identifiants de connexion partagés de ce serveur et un code de configuration app en une ligne (éphémère, visible uniquement par vous).",
 		"help.help": "Affiche ce message d'aide.",
 
 		"remove.notConfiguredDescription": "Ce serveur n'est pas enregistré dans MemeOver.",
@@ -345,15 +352,15 @@ export const translations = {
 			"Ajoutez un fichier média ou fournissez une URL directe, puis ajoutez éventuellement `text` comme légende.",
 		"secret.mediaRequiredTitle": "Média requis",
 		"secret.successDescription":
-			"Votre meme anonyme a été envoyé à tous les overlays connectés de ce serveur. Personne ne voit votre nom.",
+			"Votre meme anonyme a été envoyé à tous les overlays connectés de ce serveur. Votre nom n'apparaît pas sur les overlays.",
 		"secret.successDescriptionWithText":
-			"Votre meme anonyme et sa légende ont été envoyés à tous les overlays connectés. Personne ne voit votre nom.",
+			"Votre meme anonyme et sa légende ont été envoyés à tous les overlays connectés. Votre nom n'apparaît pas sur les overlays.",
 		"secret.successTitle": "Meme secret envoyé",
 		"secret.unsupportedTypeDescription":
 			"Le média doit être une image, un GIF, une vidéo ou un fichier audio (`.png`, `.jpg`, `.gif`, `.mp4`, `.webm`, `.mp3`, …).",
 		"secret.unsupportedTypeTitle": "Type de média non pris en charge",
 		"secret.urlNotAllowedDescription":
-			"Seuls les liens Discord CDN, Tenor, Giphy ou Imgur sont acceptés. Collez une URL directe image/GIF/vidéo depuis l'un de ces services.",
+			"Seuls les liens Discord CDN, Tenor, Giphy, KLIPY ou Imgur sont acceptés. Collez une URL directe image/GIF/vidéo depuis l'un de ces services.",
 		"secret.urlNotAllowedTitle": "URL non autorisée",
 
 		"setup.configuredTitle": "MemeOver configuré",
@@ -375,7 +382,7 @@ export const translations = {
 		"status.title": "Statut MemeOver",
 		"status.uptime": "⏱️ Temps en ligne",
 
-		"token.title": "Vos identifiants de connexion MemeOver",
+		"token.title": "Identifiants de connexion MemeOver de ce serveur",
 	},
 } as const;
 

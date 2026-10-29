@@ -40,7 +40,8 @@ export const en = {
 			{
 				icon: "send",
 				title: "Send media",
-				description: "Drop an image, GIF, video, audio clip, reaction or message in Discord.",
+				description:
+					"Drop an image, GIF, video, audio clip, reaction or message in a channel the bot watches.",
 			},
 			{
 				icon: "sparkles",
@@ -82,7 +83,8 @@ export const en = {
 			{
 				icon: "zap",
 				title: "One-paste setup",
-				description: "Run /memeover setup and paste the connection code into the app.",
+				description:
+					"Managers run /memeover setup, everyone else runs /memeover token, then each person pastes the setup code into the app.",
 			},
 			{
 				icon: "image",
@@ -130,7 +132,8 @@ export const en = {
 			{
 				icon: "refresh",
 				title: "Automatic updates",
-				description: "Stay current without hunting for installers after every release.",
+				description:
+					"Windows, macOS and AppImage builds update themselves; .deb and .rpm packages are updated by downloading the new release.",
 			},
 		],
 	},
@@ -145,7 +148,7 @@ export const en = {
 		commandsLink: "See all commands",
 		appStepTitle: "Install the app",
 		appStepDescription:
-			"Each participant installs the app for their system, runs /memeover token in Discord and pastes the connection code.",
+			"Each participant installs the app for their system, runs /memeover token in Discord and pastes the setup code.",
 		detected: "Your system",
 		otherFormats: "Other formats:",
 		windows: "Windows",
@@ -153,7 +156,7 @@ export const en = {
 		macos: "macOS",
 		macosFormats: ".dmg",
 		linux: "Linux",
-		linuxFormats: ".AppImage / .deb",
+		linuxFormats: ".AppImage / .deb / .rpm",
 		allReleases: "All releases →",
 	},
 	faq: {
@@ -183,12 +186,37 @@ export const en = {
 			{
 				question: "Can I host the bot myself?",
 				answer:
-					"Yes. Use the desktop app’s Server tab to install and run your own instance, or follow the Docker guide.",
+					"Yes. Use the desktop app’s Server tab to install and run your own instance, or follow the Docker section of the Run your own bot page.",
 			},
 			{
 				question: "Can I send a meme anonymously?",
 				answer:
 					"Use /memeover secret. The overlay hides the author badge; this is not anonymity from Discord or the bot operator.",
+			},
+			{
+				question: "Who can see the connection token?",
+				answer:
+					"Each server has one shared token. Any member can display it with /memeover token to connect their app. If it leaks, a member with Manage Server runs /memeover rotate: every connected overlay is logged out and needs the new setup code.",
+			},
+			{
+				question: "My system warns me when installing MemeOver. Is that normal?",
+				answer:
+					"Yes. The installers are not signed with an Apple or Microsoft certificate yet, so macOS Gatekeeper and Windows SmartScreen show a warning on first launch. On macOS, try opening the app first, then go to System Settings → Privacy & Security → Open Anyway; on Windows, choose More info, then Run anyway. The updater verifies every update with MemeOver's own signing key.",
+			},
+			{
+				question: "The overlay does not appear over my game.",
+				answer:
+					"Some games in exclusive full-screen mode block every overlay. Switch the game to windowed full-screen or borderless mode.",
+			},
+			{
+				question: "Which links can I post?",
+				answer:
+					"In watched channels, MemeOver supports files uploaded to Discord, Discord stickers, media previews embedded by Discord (including Tenor), and direct media links from Discord's CDN, Tenor, Giphy, KLIPY and Imgur. The url option of /memeover secret requires a direct link to a media file (for example .gif, .png, .jpg, .webp, .mp4, .webm, .mp3, .ogg), not a page link.",
+			},
+			{
+				question: "Are there limits?",
+				answer:
+					"Captions and text are cut at 140 characters. At most 10 reactions per second per server reach the overlays. The hosted bot unregisters a server only when no overlay is connected and either there has been no overlay activity for 48 hours, or the configuration is at least 48 hours old and at most one app installation has ever connected. Run /memeover setup again to reconfigure it.",
 			},
 			{
 				question: "Is MemeOver built with AI?",
@@ -269,13 +297,13 @@ export const en = {
 				name: "/memeover pause",
 				description: "Pause broadcasts.",
 				access: "Manage Server",
-				published: false,
+				published: true,
 			},
 			{
 				name: "/memeover resume",
 				description: "Resume broadcasts.",
 				access: "Manage Server",
-				published: false,
+				published: true,
 			},
 			{
 				name: "/memeover help",
@@ -294,7 +322,7 @@ export const en = {
 			"Install the bot and Bun if needed.",
 			"Create a Discord application, paste its application ID and bot token, and enable Message Content Intent in the Developer Portal.",
 			"Invite the bot, save the configuration, start it and check its status.",
-			"Run /memeover setup in Discord and use the connection code to connect your friends.",
+			"Run /memeover setup in Discord and use the setup code to connect your friends.",
 		],
 		dockerTitle: "With Docker",
 		dockerNote:
@@ -306,7 +334,7 @@ export const en = {
 		description:
 			"Release history from the project repository. Release entries are maintained in English.",
 	},
-	menu: { toggle: "Toggle menu", label: "Main navigation" },
+	menu: { toggle: "Toggle menu", label: "Main navigation", footerLabel: "Footer navigation" },
 	notFound: {
 		title: "404",
 		description: "This page doesn't exist. It probably wandered off to find some memes.",

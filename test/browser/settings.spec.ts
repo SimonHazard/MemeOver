@@ -153,7 +153,7 @@ test("navigation, language, theme, history and dashboard controls", async ({ pag
 
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {
 	await overlay(page);
-	await page.getByLabel("Profile Name", { exact: true }).fill("Browser profile");
+	await page.getByLabel("Profile name", { exact: true }).fill("Browser profile");
 	await page.getByRole("button", { name: "Create", exact: true }).click();
 	await expect(page.getByText("Browser profile", { exact: true })).toBeVisible();
 	const input = page.getByRole("slider", { name: "Media size", exact: true });
@@ -263,7 +263,7 @@ test("invalid profile import and failed creation show errors without crashing", 
 		}),
 	).toBeVisible();
 	await page.evaluate(() => localStorage.setItem("test-fail-save", "1"));
-	await page.getByLabel("Profile Name", { exact: true }).fill("Failed profile");
+	await page.getByLabel("Profile name", { exact: true }).fill("Failed profile");
 	await page.getByRole("button", { name: "Create", exact: true }).click();
 	await expect(page.getByText("Could not create this profile", { exact: true })).toBeVisible();
 });

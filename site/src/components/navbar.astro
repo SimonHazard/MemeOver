@@ -39,7 +39,7 @@ const downloadHref = homeAnchorHref("#download");
 		</a>
 
 		<!-- Desktop nav -->
-		<nav class="hidden lg:flex items-center gap-5" aria-label="Main navigation">
+		<nav class="hidden lg:flex items-center gap-5" aria-label={t(lang, "menu.label")}>
 			{links.map((link) => (
 				<a
 					href={link.href}

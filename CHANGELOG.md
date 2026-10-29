@@ -27,14 +27,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Added
 
-- Show a Sonner toast on the overlay when another user connects to the same server. Connection notifications are enabled by default and can be turned off or placed in any of the four corners from display settings and profiles.
-- Adjust connection notification duration from 1 to 30 seconds (4 seconds by default), save it in display profiles, and choose the notification corner from a Select.
+- Show a short notification on the overlay when another user connects to the same server. Connection notifications are enabled by default and can be turned off or placed in any of the four corners from display settings and profiles.
+- Adjust connection notification duration from 1 to 30 seconds (4 seconds by default), save it in display profiles, and choose the notification corner from a menu.
 - Ignore the initial member count, departures and repeated counts so opening or reconnecting the app does not announce existing users. Hide connection toasts when the overlay is closed or notifications are disabled.
 
 ### Fixed
 
-- Keep connection toasts in sync with the app's language and light/dark theme across windows, including a toast already on screen. Without a saved theme, follow the system theme. Release preference listeners on unmount, including native subscriptions that finish registering after cleanup.
-- The bot (1.6.1) counts distinct app installs, so a replacement socket is not counted twice while the stale one awaits heartbeat eviction. A new arrival immediately after another user's departure is still announced; a reconnect after a full disconnect may also be announced.
+- Keep connection notifications in sync with the app's language and light/dark theme across windows, including a notification already on screen. Without a saved theme, follow the system theme. Stop synchronizing closed windows.
+- The bot (1.6.1) counts distinct app installs, so replacing a connection does not count the same app twice while its previous connection is still closing. A new arrival immediately after another user's departure is still announced; a reconnect after a full disconnect may also be announced.
 
 ## [1.7.1]
 
@@ -47,20 +47,20 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added
 
 - Add privileged `/memeover pause` and `/memeover resume` commands.
-- Persist timed pauses, restore timers after restart and negotiate guild state with overlays.
+- Save timed pauses, restore timers after restart and keep overlays informed of the server's pause status.
 - Clear pending media during a pause while allowing the visible item to finish.
-- Keep history replays playable during a pause; only Discord events are dropped.
+- Keep history replays playable during a pause; new Discord activity is ignored.
 
 ## [1.6.6]
 
 ### Fixed
 
-- Size the overlay to the full bounds of its monitor instead of maximizing it. Since the Tauri 2.12 update in 1.6.4, a hidden window is only maximized when first shown on Windows, and maximizing never covered the taskbar or menu bar area. The overlay also drops the default window shadow on Windows, which would otherwise draw a 1px border and rounded corners around it.
+- Cover the full monitor with the overlay, including the taskbar or menu bar area, and restore its size when reopened on Windows. Remove the unwanted thin border and rounded corners around the Windows overlay.
 - Fit the overlay to its monitor again within two seconds after a resolution or scaling change, or after its monitor is disconnected.
 - Keep the author badge on screen for tall media: the media height now leaves room for the badge, background and caption, which previously pushed the badge off the top edge at bottom positions.
-- Restore the keyboard behaviour of option groups lost in the 1.6.2 Base UI migration (position grid, text position, preview format, language and media types): the up and down arrows move between options again, and tabbing into a single-choice group focuses the selected option, as in a WAI-ARIA radio group.
+- Restore keyboard navigation for position, text position, preview format, language and media type options: the up and down arrows move between options again, and tabbing into a single-choice group focuses the selected option.
 - Keep Enter from saving the overlay form while a slider is focused, as before the 1.6.2 migration.
-- Replace the hold-to-confirm buttons (delete a profile, clear the history from History or About) with a confirmation dialog. Holding a key for a set time is not keyboard accessible (WCAG 2.1.1), and some screen readers and voice control could not confirm at all. The alert dialog focuses Cancel first, closes with Escape and ignores clicks outside it.
+- Replace the hold-to-confirm buttons (delete a profile, clear the history from History or About) with a confirmation dialog. Some keyboard, screen reader and voice control users could not confirm by holding a key. The confirmation focuses Cancel first, closes with Escape and ignores clicks outside it.
 - Give the member count badge a screen-reader description of its state; its visible parts were hidden from assistive technology.
 - Show replays of muted authors and hidden anonymous memes. History confirmed these replays, but the overlay dropped them.
 - Stop accepting the self-hosted server's placeholder public address for installation, progress and friend codes, which pointed friends to the unreachable `YOUR_PUBLIC_IP` host.
@@ -69,11 +69,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
-- Remove the overlay page's own always-on-top request, which its window permissions rejected; Rust already keeps the overlay on top.
-- Base every dialog on the shadcn base-vega Dialog and Alert Dialog, styled with the MemeOver theme: neo-brutalist frame, display font titles, a lightly blurred backdrop and no zoom or fade under reduced motion.
+- Keep the overlay on top without showing a redundant permission error.
+- Give every dialog the same MemeOver look: strong frame, display font titles, a lightly blurred backdrop, and no zoom or fade under reduced motion.
 - Use formal French ("vous") in the unsaved changes dialog, like the rest of the interface.
 - Remove 18 unused interface translations.
-- Add browser regression checks for tall media at centre, top and bottom positions, the space reserved for the author badge, option-group keyboard focus, slider Enter, confirmation dialogs, tray labels, color, member count and expired replay announcements.
 
 ## [1.6.5]
 
@@ -83,8 +82,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
-- Keep confetti, pop and firework keyframe times in increasing order for any fade timing. The built-in reaction timings already produced ordered keyframes, so displayed reactions are unchanged.
-- Extend browser regression checks to production builds, animated popup replacements and interrupted badge entrances.
+- Keep confetti, pop and firework reactions working with custom fade timings. Built-in reaction effects keep their existing appearance.
 
 ## [1.6.4]
 
@@ -101,16 +99,16 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
-- Update JavaScript and Rust dependencies and require Bun 1.4.2.
+- Update bundled software and require Bun 1.4.2 to run the bot.
 
 ## [1.6.3]
 
 ### Fixed
 
 - Center the author badge above content and keep it outside the configurable media background; remove its outer halo.
-- Restore all overlay settings sliders after the Base UI migration, including pointer and keyboard interactions.
+- Restore pointer and keyboard interactions for all overlay settings sliders.
 - Remove the duplicate arrow from selection menus and label slider and switch controls for assistive technology.
-- Handle failed profile creation, replacement and imports without unhandled errors; allow retrying the same import file.
+- Show errors when profile creation, replacement or import fails, and allow retrying the same import file.
 - Keep the first-configuration wizard open through its final step and report failed connection saves and screen changes.
 
 ### Changed
@@ -121,9 +119,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
-- Migrate shared UI components from Radix to Base UI and adapt the settings controls.
+- Rebuild the shared controls and adapt the settings interface.
 - Harmonize switches, inputs, profile actions and connection buttons with the neo-brutalist design.
-- Replace the bundled Bungee font and improve reduced-motion transitions for settings controls.
+- Refresh the display font and improve reduced-motion transitions for settings controls.
 - Translate position and color controls, preview summaries and French interface labels.
 - Identify site deployments by the published app release and queue production deployments without interrupting an active run.
 

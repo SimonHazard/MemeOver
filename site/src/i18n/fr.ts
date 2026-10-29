@@ -4,7 +4,7 @@ export const fr: Translations = {
 	meta: {
 		title: "MemeOver",
 		description:
-			"Tes mèmes, GIFs, vidéos et sons Discord s'affichent en direct sur l'écran de tes amis grâce à une application desktop autonome. Gratuit et open source.",
+			"Vos mèmes, GIFs, vidéos et sons Discord s'affichent en direct sur l'écran de vos amis grâce à une application desktop autonome. Gratuit et open source.",
 		imageAlt: "Bannière MemeOver : images, GIFs, vidéos, sons, réactions et texte depuis Discord.",
 	},
 	nav: {
@@ -18,9 +18,9 @@ export const fr: Translations = {
 		badge: "Gratuit et open source",
 		title: "MemeOver",
 		subtitle: "Overlay inspiré du LiveChat de la Cacabox",
-		tagline: "Envoie des mèmes sur l'écran de tes amis, en direct depuis Discord.",
+		tagline: "Envoyez des mèmes sur l'écran de vos amis, en direct depuis Discord.",
 		description:
-			"Transforme un salon Discord en LiveChat : images, GIFs, vidéos, sons, réactions et textes s'affichent en overlay sur l'écran de chaque ami connecté. Pensé pour les soirées jeu, les watch parties et les groupes qui aiment le chaos bien réglé.",
+			"Transformez un salon Discord en LiveChat : images, GIFs, vidéos, sons, réactions et textes s'affichent en overlay sur l'écran de chaque ami connecté. Pensé pour les soirées jeu, les watch parties et les groupes qui aiment le chaos bien réglé.",
 		cta_download: "Télécharger l'application",
 		cta_invite: "Ajouter le bot à Discord",
 	},
@@ -29,25 +29,25 @@ export const fr: Translations = {
 		steps: [
 			{
 				icon: "bot",
-				title: "Installe le bot",
+				title: "Installez le bot",
 				description:
 					"Un administrateur ajoute MemeOver au serveur Discord et lance une fois /memeover setup pour l'enregistrer.",
 			},
 			{
 				icon: "download",
-				title: "Télécharge l'app",
+				title: "Téléchargez l'app",
 				description:
 					"Chaque participant installe l'app desktop et la connecte avec le code obtenu via /memeover token.",
 			},
 			{
 				icon: "send",
-				title: "Envoie un média",
+				title: "Envoyez un média",
 				description:
-					"Balance une image, un GIF, une vidéo, un son, une réaction ou un message dans Discord.",
+					"Envoyez une image, un GIF, une vidéo, un son, une réaction ou un message dans un salon surveillé par le bot.",
 			},
 			{
 				icon: "sparkles",
-				title: "Regarde l'effet",
+				title: "Regardez l'effet",
 				description:
 					"Tout le monde le voit apparaître à l'écran, avec contrôle du timing, du placement et du replay.",
 			},
@@ -55,7 +55,7 @@ export const fr: Translations = {
 	},
 	useCases: {
 		kicker: "Pensé pour les écrans partagés",
-		title: "Un overlay Discord pour les moments que ton groupe crée déjà",
+		title: "Un overlay Discord pour les moments que votre groupe crée déjà",
 		description:
 			"MemeOver garde la blague dans Discord tout en l'affichant sur chaque app desktop connectée, avec des réglages pour rester fun sans devenir envahissant.",
 		items: [
@@ -63,19 +63,19 @@ export const fr: Translations = {
 				icon: "gamepad",
 				title: "Soirées jeu",
 				description:
-					"Envoie réactions, GIFs et messages courts pendant la partie sans demander à tout le monde d'alt-tab.",
+					"Envoyez réactions, GIFs et messages courts pendant la partie sans demander à tout le monde d'alt-tab.",
 			},
 			{
 				icon: "party",
 				title: "Watch parties",
 				description:
-					"Laisse tes amis envoyer mèmes, sons et commentaires qui apparaissent en direct pendant que le groupe regarde ensemble.",
+					"Laissez vos amis envoyer mèmes, sons et commentaires qui apparaissent en direct pendant que le groupe regarde ensemble.",
 			},
 			{
 				icon: "broadcast",
 				title: "Setups streaming",
 				description:
-					"Utilise un overlay desktop léger pour les médias Discord sans reconstruire toute ta scène de stream.",
+					"Utilisez un overlay desktop léger pour les médias Discord sans reconstruire toute votre scène de stream.",
 			},
 		],
 	},
@@ -85,7 +85,8 @@ export const fr: Translations = {
 			{
 				icon: "zap",
 				title: "Un code à coller",
-				description: "Lance /memeover setup puis colle le code de connexion dans l’application.",
+				description:
+					"Les gestionnaires lancent /memeover setup, les autres membres lancent /memeover token, puis chacun colle le code de configuration dans l’application.",
 			},
 			{
 				icon: "image",
@@ -95,9 +96,9 @@ export const fr: Translations = {
 			},
 			{
 				icon: "message",
-				title: "Memes anonymes",
+				title: "Mèmes anonymes",
 				description:
-					"Utilise /memeover secret pour envoyer un meme sans afficher ton badge auteur.",
+					"Utilisez /memeover secret pour envoyer un mème sans afficher votre badge auteur.",
 			},
 			{
 				icon: "message",
@@ -108,35 +109,37 @@ export const fr: Translations = {
 			{
 				icon: "sliders",
 				title: "Un placement adapté",
-				description: "Choisis position, taille, opacité, durée et son pour ton écran.",
+				description: "Choisissez position, taille, opacité, durée et son pour votre écran.",
 			},
 			{
 				icon: "layers",
 				title: "Profils réutilisables",
 				description:
-					"Enregistre et partage tes styles d’overlay sans partager les identifiants de connexion.",
+					"Enregistrez et partagez vos styles d’overlay sans partager les identifiants de connexion.",
 			},
 			{
 				icon: "monitor",
 				title: "Tray et multi-écrans",
-				description: "Démarre dans la zone de notification et choisis l’écran de ton overlay.",
+				description:
+					"Démarrez dans la zone de notification et choisissez l’écran de votre overlay.",
 			},
 			{
 				icon: "history",
 				title: "Historique et replay",
 				description:
-					"Retrouve les 50 derniers éléments affichés et rejoue les médias encore disponibles.",
+					"Retrouvez les 50 derniers éléments affichés et rejouez les médias encore disponibles.",
 			},
 			{
 				icon: "layers",
-				title: "Ton propre bot",
+				title: "Votre propre bot",
 				description:
-					"L’onglet Serveur de l’application aide à installer, configurer et lancer ton instance de bot.",
+					"L’onglet Serveur de l’application aide à installer, configurer et lancer votre instance de bot.",
 			},
 			{
 				icon: "refresh",
 				title: "Mises à jour automatiques",
-				description: "Reste à jour sans chercher un nouvel installateur à chaque version.",
+				description:
+					"Les versions Windows, macOS et AppImage se mettent à jour automatiquement ; pour les paquets .deb et .rpm, téléchargez la nouvelle version.",
 			},
 		],
 	},
@@ -151,15 +154,15 @@ export const fr: Translations = {
 		commandsLink: "Voir toutes les commandes",
 		appStepTitle: "Installer l'application",
 		appStepDescription:
-			"Chaque participant installe l'application pour son système, lance /memeover token dans Discord et colle le code de connexion.",
-		detected: "Ton système",
+			"Chaque participant installe l'application pour son système, lance /memeover token dans Discord et colle le code de configuration.",
+		detected: "Votre système",
 		otherFormats: "Autres formats :",
 		windows: "Windows",
 		windowsFormats: ".exe / .msi",
 		macos: "macOS",
 		macosFormats: ".dmg",
 		linux: "Linux",
-		linuxFormats: ".AppImage / .deb",
+		linuxFormats: ".AppImage / .deb / .rpm",
 		allReleases: "Toutes les versions →",
 	},
 	faq: {
@@ -189,12 +192,38 @@ export const fr: Translations = {
 			{
 				question: "Puis-je héberger le bot moi-même ?",
 				answer:
-					"Oui. Utilise l’onglet Serveur de l’application pour installer et lancer ton instance, ou suis le guide Docker.",
+					"Oui. Utilisez l’onglet Serveur de l’application pour installer et lancer votre instance, ou suivez la section Docker de la page Héberger votre propre bot.",
 			},
 			{
-				question: "Puis-je envoyer un meme anonymement ?",
+				question: "Puis-je envoyer un mème anonymement ?",
 				answer:
-					"Utilise /memeover secret. L’overlay masque le badge auteur ; cela ne garantit pas l’anonymat auprès de Discord ou de l’opérateur du bot.",
+					"Utilisez /memeover secret. L’overlay masque le badge auteur ; cela ne garantit pas l’anonymat auprès de Discord ou de l’opérateur du bot.",
+			},
+			{
+				question: "Qui peut voir le token de connexion ?",
+				answer:
+					"Chaque serveur possède un seul token partagé. N'importe quel membre peut l'afficher avec /memeover token pour connecter son application. En cas de fuite, un membre ayant Gérer le serveur lance /memeover rotate : tous les overlays connectés sont déconnectés et doivent coller le nouveau code de configuration.",
+			},
+			{
+				question:
+					"Mon système affiche un avertissement à l’installation de MemeOver. Est-ce normal ?",
+				answer:
+					"Oui. Les installateurs ne sont pas encore signés avec un certificat Apple ou Microsoft : macOS Gatekeeper et Windows SmartScreen affichent donc un avertissement au premier lancement. Sur macOS, essayez d’abord d’ouvrir l’application, puis allez dans Réglages système → Confidentialité et sécurité → Ouvrir quand même ; sur Windows, choisissez Informations complémentaires, puis Exécuter quand même. Le système de mise à jour vérifie chaque version avec la clé de signature de MemeOver.",
+			},
+			{
+				question: "L’overlay n’apparaît pas au-dessus de mon jeu.",
+				answer:
+					"Certains jeux en plein écran exclusif bloquent tous les overlays. Passez le jeu en mode plein écran fenêtré ou sans bordure.",
+			},
+			{
+				question: "Quels liens puis-je publier ?",
+				answer:
+					"Dans les salons surveillés, MemeOver prend en charge les fichiers envoyés sur Discord, les stickers Discord, les aperçus de médias intégrés par Discord (dont Tenor) et les liens directs vers des médias du CDN Discord, de Tenor, Giphy, KLIPY et Imgur. L’option url de /memeover secret exige un lien direct vers un fichier média (par exemple .gif, .png, .jpg, .webp, .mp4, .webm, .mp3, .ogg), pas vers une page.",
+			},
+			{
+				question: "Y a-t-il des limites ?",
+				answer:
+					"Les légendes et les textes sont limités à 140 caractères. Au maximum 10 réactions par seconde et par serveur atteignent les overlays. Le bot hébergé désinscrit un serveur uniquement si aucun overlay n’est connecté et si, soit aucune activité d’overlay n’a eu lieu depuis 48 heures, soit la configuration a au moins 48 heures et au plus une installation de l’application s’est connectée depuis sa création. Relancez /memeover setup pour le reconfigurer.",
 			},
 			{
 				question: "MemeOver est-il développé avec l'IA ?",
@@ -206,13 +235,13 @@ export const fr: Translations = {
 	openSource: {
 		title: "Open Source",
 		description:
-			"MemeOver est open source sous licence MIT. Tu peux l'inspecter, l'auto-héberger, signaler des problèmes et aider à choisir la suite.",
+			"MemeOver est open source sous licence MIT. Vous pouvez l'inspecter, l'auto-héberger, signaler des problèmes et aider à choisir la suite.",
 		viewOnGithub: "Voir sur GitHub",
-		joinDiscord: "Rejoins le Discord",
+		joinDiscord: "Rejoignez le Discord",
 		reportBug: "Signaler un bug",
 		supportOnKofi: "Soutenir sur Ko-fi",
 		contribute:
-			"Fork le repo, ouvre une PR — chaque contribution compte. Jette un œil aux issues pour des idées !",
+			"Forkez le dépôt, ouvrez une PR — chaque contribution compte. Jetez un œil aux issues pour des idées !",
 	},
 	footer: {
 		community: "Discord",
@@ -224,7 +253,7 @@ export const fr: Translations = {
 	commands: {
 		title: "Commandes Discord",
 		description:
-			"Configure ton serveur et envoie des memes depuis Discord. Les commandes de gestion nécessitent Gérer le serveur.",
+			"Configurez votre serveur et envoyez des mèmes depuis Discord. Les commandes de gestion nécessitent Gérer le serveur.",
 		commandLabel: "Commande",
 		accessLabel: "Accès",
 		descriptionLabel: "Action",
@@ -275,13 +304,13 @@ export const fr: Translations = {
 				name: "/memeover pause",
 				description: "Met la diffusion en pause.",
 				access: "Gérer le serveur",
-				published: false,
+				published: true,
 			},
 			{
 				name: "/memeover resume",
 				description: "Reprend la diffusion.",
 				access: "Gérer le serveur",
-				published: false,
+				published: true,
 			},
 			{
 				name: "/memeover help",
@@ -292,26 +321,30 @@ export const fr: Translations = {
 		],
 	},
 	selfHost: {
-		title: "Héberger ton propre bot",
-		description: "Choisis l’assistant intégré ou lance le dépôt avec Docker.",
+		title: "Héberger votre propre bot",
+		description: "Choisissez l’assistant intégré ou lancez le dépôt avec Docker.",
 		appTitle: "Depuis l’application",
 		appSteps: [
-			"Ouvre l’onglet Serveur et choisis un dossier d’installation.",
-			"Installe le bot et Bun si nécessaire.",
-			"Crée une application Discord, renseigne son ID et le token du bot, puis active Message Content Intent dans le portail développeur.",
-			"Invite le bot, enregistre la configuration, lance-le et vérifie son état.",
-			"Lance /memeover setup dans Discord et utilise le code de connexion pour connecter tes amis.",
+			"Ouvrez l’onglet Serveur et choisissez un dossier d’installation.",
+			"Installez le bot et Bun si nécessaire.",
+			"Créez une application Discord, renseignez son ID et le token du bot, puis activez Message Content Intent dans le portail développeur.",
+			"Invitez le bot, enregistrez la configuration, lancez-le et vérifiez son état.",
+			"Lancez /memeover setup dans Discord et utilisez le code de configuration pour connecter vos amis.",
 		],
 		dockerTitle: "Avec Docker",
 		dockerNote:
-			"Clone le dépôt. Copie bot/.env.example vers .env à la racine, renseigne DISCORD_TOKEN et DISCORD_CLIENT_ID et active Message Content Intent. Configure PUBLIC_WS_URL avec une adresse accessible à tes amis. Garde les tokens privés.",
+			"Clonez le dépôt. Copiez bot/.env.example vers .env à la racine, renseignez DISCORD_TOKEN et DISCORD_CLIENT_ID et activez Message Content Intent. Configurez PUBLIC_WS_URL avec une adresse accessible à vos amis. Gardez les tokens privés.",
 		guideLabel: "Guide complet",
 	},
 	changelog: {
 		title: "Notes de version",
 		description: "Historique des versions du dépôt. Les notes de version sont rédigées en anglais.",
 	},
-	menu: { toggle: "Ouvrir ou fermer le menu", label: "Navigation principale" },
+	menu: {
+		toggle: "Ouvrir ou fermer le menu",
+		label: "Navigation principale",
+		footerLabel: "Navigation du pied de page",
+	},
 	notFound: {
 		title: "404",
 		description: "Cette page n'existe pas. Elle est probablement partie chercher des mèmes.",
