@@ -10,7 +10,7 @@ import { CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { loadSettings, persistSettings } from "@/shared/settings";
+import { patchSettings } from "@/shared/settings";
 import { DEFAULT_SETTINGS } from "@/shared/types";
 import { ConnectionCredentialsFields } from "@/windows/settings/components/setup-form/connection-fields";
 import type { SetupValues } from "./setup-form/schema";
@@ -89,11 +89,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
 	const { mutateAsync: saveConnection, isPending } = useMutation({
 		mutationFn: async (values: SetupValues) => {
-			const current = await queryClient.fetchQuery({
-				queryKey: ["settings"],
-				queryFn: loadSettings,
-			});
-			await persistSettings({ ...current, ...values });
+			await patchSettings((s) => ({ ...s, ...values }));
 		},
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["settings"] });

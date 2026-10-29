@@ -20,6 +20,7 @@ import type {
 	WsStatus,
 } from "./types";
 import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
+import { decideStatusToast, INITIAL_TOAST_TRACKER } from "./ws-status-toasts";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -306,9 +307,9 @@ export async function initSettingsStore(): Promise<void> {
 	await listen<number | null>("guild-pause-changed", (event) =>
 		useAppStore.getState().setGuildPausedUntil(event.payload),
 	);
-	// Track previous status to fire toasts only on genuine transitions.
+	// Track status transitions and toast errors only once per outage.
 	// This runs entirely outside React — toast() and i18n.t() are both safe here.
-	let prevWsStatus: WsStatus = "disconnected";
+	let tracker = INITIAL_TOAST_TRACKER;
 
 	await listen<SessionRevocationCode>("ws-session-revoked", (event) => {
 		if (!isSessionRevocationCode(event.payload)) return;
@@ -319,16 +320,17 @@ export async function initSettingsStore(): Promise<void> {
 	await listen<WsStatus>("ws-status-changed", (event) => {
 		const status = event.payload;
 		if (status === "connected") useAppStore.getState().setWsRevokedReason(null);
-		if (status === "connected" && prevWsStatus !== "connected") {
+		const decision = decideStatusToast(
+			tracker,
+			status,
+			Boolean(useAppStore.getState().wsRevokedReason),
+		);
+		if (decision.toast === "connected") {
 			toast.success(i18n.t("toast.wsConnected"));
-		} else if (
-			status === "error" &&
-			prevWsStatus !== "error" &&
-			!useAppStore.getState().wsRevokedReason
-		) {
+		} else if (decision.toast === "error") {
 			toast.error(i18n.t("toast.wsError"));
 		}
-		prevWsStatus = status;
+		tracker = decision.next;
 		useAppStore.getState().setWsStatus(status);
 	});
 

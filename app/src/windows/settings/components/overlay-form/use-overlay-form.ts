@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { loadSettings, persistSettings } from "@/shared/settings";
+import { patchSettings } from "@/shared/settings";
 import { OVERLAY_PROFILE_FIELDS, type OverlayProfileSettings, type Settings } from "@/shared/types";
 import { useAppForm } from "./form-hook";
 import { extractDefaults, type OverlaySettingsValues } from "./schema";
@@ -17,11 +17,7 @@ export function useOverlayForm(initialData: Settings) {
 	);
 
 	async function persistOverlayValues(values: OverlaySettingsValues) {
-		const current = await queryClient.fetchQuery({
-			queryKey: ["settings"],
-			queryFn: loadSettings,
-		});
-		await persistSettings({ ...current, ...values });
+		await patchSettings((s) => ({ ...s, ...values }));
 	}
 
 	const { mutateAsync: save, isPending: isSavePending } = useMutation({
