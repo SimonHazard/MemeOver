@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
+import { isDiscordGatewayUsable } from "./utils/discord-gateway";
 import { SERVER_FEATURES } from "./utils/features";
 import { isPausedAt } from "./utils/guild-pause";
 import { discordRefLogFields } from "./utils/log-privacy";
@@ -283,10 +284,12 @@ function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 
 export function createServer() {
 	return new Elysia()
-		.get("/health", () => {
+		.get("/health", (ctx) => {
 			const snapshot = stats.snapshot();
+			const discordUsable = isDiscordGatewayUsable();
+			if (!discordUsable) ctx.set.status = 503;
 			return {
-				status: "ok" as const,
+				status: discordUsable ? ("ok" as const) : ("discord_unavailable" as const),
 				uptime: process.uptime(),
 				connections: { active: snapshot.connections.active },
 				guilds: { active: snapshot.guilds.active },

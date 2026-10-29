@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { MotionConfig } from "framer-motion";
@@ -22,23 +21,10 @@ void initOverlayStore().then(() => {
 	void getCurrentWebviewWindow().show();
 });
 
-// Minimal QueryClient for the overlay — system queries (e.g. monitor detection)
-// are stable for the session lifetime, so staleTime: Infinity is the right default.
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: Infinity,
-			retry: false,
-		},
-	},
-});
-
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 	<React.StrictMode>
 		<MotionConfig reducedMotion="user">
-			<QueryClientProvider client={queryClient}>
-				<OverlayApp />
-			</QueryClientProvider>
+			<OverlayApp />
 		</MotionConfig>
 	</React.StrictMode>,
 );

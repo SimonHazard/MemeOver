@@ -11,7 +11,7 @@ a lightweight WebSocket server.
 - Lets server managers allow or mute bots/apps with `/memeover bots`.
 - Sends supported Discord media, stickers, text and reactions to connected desktop apps.
 - Supports anonymous media pushes with `/memeover secret`.
-- Exposes `/health` and optional bearer-protected `/metrics` HTTP endpoints.
+- Exposes `/health` and optional bearer-protected `/metrics` HTTP endpoints. `/health` returns 503 once Discord closes the gateway for good (invalid token or intents); fix the cause, then restart.
 - Removes disconnected server registrations after 48 hours of inactivity, or once they are 48 hours old if at most one client has ever connected; also removes them as soon as the bot is removed from the server.
 
 ## Discord Commands

@@ -1,6 +1,7 @@
 import {
 	Client,
 	Events,
+	GatewayCloseCodes,
 	GatewayIntentBits,
 	type Message,
 	Options,
@@ -14,7 +15,12 @@ import { dispatchMedia, isEmbedResolutionUpdate } from "./media/dispatcher";
 import { dispatchReaction } from "./media/reactions";
 import { startGuildCleanupScheduler, unregisterRemovedGuild } from "./utils/cleanup";
 import { config } from "./utils/config";
-import { normalizeBotLoginError } from "./utils/discord-intents";
+import { markShardLost, markShardReady } from "./utils/discord-gateway";
+import {
+	DISCORD_MESSAGE_CONTENT_INTENT_ERROR,
+	normalizeBotLoginError,
+} from "./utils/discord-intents";
+import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
 import { attachPresenceClient } from "./utils/presence";
 
@@ -73,8 +79,45 @@ discordClient.on(
 	},
 );
 
-discordClient.on(Events.MessageReactionAdd, async (reaction, user) => {
-	await dispatchReaction(reaction, user);
+discordClient.on(Events.MessageReactionAdd, (reaction, user) => {
+	dispatchReaction(reaction, user).catch((err: unknown) => {
+		log.error(
+			{
+				event: "reaction_dispatch_failed",
+				err,
+				...discordRefLogFields({
+					guildId: reaction.message.guildId,
+					channelId: reaction.message.channelId,
+					messageId: reaction.message.id,
+				}),
+			},
+			"Reaction dispatch failed",
+		);
+	});
+});
+
+discordClient.on(Events.Error, (err) => {
+	log.error({ event: "client_error", err }, "Discord client error");
+});
+discordClient.on(Events.Warn, (warning) => {
+	log.warn({ event: "client_warning", warning }, "Discord client warning");
+});
+discordClient.on(Events.ShardError, (err, shardId) => {
+	log.warn({ event: "shard_error", err, shard_id: shardId }, "Discord shard error");
+});
+// discord.js emits ShardDisconnect only for close codes it will not recover from (token,
+// intents, sharding); ordinary drops go through ShardReconnecting. /health reports it.
+discordClient.on(Events.ShardDisconnect, (close, shardId) => {
+	markShardLost(shardId, close.code);
+	log.error(
+		{ event: "shard_disconnect", shard_id: shardId, close_code: close.code },
+		close.code === GatewayCloseCodes.DisallowedIntents
+			? DISCORD_MESSAGE_CONTENT_INTENT_ERROR
+			: "Discord closed the gateway permanently; fix the bot token or intents, then restart",
+	);
+});
+discordClient.on(Events.ShardReady, (shardId) => {
+	markShardReady(shardId);
 });
 
 // Slash commands
@@ -99,4 +142,8 @@ export async function startBot(): Promise<void> {
 	} catch (err) {
 		throw normalizeBotLoginError(err);
 	}
+}
+
+export async function destroyDiscordClient(): Promise<void> {
+	await discordClient.destroy();
 }

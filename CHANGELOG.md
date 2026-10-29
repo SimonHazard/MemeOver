@@ -8,6 +8,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.8.7), bot (1.6.9): update vulnerable transitive dependencies, including Zod, Vite and HTTP/image tooling, while removing obsolete dependency pins.
+
+- Bot (1.6.8): handle Discord client and reaction errors without an unhandled event, close the Discord connection during shutdown before Docker's stop timeout, and report a permanent Discord gateway closure (invalid token or intents) as an error with a 503 `/health`. Record applied administrative changes, including confirmed token rotations and removals, even when Discord rejects the reply.
+
+- App (1.8.6): preserve concurrent settings edits, validate saved numeric values and colours, and retry overlay connections with increasing delays while showing one error toast per outage.
+
 - App (1.8.5): bundle Sonner's stylesheet so overlay connection toasts keep their corner position and 300 px width in release builds. The overlay's inline first-paint style made Tauri add a CSP nonce, which blocked Sonner's runtime style injection and left toasts full-width at the top of the screen.
 - App (1.8.3): install dependencies and start app-managed bots with the exact validated Bun executable when several Bun installations coexist. Keep nested bot commands on the selected runtime.
 - App/site (1.8.2): wait for successful main CI before preparing draft app releases, and build and tag the exact commit validated by that CI.
@@ -16,6 +22,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Bot (1.6.3): filter reactions before calling Discord, then recheck the watched channel, pause and bot-source settings after the response. Limit Discord fetches and outgoing reactions independently to 10 per guild per second so delayed responses cannot flood the overlay.
 
 ### Changed
+
+- App (1.8.6): restrict overlay permissions to its window, reduce unused overlay dependencies, and cache Bun/Git availability for 30 seconds while refreshing probes after installation attempts.
 
 - Bot (1.6.6): exclude local certificates and backups from Docker build contexts, and document manual source updates with revision checks, Discord/overlay verification and persistent-volume safeguards.
 - App/site (1.8.1), bot (1.6.5): consolidate CI into one workflow with fast checks, path-filtered app builds/browser tests, Rust checks, Astro checks/site builds, and an aggregate `status` gate that requires every selected job to succeed. Ignore workspace version-only lockfile changes when selecting expensive jobs; keep real dependency changes fully checked. Restrict Cloudflare previews to internal PRs, excluding forks and Dependabot. Pin Bun in these workflows to the repository version, limit app bundling to new versions on main, and rename the site deployment workflows.

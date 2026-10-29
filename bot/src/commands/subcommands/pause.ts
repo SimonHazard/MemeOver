@@ -7,8 +7,13 @@ import {
 	resolvePausedUntil,
 } from "../../utils/guild-pause";
 import { applyGuildPause } from "../../utils/guild-pause-timers";
+import { discordRefLogFields, logHash } from "../../utils/log-privacy";
+import { logger } from "../../utils/logger";
 import { notConfiguredResponse } from "../connection";
 import { errorResponse, successResponse } from "../response-panel";
+
+const log = logger.child({ module: "pause" });
+
 export async function handlePause(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
@@ -31,6 +36,15 @@ export async function handlePause(
 		await interaction.reply(notConfiguredResponse(locale));
 		return;
 	}
+	log.info(
+		{
+			event: "admin_pause",
+			...discordRefLogFields({ guildId }),
+			actor: logHash(interaction.user?.id),
+			choice,
+		},
+		"Guild broadcast paused",
+	);
 	const time = Math.floor(until / 1000);
 	await interaction.reply(
 		successResponse(

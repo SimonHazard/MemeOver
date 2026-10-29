@@ -1,5 +1,6 @@
 const files = [
-	...new Bun.Glob("{app,bot,shared,site}/src/**/*.mocked.test.ts").scanSync("."),
+	...new Bun.Glob("{app,bot,shared,site}/src/**/*.mocked.test.{ts,tsx}").scanSync("."),
+	...new Bun.Glob("packages/ui/src/**/*.mocked.test.{ts,tsx}").scanSync("."),
 ].sort();
 if (files.length === 0) console.log("No mocked test files found.");
 let failed = false;

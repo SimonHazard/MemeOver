@@ -1,3 +1,4 @@
+import { cn } from "@memeover/ui/lib/utils";
 import {
 	CircleCheckIcon,
 	InfoIcon,
@@ -6,11 +7,15 @@ import {
 	TriangleAlertIcon,
 } from "lucide-react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
-import { cn } from "../../lib/utils";
 
 type Theme = "light" | "dark" | "system";
 
-const Toaster = ({ theme = "system", className, style, ...props }: ToasterProps & { theme?: Theme }) => {
+const Toaster = ({
+	theme = "system",
+	className,
+	style,
+	...props
+}: ToasterProps & { theme?: Theme }) => {
 	return (
 		<Sonner
 			theme={theme}
@@ -36,5 +41,5 @@ const Toaster = ({ theme = "system", className, style, ...props }: ToasterProps 
 	);
 };
 
-export { Toaster };
 export type { ToasterProps };
+export { Toaster };
