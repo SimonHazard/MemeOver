@@ -1,0 +1,33 @@
+# Local configuration and credentials
+.git
+.github
+.agents
+.agent
+.claude
+.codex
+.aws
+**/.env*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+
+# Installed dependencies and generated files
+**/node_modules
+**/target
+**/dist
+**/dist-browser
+**/build
+**/.astro
+**/*.tsbuildinfo
+**/*.log
+**/.DS_Store
+**/Thumbs.db
+
+# Runtime data, local plans and test output
+**/data
+**/memeover.db*
+**/guilds.json*
+plans
+test-results
+playwright-report

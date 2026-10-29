@@ -1,0 +1,124 @@
+name: app-release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "packages/ui/**"
+      - "shared/**"
+      - "package.json"
+      - "bun.lock"
+      - "site/package.json"
+      - "scripts/check-versions.ts"
+      - ".github/workflows/app-release.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      released: ${{ steps.read.outputs.released }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Verify synchronized versions
+        run: bun run check:versions
+      - id: read
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(jq -r .version app/package.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "app-v$version" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "app-v$version" > /dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "app-v$version already exists; nothing to build" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  tauri:
+    needs: version
+    if: needs.version.outputs.released == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Keep the Linux release baseline compatible with Ubuntu 22.04 and newer.
+          - { name: ubuntu, os: ubuntu-22.04, args: "" }
+          - { name: windows, os: windows-latest, args: "" }
+          - { name: macos, os: macos-latest, args: "--target universal-apple-darwin" }
+    name: tauri (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      # ── Dépendances système (Linux uniquement) ────────────────────────────────
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev \
+            pkg-config
+
+      # ── Bun ──────────────────────────────────────────────────────────────────
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ~/.bun/install/cache
+          key: bun-app-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-app-${{ runner.os }}-
+
+      - name: Install JS dependencies
+        run: bun install --frozen-lockfile
+
+      # ── Rust ─────────────────────────────────────────────────────────────────
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # macOS : les deux cibles sont nécessaires pour le binaire universel
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust build artifacts
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./app/src-tauri -> target"
+
+      # ── Build Tauri ───────────────────────────────────────────────────────────
+      # L'action gère automatiquement beforeBuildCommand (bun run build = Vite)
+      # et détecte Bun via la présence de bun.lock.
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: app
+          args: ${{ matrix.args }}
+          tagName: app-v__VERSION__
+          releaseName: App v__VERSION__
+          releaseDraft: true
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true
