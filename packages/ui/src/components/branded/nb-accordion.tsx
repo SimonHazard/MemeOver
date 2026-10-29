@@ -1,5 +1,3 @@
-import type * as React from "react";
-
 import {
 	Accordion,
 	AccordionContent,
@@ -8,6 +6,7 @@ import {
 } from "@memeover/ui/components/ui/accordion";
 import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
+import type * as React from "react";
 
 // ─── NbAccordion — Neo-brutalist accordion ───────────────────────────────────
 // Each item is a mini-card: 2px border + 2px offset shadow.

@@ -1,9 +1,13 @@
 import { ButtonStyle, type ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
+import { discordRefLogFields, logHash } from "../../utils/log-privacy";
+import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
 import { actionButton } from "../component-actions";
 import { notConfiguredResponse } from "../connection";
 import { panelResponse } from "../response-panel";
+
+const log = logger.child({ module: "rotate" });
 
 export async function handleRotate(
 	interaction: ChatInputCommandInteraction,
@@ -39,5 +43,13 @@ export async function handleRotate(
 				}),
 			],
 		}),
+	);
+	log.info(
+		{
+			event: "admin_rotate_confirmation_requested",
+			...discordRefLogFields({ guildId }),
+			actor: logHash(interaction.user?.id),
+		},
+		"Token rotation confirmation requested",
 	);
 }

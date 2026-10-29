@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri::{AppHandle, Manager};
 
@@ -17,6 +17,7 @@ const REPO_URL: &str = "https://github.com/SimonHazard/MemeOver";
 // Keep aligned with package.json's packageManager and Dockerfile.bot.
 const MIN_BUN_VERSION: &str = "1.4.2";
 const LOG_LIMIT: usize = 500;
+const TOOL_PROBE_TTL: Duration = Duration::from_secs(30);
 const INSTALL_METADATA_FILE: &str = ".memeover-server-creator.json";
 const INSTALL_METADATA_MANAGED_BY: &str = "memeover-server-creator";
 const UNMANAGED_INSTALL_ERROR: &str = "Install folder is not managed by MemeOver. Choose an empty folder or reinstall into the default folder.";
@@ -27,6 +28,44 @@ const UNMANAGED_INSTALL_ERROR: &str = "Install folder is not managed by MemeOver
 pub struct ServerCreatorState {
     child: Arc<Mutex<Option<Child>>>,
     logs: Arc<Mutex<VecDeque<String>>>,
+    tools: Arc<Mutex<Option<(Instant, ToolProbe)>>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct ToolProbe {
+    bun_path: Option<PathBuf>,
+    git_available: bool,
+}
+
+fn cached_tool_probe(
+    cache: &mut Option<(Instant, ToolProbe)>,
+    now: Instant,
+    probe: impl FnOnce() -> ToolProbe,
+) -> ToolProbe {
+    if let Some((checked_at, tools)) = cache.as_ref() {
+        if now.duration_since(*checked_at) < TOOL_PROBE_TTL {
+            return tools.clone();
+        }
+    }
+    let tools = probe();
+    *cache = Some((now, tools.clone()));
+    tools
+}
+
+fn detect_tools(state: &ServerCreatorState) -> Result<ToolProbe, String> {
+    // Hold the lock during detection so concurrent status requests share one probe.
+    let mut cache = state.tools.lock().map_err(|e| e.to_string())?;
+    Ok(cached_tool_probe(&mut cache, Instant::now(), || {
+        ToolProbe {
+            bun_path: bun_command(),
+            git_available: command_exists("git"),
+        }
+    }))
+}
+
+fn invalidate_tool_probe(state: &ServerCreatorState) -> Result<(), String> {
+    *state.tools.lock().map_err(|e| e.to_string())? = None;
+    Ok(())
 }
 
 #[derive(Debug, Deserialize)]
@@ -434,6 +473,7 @@ fn install_sync(
     state: &ServerCreatorState,
     req: ServerInstallRequest,
 ) -> Result<ServerInstallResult, String> {
+    invalidate_tool_probe(state)?;
     let root = normalize_install_dir(app, Some(req.install_dir.clone()))?;
 
     // Repair must work after an app restart, when the token only lives in
@@ -488,7 +528,7 @@ fn install_sync(
 
     // Only the bot workspace (and the shared package it links) is needed;
     // skip the app's heavy frontend dependencies.
-    run_logged(
+    let installation = run_logged(
         state,
         &bun,
         &[
@@ -499,7 +539,9 @@ fn install_sync(
             "@memeover/shared",
         ],
         Some(&source),
-    )?;
+    );
+    invalidate_tool_probe(state)?;
+    installation?;
     push_log(state, "Dependencies installed");
 
     if !bot.exists() {
@@ -534,7 +576,7 @@ fn status_sync(
     let root = normalize_install_dir(app, install_dir)?;
     let ws_port = port.unwrap_or(3001);
     let running = prune_child(state)?;
-    let bun_path = bun_command();
+    let tools = detect_tools(state)?;
 
     Ok(ServerCreatorStatus {
         platform: env::consts::OS.to_string(),
@@ -544,9 +586,11 @@ fn status_sync(
         bot_dir: bot_dir(&root).to_string_lossy().to_string(),
         installed: package_json_path(&root).exists(),
         configured: env_path(&root).exists(),
-        bun_available: bun_path.is_some(),
-        bun_path: bun_path.map(|path| path.to_string_lossy().into_owned()),
-        git_available: command_exists("git"),
+        bun_available: tools.bun_path.is_some(),
+        bun_path: tools
+            .bun_path
+            .map(|path| path.to_string_lossy().into_owned()),
+        git_available: tools.git_available,
         running,
         healthy: health_check(ws_port),
         health_url: format!("http://localhost:{ws_port}/health"),
@@ -555,6 +599,7 @@ fn status_sync(
 }
 
 fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
+    invalidate_tool_probe(state)?;
     if bun_command().is_some() {
         push_log(
             state,
@@ -564,7 +609,7 @@ fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
     }
 
     #[cfg(target_os = "windows")]
-    run_logged(
+    let installation = run_logged(
         state,
         "powershell",
         &[
@@ -576,10 +621,10 @@ fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
             ),
         ],
         None,
-    )?;
+    );
 
     #[cfg(not(target_os = "windows"))]
-    run_logged(
+    let installation = run_logged(
         state,
         "sh",
         &[
@@ -587,7 +632,11 @@ fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
             &format!("curl -fsSL https://bun.com/install | bash -s bun-v{MIN_BUN_VERSION}"),
         ],
         None,
-    )?;
+    );
+
+    // Also invalidate after a failed installer: it may have changed tools before failing.
+    invalidate_tool_probe(state)?;
+    installation?;
 
     if bun_command().is_some() {
         push_log(state, format!("Bun {MIN_BUN_VERSION} installed"));
@@ -821,6 +870,70 @@ mod tests {
         ] {
             assert!(!bun_version_supported(version), "should reject {version}");
         }
+    }
+
+    #[test]
+    fn tool_detection_reuses_fresh_results_and_refreshes_expired_results() {
+        let now = Instant::now();
+        let missing = ToolProbe {
+            bun_path: None,
+            git_available: false,
+        };
+        let installed = ToolProbe {
+            bun_path: Some(PathBuf::from("/validated/bin/bun")),
+            git_available: true,
+        };
+        let mut cache = None;
+        assert_eq!(
+            cached_tool_probe(&mut cache, now, || missing.clone()),
+            missing
+        );
+        assert_eq!(
+            cached_tool_probe(
+                &mut cache,
+                now + TOOL_PROBE_TTL - Duration::from_millis(1),
+                || { panic!("a fresh probe must not spawn any commands") }
+            ),
+            missing
+        );
+        assert_eq!(
+            cached_tool_probe(&mut cache, now + TOOL_PROBE_TTL, || installed.clone()),
+            installed
+        );
+        assert_eq!(
+            cached_tool_probe(
+                &mut cache,
+                now + TOOL_PROBE_TTL * 2 + Duration::from_secs(1),
+                || { missing.clone() }
+            ),
+            missing
+        );
+    }
+
+    #[test]
+    fn invalidating_tools_clears_the_cache_for_all_state_clones() {
+        let state = ServerCreatorState::default();
+        let clone = state.clone();
+        let now = Instant::now();
+        let mut cache = state.tools.lock().unwrap();
+        cached_tool_probe(&mut cache, now, || ToolProbe {
+            bun_path: None,
+            git_available: false,
+        });
+        drop(cache);
+
+        invalidate_tool_probe(&clone).unwrap();
+        let mut cache = state.tools.lock().unwrap();
+        assert!(cache.is_none());
+        let refreshed = cached_tool_probe(&mut cache, now, || ToolProbe {
+            bun_path: Some(PathBuf::from("/new/bin/bun")),
+            git_available: true,
+        });
+        assert_eq!(
+            refreshed.bun_path.as_deref(),
+            Some(Path::new("/new/bin/bun"))
+        );
+        assert!(refreshed.git_available);
     }
 
     fn unique_temp_root(name: &str) -> PathBuf {

@@ -1,8 +1,8 @@
 [package]
 name = "memeover"
-version = "1.8.5"
+version = "1.8.8"
 description = "An overlay application that lets friends send memes to each other in real time from a Discord text channel."
-authors = ["you"]
+authors = ["Simon Hazard"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

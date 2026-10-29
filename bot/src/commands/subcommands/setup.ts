@@ -1,8 +1,12 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
+import { discordRefLogFields, logHash } from "../../utils/log-privacy";
+import { logger } from "../../utils/logger";
 import { schedulePresenceRefresh } from "../../utils/presence";
 import { guildRegistry } from "../../utils/registry";
 import { connectionResponse } from "../connection";
+
+const log = logger.child({ module: "setup" });
 
 export async function handleSetup(
 	interaction: ChatInputCommandInteraction,
@@ -15,6 +19,14 @@ export async function handleSetup(
 
 	const isUpdate = guildRegistry.isRegistered(guildId);
 	const token = guildRegistry.register(guildId, channelId);
+	log.info(
+		{
+			event: "admin_setup",
+			...discordRefLogFields({ guildId, channelId }),
+			actor: logHash(interaction.user?.id),
+		},
+		"Guild registered",
+	);
 	schedulePresenceRefresh();
 
 	const cfg = guildRegistry.getConfig(guildId);

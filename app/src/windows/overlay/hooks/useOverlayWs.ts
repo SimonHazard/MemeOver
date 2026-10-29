@@ -8,6 +8,7 @@ import {
 	dismissConnectionNotification,
 	showConnectionNotification,
 } from "../components/connection-notifications";
+import { nextReconnectDelay } from "../reconnect-backoff";
 import { bindSocket, sendClientMessage, setServerFeatures, unbindSocket } from "../ws-client";
 
 import {
@@ -78,6 +79,7 @@ export function useOverlayWs(): void {
 		}
 	}, [guildId, token, wsUrl]);
 	const reconnectTimerRef = useRef<number | null>(null);
+	const reconnectAttemptRef = useRef(0);
 
 	// ── Stable event handlers ─────────────────────────────────────────────────
 
@@ -109,6 +111,7 @@ export function useOverlayWs(): void {
 			switch (action.kind) {
 				case "join_ack":
 					if (action.success) {
+						reconnectAttemptRef.current = 0;
 						setServerFeatures(action.features);
 						void emit("ws-join-error", null);
 						void emit("ws-features-changed", action.features ?? []);
@@ -252,13 +255,17 @@ export function useOverlayWs(): void {
 
 				if (revokedRef.current !== null) return;
 				onClose();
-				reconnectTimerRef.current = window.setTimeout(connect, 3_000);
+				reconnectTimerRef.current = window.setTimeout(
+					connect,
+					nextReconnectDelay(reconnectAttemptRef.current++),
+				);
 			});
 		};
 
 		connect();
 
 		return () => {
+			reconnectAttemptRef.current = 0;
 			connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 			dismissConnectionNotification();
 			disposed = true;

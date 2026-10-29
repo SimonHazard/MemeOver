@@ -14,6 +14,7 @@
 			"app/src/**",
 			"shared/src/**",
 			"site/src/**",
+			"packages/ui/src/**",
 			"!**/routeTree.gen.ts",
 			"app/test/browser/**",
 			"playwright.config.ts"
@@ -49,6 +50,29 @@
 		}
 	},
 	"overrides": [
+		{
+			"includes": ["packages/ui/src/components/ui/label.tsx"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noLabelWithoutControl": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["packages/ui/src/components/ui/slider.tsx"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"useExhaustiveDependencies": "off"
+					},
+					"suspicious": {
+						"noArrayIndexKey": "off"
+					}
+				}
+			}
+		},
 		{
 			"includes": ["site/src/**/*.astro"],
 			"linter": {

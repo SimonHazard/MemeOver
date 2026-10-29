@@ -84,13 +84,9 @@ export const NB_SWITCH = [
 // ─── Card classes ────────────────────────────────────────────────────────────
 
 /** Neo-brutalist card — thick border + 4px offset shadow */
-export const NB_CARD = [
-	"border-2 border-foreground p-5 gap-0",
-	NB_SHADOW_LG,
-].join(" ");
+export const NB_CARD = ["border-2 border-foreground p-5 gap-0", NB_SHADOW_LG].join(" ");
 
 // ─── Badge classes ───────────────────────────────────────────────────────────
 
 /** Neo-brutalist badge — thick border, display font, tight tracking */
-export const NB_BADGE =
-	"border-2 border-foreground rounded-md font-display text-xs tracking-wide";
+export const NB_BADGE = "border-2 border-foreground rounded-md font-display text-xs tracking-wide";

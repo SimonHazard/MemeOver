@@ -12,7 +12,7 @@ import { cn } from "@memeover/ui/lib/utils";
 import { RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SETTINGS } from "@/shared/types";
-import { useMonitor } from "@/windows/overlay/hooks/useMonitor";
+import { useMonitor } from "@/windows/settings/hooks/useMonitor";
 import { AspectToggle } from "../../aspect-toggle";
 import { MonitorSelector } from "../../monitor-selector";
 import { PositionGrid } from "../../position-grid";
