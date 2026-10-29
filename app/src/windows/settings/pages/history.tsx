@@ -16,7 +16,7 @@ import {
 	replayHistoryItem,
 } from "@/shared/history";
 import { addMutedAuthor, removeMutedAuthor } from "@/shared/muted-authors";
-import { loadSettings, patchSettings, persistSettings } from "@/shared/settings";
+import { loadSettings, patchSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { HistoryItemCard } from "@/windows/settings/components/history-item";
 import { MutedAuthorsCard } from "../components/muted-authors-card";
@@ -29,7 +29,7 @@ export function HistoryPage() {
 	const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: loadSettings });
 	const { mutate: setAutoPurge, isPending: isSavingPurge } = useMutation({
 		mutationFn: async (historyAutoPurge: boolean) => {
-			await persistSettings({ ...(await loadSettings()), historyAutoPurge });
+			await patchSettings((settings) => ({ ...settings, historyAutoPurge }));
 			if (historyAutoPurge) await purgeExpiredHistory();
 		},
 		onSuccess: () => {
