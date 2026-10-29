@@ -8,10 +8,6 @@ bot/node_modules/
 .env.*.local
 bot/.env
 
-# Tauri build artifacts
-memeover/target/
-memeover/src-tauri/target/
-
 # Build outputs
 dist/
 build/

@@ -5,7 +5,7 @@
 - `app/`: Tauri v2 + React desktop settings and transparent overlay.
 - `bot/`: Bun + discord.js + Elysia Discord bot and WebSocket server.
 - `shared/`: Zod protocol, setup codes and media expiry helpers.
-- `packages/ui/`: shadcn components and neo-brutalist classes; app/site alias to source; tsup builds explicit entries.
+- `packages/ui/`: shadcn components and neo-brutalist classes; app and site alias `@memeover/ui/*` to its `src`, nothing is built.
 - `site/`: Astro marketing site deployed to Cloudflare.
 - `plans/`: ignored implementation plans; read the applicable plan and update `plans/README.md` truthfully.
 
@@ -17,6 +17,7 @@ Run `bun run check`, `bun run typecheck`, `bun run test`, and `bun run --cwd app
 Run `bun run build:site` and `bun run --cwd site check` for site or shared UI changes.
 For Rust: `cargo check --manifest-path app/src-tauri/Cargo.toml` and appropriate Rust tests.
 Local bot development reads `bot/.env`; Docker Compose reads the root `.env`.
+Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or `packages/ui/`; the CLI is not a dependency.
 
 ## Change checklists
 
@@ -73,7 +74,6 @@ Use `@memeover/ui/lib/motion` tokens and `ease-out`/`ease-in-out` utilities; avo
 Include `translate` and `scale` in explicit transitions for Tailwind v4 movement utilities.
 Every animation needs a reduced-motion path; avoid decorative motion for keyboard or frequent actions.
 The media `0.3 → 1` entrance and its 0.28 s / 0.2-bounce spring are product decisions: preserve them.
-New published UI modules need an entry in `packages/ui/tsup.config.ts`.
 
 ## Pull requests and versions
 
@@ -93,7 +93,7 @@ A version bump does not authorize a push, tag or release. App release tags remai
 
 ## Conventions and boundaries
 
-Biome uses tabs, double quotes, 100 columns. `packages/ui/src` is outside the root Biome include list: match its style manually.
+Biome uses tabs, double quotes, 100 columns. Biome covers every workspace, including `packages/ui/src`.
 Use conventional commits and squash merges. Do not push, tag, publish or open PRs without authorization.
 Preserve pre-existing changes and exclude them from unrelated commits.
 Never edit `.env*`, `**/data/` (guild registry `memeover.db*`, legacy `guilds.json*`), `app/src-tauri/target/` or `.claude/settings.local.json` during ordinary source work.

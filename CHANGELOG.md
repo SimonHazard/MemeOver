@@ -8,6 +8,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.8.7), bot (1.6.9): update vulnerable transitive dependencies, including Zod, Vite and HTTP/image tooling, while removing obsolete dependency pins.
+
 - Bot (1.6.8): handle Discord client and reaction errors without an unhandled event, close the Discord connection during shutdown before Docker's stop timeout, and report a permanent Discord gateway closure (invalid token or intents) as an error with a 503 `/health`. Record applied administrative changes, including confirmed token rotations and removals, even when Discord rejects the reply.
 
 - App (1.8.6): preserve concurrent settings edits, validate saved numeric values and colours, and retry overlay connections with increasing delays while showing one error toast per outage.
