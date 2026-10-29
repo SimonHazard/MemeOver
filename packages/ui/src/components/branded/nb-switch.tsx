@@ -1,8 +1,7 @@
-import type * as React from "react";
-
 import { Switch } from "@memeover/ui/components/ui/switch";
 import { NB_SWITCH } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
+import type * as React from "react";
 
 // ─── NbSwitch — Neo-brutalist switch ─────────────────────────────────────────
 // Wraps shadcn Switch with a thick track border and a lifted "on" state, so

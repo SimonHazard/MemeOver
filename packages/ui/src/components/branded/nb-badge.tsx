@@ -1,8 +1,7 @@
-import type * as React from "react";
-
-import { cn } from "@memeover/ui/lib/utils";
-import { NB_BADGE } from "@memeover/ui/lib/nb-classes";
 import { Badge } from "@memeover/ui/components/ui/badge";
+import { NB_BADGE } from "@memeover/ui/lib/nb-classes";
+import { cn } from "@memeover/ui/lib/utils";
+import type * as React from "react";
 
 // ─── NbBadge — Neo-brutalist badge ───────────────────────────────────────────
 // Wraps shadcn Badge with thick border, display font, and tight tracking.
@@ -14,5 +13,5 @@ function NbBadge({ className, ...props }: BadgeProps) {
 	return <Badge className={cn(NB_BADGE, className)} {...props} />;
 }
 
-export { NbBadge };
 export type { BadgeProps as NbBadgeProps };
+export { NbBadge };
