@@ -1,7 +1,7 @@
 {
 	"app": {
 		"title": "MemeOver",
-		"subtitle": "Connectez l'overlay à votre bot Discord."
+		"subtitle": "Connectez l'overlay à votre serveur Discord."
 	},
 	"status": {
 		"connected": "Connecté",
@@ -15,19 +15,19 @@
 	},
 	"connection": {
 		"title": "Connexion au bot",
-		"error": "Connexion au bot perdue. Vérifiez le token, l'ID du serveur et l'URL WebSocket.",
+		"error": "Connexion au bot perdue. Collez à nouveau le code de configuration, ou vérifiez le token, l'ID du serveur et l'URL WebSocket en mode expert.",
 		"joinUnknownGuild": "Ce serveur n'est pas encore enregistré auprès du bot. Lancez /memeover setup sur votre serveur Discord, puis réessayez.",
 		"joinInvalidToken": "Le bot a refusé ce token. Vérifiez-le ou collez le nouveau code de configuration.",
 		"wsUrl": "URL du serveur WebSocket",
 		"expertMode": "Mode expert",
 		"expertMode_hint": "Permet de configurer une URL WebSocket personnalisée (self-hosted).",
 		"guildId": "ID du serveur",
-		"guildId_hint": "Obtenu avec /memeover setup dans Discord.",
+		"guildId_hint": "Obtenu avec /memeover token dans Discord (ou /memeover setup pour les gestionnaires du serveur).",
 		"token": "Token",
 		"quickPaste": "Code de configuration Discord",
 		"quickPaste_placeholder": "Collez le code memeover://setup…",
 		"quickPaste_apply": "Appliquer",
-		"quickPaste_hint": "Copiez le bloc “App setup code” depuis /memeover setup ou /memeover token.",
+		"quickPaste_hint": "Copiez le bloc « ⚡ Code de configuration app » (« App setup code » si votre Discord est en anglais) depuis /memeover setup ou /memeover token.",
 		"save": "Sauvegarder et connecter",
 		"saving": "Sauvegarde…",
 		"tokenRotated": "Le jeton de ce serveur a changé dans Discord. Collez le nouveau code de configuration pour vous reconnecter.",
@@ -62,7 +62,7 @@
 		"size": "Taille du média",
 		"duration": "Durée d'affichage",
 		"duration_unit": "s",
-		"volume": "Volume (médias)",
+		"volume": "Volume des médias",
 		"position": "Position",
 		"position_top_left": "En haut à gauche",
 		"position_top": "En haut au centre",
@@ -195,7 +195,7 @@
 		"step2_title": "Configurez la connexion",
 		"step2_desc": "Collez le code de configuration depuis Discord ou entrez les informations de connexion ci-dessous.",
 		"step3_title": "Tout est prêt !",
-		"step3_desc": "L'overlay est maintenant configuré. Envoyez une image ou un GIF dans Discord pour tester !",
+		"step3_desc": "L'overlay est maintenant configuré. Envoyez une image ou un GIF dans un salon surveillé par le bot pour tester !",
 		"next": "Suivant",
 		"prev": "Précédent",
 		"finish": "Commencer",
@@ -384,7 +384,7 @@
 		"mutedAuthorsHint": "Ces préférences concernent uniquement votre overlay.",
 		"unmute": "Afficher à nouveau",
 		"mutedOn": "Masqué le {{date}}",
-		"hideAnonymous": "Masquer les mèmes anonymes /secret",
+		"hideAnonymous": "Masquer les mèmes anonymes /memeover secret",
 		"hideAnonymousHint": "Les mèmes anonymes ne peuvent pas être masqués par auteur."
 	},
 	"memberCount": {

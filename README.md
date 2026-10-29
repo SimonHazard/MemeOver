@@ -19,57 +19,57 @@ that works without streaming.
 ---
 
 <details>
-<summary><b>Version francaise</b></summary>
+<summary><b>Version française</b></summary>
 
 ## Ce que fait MemeOver
 
-Projet inspire du LiveChat de la Cacabox, qui fonctionnait avec OBS pour les streamers :
+Projet inspiré du LiveChat de la Cacabox, qui fonctionnait avec OBS pour les streamers :
 MemeOver est une application autonome qui fonctionne sans streamer.
 
-- Affiche les medias envoyes depuis Discord directement en overlay.
-- Prend en charge images, GIFs, videos, audio, stickers, textes et reactions.
-- Permet de choisir position, taille, opacite, duree, son et ecran cible.
+- Affiche les médias envoyés depuis Discord directement en overlay.
+- Prend en charge images, GIFs, vidéos, audio, stickers, textes et réactions.
+- Permet de choisir position, taille, opacité, durée, son et écran cible.
 - Sauvegarde plusieurs profils d'affichage sans inclure les identifiants Discord.
-- Conserve un historique local pour rejouer les derniers medias recus.
+- Conserve un historique local pour rejouer les derniers médias reçus.
 - Fournit un code `memeover://setup` pour connecter l'app en un copier-coller.
-- Se met a jour automatiquement via les releases GitHub.
-- Cree votre bot self-host depuis l'onglet Serveur de l'app.
-- Envoie un media anonyme avec `/memeover secret` et affiche l'etat avec `/memeover status`.
-- Demarre dans le tray a l'ouverture de session.
-- Lit les GIF Discord au format video (gifv).
+- Se met à jour automatiquement via les releases GitHub.
+- Crée votre bot self-host depuis l'onglet Serveur de l'app.
+- Envoie un média anonyme avec `/memeover secret` et affiche l'état avec `/memeover status`.
+- Démarre dans le tray à l'ouverture de session.
+- Lit les GIF Discord au format vidéo (gifv).
 - Fonctionne sur Windows, macOS et Linux.
 
 ## Fonctionnement
 
 1. Invitez le bot MemeOver sur votre serveur Discord.
-2. Lancez `/memeover setup` pour enregistrer le serveur, ou `/memeover setup #salon` pour surveiller un salon precis.
+2. Lancez `/memeover setup` pour enregistrer le serveur, ou `/memeover setup #salon` pour surveiller un salon précis.
 3. Copiez le bloc `App setup code` dans l'app desktop.
-4. Envoyez un media, un message ou une reaction dans un salon surveille.
-5. Le contenu apparait sur les overlays connectes.
+4. Envoyez un média, un message ou une réaction dans un salon surveillé.
+5. Le contenu apparaît sur les overlays connectés.
 
-Par defaut, l'app utilise le bot heberge. Pour du self-host, activez le mode expert
+Par défaut, l'app utilise le bot hébergé. Pour du self-host, activez le mode expert
 dans l'app et fournissez votre propre URL WebSocket.
 
 ## Commandes Discord
 
 | Commande | Permission | Description |
 | --- | --- | --- |
-| `/memeover setup [#salon]` | Gerer le serveur | Enregistre le serveur; sans salon, tous les salons sont surveilles |
+| `/memeover setup [#salon]` | Gérer le serveur | Enregistre le serveur; sans salon, tous les salons sont surveillés |
 | `/memeover token` | Tous | Affiche les identifiants et le setup code, visibles uniquement par vous |
-| `/memeover rotate` | Gerer le serveur | Demande confirmation, regenere le token et invalide l'ancien |
-| `/memeover remove` | Gerer le serveur | Demande confirmation puis desinscrit le serveur de MemeOver |
-| `/memeover bots enabled:<true\|false>` | Gerer le serveur | Autorise ou masque les messages et reactions des bots/apps |
-| `/memeover secret [media] [url] [text]` | Tous | Envoie un media anonyme aux overlays connectes |
-| `/memeover status` | Gerer le serveur | Affiche configuration, salons surveilles, overlays actifs et uptime |
-| `/memeover pause duration:<5m\|15m\|30m\|1h\|2h\|indefinite>` | Gerer le serveur | Met en pause la diffusion; les événements sont ignorés |
-| `/memeover resume` | Gerer le serveur | Reprend la diffusion |
+| `/memeover rotate` | Gérer le serveur | Demande confirmation, régénère le token et invalide l'ancien |
+| `/memeover remove` | Gérer le serveur | Demande confirmation puis désinscrit le serveur de MemeOver |
+| `/memeover bots enabled:<true\|false>` | Gérer le serveur | Autorise ou masque les messages et réactions des bots/apps |
+| `/memeover secret [media] [url] [text]` | Tous | Envoie un média anonyme aux overlays connectés |
+| `/memeover status` | Gérer le serveur | Affiche configuration, salons surveillés, overlays actifs et uptime |
+| `/memeover pause duration:<5m\|15m\|30m\|1h\|2h\|indefinite>` | Gérer le serveur | Met en pause la diffusion; les événements sont ignorés |
+| `/memeover resume` | Gérer le serveur | Reprend la diffusion |
 | `/memeover help` | Tous | Liste les commandes disponibles |
 
-## Developpement
+## Développement
 
 Les [idées produit](docs/feature-ideas.md) restent hors du périmètre à développer tant qu'elles ne font pas l'objet d'une demande explicite.
 
-### Prerequis
+### Prérequis
 
 - [Bun](https://bun.sh/) 1.4.2+ (CI et Docker utilisent 1.4.2 ; l’application vérifie ce minimum pour le bot local)
 - [Rust](https://www.rust-lang.org/)
@@ -83,7 +83,7 @@ bun install
 ### Configuration locale
 
 Pour `bun run dev:bot`, copiez `bot/.env.example` vers `bot/.env`, puis renseignez :
-Pour Docker Compose, utilisez un `.env` a la racine du repo.
+Pour Docker Compose, utilisez un `.env` à la racine du repo.
 
 ```env
 DISCORD_TOKEN=votre_token_bot
@@ -103,8 +103,8 @@ METRICS_TOKEN=
 PUBLIC_BOT_CLIENT_ID=
 ```
 
-`PUBLIC_WS_URL` est incluse dans les setup codes generes par le bot. Pour le site,
-`PUBLIC_BOT_CLIENT_ID` sert a construire les liens d'invitation du bot.
+`PUBLIC_WS_URL` est incluse dans les setup codes générés par le bot. Pour le site,
+`PUBLIC_BOT_CLIENT_ID` sert à construire les liens d'invitation du bot.
 
 ### Scripts utiles
 
@@ -116,20 +116,20 @@ bun run lint          # Biome lint read-only
 bun run check         # Biome check read-only
 bun run check:fix     # Biome check avec corrections
 bun run typecheck     # TypeScript bot/app/shared/ui
-bun run test          # Tests Bun cibles
+bun run test          # Tests Bun ciblés
 ```
 
 ## Structure du projet
 
 ```text
 app/          App desktop Tauri
-bot/          Bot Discord et serveur temps reel
-shared/       Types, schemas et constantes partages
-packages/ui/  Composants UI partages
+bot/          Bot Discord et serveur temps réel
+shared/       Types, schémas et constantes partagés
+packages/ui/  Composants UI partagés
 site/         Site web Astro
 ```
 
-## Deploiement
+## Déploiement
 
 GitHub Actions vérifie le projet, prépare les releases de l’application et déploie le site :
 
@@ -163,7 +163,7 @@ et les versions des workspaces dans les lockfiles. La distribution Linux est con
 sur Ubuntu 22.04 ; cette base fixe le minimum de compilation visé, sans garantir toutes
 les distributions Linux.
 
-Le bot peut aussi etre lance avec Docker Compose :
+Le bot peut aussi être lancé avec Docker Compose :
 
 ```bash
 docker compose up -d --build
