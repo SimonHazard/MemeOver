@@ -38,12 +38,17 @@ startBot()
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 
+// Below Docker's default 10 s stop timeout, so this exit and its log happen before SIGKILL.
+const SHUTDOWN_TIMEOUT_MS = 8_000;
 let shuttingDown = false;
 
 async function shutdown(signal: string): Promise<void> {
 	if (shuttingDown) return;
 	shuttingDown = true;
-	const killTimer = setTimeout(() => process.exit(1), 10_000);
+	const killTimer = setTimeout(() => {
+		log.error({ event: "shutdown_timeout" }, "Graceful shutdown timed out");
+		process.exit(1);
+	}, SHUTDOWN_TIMEOUT_MS);
 	killTimer.unref();
 	log.info({ event: "shutdown", signal }, `Received ${signal}, shutting down gracefully...`);
 
