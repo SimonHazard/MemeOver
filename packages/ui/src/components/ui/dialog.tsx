@@ -1,11 +1,10 @@
 "use client";
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { XIcon } from "lucide-react";
-import type * as React from "react";
-
 import { Button } from "@memeover/ui/components/ui/button";
 import { cn } from "@memeover/ui/lib/utils";
+import { XIcon } from "lucide-react";
+import type * as React from "react";
 
 // shadcn base-vega Dialog with the MemeOver theme: neo-brutalist frame (2px border and
 // offset shadow), display font titles and no zoom or fade under reduced motion.
