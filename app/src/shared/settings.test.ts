@@ -72,6 +72,86 @@ test("connection notification duration migrates to four seconds and validates sa
 });
 
 describe("settings normalization", () => {
+	test("clamps hand-edited display settings without advancing the schema", () => {
+		expect(
+			normalizeSettings({
+				schemaVersion: CURRENT_SCHEMA_VERSION,
+				mediaSize: 500,
+				volume: -3,
+				bgBorderRadius: 50,
+				textColor: "red",
+			}),
+		).toMatchObject({
+			mediaSize: 90,
+			volume: 0,
+			bgBorderRadius: 30,
+			textColor: DEFAULT_SETTINGS.textColor,
+			schemaVersion: CURRENT_SCHEMA_VERSION,
+		});
+	});
+
+	for (const [field, min, max] of [
+		["mediaSize", 10, 90],
+		["duration", 1, 30],
+		["volume", 0, 100],
+		["positionOffsetX", -20, 20],
+		["positionOffsetY", -20, 20],
+		["textSize", 12, 96],
+		["mediaOpacity", 0, 100],
+		["bgOpacity", 0, 100],
+		["bgBorderOpacity", 0, 100],
+		["bgBorderWidth", 0, 20],
+		["bgBorderRadius", 0, 30],
+		["bgPadding", 0, 100],
+	] as const) {
+		test(`${field} respects bounds and falls back for invalid numbers`, () => {
+			const saved = { schemaVersion: CURRENT_SCHEMA_VERSION };
+			for (const [value, expected] of [
+				[min - 1, min],
+				[max + 1, max],
+				[min, min],
+				[max, max],
+			]) {
+				expect(normalizeSettings({ ...saved, [field]: value })[field]).toBe(expected);
+			}
+			for (const value of [null, "invalid", Number.NaN, Infinity, -Infinity]) {
+				expect(normalizeSettings({ ...saved, [field]: value })[field]).toBe(
+					DEFAULT_SETTINGS[field],
+				);
+			}
+		});
+	}
+
+	for (const field of ["bgColor", "bgBorderColor", "textColor"] as const) {
+		test(`${field} accepts six-digit hex colours only`, () => {
+			for (const value of ["#aB12Ef", "#000000", "#FFFFFF"]) {
+				expect(normalizeSettings({ [field]: value })[field]).toBe(value);
+			}
+			for (const value of ["red", "#fff", "#12345678", "#gg0000", "123456", null, 42]) {
+				expect(normalizeSettings({ [field]: value })[field]).toBe(DEFAULT_SETTINGS[field]);
+			}
+		});
+	}
+
+	test("preserves valid display values and normalization is idempotent", () => {
+		const saved = {
+			...DEFAULT_SETTINGS,
+			clientId: "client-123456",
+			mediaSize: 55,
+			volume: 40,
+			positionOffsetX: -8,
+			bgBorderRadius: 12,
+			textColor: "#aB12Ef",
+		};
+		expect(normalizeSettings(saved)).toEqual(saved);
+		expect(normalizeSettings(normalizeSettings(saved))).toEqual(saved);
+		for (const mediaSize of [NaN, Infinity, -Infinity]) {
+			expect(normalizeSettings({ schemaVersion: 0, mediaSize }).mediaSize).toBe(
+				DEFAULT_SETTINGS.mediaSize,
+			);
+		}
+	});
+
 	test("defaults bot/app sources to hidden during migration", () => {
 		const settings = normalizeSettings({
 			schemaVersion: 7,

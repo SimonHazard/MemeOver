@@ -2,10 +2,13 @@ import { describe, expect, test } from "bun:test";
 import type { Message } from "discord.js";
 import { ALLOWED_MEDIA_HOSTS, isAllowedAndFresh } from "./allowlist";
 import {
+	CAPTION_MAX_LENGTH,
+	detectAttachmentMediaType,
 	detectMediaType,
 	extractMedia,
 	extractStickers,
 	extractText,
+	normalizeCaption,
 	urlPathname,
 } from "./extractor";
 
@@ -151,3 +154,28 @@ test("truncated caption trims trailing whitespace", () =>
 	expect(extractText(makeMessage({ content: `${"a".repeat(139)} more text` }))).toBe(
 		`${"a".repeat(139)}…`,
 	));
+
+describe("shared caption and attachment helpers", () => {
+	test("attachment MIME takes priority, unknown or absent MIME falls back to URL", () => {
+		expect(detectAttachmentMediaType("image/gif", "https://x/a.mp4")).toBe("gif");
+		for (const mime of ["application/octet-stream", null, undefined]) {
+			expect(detectAttachmentMediaType(mime, "https://x/a.png")).toBe("image");
+		}
+		expect(detectAttachmentMediaType(null, "https://x/unknown")).toBeNull();
+	});
+	test("normalizes empty, control characters, whitespace and truncation", () => {
+		for (const raw of [null, undefined, "", " ", "\u0000\u0001"])
+			expect(normalizeCaption(raw)).toBeUndefined();
+		expect(normalizeCaption("  a\u0000b\u0001  ")).toBe("ab");
+		expect(normalizeCaption("a".repeat(CAPTION_MAX_LENGTH))).toBe("a".repeat(CAPTION_MAX_LENGTH));
+		expect(normalizeCaption(`${"a".repeat(CAPTION_MAX_LENGTH - 1)} more`)).toBe(
+			`${"a".repeat(CAPTION_MAX_LENGTH - 1)}…`,
+		);
+	});
+	test("preserves format characters and removes URLs before control filtering", () => {
+		expect(normalizeCaption("a\u200bb\u202ec")).toBe("a\u200bb\u202ec");
+		expect(extractText(makeMessage({ content: " before https://x/a\u0000tail after " }))).toBe(
+			"before  after",
+		);
+	});
+});

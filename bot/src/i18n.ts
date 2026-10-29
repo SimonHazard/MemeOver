@@ -4,7 +4,6 @@ export const translations = {
 	en: {
 		"commands.pause.name": "pause",
 		"commands.pause.description": "Pause broadcasts for this server",
-		"commands.pause.duration.name": "duration",
 		"commands.pause.duration.description": "How long to pause broadcasts",
 		"commands.resume.name": "resume",
 		"commands.resume.description": "Resume broadcasts for this server",
@@ -76,7 +75,6 @@ export const translations = {
 		"common.controlOwnerOnlyDescription": "Run the command yourself to use this action.",
 		"common.controlOwnerOnlyTitle": "This control is not yours",
 		"common.enabled": "Enabled",
-		"common.manageServer": "Manage Server",
 		"common.muted": "Muted",
 		"common.notConfiguredDescription":
 			"This server has not been set up yet. Run `/memeover setup` first.",
@@ -194,7 +192,6 @@ export const translations = {
 	fr: {
 		"commands.pause.name": "pause",
 		"commands.pause.description": "Mettre en pause la diffusion de ce serveur",
-		"commands.pause.duration.name": "duration",
 		"commands.pause.duration.description": "Durée de la pause",
 		"commands.resume.name": "resume",
 		"commands.resume.description": "Reprendre la diffusion de ce serveur",
@@ -269,7 +266,6 @@ export const translations = {
 			"Lancez la commande vous-même pour utiliser cette action.",
 		"common.controlOwnerOnlyTitle": "Ce contrôle ne vous appartient pas",
 		"common.enabled": "Activé",
-		"common.manageServer": "Gérer le serveur",
 		"common.muted": "Masqué",
 		"common.notConfiguredDescription":
 			"Ce serveur n'est pas encore configuré. Lancez `/memeover setup` d'abord.",
