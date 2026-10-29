@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "../../packages/ui/src/shadcn.css";
 /* Bundle Sonner styles: the overlay CSP nonce blocks the library's runtime <style> injection. */
 @import "sonner/dist/styles.css";
 @import "../../packages/ui/src/theme.css";
