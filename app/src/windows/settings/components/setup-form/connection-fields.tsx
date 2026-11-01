@@ -50,6 +50,19 @@ function fieldError(errors: unknown[]): ReactNode {
 	return <p className="text-xs text-destructive font-text">{String(errors[0])}</p>;
 }
 
+interface RevalidatedField {
+	state: { meta: { errorMap: { onBlur?: unknown } } };
+	handleChange: (value: string) => void;
+	validate: (cause: "blur") => unknown;
+}
+
+// Clear a displayed blur error as soon as the value is corrected. Clearing it only on blur would
+// shift the submit button between mousedown and mouseup, and the click would be lost.
+function changeAndRevalidate(field: RevalidatedField, value: string): void {
+	field.handleChange(value);
+	if (field.state.meta.errorMap.onBlur) field.validate("blur");
+}
+
 export function validateSetupField(
 	schema: z.ZodType,
 	value: string,
@@ -143,7 +156,7 @@ export function ConnectionCredentialsFields({
 											placeholder={wsUrlPlaceholder}
 											value={field.state.value}
 											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
+											onChange={(e) => changeAndRevalidate(field, e.target.value)}
 											className={inputClassName}
 										/>
 										{field.state.meta.isTouched && fieldError(field.state.meta.errors)}
@@ -174,7 +187,7 @@ export function ConnectionCredentialsFields({
 								placeholder="123456789012345678"
 								value={field.state.value}
 								onBlur={field.handleBlur}
-								onChange={(e) => field.handleChange(e.target.value)}
+								onChange={(e) => changeAndRevalidate(field, e.target.value)}
 								className={inputClassName}
 							/>
 							<p className="text-xs text-muted-foreground">{t("connection.guildId_hint")}</p>
@@ -204,7 +217,7 @@ export function ConnectionCredentialsFields({
 								placeholder="••••••••••••••••"
 								value={field.state.value}
 								onBlur={field.handleBlur}
-								onChange={(e) => field.handleChange(e.target.value)}
+								onChange={(e) => changeAndRevalidate(field, e.target.value)}
 								className={inputClassName}
 							/>
 							{field.state.meta.isTouched && fieldError(field.state.meta.errors)}

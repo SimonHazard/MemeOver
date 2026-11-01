@@ -13,7 +13,12 @@ export default defineConfig({
 	},
 	projects: [
 		{ name: "chrome", use: { browserName: "chromium", channel: "chrome" } },
-		{ name: "webkit", use: { browserName: "webkit" } },
+		{
+			name: "webkit",
+			use: { browserName: "webkit" },
+			// Linux WebKit occasionally freezes the page on a key press; the report still flags it as flaky.
+			retries: process.env.CI ? 1 : 0,
+		},
 	],
 	webServer: {
 		command: production
