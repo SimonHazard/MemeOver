@@ -4,10 +4,9 @@
 // frame, display font title and no zoom or fade under reduced motion.
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
-import type * as React from "react";
-
 import { Button } from "@memeover/ui/components/ui/button";
 import { cn } from "@memeover/ui/lib/utils";
+import type * as React from "react";
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
 	return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;

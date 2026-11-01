@@ -1,7 +1,6 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
-import type * as React from "react";
-
 import { cn } from "@memeover/ui/lib/utils";
+import type * as React from "react";
 
 function Avatar({
 	className,
@@ -88,4 +87,4 @@ function AvatarGroupCount({ className, ...props }: React.ComponentProps<"div">) 
 	);
 }
 
-export { Avatar, AvatarImage, AvatarFallback, AvatarBadge, AvatarGroup, AvatarGroupCount };
+export { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage };

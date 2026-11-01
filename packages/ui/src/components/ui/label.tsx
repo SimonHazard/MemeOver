@@ -1,8 +1,7 @@
 "use client";
 
-import type * as React from "react";
-
 import { cn } from "@memeover/ui/lib/utils";
+import type * as React from "react";
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {
 	return (

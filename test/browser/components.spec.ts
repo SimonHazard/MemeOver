@@ -103,6 +103,33 @@ test("shared primitives work with pointer, keyboard, disabled states and focus",
 	expect(errors).toEqual([]);
 });
 
+test("shared state styles and Base UI accordion animations are compiled", async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: "no-preference" });
+	await page.goto("/test/browser/components.html");
+	const tabA = page.getByRole("tab", { name: "Tab A" });
+	const tabB = page.getByRole("tab", { name: "Tab B" });
+	const background = (tab: typeof tabA) =>
+		tab.evaluate((element) => getComputedStyle(element).backgroundColor);
+	await expect.poll(() => background(tabA)).not.toBe("rgba(0, 0, 0, 0)");
+	await expect.poll(() => background(tabB)).toBe("rgba(0, 0, 0, 0)");
+	await tabB.click();
+	await expect.poll(() => background(tabA)).toBe("rgba(0, 0, 0, 0)");
+	await expect.poll(() => background(tabB)).not.toBe("rgba(0, 0, 0, 0)");
+
+	const trigger = page.getByRole("button", { name: "Accordion A" });
+	const panel = page.locator('[data-slot="accordion-content"]').first();
+	await trigger.click();
+	await expect(panel).toHaveCSS("animation-name", "accordion-down");
+	// A missing Base UI keyframe fallback can leave the content at zero height.
+	await expect
+		.poll(() => panel.evaluate((element) => element.getBoundingClientRect().height))
+		.toBeGreaterThan(20);
+	await trigger.click();
+	await expect(page.getByText("Content A", { exact: true })).toBeHidden();
+	await trigger.click();
+	await expect(page.getByText("Content A", { exact: true })).toBeVisible();
+});
+
 test("button hover lifts both sizes and respects reduced motion", async ({ page }) => {
 	await page.goto("/test/browser/components.html");
 	for (const name of ["Action", "Large action"]) {

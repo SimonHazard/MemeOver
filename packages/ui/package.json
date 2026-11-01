@@ -5,21 +5,20 @@
 	"type": "module",
 	"exports": {
 		"./components/ui/*": {
-			"types": "./dist/components/ui/*.d.ts",
-			"import": "./dist/components/ui/*.js"
+			"types": "./src/components/ui/*.tsx",
+			"import": "./src/components/ui/*.tsx"
 		},
 		"./components/branded/*": {
-			"types": "./dist/components/branded/*.d.ts",
-			"import": "./dist/components/branded/*.js"
+			"types": "./src/components/branded/*.tsx",
+			"import": "./src/components/branded/*.tsx"
 		},
 		"./lib/*": {
-			"types": "./dist/lib/*.d.ts",
-			"import": "./dist/lib/*.js"
+			"types": "./src/lib/*.ts",
+			"import": "./src/lib/*.ts"
 		},
 		"./theme.css": "./src/theme.css"
 	},
 	"scripts": {
-		"build": "tsup",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -37,7 +36,6 @@
 	"devDependencies": {
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.5",
-		"tsup": "^8.5.1",
-		"typescript": "~6.0.3"
+		"typescript": "~7.0.2"
 	}
 }
