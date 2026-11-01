@@ -276,7 +276,11 @@ test("dashboard connection validation, expert mode and autostart", async ({ page
 	await page.getByLabel("WebSocket server URL", { exact: true }).blur();
 	await page.getByRole("button", { name: "Save & connect", exact: true }).click();
 	expect((await settings(page)).wsUrl).not.toBe("invalid-url");
+	const invalidUrl = page.getByText("Must start with ws:// or wss://", { exact: true });
+	await expect(invalidUrl).toBeVisible();
 	await page.getByLabel("WebSocket server URL", { exact: true }).fill("ws://127.0.0.1:3001/ws");
+	// The error must clear while typing: clearing it on blur would move the button mid-click.
+	await expect(invalidUrl).toBeHidden();
 	await page.getByRole("button", { name: "Save & connect", exact: true }).click();
 	await expect.poll(async () => (await settings(page)).wsUrl).toBe("ws://127.0.0.1:3001/ws");
 	await page.getByRole("switch", { name: "Launch at startup", exact: true }).click();
