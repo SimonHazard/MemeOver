@@ -25,6 +25,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- App/site (1.8.9): slide a single active-tab pill between settings tabs instead of switching the highlight instantly. The pill keeps the neo-brutalist border and offset shadow, uses a 0.3 s spring and becomes an instant swap when reduced motion is requested. The active tab is announced with `aria-current="page"`.
+
 - App/site (1.8.7): export shared UI sources directly, remove their unused build configuration and keep the upstream shadcn stylesheet through an updated build dependency.
 
 - App (1.8.6): restrict overlay permissions to its window, reduce unused overlay dependencies, and cache Bun/Git availability for 30 seconds while refreshing probes after installation attempts.

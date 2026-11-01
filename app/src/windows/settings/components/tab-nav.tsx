@@ -3,6 +3,7 @@ import { NB_SHADOW_MD, NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import type { FileRoutesByPath } from "@tanstack/react-router";
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { History, LayoutDashboard, Monitor, Server, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/shared/store";
@@ -16,6 +17,10 @@ interface TabDef {
 	icon: React.ComponentType<{ className?: string }>;
 	labelKey: string;
 }
+
+// One pill shared by every tab: `layoutId` makes Framer Motion slide it from the
+// previous tab to the new one. MotionConfig reducedMotion="user" turns it into a swap.
+const PILL_SPRING = { type: "spring", duration: 0.3, bounce: 0.15 } as const;
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
@@ -50,15 +55,23 @@ export function TabNav() {
 							variant="ghost"
 							size="sm"
 							onClick={() => navigate({ to: tab.route })}
+							aria-current={isActive ? "page" : undefined}
 							className={cn(
-								"relative h-8 gap-1.5 rounded-lg text-sm font-display tracking-wide border-2 transition-[color,background-color,border-color,transform,box-shadow] duration-150 cursor-pointer",
+								"relative h-8 gap-1.5 rounded-lg text-sm font-display tracking-wide border-2 border-transparent bg-transparent transition-[color,background-color,transform,translate,scale] duration-300 ease-out cursor-pointer",
 								isActive
-									? `bg-primary-400 text-primary-foreground border-foreground ${NB_SHADOW_SM} hover:bg-primary-400 hover:text-primary-foreground dark:hover:bg-primary-400 -translate-x-px -translate-y-px`
-									: "bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:bg-accent",
+									? "text-primary-foreground hover:bg-transparent hover:text-primary-foreground dark:hover:bg-transparent"
+									: "text-muted-foreground hover:text-foreground hover:bg-accent",
 							)}
 						>
-							<Icon className="h-3.5 w-3.5" />
-							<span>{t(tab.labelKey)}</span>
+							{isActive && (
+								<motion.span
+									layoutId="tab-nav-pill"
+									transition={PILL_SPRING}
+									className={`absolute -inset-0.5 rounded-lg bg-primary-400 border-2 border-foreground ${NB_SHADOW_SM} -translate-x-px -translate-y-px`}
+								/>
+							)}
+							<Icon className="relative h-3.5 w-3.5" />
+							<span className="relative">{t(tab.labelKey)}</span>
 							{showUpdateDot && (
 								<span className="pointer-events-none absolute -top-1 -right-1 flex size-2.5">
 									<span
