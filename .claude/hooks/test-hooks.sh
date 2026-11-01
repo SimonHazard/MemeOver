@@ -7,9 +7,10 @@ assert_exit() {
   expected=$1
   kind=$2
   value=$3
+  cwd=${4:-$root}
   status=0
   if [ "$kind" = command ]; then
-    payload=$(jq -nc --arg value "$value" '{tool_input:{command:$value}}')
+    payload=$(jq -nc --arg value "$value" --arg cwd "$cwd" '{cwd:$cwd,tool_input:{command:$value}}')
     hook=guard-protected-bash.sh
   else
     payload=$(jq -nc --arg value "$value" '{tool_input:{file_path:$value}}')
@@ -96,8 +97,32 @@ for file in bot/src/server.ts app/src/data-reader.ts bot/database/file.json app/
   assert_exit 0 file "$file"
 done
 
+# Relative operands must stay protected after a cwd change or a literal cd.
+assert_exit 2 command 'rm -rf target' "$root/app/src-tauri"
+assert_exit 2 command 'rm -rf ./target/release' "$root/app/src-tauri"
+assert_exit 2 command 'cp settings.json settings.local.json' "$root/.claude"
+assert_exit 2 command 'rm memeover.db' "$root/bot/data"
+assert_exit 2 command 'echo x > ../data/custom.json' "$root/bot/src"
+assert_exit 2 command 'echo x > target/file.json' "$root/app/src-tauri"
+assert_exit 2 command '> target/file.json' "$root/app/src-tauri"
+assert_exit 2 command 'cd app/src-tauri && rm -rf target'
+assert_exit 2 command 'cd .claude; cp settings.json settings.local.json'
+assert_exit 2 command 'cd bot/data && rm memeover.db'
+assert_exit 2 command 'cd app && cd src-tauri && rm -rf target'
+assert_exit 2 command 'cd -- app/src-tauri && rm -rf target'
+assert_exit 2 command '(cd app/src-tauri && rm -rf target)'
+assert_exit 2 command 'cd "app/src-tauri" && rm -rf "target/release"'
+assert_exit 2 command 'rm -rf target' '/tmp/project with spaces/app/src-tauri'
+assert_exit 0 command 'cat memeover.db' "$root/bot/data"
+assert_exit 0 command 'cat settings.local.json' "$root/.claude"
+assert_exit 0 command 'rm -rf target' "$root/app"
+assert_exit 0 command 'rm settings.local.json' "$root/app"
+assert_exit 0 command 'cp .env.example other.txt' "$root/bot"
+assert_exit 0 command '(cd app/src-tauri && pwd); rm -rf target'
+
 # Never register a tree-wide writer at Stop. Preserve the original formatter/typecheck.
 jq -e '
+  ([.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(contains("guard-protected-bash.sh"))) and
   ([.hooks.Stop[].hooks[].command] | all(contains("format-touched.sh") | not)) and
   ([.hooks.Stop[].hooks[].command] | any(contains("typecheck-touched.sh"))) and
   ([.hooks.PostToolUse[].hooks[].command] | any(contains("format-edited-file.sh")))

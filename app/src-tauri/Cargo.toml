@@ -1,6 +1,6 @@
 [package]
 name = "memeover"
-version = "1.8.8"
+version = "1.8.9"
 description = "An overlay application that lets friends send memes to each other in real time from a Discord text channel."
 authors = ["Simon Hazard"]
 edition = "2021"
