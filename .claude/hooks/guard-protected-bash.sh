@@ -1,85 +1,22 @@
 #!/usr/bin/env bash
-# PreToolUse heuristic for common shell writes mentioning literal protected paths.
-# This is not a shell parser or sandbox: Python/Perl, find/git clean, dynamic paths,
-# aliases and other write forms can bypass it. Pairs with guard-protected-paths.sh.
+# PreToolUse guard for common shell writes to protected paths; fails closed. The rules and
+# their limits live in protected-paths.mjs: this wrapper only skips commands that cannot
+# write a file, so most commands never start bun.
 set -eu
+trap 'echo "Bash guard could not run: command blocked (check jq and bun)." >&2; exit 2' ERR
 input=$(cat)
 cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
 [ -n "$cmd" ] || exit 0
 
-# Match directories themselves as well as descendants, and every **/data/ directory.
-protected="(^|[[:space:]\"'=/:])(data|app/src-tauri/target)($|[/[:space:]\"';|&<>)])|(^|[[:space:]\"'=/:])\.claude/settings\.local\.json($|[[:space:]\"';|&<>)])"
-env_path="(^|[[:space:]\"'=/:])(\.env[^[:space:]\"';|&<>)]*)"
+# File descriptor duplication (2>&1) and /dev/null redirections write no file.
+text=$(printf '%s' "$cmd" | sed -E 's/[0-9]*[<>]&([0-9]+-?|-)//g; s/(&|[0-9]*)>>?[[:space:]]*\/dev\/null//g')
 # POSIX ERE (bash =~) has no \b, so word boundaries are spelled out.
-writing='(>|(^|[[:space:]|;&(])(tee|rm|mv|cp|truncate|ln|chmod|chown|install)([[:space:]]|$)|(^|[[:space:]|;&(])sed[[:space:]]+[^|;]*-[A-Za-z]*i([[:space:]]|$|\.))'
+writers='(>|(^|[^[:alnum:]_.-])(tee|rm|rmdir|unlink|shred|mv|cp|ln|install|truncate|touch|chmod|chown|dd|rsync|sqlite3|sed|clean|-delete)([^[:alnum:]_.-]|$))'
+[[ "$text" =~ $writers ]] || exit 0
 
-resolve_operands() {
-  bun - "$@" <<'JS'
-const { resolve } = require("node:path");
-const [command, initialCwd] = process.argv.slice(2);
-const words = command.match(/(?:[^\s"';&|()<>]+|"[^"]*"|'[^']*')+|&&|\|\||[;&|()<>\n]/g) ?? [];
-let cwd = resolve(initialCwd);
-let start = true;
-let cd = false;
-let redirect = false;
-const parents = [];
-for (const word of words) {
-  if (/^[;&|()\n]+$/.test(word)) {
-    if (word === "(") parents.push(cwd);
-    if (word === ")") cwd = parents.pop() ?? cwd;
-    start = true;
-    cd = false;
-    redirect = false;
-    continue;
-  }
-  if (word === ">" || word === "<") {
-    redirect = true;
-    continue;
-  }
-  const literal = word.replace(/(["'])([\s\S]*?)\1/g, "$2");
-  if (/[$`\\]/.test(literal)) {
-    start = false;
-    cd = false;
-    redirect = false;
-    continue;
-  }
-  if (redirect) {
-    console.log(resolve(cwd, literal));
-    redirect = false;
-  } else if (start) {
-    cd = literal === "cd";
-    start = false;
-  } else if (!literal.startsWith("-")) {
-    if (cd) {
-      cwd = resolve(cwd, literal);
-      cd = false;
-    } else {
-      console.log(resolve(cwd, literal));
-    }
-  }
-}
-JS
-}
-
-if [[ "$cmd" =~ $writing ]]; then
-  cwd=$(printf '%s' "$input" | jq -r --arg root "${CLAUDE_PROJECT_DIR:-$(pwd)}" '.cwd // $root')
-  # Resolve literal operands without evaluating the shell. Track simple cd commands
-  # and subshells; expansions, aliases and arbitrary shell programs remain out of scope.
-  resolved=$(resolve_operands "$cmd" "$cwd")
-  paths="$cmd"$'\n'"$resolved"
-  blocked=false
-  [[ "$paths" =~ $protected ]] && blocked=true
-  remaining=$paths
-  while [[ "$remaining" =~ $env_path ]]; do
-    match=${BASH_REMATCH[0]}
-    path=${BASH_REMATCH[2]}
-    # Only the exact example filename is exempt; suffixes and .env* globs are protected.
-    [ "$path" = ".env.example" ] || blocked=true
-    remaining=${remaining#*"$match"}
-  done
-  if [ "$blocked" = true ]; then
-    echo "Protected project data or personal configuration: shell write blocked (edit it yourself if needed)." >&2
-    exit 2
-  fi
-fi
-exit 0
+root=${CLAUDE_PROJECT_DIR:-$(pwd)}
+cwd=$(printf '%s' "$input" | jq -r --arg root "$root" '.cwd // $root')
+status=0
+bun "$(dirname "$0")/protected-paths.mjs" command "$cmd" "$cwd" "$root" || status=$?
+[ "$status" -eq 0 ] || [ "$status" -eq 2 ] || echo "Bash guard could not run: command blocked." >&2
+[ "$status" -eq 0 ] || exit 2

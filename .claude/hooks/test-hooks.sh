@@ -2,12 +2,15 @@
 # Isolated dry runs: command strings go to the guards as JSON and are never evaluated.
 set -eu
 root=$(cd "$(dirname "$0")/../.." && pwd)
+project=$root
 count=0
+fixture=$(mktemp -d "${TMPDIR:-/tmp}/memeover-hook-test.XXXXXX")
+trap 'rm -rf -- "$fixture"' EXIT
 assert_exit() {
   expected=$1
   kind=$2
   value=$3
-  cwd=${4:-$root}
+  cwd=${4:-$project}
   status=0
   if [ "$kind" = command ]; then
     payload=$(jq -nc --arg value "$value" --arg cwd "$cwd" '{cwd:$cwd,tool_input:{command:$value}}')
@@ -16,8 +19,9 @@ assert_exit() {
     payload=$(jq -nc --arg value "$value" '{tool_input:{file_path:$value}}')
     hook=guard-protected-paths.sh
   fi
-  output=$(printf '%s' "$payload" | CLAUDE_PROJECT_DIR="$root" bash "$root/.claude/hooks/$hook" 2>&1) || status=$?
-  if [ "$status" -ne "$expected" ]; then
+  output=$(printf '%s' "$payload" | CLAUDE_PROJECT_DIR="$project" bash "$root/.claude/hooks/$hook" 2>&1) || status=$?
+  # A crash also exits 2 (fail closed), so a real block must not report "could not run".
+  if [ "$status" -ne "$expected" ] || [[ "$output" == *"could not run"* ]]; then
     printf 'FAIL: %s expected %s, got %s: %s\n%s\n' "$kind" "$expected" "$status" "$value" "$output" >&2
     exit 1
   fi
@@ -34,7 +38,7 @@ done <<'CASES'
 0	sed -n '1,20p' .claude/settings.json
 0	cat bot/.env
 0	cat bot/data/memeover.db
-0	cp bot/.env.example app/.env.example
+2	cp bot/.env.example app/.env.example
 0	echo x > bot/metadata.json
 0	rm -rf bot/database
 0	rm -rf app/src-tauri/targeted
@@ -85,10 +89,108 @@ CASES
 # These must never be mistaken for protection; none of the strings is executed.
 assert_exit 0 command 'python3 -c "from pathlib import Path; Path(\"bot/.env\").write_text(\"x\")"'
 assert_exit 0 command "perl -pi -e 's/a/b/' bot/.env"
-assert_exit 0 command 'find bot/data -delete'
 assert_exit 0 command 'find bot/data -exec /bin/rm {} +'
-assert_exit 0 command 'git clean -fdx bot/data'
+assert_exit 0 command 'ls bot/data | xargs rm'
 assert_exit 0 command 'f=.en; echo x > "${f}v"'
+
+# Write commands resolved by verb, whatever the spelling of the command name.
+for command in \
+  'sqlite3 bot/data/memeover.db "DELETE FROM guilds"' \
+  'unlink bot/data/memeover.db' \
+  'touch bot/.env' \
+  'dd if=/dev/null of=bot/.env' \
+  '/bin/cp foo bot/data/memeover.db' \
+  '/bin/rm bot/data/memeover.db' \
+  '\rm bot/data/memeover.db' \
+  '"rm" bot/data/memeover.db' \
+  'sudo rm -rf bot/data' \
+  'FOO=1 rm .env' \
+  'env -i rm .env' \
+  "bash -c 'rm -rf bot/data'" \
+  'git rm bot/data/memeover.db' \
+  'git -C bot rm data/memeover.db' \
+  'git mv bot/data/memeover.db old.db' \
+  'git clean -fdx bot/data' \
+  'find bot/data -delete' \
+  'shred .env' \
+  'rmdir bot/data' \
+  'rsync -a src/ bot/data/' \
+  'cp -t bot/data foo' \
+  'cp --target-directory=bot/data foo' \
+  'sed -i.bak s/a/b/ bot/.env' \
+  'echo X > bot/.env.example' \
+  'rm bot/.env.example' \
+  'cat bot/.env.example > bot/.env' \
+  'echo x &> bot/.env' \
+  'echo x 2> bot/.env' \
+  $'cd app/src-tauri\ncp x target/y' \
+  'pushd app/src-tauri && cp x target/y' \
+  'if true; then cd app/src-tauri; fi; cp x target/y' \
+  '{ cd app/src-tauri; cp x target/y; }'; do
+  assert_exit 2 command "$command"
+done
+
+# Reads, prose and redirections that write no protected file stay allowed.
+for command in \
+  'cat bot/data/memeover.db 2>/dev/null' \
+  'cp bot/data/memeover.db /tmp/memeover-backup.db' \
+  'cp bot/.env.example /tmp/memeover-env.txt' \
+  'cat bot/.env.example > /tmp/memeover-env.txt' \
+  'ls bot/data > /tmp/memeover-list.txt' \
+  'echo "the data layer" > notes.md' \
+  $'cat > notes.md <<\'EOF\'\nThe guild data registry: rm -rf bot/data\nEOF' \
+  $'git commit -m "$(cat <<\'EOF\'\nfix: data -> registry\nEOF\n)"' \
+  'git commit -m "fix: data -> registry"' \
+  'bun run test 2>&1 | tail -5' \
+  'echo x >&2' \
+  "sed -i 's/data/info/' notes.md" \
+  "sed -n '/data/p' notes.md > /tmp/memeover-lines.txt" \
+  'pushd app/src-tauri && popd && cp x target/y' \
+  'git clean -fd'; do
+  assert_exit 0 command "$command"
+done
+
+# Rules apply below the project root, so a checkout under a data directory stays usable.
+project=/mnt/data/MemeOver
+assert_exit 0 command 'echo x > foo.ts'
+assert_exit 0 command 'rm -rf src'
+assert_exit 2 command 'rm -rf bot/data'
+assert_exit 0 file src/foo.ts
+assert_exit 2 file bot/data/memeover.db
+
+# Removals and globs that contain an existing protected entry.
+project="$fixture/guard"
+mkdir -p "$project/bot/data" "$project/bot/src" "$project/app/src-tauri/target" "$project/other"
+touch "$project/bot/data/memeover.db" "$project/bot/src/server.ts" "$project/other/file"
+for command in 'rm -rf bot' 'rm -rf bot/*' 'rm -rf bot/dat?' 'mv bot /tmp/old-bot' 'rm -rf .' \
+  'git clean -fdX' 'git -C app clean -fdx' 'rsync -a --delete empty/ bot/' 'cp x bot/dat?/y' \
+  'find . -name "*.log" -delete'; do
+  assert_exit 2 command "$command"
+done
+assert_exit 2 command 'rm -rf ..' "$project/bot"
+for command in 'rm -rf bot/src' 'rm *.log' 'mv foo bot' 'rsync -a src/ bot/' 'rm -rf other' \
+  'git clean -fd'; do
+  assert_exit 0 command "$command"
+done
+project=$root
+
+# Both guards fail closed when bun cannot run; commands that write no file never need it.
+mkdir -p "$fixture/no-bun"
+for tool in jq sed cat dirname; do ln -s "$(command -v "$tool")" "$fixture/no-bun/$tool"; done
+expect_closed() {
+  status=0
+  output=$(printf '%s' "$2" | PATH="$fixture/no-bun" "$BASH" "$root/.claude/hooks/$1" 2>&1) || status=$?
+  if [ "$status" -ne 2 ] || [[ "$output" != *"could not run"* ]]; then
+    printf 'FAIL: %s did not fail closed without bun (%s): %s\n' "$1" "$status" "$output" >&2
+    exit 1
+  fi
+  count=$((count + 1))
+}
+expect_closed guard-protected-bash.sh '{"tool_input":{"command":"echo x > bot/.env"}}'
+expect_closed guard-protected-paths.sh '{"tool_input":{"file_path":"bot/src/server.ts"}}'
+printf '%s' '{"tool_input":{"command":"bun run test 2>&1 | tail -5"}}' |
+  PATH="$fixture/no-bun" "$BASH" "$root/.claude/hooks/guard-protected-bash.sh"
+count=$((count + 1))
 
 for file in bot/data bot/data/ bot/data/memeover.db-wal bot/data/guilds.json.bak other/data/custom.json app/src-tauri/target app/src-tauri/target/ app/src-tauri/target/release/foo .env .envrc .environment bot/.env.local .claude/settings.local.json; do
   assert_exit 2 file "$file"
@@ -128,8 +230,6 @@ jq -e '
   ([.hooks.PostToolUse[].hooks[].command] | any(contains("format-edited-file.sh")))
 ' "$root/.claude/settings.json" > /dev/null
 
-fixture=$(mktemp -d "${TMPDIR:-/tmp}/memeover-hook-test.XXXXXX")
-trap 'rm -rf -- "$fixture"' EXIT
 mkdir -p "$fixture/bin" "$fixture/app"
 # Staged user work plus different unstaged work must survive both invocations.
 printf 'staged user work\n' > "$fixture/app/user.ts"
@@ -160,4 +260,11 @@ git -C "$fixture" show :app/user.ts > "$fixture/actual-index"
 cmp "$fixture/expected-index" "$fixture/actual-index"
 [ "$(cat "$fixture/app/agent file.ts")" = 'formatted agent work' ]
 [ "$(wc -l < "$FORMAT_TEST_LOG" | tr -d ' ')" = 1 ]
+# The Edit/Write hook delegates to the same formatter for its single named file.
+printf 'agent edit\n' > "$fixture/app/edited.ts"
+printf '{"tool_input":{"file_path":"app/edited.ts"}}' |
+  PATH="$fixture/bin:$PATH" CLAUDE_PROJECT_DIR="$fixture" bash "$root/.claude/hooks/format-edited-file.sh"
+[ "$(cat "$fixture/app/edited.ts")" = 'formatted agent work' ]
+cmp "$fixture/expected-user" "$fixture/app/user.ts"
+[ "$(wc -l < "$FORMAT_TEST_LOG" | tr -d ' ')" = 2 ]
 printf '%s guard dry runs, hook registration and explicit formatter isolation passed.\n' "$count"
