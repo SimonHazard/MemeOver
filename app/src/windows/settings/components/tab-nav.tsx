@@ -4,7 +4,7 @@ import { cn } from "@memeover/ui/lib/utils";
 import type { FileRoutesByPath } from "@tanstack/react-router";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { History, LayoutDashboard, Monitor, Server, Settings } from "lucide-react";
+import { History, LayoutDashboard, Monitor, Radio, Server, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/shared/store";
 
@@ -27,6 +27,7 @@ const PILL_SPRING = { type: "spring", duration: 0.3, bounce: 0.15 } as const;
 const TABS: TabDef[] = [
 	{ route: "/", icon: LayoutDashboard, labelKey: "tabs.dashboard" },
 	{ route: "/overlay", icon: Monitor, labelKey: "tabs.overlay" },
+	{ route: "/stream", icon: Radio, labelKey: "tabs.stream" },
 	{ route: "/server", icon: Server, labelKey: "tabs.server" },
 	{ route: "/history", icon: History, labelKey: "tabs.history" },
 	{ route: "/about", icon: Settings, labelKey: "tabs.about" },

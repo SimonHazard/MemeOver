@@ -429,6 +429,9 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
     // Common properties for both modes
     let builder = WebviewWindowBuilder::new(app, "overlay", url)
         .title("MemeOver Overlay")
+        // Distinct from the settings window's default class so OBS can match the
+        // overlay by type (class + executable). The title stays: OBS scenes match on it.
+        .window_classname("MemeOverOverlay")
         .visible(false)
         .skip_taskbar(true)
         .accept_first_mouse(true);

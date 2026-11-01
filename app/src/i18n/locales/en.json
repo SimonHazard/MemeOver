@@ -248,7 +248,30 @@
 		"overlay": "Overlay",
 		"server": "Server",
 		"history": "History",
-		"about": "About"
+		"about": "About",
+		"stream": "Stream"
+	},
+	"stream": {
+		"desktop": {
+			"title": "Stream with OBS",
+			"desc": "MemeOver shows memes in a transparent window above your games. In OBS, a screen capture is enough to show them on stream.",
+			"quickTitle": "Quick setup",
+			"quickVideo": "In OBS, add a “Display Capture” source and pick the screen where MemeOver shows memes (Overlay tab → Overlay screen).",
+			"quickAudio": "Keep OBS's “Desktop Audio”: it already includes MemeOver's sound, along with everything else your computer plays. If it is missing from the OBS mixer, enable it in OBS Settings → Audio → Global Audio Devices.",
+			"quickGameCapture": "“Game Capture” does not show MemeOver: it only captures the game, and the overlay is a separate window.",
+			"cableTitle": "Only MemeOver's sound on stream (Windows)",
+			"cableIntro": "OBS's “Application Audio Capture” does not list MemeOver: Windows plays its sound as “Microsoft Edge WebView2”. OBS recommends a virtual audio cable for such apps.",
+			"cableInstall": "Install VB-Audio Virtual Cable.",
+			"cableMixer": "Open Windows Settings → System → Sound → Volume mixer. Under Apps, set the output device of “Microsoft Edge WebView2” to “CABLE Input”. If it is not listed, play a meme with sound first.",
+			"cableObsInput": "In OBS, add an “Audio Input Capture” source on “CABLE Output”.",
+			"cableMonitor": "To keep hearing memes, open “Advanced Audio Properties” in the OBS mixer and set its Audio Monitoring to “Monitor and Output”.",
+			"cableWarning": "Windows routes sound per application: other WebView2 apps open at the same time also go to the cable.",
+			"cableDownload": "VB-Cable website",
+			"obsGuide": "OBS guide",
+			"otherPlatforms": "On macOS and Linux, use a screen capture too; the audio steps above are written for Windows.",
+			"windowName": "Overlay window name in OBS lists",
+			"copyWindowName": "Copy window name"
+		}
 	},
 	"server": {
 		"title": "Self-hosted server",

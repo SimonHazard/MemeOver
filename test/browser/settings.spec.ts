@@ -136,7 +136,7 @@ test("unsaved dialog supports stay, escape, discard, save and failed save", asyn
 
 test("navigation, language, theme, history and dashboard controls", async ({ page }) => {
 	await page.goto("/test/browser/settings.html");
-	for (const tab of ["Overlay", "Server", "History", "About", "Dashboard"]) {
+	for (const tab of ["Overlay", "Stream", "Server", "History", "About", "Dashboard"]) {
 		await page.getByRole("button", { name: tab, exact: true }).click();
 		await expect(page.locator("main")).toBeVisible();
 	}
@@ -149,6 +149,35 @@ test("navigation, language, theme, history and dashboard controls", async ({ pag
 	const before = await page.locator("html").getAttribute("class");
 	await theme.click();
 	await expect.poll(() => page.locator("html").getAttribute("class")).not.toBe(before);
+});
+
+test("stream tab explains the OBS capture routes and copies the overlay window name", async ({
+	page,
+}) => {
+	await page.goto("/test/browser/settings.html");
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Stream with OBS" })).toBeVisible();
+	await expect(page.getByText(/add a “Display Capture” source/)).toBeVisible();
+	await expect(page.getByText(/“Desktop Audio”/)).toBeVisible();
+
+	const cable = page.getByRole("button", { name: /Only MemeOver's sound on stream/ });
+	await cable.focus();
+	await page.keyboard.press("Enter");
+	await expect(page.getByText(/“CABLE Input”/)).toBeVisible();
+	await expect(page.getByRole("button", { name: "OBS guide", exact: true })).toBeVisible();
+
+	await page.evaluate(() => {
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: async (text: string) => localStorage.setItem("test-clipboard", text),
+			},
+		});
+	});
+	await page.getByRole("button", { name: "Copy window name" }).click();
+	await expect
+		.poll(() => page.evaluate(() => localStorage.getItem("test-clipboard")))
+		.toBe("MemeOver Overlay");
 });
 
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {

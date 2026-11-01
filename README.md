@@ -50,6 +50,21 @@ MemeOver est une application autonome qui fonctionne sans streamer.
 Par défaut, l'app utilise le bot hébergé. Pour du self-host, activez le mode expert
 dans l'app et fournissez votre propre URL WebSocket.
 
+## Streamer avec OBS
+
+L'onglet **Stream** de l'app reprend ces étapes.
+
+1. Ajoutez une source « Display Capture » sur l'écran où MemeOver affiche les memes.
+   « Game Capture » ne suffit pas : elle capture uniquement le jeu.
+2. Gardez la source « Desktop Audio » d'OBS : elle inclut déjà le son de MemeOver.
+
+Pour n'envoyer que le son de MemeOver (Windows) : « Application Audio Capture » ne liste
+pas MemeOver, car Windows joue son son sous le nom « Microsoft Edge WebView2 ». Installez
+VB-Audio Virtual Cable, réglez la sortie de « Microsoft Edge WebView2 » sur « CABLE Input »
+dans le mélangeur de volume Windows, ajoutez une source OBS « Audio Input Capture » sur
+« CABLE Output », puis réglez son Audio Monitoring sur « Monitor and Output ». Les autres
+applications WebView2 ouvertes en même temps passent aussi par le câble.
+
 ## Commandes Discord
 
 | Commande | Permission | Description |
@@ -216,6 +231,21 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE).
 
 The desktop app uses the hosted bot by default. For self-hosting, enable expert
 mode in the app and provide your own WebSocket URL.
+
+## Streaming with OBS
+
+The app's **Stream** tab walks through these steps.
+
+1. Add a "Display Capture" source on the screen where MemeOver shows memes.
+   "Game Capture" is not enough: it only captures the game.
+2. Keep OBS's "Desktop Audio" source: it already includes MemeOver's sound.
+
+To send only MemeOver's sound (Windows): "Application Audio Capture" does not list
+MemeOver, because Windows plays its sound as "Microsoft Edge WebView2". Install VB-Audio
+Virtual Cable, set the "Microsoft Edge WebView2" output to "CABLE Input" in the Windows
+Volume mixer, add an OBS "Audio Input Capture" source on "CABLE Output", then set its
+Audio Monitoring to "Monitor and Output". Other WebView2 apps open at the same time also
+go to the cable.
 
 ## Discord Commands
 

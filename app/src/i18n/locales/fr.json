@@ -248,7 +248,30 @@
 		"overlay": "Overlay",
 		"server": "Serveur",
 		"history": "Historique",
-		"about": "À propos"
+		"about": "À propos",
+		"stream": "Stream"
+	},
+	"stream": {
+		"desktop": {
+			"title": "Streamer avec OBS",
+			"desc": "MemeOver affiche les memes dans une fenêtre transparente au-dessus de vos jeux. Dans OBS, une capture d'écran suffit pour les montrer en stream.",
+			"quickTitle": "Configuration rapide",
+			"quickVideo": "Dans OBS, ajoutez une source « Display Capture » et choisissez l'écran où MemeOver affiche les memes (onglet Overlay → Écran de l'overlay).",
+			"quickAudio": "Gardez la source « Desktop Audio » d'OBS : elle inclut déjà le son de MemeOver, avec tout ce que joue votre ordinateur. Si elle n'apparaît pas dans le mixeur OBS, activez-la dans les paramètres OBS → Audio → Global Audio Devices.",
+			"quickGameCapture": "« Game Capture » n'affiche pas MemeOver : elle capture uniquement le jeu, et l'overlay est une fenêtre séparée.",
+			"cableTitle": "Uniquement le son de MemeOver en stream (Windows)",
+			"cableIntro": "« Application Audio Capture » d'OBS ne liste pas MemeOver : Windows joue son son sous le nom « Microsoft Edge WebView2 ». OBS recommande un câble audio virtuel pour ces applications.",
+			"cableInstall": "Installez VB-Audio Virtual Cable.",
+			"cableMixer": "Ouvrez Paramètres Windows → Système → Son → Mélangeur de volume. Dans Applications, réglez le périphérique de sortie de « Microsoft Edge WebView2 » sur « CABLE Input ». S'il n'apparaît pas, jouez d'abord un meme avec du son.",
+			"cableObsInput": "Dans OBS, ajoutez une source « Audio Input Capture » sur « CABLE Output ».",
+			"cableMonitor": "Pour continuer à entendre les memes, ouvrez « Advanced Audio Properties » dans le mixeur OBS et réglez son Audio Monitoring sur « Monitor and Output ».",
+			"cableWarning": "Windows route le son par application : les autres applications WebView2 ouvertes en même temps passent aussi par le câble.",
+			"cableDownload": "Site de VB-Cable",
+			"obsGuide": "Guide OBS",
+			"otherPlatforms": "Sur macOS et Linux, utilisez aussi une capture d'écran ; les étapes audio ci-dessus sont écrites pour Windows.",
+			"windowName": "Nom de la fenêtre de l'overlay dans les listes OBS",
+			"copyWindowName": "Copier le nom de la fenêtre"
+		}
 	},
 	"server": {
 		"title": "Serveur self-hosted",
