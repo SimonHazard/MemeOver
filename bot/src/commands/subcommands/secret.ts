@@ -1,14 +1,19 @@
-import type { Attachment, ChatInputCommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
+import { admitGuildEvent } from "../../media/admission";
 import { isAllowedAndFresh, isCdnUrlExpired } from "../../media/allowlist";
 import { shouldDispatch } from "../../media/dedup";
-import { detectMediaType, urlPathname } from "../../media/extractor";
+import {
+	detectAttachmentMediaType,
+	detectMediaType,
+	normalizeCaption,
+	urlPathname,
+} from "../../media/extractor";
 import { broadcastToGuild } from "../../server";
-import { isPausedAt } from "../../utils/guild-pause";
 import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy";
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
-import type { MediaEvent, MediaType } from "../../utils/types";
+import type { MediaEvent } from "../../utils/types";
 import { notConfiguredResponse } from "../connection";
 import { errorResponse, successResponse } from "../response-panel";
 
@@ -16,25 +21,6 @@ const log = logger.child({ module: "secret" });
 
 /** Sentinel author_id for anonymous memes — surfaced in logs, ignored by the overlay (which checks `anonymous`). */
 const ANONYMOUS_AUTHOR_ID = "secret";
-const SECRET_TEXT_MAX_LENGTH = 140;
-
-function normalizeSecretText(raw: string | null): string | undefined {
-	const text = raw?.replace(/[\p{Cc}\p{Cn}]/gu, "").trim();
-	if (!text) return undefined;
-	return text.length > SECRET_TEXT_MAX_LENGTH
-		? `${text.slice(0, SECRET_TEXT_MAX_LENGTH).trimEnd()}…`
-		: text;
-}
-
-function detectAttachmentMediaType(attachment: Attachment): MediaType | null {
-	const contentType = attachment.contentType ?? "";
-	if (contentType.startsWith("image/gif")) return "gif";
-	if (contentType.startsWith("image/")) return "image";
-	if (contentType.startsWith("video/")) return "video";
-	if (contentType.startsWith("audio/")) return "audio";
-	return detectMediaType(attachment.url);
-}
-
 export async function handleSecret(
 	interaction: ChatInputCommandInteraction,
 	guildId: string,
@@ -47,7 +33,7 @@ export async function handleSecret(
 
 	const attachment = interaction.options.getAttachment("media");
 	const rawUrl = interaction.options.getString("url")?.trim() ?? null;
-	const text = normalizeSecretText(interaction.options.getString("text"));
+	const text = normalizeCaption(interaction.options.getString("text"));
 	const mediaUrl = attachment?.url ?? rawUrl;
 
 	if (!mediaUrl) {
@@ -80,7 +66,9 @@ export async function handleSecret(
 		return;
 	}
 
-	const media_type = attachment ? detectAttachmentMediaType(attachment) : detectMediaType(mediaUrl);
+	const media_type = attachment
+		? detectAttachmentMediaType(attachment.contentType, attachment.url)
+		: detectMediaType(mediaUrl);
 	if (!media_type) {
 		await interaction.reply(
 			errorResponse(
@@ -102,7 +90,14 @@ export async function handleSecret(
 		return;
 	}
 
-	if (!guildRegistry.isChannelAllowed(guildId, channelId)) {
+	const verdict = admitGuildEvent({
+		channelAllowed: guildRegistry.isChannelAllowed(guildId, channelId),
+		config: guildRegistry.getConfig(guildId),
+		source: "user",
+		now: Date.now(),
+		enforceSourcePolicy: false,
+	});
+	if (verdict === "channel_not_watched") {
 		await interaction.reply(
 			errorResponse(
 				t(locale, "secret.channelNotWatchedTitle"),
@@ -112,7 +107,7 @@ export async function handleSecret(
 		return;
 	}
 
-	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) {
+	if (verdict === "paused") {
 		await interaction.reply(
 			errorResponse(t(locale, "secret.pausedTitle"), t(locale, "secret.pausedDescription")),
 		);

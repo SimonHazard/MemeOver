@@ -7,6 +7,7 @@ import {
 	SlashCommandBuilder,
 } from "discord.js";
 import { type BotTranslationKey, frLocalization, interactionLocale, t } from "../i18n";
+import { CAPTION_MAX_LENGTH } from "../media/extractor";
 import { config } from "../utils/config";
 import { PAUSE_CHOICES } from "../utils/guild-pause";
 import { logger } from "../utils/logger";
@@ -103,7 +104,7 @@ export const memeover = new SlashCommandBuilder()
 					.setName(en("commands.secret.text.name"))
 					.setDescription(en("commands.secret.text.description"))
 					.setDescriptionLocalizations(fr("commands.secret.text.description"))
-					.setMaxLength(140)
+					.setMaxLength(CAPTION_MAX_LENGTH)
 					.setRequired(false),
 			),
 	)

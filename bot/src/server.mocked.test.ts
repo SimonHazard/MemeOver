@@ -16,6 +16,7 @@ mock.module("./utils/logger", () => ({ logger: pino({ level: "silent" }) }));
 const { guildRegistry } = await import("./utils/registry");
 const { createServer, broadcastToGuild, evictGuild } = await import("./server");
 const { applyGuildPause } = await import("./utils/guild-pause-timers");
+const { markShardLost, markShardReady } = await import("./utils/discord-gateway");
 let server: ReturnType<typeof startServer>;
 const clients: TestClient[] = [];
 const guildId = "123456789012345678";
@@ -54,6 +55,17 @@ test("health", async () => {
 	expect(body.status).toBe("ok");
 	expect(typeof body.uptime).toBe("number");
 	expect(body.connections.active).toBeGreaterThanOrEqual(0);
+});
+test("health fails while Discord has closed the gateway for good", async () => {
+	markShardLost(0, 4014);
+	try {
+		const response = await fetch(`${server.baseUrl}/health`);
+		expect(response.status).toBe(503);
+		expect((await response.json()).status).toBe("discord_unavailable");
+	} finally {
+		markShardReady(0);
+	}
+	expect((await fetch(`${server.baseUrl}/health`)).status).toBe(200);
 });
 for (const auth of [undefined, "Bearer wrong", "Bearer test-metrics-token"])
 	test(`metrics ${auth}`, async () => {

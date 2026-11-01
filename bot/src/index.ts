@@ -1,4 +1,4 @@
-import { startBot } from "./bot";
+import { destroyDiscordClient, startBot } from "./bot";
 import { registerCommands } from "./commands/commands";
 import { createServer } from "./server";
 import { config } from "./utils/config";
@@ -38,7 +38,18 @@ startBot()
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 
+// Below Docker's default 10 s stop timeout, so this exit and its log happen before SIGKILL.
+const SHUTDOWN_TIMEOUT_MS = 8_000;
+let shuttingDown = false;
+
 async function shutdown(signal: string): Promise<void> {
+	if (shuttingDown) return;
+	shuttingDown = true;
+	const killTimer = setTimeout(() => {
+		log.error({ event: "shutdown_timeout" }, "Graceful shutdown timed out");
+		process.exit(1);
+	}, SHUTDOWN_TIMEOUT_MS);
+	killTimer.unref();
 	log.info({ event: "shutdown", signal }, `Received ${signal}, shutting down gracefully...`);
 
 	// Notify all connected clients and close their connections
@@ -65,6 +76,12 @@ async function shutdown(signal: string): Promise<void> {
 	}
 
 	try {
+		await destroyDiscordClient();
+	} catch (err) {
+		log.error({ event: "shutdown_discord_failed", err }, "Failed to destroy Discord client");
+	}
+
+	try {
 		await app.stop();
 	} catch (err) {
 		log.error({ event: "shutdown_stop_failed", err }, "Failed to stop server during shutdown");
@@ -78,6 +95,8 @@ process.on("SIGINT", () => void shutdown("SIGINT"));
 
 // ─── Unhandled errors ─────────────────────────────────────────────────────────
 
+// Prefer a restart under restart: unless-stopped after an unhandled failure.
+// Continuing with unknown state risks corrupting subsequent work.
 process.on("unhandledRejection", (reason) => {
 	log.error({ event: "unhandled_rejection", err: reason }, "Unhandled promise rejection");
 	process.exit(1);

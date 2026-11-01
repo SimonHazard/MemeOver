@@ -88,13 +88,6 @@ export function createGuildRegistry(dataDir: string) {
 			return token;
 		},
 
-		/** Reset to watching ALL channels without changing the token. */
-		clearChannels(guildId: string): void {
-			const existing = registry[guildId];
-			if (!existing) return;
-			commit(guildId, { ...existing, channel_ids: [] });
-		},
-
 		setPausedUntil(guildId: string, pausedUntil: number | null): GuildConfig | null {
 			const cfg = registry[guildId];
 			if (!cfg) return null;

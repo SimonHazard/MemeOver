@@ -1,10 +1,10 @@
 import type { Message, PartialMessage } from "discord.js";
 import { broadcastToGuild } from "../server";
-import { isPausedAt } from "../utils/guild-pause";
 import { discordRefLogFields, logHash, mediaUrlLogFields } from "../utils/log-privacy";
 import { logger } from "../utils/logger";
 import { guildRegistry } from "../utils/registry";
 import type { MediaEvent, TextEvent } from "../utils/types";
+import { admitGuildEvent } from "./admission";
 import { shouldDispatch } from "./dedup";
 import { extractMedia, extractStickers, extractText, urlPathname } from "./extractor";
 import { classifyMessageSource, sourceField } from "./source";
@@ -59,8 +59,14 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 	const channelId = message.channelId;
 	const source = classifyMessageSource(message);
 
-	if (!guildRegistry.isChannelAllowed(guildId, channelId)) return;
-	if (isPausedAt(guildRegistry.getConfig(guildId), Date.now())) {
+	const verdict = admitGuildEvent({
+		channelAllowed: guildRegistry.isChannelAllowed(guildId, channelId),
+		config: guildRegistry.getConfig(guildId),
+		source,
+		now: Date.now(),
+		enforceSourcePolicy: true,
+	});
+	if (verdict === "paused") {
 		log.debug(
 			{
 				event: "paused_drop",
@@ -70,7 +76,7 @@ export function dispatchMedia(message: Message | PartialMessage, includeText: bo
 		);
 		return;
 	}
-	if (source === "bot_app" && !guildRegistry.getConfig(guildId)?.allow_bot_app_sources) return;
+	if (verdict !== "ok") return;
 
 	const msgLog = log.child(discordRefLogFields({ guildId, channelId, messageId: message.id }));
 	msgLog.debug({ event: "processing", includeText, source }, "Processing message");
