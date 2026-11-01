@@ -64,9 +64,6 @@
 			"includes": ["packages/ui/src/components/ui/slider.tsx"],
 			"linter": {
 				"rules": {
-					"correctness": {
-						"useExhaustiveDependencies": "off"
-					},
 					"suspicious": {
 						"noArrayIndexKey": "off"
 					}

@@ -17,7 +17,7 @@ Run `bun run check`, `bun run typecheck`, `bun run test`, and `bun run --cwd app
 Run `bun run build:site` and `bun run --cwd site check` for site or shared UI changes.
 For Rust: `cargo check --manifest-path app/src-tauri/Cargo.toml` and appropriate Rust tests.
 Local bot development reads `bot/.env`; Docker Compose reads the root `.env`.
-Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or `packages/ui/`; preview updates with `--dry-run` and `--diff` to preserve local customizations. The shared Tailwind utilities are ejected in `packages/ui/src/theme.css` (shadcn 4.21.1); review that full CSS block against upstream when updating components, since it no longer updates with the CLI.
+Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or `packages/ui/`; preview updates with `--dry-run` and `--diff` to preserve local customizations. Keep the root `shadcn` devDependency: `app/src/App.css` imports its shared Tailwind CSS at build time.
 
 ## Change checklists
 

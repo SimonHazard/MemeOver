@@ -23,7 +23,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
-- App/site (1.8.7): export shared UI sources directly and retain the complete shadcn 4.21.1 stylesheet in the shared theme using the official eject workflow.
+- App/site (1.8.7): export shared UI sources directly, remove their unused build configuration and keep the upstream shadcn stylesheet through an updated build dependency.
 
 - App (1.8.6): restrict overlay permissions to its window, reduce unused overlay dependencies, and cache Bun/Git availability for 30 seconds while refreshing probes after installation attempts.
 

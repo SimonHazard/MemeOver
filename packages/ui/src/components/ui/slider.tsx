@@ -18,7 +18,7 @@ function Slider<Value extends number | readonly number[]>({
 		const current = value ?? defaultValue;
 		if (Array.isArray(current)) return current;
 		return typeof current === "number" ? [current] : [min];
-	}, [value, defaultValue, min, max]);
+	}, [value, defaultValue, min]);
 
 	return (
 		<SliderPrimitive.Root
