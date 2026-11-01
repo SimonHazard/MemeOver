@@ -1,5 +1,5 @@
-import { listen } from "@tauri-apps/api/event";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
+import { useTauriEvent } from "@/hooks/useTauriEvent";
 import { useLanguageSync } from "@/i18n/use-language-sync";
 import { useAppStore } from "@/shared/store";
 import { ConnectionNotifications } from "./components/connection-notifications";
@@ -27,30 +27,7 @@ export function OverlayApp() {
 	useLanguageSync();
 
 	// Dev-only: simulated production background
-	const [devPreview, setDevPreview] = useState(false);
-
-	useEffect(() => {
-		if (!import.meta.env.DEV) return;
-		// Store the unlisten fn once the promise resolves so cleanup is synchronous.
-		let unlistenFn: (() => void) | undefined;
-		let disposed = false;
-		void listen<boolean>("overlay-dev-preview", (e) => {
-			if (!disposed) setDevPreview(e.payload);
-		})
-			.then((fn) => {
-				if (disposed) return fn();
-				else unlistenFn = fn;
-			})
-			.catch((error) => console.warn("[Overlay] Could not subscribe to dev preview", error));
-		return () => {
-			disposed = true;
-			if (unlistenFn) {
-				void Promise.resolve(unlistenFn()).catch((error) =>
-					console.warn("[Overlay] Could not unsubscribe from dev preview", error),
-				);
-			}
-		};
-	}, []);
+	const devPreview = useTauriEvent<boolean>("overlay-dev-preview") ?? false;
 
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">

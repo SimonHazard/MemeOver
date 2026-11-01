@@ -59,17 +59,6 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	if (typeof out.textSize === "string") {
 		out.textSize = LEGACY_TEXT_SIZE_PX[out.textSize] ?? DEFAULT_SETTINGS.textSize;
 	}
-	if (typeof out.textSize === "number") {
-		out.textSize = Math.max(12, Math.min(96, Math.round(out.textSize)));
-	}
-
-	// Clamp offsets to valid range — also catches values from the pre-tightened ±50 range.
-	if (typeof out.positionOffsetX === "number") {
-		out.positionOffsetX = Math.max(-20, Math.min(20, out.positionOffsetX));
-	}
-	if (typeof out.positionOffsetY === "number") {
-		out.positionOffsetY = Math.max(-20, Math.min(20, out.positionOffsetY));
-	}
 
 	// v0 → v1: legacy mediaSize was `%` of viewport width (vw). The new fit-box
 	// renderer expresses it as `%` of viewport min (vmin). On a 16:9 monitor
@@ -78,7 +67,7 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 	// while staying under the 90 cap for reasonable pre-migration values.
 	const savedVersion = typeof out.schemaVersion === "number" ? out.schemaVersion : 0;
 	if (savedVersion < 1) {
-		if (typeof out.mediaSize === "number") {
+		if (typeof out.mediaSize === "number" && Number.isFinite(out.mediaSize)) {
 			out.mediaSize = Math.max(10, Math.min(90, Math.round(out.mediaSize * 1.5)));
 		}
 	}
@@ -167,6 +156,24 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		30,
 		DEFAULT_SETTINGS.connectionNotificationDuration,
 	);
+	// Idempotent validation also applies to hand-edited files at the current schema version.
+	out.mediaSize = clampNumber(out.mediaSize, 10, 90, DEFAULT_SETTINGS.mediaSize);
+	out.duration = clampNumber(out.duration, 1, 30, DEFAULT_SETTINGS.duration);
+	out.volume = clampNumber(out.volume, 0, 100, DEFAULT_SETTINGS.volume);
+	out.positionOffsetX = clampNumber(out.positionOffsetX, -20, 20, DEFAULT_SETTINGS.positionOffsetX);
+	out.positionOffsetY = clampNumber(out.positionOffsetY, -20, 20, DEFAULT_SETTINGS.positionOffsetY);
+	out.textSize = clampNumber(out.textSize, 12, 96, DEFAULT_SETTINGS.textSize);
+	out.mediaOpacity = clampNumber(out.mediaOpacity, 0, 100, DEFAULT_SETTINGS.mediaOpacity);
+	out.bgOpacity = clampNumber(out.bgOpacity, 0, 100, DEFAULT_SETTINGS.bgOpacity);
+	out.bgBorderOpacity = clampNumber(out.bgBorderOpacity, 0, 100, DEFAULT_SETTINGS.bgBorderOpacity);
+	out.bgBorderWidth = clampNumber(out.bgBorderWidth, 0, 20, DEFAULT_SETTINGS.bgBorderWidth);
+	out.bgBorderRadius = clampNumber(out.bgBorderRadius, 0, 30, DEFAULT_SETTINGS.bgBorderRadius);
+	out.bgPadding = clampNumber(out.bgPadding, 0, 100, DEFAULT_SETTINGS.bgPadding);
+	for (const field of ["bgColor", "bgBorderColor", "textColor"] as const) {
+		if (typeof out[field] !== "string" || !/^#[0-9a-fA-F]{6}$/.test(out[field])) {
+			out[field] = DEFAULT_SETTINGS[field];
+		}
+	}
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;
@@ -206,6 +213,7 @@ export function normalizeSettings(saved: unknown): Settings {
 	};
 }
 
+/** Replace the complete settings snapshot; use patchSettings for partial edits. */
 export async function persistSettings(settings: Settings): Promise<void> {
 	const store = await Store.load("settings.json");
 	await store.set("settings", settings);
@@ -213,9 +221,19 @@ export async function persistSettings(settings: Settings): Promise<void> {
 	await emit("settings-changed", settings);
 }
 
-/** Read from disk immediately before editing a machine-local preference. */
-export async function patchSettings(mutator: (settings: Settings) => Settings): Promise<Settings> {
-	const updated = normalizeSettings(mutator(await loadSettings()));
-	await persistSettings(updated);
-	return updated;
+let settingsPatchQueue: Promise<void> = Promise.resolve();
+
+/** Serialize read/merge/save/notify in this window so concurrent edits see the latest write. */
+export function patchSettings(mutator: (settings: Settings) => Settings): Promise<Settings> {
+	const pending = settingsPatchQueue.then(async () => {
+		const updated = normalizeSettings(mutator(await loadSettings()));
+		await persistSettings(updated);
+		return updated;
+	});
+	// Keep each caller's rejection while allowing later edits to run after a failed operation.
+	settingsPatchQueue = pending.then(
+		() => undefined,
+		() => undefined,
+	);
+	return pending;
 }

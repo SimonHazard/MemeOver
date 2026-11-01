@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "overlay",
+  "description": "Capability for the overlay window",
+  "windows": ["overlay"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "store:default",
+    "core:window:allow-show"
+  ]
+}

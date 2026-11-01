@@ -13,7 +13,7 @@ export interface MonitorSize {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
- * Detects the current monitor's logical dimensions via the Tauri monitor API.
+ * Detects the settings window's current monitor dimensions via the Tauri monitor API.
  * Returns `null` until the async detection resolves.
  *
  * Uses TanStack Query with `staleTime: Infinity` — monitor size is stable for

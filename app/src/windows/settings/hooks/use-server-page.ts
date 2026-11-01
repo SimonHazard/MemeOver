@@ -22,7 +22,7 @@ import {
 	serverCreatorStatus,
 	serverCreatorStop,
 } from "@/shared/server-creator";
-import { loadSettings, persistSettings } from "@/shared/settings";
+import { patchSettings } from "@/shared/settings";
 import type { ServerStep } from "@/windows/settings/components/server/types";
 
 function mutationError(error: unknown): string {
@@ -260,17 +260,13 @@ export function useServerPage() {
 		}
 
 		const localWsUrl = `ws://localhost:${wsPort}/ws`;
-		const current = await queryClient.fetchQuery({
-			queryKey: ["settings"],
-			queryFn: loadSettings,
-		});
-		await persistSettings({
-			...current,
+		await patchSettings((s) => ({
+			...s,
 			wsUrl: localWsUrl,
 			expertMode: true,
 			guildId: parsed.guildId,
 			token: parsed.token,
-		});
+		}));
 		setField("guildId", parsed.guildId);
 		setField("guildToken", parsed.token);
 		void queryClient.invalidateQueries({ queryKey: ["settings"] });

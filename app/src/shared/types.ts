@@ -188,7 +188,7 @@ export interface Settings {
 	bgBorderOpacity: number;
 	/** Background border width in px (0–20) */
 	bgBorderWidth: number;
-	/** Background border radius in px (0–50) */
+	/** Background border radius in px (0–30) */
 	bgBorderRadius: number;
 	/** Background inner padding in px (0–100) */
 	bgPadding: number;

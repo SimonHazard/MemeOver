@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { moveOverlayToMonitor, sameMonitorPosition } from "@/shared/helpers";
 import { useAvailableMonitors } from "@/shared/hooks/useAvailableMonitors";
-import { loadSettings, persistSettings } from "@/shared/settings";
+import { loadSettings, patchSettings } from "@/shared/settings";
 
 export function MonitorSelector() {
 	const { t } = useTranslation();
@@ -49,15 +49,9 @@ export function MonitorSelector() {
 		if (!monitor) return;
 		setPending(index);
 		try {
-			// Always read the latest persisted settings before merging — same pattern
-			// as the form's mutationFn — so no other field gets accidentally reset.
-			const current = await queryClient.fetchQuery({
-				queryKey: ["settings"],
-				queryFn: loadSettings,
-			});
 			const identifier = await moveOverlayToMonitor(index, monitor.position);
 			if (identifier) {
-				await persistSettings({ ...current, overlayMonitor: identifier });
+				await patchSettings((s) => ({ ...s, overlayMonitor: identifier }));
 				void queryClient.invalidateQueries({ queryKey: ["settings"] });
 				const label = monitor.name ?? t("display.monitor_screen", { number: index + 1 });
 				toast.success(t("toast.monitorSwitched", { name: label }));
