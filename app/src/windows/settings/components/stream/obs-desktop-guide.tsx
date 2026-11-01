@@ -87,8 +87,10 @@ export function ObsDesktopGuide() {
 									<Steps
 										items={[
 											t("stream.desktop.cableInstall"),
+											t("stream.desktop.cableDisableDesktop"),
 											t("stream.desktop.cableMixer"),
 											t("stream.desktop.cableObsInput"),
+											t("stream.desktop.cableMonitorDevice"),
 											t("stream.desktop.cableMonitor"),
 										]}
 									/>

@@ -8,7 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Added
 
-- App/site (1.9.0): add a Stream tab to the settings that explains how to show MemeOver in OBS. The quick setup uses a "Display Capture" and OBS's default "Desktop Audio"; an optional Windows section routes only MemeOver's sound through VB-Audio Virtual Cable, because Windows plays it as "Microsoft Edge WebView2" and OBS's Application Audio Capture does not list it. The tab can copy the overlay window name. The overlay window now uses its own Windows class (`MemeOverOverlay`) so OBS can tell it apart from the settings window; its title stays "MemeOver Overlay" for existing OBS scenes.
+- App/site (1.9.0): add a Stream tab to the settings that explains how to show MemeOver in OBS. The quick setup uses a "Display Capture" and OBS's default "Desktop Audio"; an optional Windows section routes only MemeOver's sound through VB-Audio Virtual Cable, because Windows plays it as "Microsoft Edge WebView2" and OBS's Application Audio Capture does not list it. This isolated-audio route disables global Desktop Audio and monitors through headphones or speakers that OBS does not capture, to keep other PC sounds off stream and avoid duplicate audio. The tab can copy the overlay window name. The overlay window now uses its own Windows class (`MemeOverOverlay`) so OBS can tell it apart from the settings window; its title stays "MemeOver Overlay" for existing OBS scenes.
 
 ### Fixed
 

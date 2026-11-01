@@ -59,10 +59,16 @@ L'onglet **Stream** de l'app reprend ces étapes.
 2. Gardez la source « Desktop Audio » d'OBS : elle inclut déjà le son de MemeOver.
 
 Pour n'envoyer que le son de MemeOver (Windows) : « Application Audio Capture » ne liste
-pas MemeOver, car Windows joue son son sous le nom « Microsoft Edge WebView2 ». Installez
-VB-Audio Virtual Cable, réglez la sortie de « Microsoft Edge WebView2 » sur « CABLE Input »
+pas MemeOver, car Windows joue son son sous le nom « Microsoft Edge WebView2 ». Cette route
+remplace l'étape « Desktop Audio » ci-dessus : désactivez « Desktop Audio » et « Desktop
+Audio 2 » dans les paramètres OBS → Audio → Global Audio Devices pour ne plus diffuser
+tous les sons du PC. Installez VB-Audio Virtual Cable, réglez la sortie de
+« Microsoft Edge WebView2 » sur « CABLE Input »
 dans le mélangeur de volume Windows, ajoutez une source OBS « Audio Input Capture » sur
-« CABLE Output », puis réglez son Audio Monitoring sur « Monitor and Output ». Les autres
+« CABLE Output », puis choisissez votre casque ou vos enceintes comme périphérique de
+monitoring dans les paramètres audio OBS, jamais « CABLE Input ». Ne capturez pas ce
+périphérique avec une autre source OBS pour éviter de diffuser le son deux fois.
+Réglez ensuite l'Audio Monitoring de « CABLE Output » sur « Monitor and Output ». Les autres
 applications WebView2 ouvertes en même temps passent aussi par le câble.
 
 ## Commandes Discord
@@ -241,10 +247,15 @@ The app's **Stream** tab walks through these steps.
 2. Keep OBS's "Desktop Audio" source: it already includes MemeOver's sound.
 
 To send only MemeOver's sound (Windows): "Application Audio Capture" does not list
-MemeOver, because Windows plays its sound as "Microsoft Edge WebView2". Install VB-Audio
-Virtual Cable, set the "Microsoft Edge WebView2" output to "CABLE Input" in the Windows
-Volume mixer, add an OBS "Audio Input Capture" source on "CABLE Output", then set its
-Audio Monitoring to "Monitor and Output". Other WebView2 apps open at the same time also
+MemeOver, because Windows plays its sound as "Microsoft Edge WebView2". This route replaces
+the "Desktop Audio" step above: disable "Desktop Audio" and "Desktop Audio 2" in OBS
+Settings → Audio → Global Audio Devices to stop streaming all your PC's sounds. Install
+VB-Audio Virtual Cable, set the "Microsoft Edge WebView2" output to "CABLE Input" in the Windows
+Volume mixer, add an OBS "Audio Input Capture" source on "CABLE Output", then choose your
+headphones or speakers as OBS's monitoring device in its audio settings, never
+"CABLE Input". Do not capture that device with another OBS source, to avoid sending the
+sound to the stream twice. Then set Audio Monitoring for "CABLE Output" to "Monitor and
+Output". Other WebView2 apps open at the same time also
 go to the cable.
 
 ## Discord Commands

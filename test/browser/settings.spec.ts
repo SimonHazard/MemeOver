@@ -163,7 +163,11 @@ test("stream tab explains the OBS capture routes and copies the overlay window n
 	const cable = page.getByRole("button", { name: /Only MemeOver's sound on stream/ });
 	await cable.focus();
 	await page.keyboard.press("Enter");
-	await expect(page.getByText(/“CABLE Input”/)).toBeVisible();
+	await expect(page.getByText(/Windows Settings.*“CABLE Input”/)).toBeVisible();
+	await expect(page.getByText(/disable “Desktop Audio” and “Desktop Audio 2”/)).toBeVisible();
+	await expect(
+		page.getByText(/choose your headphones or speakers as the monitoring device/),
+	).toBeVisible();
 	await expect(page.getByRole("button", { name: "OBS guide", exact: true })).toBeVisible();
 
 	await page.evaluate(() => {
