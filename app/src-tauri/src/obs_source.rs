@@ -8,11 +8,13 @@
 
 use std::net::TcpListener;
 use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Runtime, State};
 
 /// Loopback only: never reachable from the LAN.
 const LOOPBACK: &str = "127.0.0.1";
 const MIN_PORT: u16 = 1024;
+const SESSION_HEADER: &str = "X-MemeOver-OBS-Session";
 
 #[derive(Default)]
 pub struct ObsSourceState {
@@ -61,9 +63,20 @@ pub fn start<R: Runtime>(
     // with no feedback. Probe first; a race with another program in between only
     // ends that thread, because the release profile unwinds.
     drop(TcpListener::bind((LOOPBACK, port)).map_err(|_| StartError::PortInUse)?);
+    // This is a public instance identifier, not a credential. A new process gets
+    // a new value even if it restarts between two browser liveness checks.
+    let session = format!(
+        "{}-{}",
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|e| StartError::Plugin(e.to_string()))?
+            .as_nanos()
+    );
     app.plugin(
         tauri_plugin_localhost::Builder::new(port)
             .host(LOOPBACK)
+            .on_request(move |_, response| response.add_header(SESSION_HEADER, &session))
             .build(),
     )
     .map_err(|e| StartError::Plugin(e.to_string()))?;
@@ -121,14 +134,17 @@ mod tests {
             .port()
     }
 
-    fn get(port: u16, path: &str) -> String {
+    fn request(port: u16, path: &str, method: &str) -> String {
         for _ in 0..50 {
             if let Ok(mut stream) = TcpStream::connect((LOOPBACK, port)) {
                 stream
                     .set_read_timeout(Some(Duration::from_secs(5)))
                     .unwrap();
-                write!(stream, "GET {path} HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n")
-                    .unwrap();
+                write!(
+                    stream,
+                    "{method} {path} HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n"
+                )
+                .unwrap();
                 let mut response = String::new();
                 let _ = stream.read_to_string(&mut response);
                 return response;
@@ -138,9 +154,20 @@ mod tests {
         panic!("the OBS source never accepted a connection on port {port}");
     }
 
+    fn get(port: u16, path: &str) -> String {
+        request(port, path, "GET")
+    }
+
     fn app() -> tauri::App<tauri::test::MockRuntime> {
         let context = tauri::test::mock_context(ObsAssets);
         tauri::test::mock_builder().build(context).unwrap()
+    }
+
+    fn session_header(response: &str) -> &str {
+        response
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{SESSION_HEADER}: ")))
+            .expect("the browser needs an instance identifier to detect an app restart")
     }
 
     #[test]
@@ -148,19 +175,46 @@ mod tests {
         let app = app();
         let state = ObsSourceState::default();
         let port = free_port();
-        assert!(TcpStream::connect((LOOPBACK, port)).is_err(), "off by default");
+        assert!(
+            TcpStream::connect((LOOPBACK, port)).is_err(),
+            "off by default"
+        );
 
         assert_eq!(start(app.handle(), &state, port), Ok(port));
         let response = get(port, "/obs.html");
         assert!(response.starts_with("HTTP/1.1 200"), "{response}");
         assert!(response.contains("Cache-Control: no-cache"), "{response}");
         assert!(response.contains("MemeOver OBS"), "{response}");
+        let session = session_header(&response);
+        assert!(!session.is_empty());
+        let head = request(port, "/obs.html", "HEAD");
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert_eq!(session_header(&head), session);
+        assert!(!head.contains("MemeOver OBS"), "HEAD sends no asset body");
 
         // Idempotent for the same port, restart required for another one.
         assert_eq!(start(app.handle(), &state, port), Ok(port));
+        assert_eq!(session_header(&get(port, "/obs.html")), session);
         assert_eq!(
             start(app.handle(), &state, free_port()),
             Err(StartError::RestartRequired)
+        );
+    }
+
+    #[test]
+    fn a_restarted_source_has_a_different_session_header() {
+        let first = app();
+        let first_port = free_port();
+        start(first.handle(), &ObsSourceState::default(), first_port).unwrap();
+        let first_response = get(first_port, "/obs.html");
+
+        let restarted = app();
+        let second_port = free_port();
+        start(restarted.handle(), &ObsSourceState::default(), second_port).unwrap();
+        let second_response = get(second_port, "/obs.html");
+        assert_ne!(
+            session_header(&first_response),
+            session_header(&second_response)
         );
     }
 
@@ -170,8 +224,14 @@ mod tests {
         let state = ObsSourceState::default();
         let taken = TcpListener::bind((LOOPBACK, 0)).unwrap();
         let port = taken.local_addr().unwrap().port();
-        assert_eq!(start(app.handle(), &state, port), Err(StartError::PortInUse));
-        assert_eq!(start(app.handle(), &state, 80), Err(StartError::InvalidPort));
+        assert_eq!(
+            start(app.handle(), &state, port),
+            Err(StartError::PortInUse)
+        );
+        assert_eq!(
+            start(app.handle(), &state, 80),
+            Err(StartError::InvalidPort)
+        );
         assert_eq!(*state.port.lock().unwrap(), None);
     }
 }

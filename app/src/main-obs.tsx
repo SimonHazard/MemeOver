@@ -58,5 +58,7 @@ function render() {
 	);
 }
 
-window.addEventListener("hashchange", render);
+// A new link starts a fresh session: close the previous socket and discard its
+// current media, queued items, reactions and revocation state before joining again.
+window.addEventListener("hashchange", () => window.location.reload());
 render();

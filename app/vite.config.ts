@@ -3,8 +3,11 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
 
 const host = process.env.TAURI_DEV_HOST;
+// Mirror the native localhost plugin's session header for dev and browser tests.
+const obsSourceHeaders = { "X-MemeOver-OBS-Session": randomUUID() };
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -31,6 +34,7 @@ export default defineConfig({
 	clearScreen: false,
 	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
+		headers: obsSourceHeaders,
 		port: 1420,
 		strictPort: true,
 		host: host || false,
@@ -46,6 +50,7 @@ export default defineConfig({
 			ignored: ["**/src-tauri/**"],
 		},
 	},
+	preview: { headers: obsSourceHeaders },
 	// Multi-page : un bundle par fenêtre Tauri
 	build: {
 		rolldownOptions: {

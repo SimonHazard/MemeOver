@@ -34,6 +34,11 @@ JOIN with the link's credentials, muted preview until a gesture, sound at once i
 request carrying the token. The Stream tab tests cover the opt-in source, busy ports, restart and
 the desktop mute synchronized with the tray.
 
+OBS regressions also check that a changed link starts a new bot session without
+old playback/queued items, and that failed, timed-out or changed local HTTP sessions
+silence the current player, close the bot connection and leave the source blank until refreshed. HEAD probes
+must contain neither credentials nor a referrer.
+
 `app/test/browser/settings.ts` mounts the actual settings application with Tauri's
 official IPC/event mocks. Stores live only in the browser context's localStorage;
 tests never read or write native settings, launch servers, or contact Discord.

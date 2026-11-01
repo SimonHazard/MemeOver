@@ -8,11 +8,11 @@ import { obsPreviewStatus } from "./obs-browser";
 const CONNECTED_VISIBLE_MS = 3000;
 
 /** Browser preview aid only: ObsApp never renders it inside OBS, so it is never on stream. */
-export function ObsStatusPill() {
+export function ObsStatusPill({ sourceStopped }: { sourceStopped: boolean }) {
 	const { t } = useTranslation();
 	const wsStatus = useAppStore((s) => s.wsStatus);
 	const revoked = useAppStore((s) => s.wsRevokedReason);
-	const status = obsPreviewStatus(wsStatus, revoked);
+	const status = sourceStopped ? "stopped" : obsPreviewStatus(wsStatus, revoked);
 	const [hidden, setHidden] = useState(false);
 
 	useEffect(() => {

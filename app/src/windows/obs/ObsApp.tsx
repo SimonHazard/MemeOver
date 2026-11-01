@@ -3,10 +3,12 @@ import { OverlayStage } from "@/windows/overlay/OverlayStage";
 import { IN_OBS } from "./obs-browser";
 import { ObsStatusPill } from "./obs-status-pill";
 import { SoundUnlock } from "./sound-unlock";
+import { useObsSourceSession } from "./use-obs-source-session";
 
 /** The OBS browser source: the desktop overlay's stage, without history or window APIs. */
 export function ObsApp() {
 	const [audioUnlocked, setAudioUnlocked] = useState(IN_OBS);
+	const sourceState = useObsSourceSession();
 
 	useEffect(() => {
 		if (audioUnlocked) return;
@@ -21,9 +23,11 @@ export function ObsApp() {
 
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
-			<OverlayStage muted={!audioUnlocked} />
-			{!IN_OBS && <ObsStatusPill />}
-			{!audioUnlocked && <SoundUnlock onUnlock={() => setAudioUnlocked(true)} />}
+			{sourceState === "active" && <OverlayStage muted={!audioUnlocked} />}
+			{!IN_OBS && <ObsStatusPill sourceStopped={sourceState === "stopped"} />}
+			{sourceState === "active" && !audioUnlocked && (
+				<SoundUnlock onUnlock={() => setAudioUnlocked(true)} />
+			)}
 		</div>
 	);
 }
