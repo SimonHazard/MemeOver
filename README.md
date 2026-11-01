@@ -55,6 +55,24 @@ dans l'app et fournissez votre propre URL WebSocket.
 L'onglet **Stream** de l'app présente les problèmes connus à l'image et au son, avec quelques
 pistes. Il est en bêta : il peut changer ou disparaître à tout moment.
 
+### Source navigateur OBS
+
+Désactivée par défaut. Une fois activée dans l'onglet **Stream**, MemeOver sert une page
+sur `127.0.0.1` uniquement (port 4466 par défaut, modifiable). Copiez le lien, ajoutez une
+source OBS « Browser » à la résolution de votre stream, laissez « Shutdown source when not
+visible » désactivé et cochez « Control audio via OBS » : les memes s'affichent au-dessus
+de n'importe quelle scène, capture de jeu comprise, avec leur propre son dans le mixeur.
+
+- Le lien contient le token du serveur, après le `#` (jamais envoyé au serveur local) :
+  ne le montrez pas en stream. S'il fuite, lancez `/memeover rotate`.
+- La page ne suit pas les changements de réglages : copiez à nouveau le lien.
+- Désactiver la source ou changer de port prend effet au redémarrage de MemeOver.
+- Fermer ou redémarrer MemeOver arrête aussi les sources déjà chargées en quelques secondes.
+  Pour reprendre, relancez MemeOver avec la source activée, puis actualisez-la dans OBS
+  (recopiez le lien si le port a changé).
+- Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
+  l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
+
 ## Commandes Discord
 
 | Commande | Permission | Description |
@@ -226,6 +244,24 @@ mode in the app and provide your own WebSocket URL.
 
 The app's **Stream** tab lists the known picture and sound problems, with a few ideas. It is in
 beta: it may change or disappear at any time.
+
+### OBS browser source
+
+Off by default. Once enabled in the **Stream** tab, MemeOver serves a page on
+`127.0.0.1` only (port 4466 by default, configurable). Copy the link, add an OBS
+"Browser" source at your stream resolution, leave "Shutdown source when not visible" off
+and check "Control audio via OBS": memes show over any scene, game capture included,
+with their own sound in the mixer.
+
+- The link carries the server token after the `#` (never sent to the local server):
+  do not show it on stream. If it leaks, run `/memeover rotate`.
+- The page does not follow settings changes: copy the link again.
+- Disabling the source or changing its port takes effect after restarting MemeOver.
+- Closing or restarting MemeOver also stops already loaded sources within a few seconds.
+  To resume, launch MemeOver with the source enabled, then refresh it in OBS
+  (copy the link again if the port changed).
+- To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
+  tray menu ("Mute overlay").
 
 ## Discord Commands
 

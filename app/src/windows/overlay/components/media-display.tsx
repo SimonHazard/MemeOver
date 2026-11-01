@@ -1,4 +1,5 @@
 import type React from "react";
+import { useEffect, useRef } from "react";
 import type { DisplayQueueItem, Settings, TextPosition } from "@/shared/types";
 import { isVideoBackedGif } from "../media/media-kind";
 import { AudioEqualizer } from "./audio-equalizer";
@@ -127,6 +128,7 @@ interface MediaDisplayProps {
 	onVideoEnd: () => void;
 	startTimer: () => void;
 	onMediaError: () => void;
+	muted: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -137,7 +139,20 @@ export function MediaDisplay({
 	onVideoEnd,
 	startTimer,
 	onMediaError,
+	muted,
 }: MediaDisplayProps) {
+	const videoBackedGif = item.type === "MEDIA" && isVideoBackedGif(item.media_type, item.media_url);
+	const soundMuted = muted || videoBackedGif || settings.volume === 0;
+	// React does not reliably update `muted` after mount: assign the property so a
+	// toggle during playback cuts or restores the sound immediately.
+	const playerRef = useRef<HTMLMediaElement | null>(null);
+	const attachPlayer = (element: HTMLMediaElement | null) => {
+		playerRef.current = element;
+	};
+	useEffect(() => {
+		if (playerRef.current) playerRef.current.muted = soundMuted;
+	}, [soundMuted]);
+
 	// Fit-box model: the media fits a `mediaSize × mediaSize` vmin square,
 	// preserving its aspect ratio. vmin (vs vw) keeps the visual size consistent
 	// across monitor orientations and caps height automatically for portrait content.
@@ -231,14 +246,14 @@ export function MediaDisplay({
 	};
 
 	const mediaNode = (() => {
-		const videoBackedGif = isVideoBackedGif(item.media_type, item.media_url);
 		if (item.media_type === "video" || videoBackedGif) {
 			return (
 				<video
+					ref={attachPlayer}
 					src={item.media_url}
 					autoPlay
 					loop={videoBackedGif}
-					muted={videoBackedGif || settings.volume === 0}
+					muted={soundMuted}
 					onLoadedMetadata={(e) => {
 						(e.currentTarget as HTMLVideoElement).volume = videoBackedGif
 							? 0
@@ -276,10 +291,11 @@ export function MediaDisplay({
 					}
 				>
 					<AudioEqualizer />
-					{/* biome-ignore lint/a11y/useMediaCaption: overlay média */}
 					<audio
+						ref={attachPlayer}
 						src={item.media_url}
 						autoPlay
+						muted={soundMuted}
 						className="hidden"
 						onPlay={startTimer}
 						onEnded={onVideoEnd}

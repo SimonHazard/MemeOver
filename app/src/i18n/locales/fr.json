@@ -241,7 +241,8 @@
 	"tray": {
 		"show": "Afficher les paramètres",
 		"hide": "Masquer les paramètres",
-		"quit": "Quitter"
+		"quit": "Quitter",
+		"muteOverlay": "Couper le son de l'overlay"
 	},
 	"tabs": {
 		"dashboard": "Tableau de bord",
@@ -274,6 +275,41 @@
 			"isolateProblem": "Selon votre système, il peut ne pas apparaître sous le nom MemeOver, et une capture par application peut ne pas le trouver.",
 			"isolateHint": "Un câble audio virtuel peut aider, mais c'est une manipulation avancée : elle peut toucher d'autres applications et les rendre muettes quand votre logiciel de stream est fermé.",
 			"testTip": "Avant de passer en direct, faites un enregistrement d'essai avec un meme qui a du son."
+		},
+		"obsSource": {
+			"title": "Source navigateur OBS",
+			"desc": "Affiche les memes dans OBS comme une source « Browser » : transparente au-dessus de n'importe quelle scène, capture de jeu comprise, avec son propre son dans le mixeur OBS. Désactivée par défaut ; une fois activée, MemeOver sert la page sur cet ordinateur uniquement (127.0.0.1).",
+			"portLabel": "Port local",
+			"portInvalid": "Choisissez un port entre 1024 et 65535.",
+			"portInUse": "Le port {{port}} est utilisé par un autre programme — choisissez-en un autre.",
+			"startError": "La source navigateur OBS n'a pas pu démarrer. Redémarrez MemeOver et réessayez.",
+			"restartNotice": "La page locale garde son état actuel jusqu'au redémarrage de MemeOver.",
+			"restartNow": "Redémarrer MemeOver",
+			"urlLabel": "Lien OBS",
+			"showUrl": "Afficher le lien OBS",
+			"hideUrl": "Masquer le lien OBS",
+			"profileLabel": "Profil d'affichage à intégrer",
+			"profileCurrent": "Réglages actuels",
+			"profileDefaults": "Réglages par défaut",
+			"copyUrl": "Copier l'URL OBS",
+			"secretWarning": "Ce lien contient le token de votre serveur : ne le montrez jamais en stream. S'il fuite, lancez /memeover rotate sur Discord, puis copiez le nouveau lien.",
+			"copyAgain": "La page OBS ne suit pas les changements ultérieurs : copiez à nouveau le lien après avoir modifié vos réglages d'affichage ou de connexion.",
+			"missingCredentials": "Connectez d'abord MemeOver à votre serveur Discord (onglet Connexion) pour obtenir le lien OBS.",
+			"obsTitle": "Dans OBS",
+			"obsAdd": "Ajoutez une source « Browser » et collez le lien dans URL.",
+			"obsSize": "Réglez Width et Height sur la résolution de votre stream, par exemple 1920 × 1080.",
+			"obsShutdown": "Laissez « Shutdown source when not visible » désactivé, sinon les memes envoyés pendant que la source est masquée sont perdus.",
+			"obsAudio": "Cochez « Control audio via OBS » pour que la source ait sa propre entrée dans le mixeur OBS.",
+			"obsMonitor": "Pour entendre vous-même les memes, ouvrez « Advanced Audio Properties » et réglez l'Audio Monitoring de la source sur « Monitor and Output »."
+		},
+		"desktopMute": {
+			"title": "Son de l'overlay sur le bureau",
+			"desc": "Coupe le son des memes sur votre écran uniquement. La source navigateur OBS garde son son. Aussi disponible depuis le menu de la barre système.",
+			"mute": "Couper le son de l'overlay",
+			"unmute": "Rétablir le son de l'overlay",
+			"stateMuted": "Le son de l'overlay est coupé.",
+			"stateAudible": "L'overlay joue le son.",
+			"doubleHint": "Avec la source navigateur OBS activée, vous risquez d'entendre les memes deux fois et de les envoyer deux fois au stream : coupez le son de l'overlay."
 		}
 	},
 	"server": {
@@ -488,5 +524,19 @@
 		"sampleText": "Aperçu local de l’overlay : modifiez les réglages d’affichage, puis enregistrez. Ce texte reste à l’écran.",
 		"sampleCaption": "Exemple local — les réglages d’affichage enregistrés s’appliquent ici.",
 		"error": "Impossible d’envoyer la commande de test local."
+	},
+	"obs": {
+		"status": {
+			"connecting": "MemeOver · connexion…",
+			"connected": "MemeOver · connecté",
+			"reconnecting": "MemeOver · reconnexion…",
+			"stopped": "MemeOver · source arrêtée : relancez MemeOver, puis actualisez cette page",
+			"revoked": "MemeOver · lien révoqué : copiez-en un nouveau depuis l'onglet Stream"
+		},
+		"enableSound": "Cliquez pour activer le son",
+		"incomplete": {
+			"title": "Ce lien OBS est incomplet",
+			"desc": "Copiez-le à nouveau depuis l'onglet Stream de MemeOver."
+		}
 	}
 }

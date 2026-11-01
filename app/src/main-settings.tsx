@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { startHistoryAutoPurge } from "./shared/history";
 import { initSettingsStore } from "./shared/store";
+import { initStreamControls } from "./shared/stream-controls";
 import { getTheme } from "./shared/theme";
 import {
 	BACKGROUND_UPDATE_INTERVAL_MS,
@@ -20,6 +21,7 @@ void syncTrayLabels().catch((err) => console.warn("[Tray] Could not translate la
 
 // Subscribe to ws-status-changed events emitted by the overlay
 void initSettingsStore();
+void initStreamControls().catch((err) => console.warn("[Stream] Could not restore controls:", err));
 startHistoryAutoPurge();
 
 // Ping GitHub for a newer release — stages it for the next launch when

@@ -1,14 +1,25 @@
 import { NbBadge } from "@memeover/ui/components/branded/nb-badge";
 import { Alert, AlertDescription, AlertTitle } from "@memeover/ui/components/ui/alert";
 import { NB_SHADOW_LG } from "@memeover/ui/lib/nb-classes";
+import { useQueryClient } from "@tanstack/react-query";
 import { FlaskConical } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useTauriEventVersion } from "@/hooks/useTauriEvent";
+import { DesktopMuteCard } from "@/windows/settings/components/stream/desktop-mute-card";
+import { ObsSourceCard } from "@/windows/settings/components/stream/obs-source-card";
 import { StreamIssues } from "@/windows/settings/components/stream/stream-issues";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function StreamPage() {
 	const { t } = useTranslation();
+	const queryClient = useQueryClient();
+	// The tray mute writes settings outside React: refresh the cards when it does.
+	const settingsVersion = useTauriEventVersion("settings-changed");
+	useEffect(() => {
+		if (settingsVersion > 0) void queryClient.invalidateQueries({ queryKey: ["settings"] });
+	}, [settingsVersion, queryClient]);
 
 	return (
 		<div className="p-5">
@@ -26,6 +37,8 @@ export function StreamPage() {
 						{t("stream.beta.badge")}
 					</NbBadge>
 				</Alert>
+				<ObsSourceCard />
+				<DesktopMuteCard />
 				<StreamIssues />
 			</div>
 		</div>

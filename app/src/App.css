@@ -39,11 +39,14 @@
 	font-display: swap;
 }
 
-/* ─── Overlay window — fully transparent ──────────────────────────────────── */
+/* ─── Overlay window and OBS browser source — fully transparent ─────────────── */
 
 [data-window="overlay"],
 [data-window="overlay"] body,
-[data-window="overlay"] #root {
+[data-window="overlay"] #root,
+[data-window="obs"],
+[data-window="obs"] body,
+[data-window="obs"] #root {
 	background: transparent !important;
 	margin: 0;
 	padding: 0;
@@ -53,7 +56,9 @@
 }
 
 [data-window="overlay"] video,
-[data-window="overlay"] img {
+[data-window="overlay"] img,
+[data-window="obs"] video,
+[data-window="obs"] img {
 	background: transparent !important;
 }
 

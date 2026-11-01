@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{
-    menu::{Menu, MenuItem, PredefinedMenuItem},
+    menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Listener, Manager, WebviewUrl, WebviewWindowBuilder,
 };
@@ -10,6 +10,7 @@ use tauri::{
 use tauri_plugin_autostart::ManagerExt as _;
 
 mod auto_update;
+mod obs_source;
 mod server_creator;
 
 const AUTOSTART_ARG: &str = "--autostart";
@@ -21,6 +22,7 @@ const AUTOSTART_ARG: &str = "--autostart";
 struct TrayState {
     show_item: Mutex<MenuItem<tauri::Wry>>,
     hide_item: Mutex<MenuItem<tauri::Wry>>,
+    mute_item: Mutex<CheckMenuItem<tauri::Wry>>,
     quit_item: Mutex<MenuItem<tauri::Wry>>,
 }
 
@@ -387,6 +389,7 @@ fn update_tray_labels(
     state: tauri::State<TrayState>,
     show_label: String,
     hide_label: String,
+    mute_label: String,
     quit_label: String,
 ) -> Result<(), String> {
     state
@@ -402,12 +405,30 @@ fn update_tray_labels(
         .set_text(hide_label)
         .map_err(|e| e.to_string())?;
     state
+        .mute_item
+        .lock()
+        .map_err(|_| "TrayState lock poisoned".to_string())?
+        .set_text(mute_label)
+        .map_err(|e| e.to_string())?;
+    state
         .quit_item
         .lock()
         .map_err(|_| "TrayState lock poisoned".to_string())?
         .set_text(quit_label)
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// Reassert the tray mute checkmark from the persisted setting. Clicking a check
+/// item toggles it natively, so the settings page calls this after every change.
+#[tauri::command]
+fn set_tray_overlay_muted(state: tauri::State<TrayState>, muted: bool) -> Result<(), String> {
+    state
+        .mute_item
+        .lock()
+        .map_err(|_| "TrayState lock poisoned".to_string())?
+        .set_checked(muted)
+        .map_err(|e| e.to_string())
 }
 
 // ─── Overlay window ───────────────────────────────────────────────────────────
@@ -515,14 +536,23 @@ fn show_settings_window(app: &tauri::AppHandle) {
 fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     let show_i = MenuItem::with_id(app, "show", "Show MemeOver", true, None::<&str>)?;
     let hide_i = MenuItem::with_id(app, "hide", "Hide MemeOver", true, None::<&str>)?;
+    let mute_i = CheckMenuItem::with_id(
+        app,
+        "toggle_overlay_mute",
+        "Mute overlay",
+        true,
+        false,
+        None::<&str>,
+    )?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show_i, &hide_i, &sep, &quit_i])?;
+    let menu = Menu::with_items(app, &[&show_i, &hide_i, &mute_i, &sep, &quit_i])?;
 
     // Store handles so the frontend can update labels on language change
     app.manage(TrayState {
         show_item: Mutex::new(show_i),
         hide_item: Mutex::new(hide_i),
+        mute_item: Mutex::new(mute_i),
         quit_item: Mutex::new(quit_i),
     });
 
@@ -562,6 +592,11 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
                 if let Some(w) = app.get_webview_window("settings") {
                     let _ = w.hide();
                 }
+            }
+            // The settings page owns persistence: it flips the setting, then
+            // reasserts the checkmark with `set_tray_overlay_muted`.
+            "toggle_overlay_mute" => {
+                let _ = app.emit("overlay-mute-toggle-requested", ());
             }
             "quit" => app.exit(0),
             _ => {}
@@ -616,6 +651,9 @@ pub fn run() {
     tauri::Builder::default()
         .manage(server_creator::ServerCreatorState::default())
         .manage(auto_update::AutoUpdateState::default())
+        // The localhost plugin is not in this chain: it starts only once the user
+        // enables the OBS source (`obs_source::start_obs_source`).
+        .manage(obs_source::ObsSourceState::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -635,6 +673,9 @@ pub fn run() {
             reload_overlay,
             quit_overlay,
             update_tray_labels,
+            set_tray_overlay_muted,
+            obs_source::start_obs_source,
+            obs_source::obs_source_status,
             toggle_overlay_preview_mode,
             move_overlay_to_monitor,
             server_creator::server_creator_status,

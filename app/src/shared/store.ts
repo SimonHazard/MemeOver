@@ -10,6 +10,7 @@ import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors"
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
+import type { ObsSourceStartError } from "./stream-controls";
 import type {
 	DisplayQueueItem,
 	FloatingReaction,
@@ -104,6 +105,10 @@ interface AppStore {
 	// Release downloaded in the background, applied on the next launch
 	stagedUpdate: StagedUpdate | null;
 	setStagedUpdate: (update: StagedUpdate) => void;
+
+	// Settings window: port the local OBS page is served on this session, and the last start error
+	obsSourceRunningPort: number | null;
+	obsSourceError: ObsSourceStartError | null;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -223,6 +228,9 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	stagedUpdate: null,
 	setStagedUpdate: (update) => set({ stagedUpdate: update, updateAvailable: true }),
+
+	obsSourceRunningPort: null,
+	obsSourceError: null,
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────

@@ -214,6 +214,7 @@ if (root)
 							onVideoEnd={() => {}}
 							startTimer={() => {}}
 							onMediaError={() => {}}
+							muted={false}
 						/>
 					</div>
 				)}

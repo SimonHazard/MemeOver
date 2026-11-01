@@ -183,6 +183,103 @@ test("settings tabs fit the minimum window width in French", async ({ page }) =>
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(800);
 });
 
+async function streamTab(page: Page) {
+	await page.goto("/test/browser/settings.html");
+	await page.evaluate(() => {
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: async (text: string) => localStorage.setItem("test-clipboard", text),
+			},
+		});
+	});
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await expect(page.getByText("OBS browser source", { exact: true })).toBeVisible();
+}
+
+test("the OBS browser source is opt-in and copies a link with credentials only after #", async ({
+	page,
+}) => {
+	await streamTab(page);
+	const toggle = page.getByRole("switch", { name: "OBS browser source" });
+	await expect(toggle).toHaveAttribute("aria-checked", "false");
+	await expect(page.getByLabel("OBS link", { exact: true })).toHaveCount(0);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-obs-running"))).toBeNull();
+
+	await toggle.click();
+	const link = page.getByLabel("OBS link", { exact: true });
+	await expect(link).toHaveValue(/\/obs\.html#••••••$/);
+	expect((await settings(page)).obsSourceEnabled).toBe(true);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-obs-running"))).toBe("4466");
+	await expect(page.getByText(/“Shutdown source when not visible” off/)).toBeVisible();
+	await expect(page.getByText(/never show it on stream/)).toBeVisible();
+
+	await page.getByRole("button", { name: "Show the OBS link" }).click();
+	await expect(link).toHaveValue(/test-only-token/);
+	await page.getByRole("button", { name: "Hide the OBS link" }).click();
+	await expect(link).not.toHaveValue(/test-only-token/);
+
+	await page.getByRole("button", { name: "Copy OBS URL" }).click();
+	const copied = await expect
+		.poll(() => page.evaluate(() => localStorage.getItem("test-clipboard")))
+		.toContain("/obs.html#")
+		.then(() => page.evaluate(() => localStorage.getItem("test-clipboard") ?? ""));
+	const url = new URL(copied);
+	expect(url.search).toBe("");
+	expect(`${url.origin}${url.pathname}`).not.toContain("test-only-token");
+	const params = new URLSearchParams(url.hash.slice(1));
+	expect(params.get("g")).toBe("123456789012345678");
+	expect(params.get("t")).toBe("test-only-token");
+	expect(params.get("p")).toBeTruthy();
+
+	// The plugin cannot stop: turning it off asks for a restart.
+	await toggle.click();
+	expect((await settings(page)).obsSourceEnabled).toBe(false);
+	await page.getByRole("button", { name: "Restart MemeOver" }).click();
+	await expect.poll(() => page.evaluate(() => localStorage.getItem("test-restarted"))).toBe("1");
+});
+
+test("a busy OBS source port is reported and another port can be chosen", async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem("test-obs-busy-port", "4466"));
+	await streamTab(page);
+	await page.getByRole("switch", { name: "OBS browser source" }).click();
+	await expect(
+		page.getByText("Port 4466 is used by another program — choose another."),
+	).toBeVisible();
+	await expect(page.getByLabel("OBS link", { exact: true })).toHaveCount(0);
+
+	const port = page.getByLabel("Local port", { exact: true });
+	await port.fill("80");
+	await expect(page.getByText("Choose a port between 1024 and 65535.")).toBeVisible();
+	await port.fill("5123");
+	await port.press("Enter");
+	await expect(page.getByLabel("OBS link", { exact: true })).toBeVisible();
+	expect((await settings(page)).obsSourcePort).toBe(5123);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-obs-running"))).toBe("5123");
+});
+
+test("the desktop overlay mute follows the Stream tab and the tray", async ({ page }) => {
+	await streamTab(page);
+	await page.getByRole("button", { name: "Mute the desktop overlay" }).click();
+	await expect(page.getByText("The desktop overlay is muted.")).toBeVisible();
+	expect((await settings(page)).desktopOverlayMuted).toBe(true);
+	expect(await page.evaluate(() => localStorage.getItem("test-tray-muted"))).toBe("true");
+
+	await page.evaluate(() =>
+		(window as unknown as { testEmit: (event: string) => Promise<void> }).testEmit(
+			"overlay-mute-toggle-requested",
+		),
+	);
+	await expect(page.getByRole("button", { name: "Mute the desktop overlay" })).toBeVisible();
+	expect((await settings(page)).desktopOverlayMuted).toBe(false);
+	expect(await page.evaluate(() => localStorage.getItem("test-tray-muted"))).toBe("false");
+
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await expect(page.getByText("The desktop overlay plays sound.")).toBeVisible();
+	await expect(page.getByText(/you may hear memes twice/)).toHaveCount(0);
+});
+
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {
 	await overlay(page);
 	await page.getByLabel("Profile name", { exact: true }).fill("Browser profile");
@@ -411,6 +508,7 @@ test("tray labels follow the interface language from startup", async ({ page }) 
 	await expect.poll(tray).toEqual({
 		showLabel: "Show settings",
 		hideLabel: "Hide settings",
+		muteLabel: "Mute overlay",
 		quitLabel: "Quit",
 	});
 	await page.getByRole("button", { name: "About", exact: true }).click();
@@ -418,6 +516,7 @@ test("tray labels follow the interface language from startup", async ({ page }) 
 	await expect.poll(tray).toEqual({
 		showLabel: "Afficher les paramètres",
 		hideLabel: "Masquer les paramètres",
+		muteLabel: "Couper le son de l'overlay",
 		quitLabel: "Quitter",
 	});
 });

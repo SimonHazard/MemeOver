@@ -1,3 +1,4 @@
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import appPackage from "../../package.json";
 import { DEFAULT_SETTINGS } from "../../src/shared/types";
@@ -66,6 +67,26 @@ mockIPC(
 			localStorage.setItem("test-tray-labels", JSON.stringify(args));
 			return null;
 		}
+		// OBS source: the native server is never started; a busy port is simulated per test.
+		if (cmd === "start_obs_source") {
+			const running = sessionStorage.getItem("test-obs-running");
+			if (running && running !== String(args.port)) throw "restart_required";
+			if (localStorage.getItem("test-obs-busy-port") === String(args.port)) throw "port_in_use";
+			sessionStorage.setItem("test-obs-running", String(args.port));
+			return args.port;
+		}
+		if (cmd === "obs_source_status") {
+			const running = sessionStorage.getItem("test-obs-running");
+			return running ? Number(running) : null;
+		}
+		if (cmd === "set_tray_overlay_muted") {
+			localStorage.setItem("test-tray-muted", String(args.muted));
+			return null;
+		}
+		if (cmd === "plugin:process|restart") {
+			localStorage.setItem("test-restarted", "1");
+			return null;
+		}
 		if (cmd === "server_creator_logs") return [];
 		if (cmd === "server_creator_status")
 			return {
@@ -92,4 +113,6 @@ mockIPC(
 	},
 	{ shouldMockEvents: true },
 );
+// Lets tests simulate native events, such as a click on the tray's "Mute overlay" item.
+Object.assign(window, { testEmit: (event: string) => emit(event) });
 await import("../../src/main-settings");
