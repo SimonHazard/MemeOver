@@ -50,6 +50,11 @@ MemeOver est une application autonome qui fonctionne sans streamer.
 Par défaut, l'app utilise le bot hébergé. Pour du self-host, activez le mode expert
 dans l'app et fournissez votre propre URL WebSocket.
 
+## Streamer avec MemeOver
+
+L'onglet **Stream** de l'app présente les problèmes connus à l'image et au son, avec quelques
+pistes. Il est en bêta : il peut changer ou disparaître à tout moment.
+
 ## Commandes Discord
 
 | Commande | Permission | Description |
@@ -216,6 +221,11 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE).
 
 The desktop app uses the hosted bot by default. For self-hosting, enable expert
 mode in the app and provide your own WebSocket URL.
+
+## Streaming with MemeOver
+
+The app's **Stream** tab lists the known picture and sound problems, with a few ideas. It is in
+beta: it may change or disappear at any time.
 
 ## Discord Commands
 

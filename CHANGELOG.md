@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+### Added
+
+- App/site (1.9.0): add a beta Stream tab to the settings that lists the known picture and sound problems when streaming MemeOver, with a few ideas that name no third-party product. The tab may change or disappear at any time. The overlay window now uses its own Windows class (`MemeOverOverlay`) and keeps its title "MemeOver Overlay". An existing OBS source that matches the overlay by type must reselect the window; matching by title or executable is unaffected. Tighten the settings tabs so the sixth one fits at the 800 px minimum width in French.
+
 ### Fixed
 
 - App/site (1.8.8): clear a connection field's validation error as soon as its value is corrected. The error previously disappeared only on blur, moving "Save & connect" between mouse press and release so the click could be lost. Retry WebKit browser tests once in CI after intermittent Linux WebKit page freezes.

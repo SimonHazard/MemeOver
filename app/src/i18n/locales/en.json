@@ -248,7 +248,33 @@
 		"overlay": "Overlay",
 		"server": "Server",
 		"history": "History",
-		"about": "About"
+		"about": "About",
+		"stream": "Stream"
+	},
+	"stream": {
+		"beta": {
+			"badge": "Beta",
+			"title": "Tab in testing",
+			"text": "Its content may change, and it may disappear at any time."
+		},
+		"issues": {
+			"title": "Streaming with MemeOver",
+			"desc": "MemeOver shows memes in a transparent window, separate from your game. Depending on your streaming software and setup, they may be missing from the picture or the sound. Here are the known problems and a few ideas.",
+			"hintLabel": "Idea:",
+			"videoTitle": "Memes do not appear on stream",
+			"videoProblem": "A capture limited to the game does not see the overlay.",
+			"videoHint": "Capture the whole screen where MemeOver shows memes (Overlay tab → Overlay screen). Everything on that screen then becomes visible: notifications, messages, open windows.",
+			"fullscreenTitle": "Memes do not appear on your screen",
+			"fullscreenProblem": "The exclusive fullscreen mode of some games can block the overlay, on your screen and on stream.",
+			"fullscreenHint": "Switch your game to borderless or windowed fullscreen.",
+			"mixedTitle": "Meme sound comes with all your other sounds",
+			"mixedProblem": "Capturing desktop audio includes MemeOver, along with everything else your computer plays.",
+			"mixedHint": "This is the simplest setup. If the level is wrong, adjust “Media volume” in the Overlay tab.",
+			"isolateTitle": "MemeOver's sound is hard to isolate",
+			"isolateProblem": "Depending on your system, it may not be listed under the MemeOver name, and a per-app capture may not find it.",
+			"isolateHint": "A virtual audio cable can help, but it is an advanced setup: it may affect other apps and silence them when your streaming software is closed.",
+			"testTip": "Before going live, make a test recording with a meme that has sound."
+		}
 	},
 	"server": {
 		"title": "Self-hosted server",

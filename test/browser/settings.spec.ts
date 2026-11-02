@@ -136,7 +136,7 @@ test("unsaved dialog supports stay, escape, discard, save and failed save", asyn
 
 test("navigation, language, theme, history and dashboard controls", async ({ page }) => {
 	await page.goto("/test/browser/settings.html");
-	for (const tab of ["Overlay", "Server", "History", "About", "Dashboard"]) {
+	for (const tab of ["Overlay", "Stream", "Server", "History", "About", "Dashboard"]) {
 		await page.getByRole("button", { name: tab, exact: true }).click();
 		await expect(page.locator("main")).toBeVisible();
 	}
@@ -149,6 +149,38 @@ test("navigation, language, theme, history and dashboard controls", async ({ pag
 	const before = await page.locator("html").getAttribute("class");
 	await theme.click();
 	await expect.poll(() => page.locator("html").getAttribute("class")).not.toBe(before);
+});
+
+test("stream tab warns it is in beta and lists the known problems with ideas", async ({ page }) => {
+	await page.goto("/test/browser/settings.html");
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await expect(page.getByText("Beta", { exact: true })).toBeVisible();
+	await expect(page.getByText(/may disappear at any time/)).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Streaming with MemeOver" })).toBeVisible();
+	for (const heading of [
+		"Memes do not appear on stream",
+		"Memes do not appear on your screen",
+		"Meme sound comes with all your other sounds",
+		"MemeOver's sound is hard to isolate",
+	]) {
+		await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+	}
+	await expect(page.getByText(/Everything on that screen then becomes visible/)).toBeVisible();
+	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
+});
+
+test("settings tabs fit the minimum window width in French", async ({ page }) => {
+	await page.setViewportSize({ width: 800, height: 560 });
+	await page.goto("/test/browser/settings.html");
+	await page.getByRole("button", { name: "About", exact: true }).click();
+	await page.getByRole("button", { name: "Français", exact: true }).click();
+	const tabs = page.getByRole("button", { name: "Tableau de bord", exact: true }).locator("..");
+	await expect(tabs).toBeVisible();
+
+	const box = await tabs.boundingBox();
+	expect(box?.x).toBeGreaterThanOrEqual(0);
+	expect((box?.x ?? 0) + (box?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(800);
+	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(800);
 });
 
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {

@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as OverlayRouteImport } from './routes/overlay'
 import { Route as ServerRouteImport } from './routes/server'
+import { Route as StreamRouteImport } from './routes/stream'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const ServerRoute = ServerRouteImport.update({
   path: '/server',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StreamRoute = StreamRouteImport.update({
+  id: '/stream',
+  path: '/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/overlay': typeof OverlayRoute
   '/server': typeof ServerRoute
+  '/stream': typeof StreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/overlay': typeof OverlayRoute
   '/server': typeof ServerRoute
+  '/stream': typeof StreamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,21 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/overlay': typeof OverlayRoute
   '/server': typeof ServerRoute
+  '/stream': typeof StreamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/history' | '/overlay' | '/server'
+  fullPaths: '/' | '/about' | '/history' | '/overlay' | '/server' | '/stream'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/history' | '/overlay' | '/server'
-  id: '__root__' | '/' | '/about' | '/history' | '/overlay' | '/server'
+  to: '/' | '/about' | '/history' | '/overlay' | '/server' | '/stream'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/history'
+    | '/overlay'
+    | '/server'
+    | '/stream'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +93,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   OverlayRoute: typeof OverlayRoute
   ServerRoute: typeof ServerRoute
+  StreamRoute: typeof StreamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stream': {
+      id: '/stream'
+      path: '/stream'
+      fullPath: '/stream'
+      preLoaderRoute: typeof StreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   OverlayRoute: OverlayRoute,
   ServerRoute: ServerRoute,
+  StreamRoute: StreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

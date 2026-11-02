@@ -248,7 +248,33 @@
 		"overlay": "Overlay",
 		"server": "Serveur",
 		"history": "Historique",
-		"about": "À propos"
+		"about": "À propos",
+		"stream": "Stream"
+	},
+	"stream": {
+		"beta": {
+			"badge": "Bêta",
+			"title": "Onglet en test",
+			"text": "Son contenu peut changer, et il peut disparaître à tout moment."
+		},
+		"issues": {
+			"title": "Streamer avec MemeOver",
+			"desc": "MemeOver affiche les memes dans une fenêtre transparente, séparée de votre jeu. Selon votre logiciel de stream et votre configuration, ils peuvent manquer à l'image ou au son. Voici les problèmes connus et quelques pistes.",
+			"hintLabel": "Piste :",
+			"videoTitle": "Les memes n'apparaissent pas en stream",
+			"videoProblem": "Une capture limitée au jeu ne voit pas l'overlay.",
+			"videoHint": "Capturez l'écran entier où MemeOver affiche les memes (onglet Overlay → Écran de l'overlay). Tout ce qui s'affiche sur cet écran devient alors visible : notifications, messages, fenêtres ouvertes.",
+			"fullscreenTitle": "Les memes n'apparaissent pas sur votre écran",
+			"fullscreenProblem": "Le plein écran exclusif de certains jeux peut bloquer l'overlay, sur votre écran comme en stream.",
+			"fullscreenHint": "Passez votre jeu en mode sans bordure ou fenêtré plein écran.",
+			"mixedTitle": "Le son des memes arrive avec tous les autres sons",
+			"mixedProblem": "Capturer le son du bureau inclut MemeOver, mais aussi tout ce que joue votre ordinateur.",
+			"mixedHint": "C'est le réglage le plus simple. Si le niveau ne convient pas, ajustez « Volume des médias » dans l'onglet Overlay.",
+			"isolateTitle": "Le son de MemeOver est difficile à isoler",
+			"isolateProblem": "Selon votre système, il peut ne pas apparaître sous le nom MemeOver, et une capture par application peut ne pas le trouver.",
+			"isolateHint": "Un câble audio virtuel peut aider, mais c'est une manipulation avancée : elle peut toucher d'autres applications et les rendre muettes quand votre logiciel de stream est fermé.",
+			"testTip": "Avant de passer en direct, faites un enregistrement d'essai avec un meme qui a du son."
+		}
 	},
 	"server": {
 		"title": "Serveur self-hosted",
