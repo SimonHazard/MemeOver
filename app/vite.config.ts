@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 
 const host = process.env.TAURI_DEV_HOST;
 // Mirror the native localhost plugin's session header for dev and browser tests.
-const obsSourceHeaders = { "X-MemeOver-OBS-Session": randomUUID() };
+const sourceSessionHeaders = { "X-MemeOver-Source-Session": randomUUID() };
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -34,7 +34,7 @@ export default defineConfig({
 	clearScreen: false,
 	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
-		headers: obsSourceHeaders,
+		headers: sourceSessionHeaders,
 		port: 1420,
 		strictPort: true,
 		host: host || false,
@@ -50,14 +50,14 @@ export default defineConfig({
 			ignored: ["**/src-tauri/**"],
 		},
 	},
-	preview: { headers: obsSourceHeaders },
+	preview: { headers: sourceSessionHeaders },
 	// Multi-page : un bundle par fenêtre Tauri
 	build: {
 		rolldownOptions: {
 			input: {
 				main: fileURLToPath(new URL("./index.html", import.meta.url)),
 				overlay: fileURLToPath(new URL("./overlay.html", import.meta.url)),
-				obs: fileURLToPath(new URL("./obs.html", import.meta.url)),
+				"browser-source": fileURLToPath(new URL("./browser-source.html", import.meta.url)),
 			},
 		},
 	},

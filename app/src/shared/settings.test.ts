@@ -4,7 +4,7 @@ import { normalizeSettings } from "./settings";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	CURRENT_SCHEMA_VERSION,
-	DEFAULT_OBS_SOURCE_PORT,
+	DEFAULT_BROWSER_SOURCE_PORT,
 	DEFAULT_SETTINGS,
 	OVERLAY_PROFILE_FIELDS,
 } from "./types";
@@ -72,39 +72,49 @@ test("connection notification duration migrates to four seconds and validates sa
 	}
 });
 
-test("v14 → v15 adds the OBS source and desktop mute defaults without touching other fields", () => {
+test("v14 → v15 adds the browser source and desktop mute defaults without touching other fields", () => {
 	const migrated = normalizeSettings({ schemaVersion: 14, volume: 35, guildId: "123" });
 	expect(migrated).toMatchObject({
 		schemaVersion: CURRENT_SCHEMA_VERSION,
-		obsSourceEnabled: false,
-		obsSourcePort: DEFAULT_OBS_SOURCE_PORT,
+		browserSourceEnabled: false,
+		browserSourcePort: DEFAULT_BROWSER_SOURCE_PORT,
 		desktopOverlayMuted: false,
 		volume: 35,
 		guildId: "123",
 	});
 	expect(
-		normalizeSettings({ obsSourceEnabled: true, obsSourcePort: 5000, desktopOverlayMuted: true }),
-	).toMatchObject({ obsSourceEnabled: true, obsSourcePort: 5000, desktopOverlayMuted: true });
+		normalizeSettings({
+			browserSourceEnabled: true,
+			browserSourcePort: 5000,
+			desktopOverlayMuted: true,
+		}),
+	).toMatchObject({
+		browserSourceEnabled: true,
+		browserSourcePort: 5000,
+		desktopOverlayMuted: true,
+	});
 });
 
-test("an invalid OBS source port falls back to the default", () => {
+test("an invalid browser source port falls back to the default", () => {
 	for (const port of [1023, 65536, 0, -1, 4466.5, "4466", null, Number.NaN]) {
-		expect(normalizeSettings({ obsSourcePort: port }).obsSourcePort).toBe(DEFAULT_OBS_SOURCE_PORT);
+		expect(normalizeSettings({ browserSourcePort: port }).browserSourcePort).toBe(
+			DEFAULT_BROWSER_SOURCE_PORT,
+		);
 	}
-	expect(normalizeSettings({ obsSourcePort: 1024 }).obsSourcePort).toBe(1024);
-	expect(normalizeSettings({ obsSourcePort: 65535 }).obsSourcePort).toBe(65535);
-	expect(normalizeSettings({ obsSourceEnabled: "yes" }).obsSourceEnabled).toBe(false);
+	expect(normalizeSettings({ browserSourcePort: 1024 }).browserSourcePort).toBe(1024);
+	expect(normalizeSettings({ browserSourcePort: 65535 }).browserSourcePort).toBe(65535);
+	expect(normalizeSettings({ browserSourceEnabled: "yes" }).browserSourceEnabled).toBe(false);
 	expect(normalizeSettings({ desktopOverlayMuted: 1 }).desktopOverlayMuted).toBe(false);
 });
 
-test("OBS source and desktop mute stay machine preferences, out of profiles", () => {
+test("browser source and desktop mute stay machine preferences, out of profiles", () => {
 	const profile = pickOverlayProfileSettings({
 		...DEFAULT_SETTINGS,
-		obsSourceEnabled: true,
-		obsSourcePort: 5000,
+		browserSourceEnabled: true,
+		browserSourcePort: 5000,
 		desktopOverlayMuted: true,
 	}) as Record<string, unknown>;
-	for (const key of ["obsSourceEnabled", "obsSourcePort", "desktopOverlayMuted"]) {
+	for (const key of ["browserSourceEnabled", "browserSourcePort", "desktopOverlayMuted"]) {
 		expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain(key);
 		expect(key in profile).toBe(false);
 	}

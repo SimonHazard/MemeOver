@@ -67,16 +67,16 @@ mockIPC(
 			localStorage.setItem("test-tray-labels", JSON.stringify(args));
 			return null;
 		}
-		// OBS source: the native server is never started; a busy port is simulated per test.
-		if (cmd === "start_obs_source") {
-			const running = sessionStorage.getItem("test-obs-running");
+		// browser source: the native server is never started; a busy port is simulated per test.
+		if (cmd === "start_browser_source") {
+			const running = sessionStorage.getItem("test-source-running");
 			if (running && running !== String(args.port)) throw "restart_required";
-			if (localStorage.getItem("test-obs-busy-port") === String(args.port)) throw "port_in_use";
-			sessionStorage.setItem("test-obs-running", String(args.port));
+			if (localStorage.getItem("test-source-busy-port") === String(args.port)) throw "port_in_use";
+			sessionStorage.setItem("test-source-running", String(args.port));
 			return args.port;
 		}
-		if (cmd === "obs_source_status") {
-			const running = sessionStorage.getItem("test-obs-running");
+		if (cmd === "browser_source_status") {
+			const running = sessionStorage.getItem("test-source-running");
 			return running ? Number(running) : null;
 		}
 		if (cmd === "set_tray_overlay_muted") {

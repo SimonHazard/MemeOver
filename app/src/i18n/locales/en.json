@@ -276,40 +276,40 @@
 			"isolateHint": "A virtual audio cable can help, but it is an advanced setup: it may affect other apps and silence them when your streaming software is closed.",
 			"testTip": "Before going live, make a test recording with a meme that has sound."
 		},
-		"obsSource": {
-			"title": "OBS browser source",
-			"desc": "Shows memes in OBS as a Browser Source: transparent over any scene, game capture included, with its own sound in the OBS mixer. Off by default; while enabled, MemeOver serves the page on this computer only (127.0.0.1).",
+		"browserSource": {
+			"title": "Browser source",
+			"desc": "Shows memes in your streaming software through a browser source: transparent over any scene, game capture included. Depending on your software, its sound can have its own mixer entry. Off by default; while enabled, MemeOver serves the page on this computer only (127.0.0.1).",
 			"portLabel": "Local port",
 			"portInvalid": "Choose a port between 1024 and 65535.",
 			"portInUse": "Port {{port}} is used by another program — choose another.",
-			"startError": "The OBS browser source could not start. Restart MemeOver and try again.",
+			"startError": "The browser source could not start. Restart MemeOver and try again.",
 			"restartNotice": "The local page keeps its current state until MemeOver restarts.",
 			"restartNow": "Restart MemeOver",
-			"urlLabel": "OBS link",
-			"showUrl": "Show the OBS link",
-			"hideUrl": "Hide the OBS link",
+			"urlLabel": "Source link",
+			"showUrl": "Show the source link",
+			"hideUrl": "Hide the source link",
 			"profileLabel": "Display profile to embed",
 			"profileCurrent": "Current settings",
 			"profileDefaults": "Default settings",
-			"copyUrl": "Copy OBS URL",
+			"copyUrl": "Copy source link",
 			"secretWarning": "This link contains your server's token: never show it on stream. If it leaks, run /memeover rotate on Discord, then copy the new link.",
-			"copyAgain": "The OBS page does not follow later changes: copy the link again after changing your display or connection settings.",
-			"missingCredentials": "Connect MemeOver to your Discord server first (Connection tab) to get the OBS link.",
-			"obsTitle": "In OBS",
-			"obsAdd": "Add a “Browser” source and paste the link into URL.",
-			"obsSize": "Set Width and Height to your stream resolution, e.g. 1920 × 1080.",
-			"obsShutdown": "Leave “Shutdown source when not visible” off, otherwise memes sent while the source is hidden are lost.",
-			"obsAudio": "Check “Control audio via OBS” so the source gets its own entry in the OBS mixer.",
-			"obsMonitor": "To hear memes yourself, open “Advanced Audio Properties” and set the source's Audio Monitoring to “Monitor and Output”."
+			"copyAgain": "The source page does not follow later changes: copy the link again after changing your display or connection settings.",
+			"missingCredentials": "Connect MemeOver to your Discord server first (Connection tab) to get the source link.",
+			"softwareTitle": "In your streaming software",
+			"softwareAdd": "Add a browser source and paste the link as its URL.",
+			"softwareSize": "Set its width and height to your stream resolution, e.g. 1920 × 1080.",
+			"softwareKeepRunning": "Keep the source running while it is hidden, otherwise memes sent in the meantime are lost.",
+			"softwareAudio": "If available, let your software control the source's audio so it gets its own mixer entry.",
+			"softwareMonitor": "To hear memes yourself, enable audio monitoring for that source."
 		},
 		"desktopMute": {
 			"title": "Desktop overlay sound",
-			"desc": "Mutes memes on your screen only. The OBS browser source keeps its sound. Also available from the tray menu.",
+			"desc": "Mutes memes on your screen only. The browser source keeps its sound. Also available from the tray menu.",
 			"mute": "Mute the desktop overlay",
 			"unmute": "Unmute the desktop overlay",
 			"stateMuted": "The desktop overlay is muted.",
 			"stateAudible": "The desktop overlay plays sound.",
-			"doubleHint": "With the OBS browser source on, you may hear memes twice and send them twice to the stream: mute the desktop overlay."
+			"doubleHint": "With the browser source on, you may hear memes twice and send them twice to the stream: mute the desktop overlay."
 		}
 	},
 	"server": {
@@ -525,7 +525,7 @@
 		"sampleCaption": "Local sample — saved display settings apply here.",
 		"error": "Could not send the local test command."
 	},
-	"obs": {
+	"browserSource": {
 		"status": {
 			"connecting": "MemeOver · connecting…",
 			"connected": "MemeOver · connected",
@@ -535,7 +535,7 @@
 		},
 		"enableSound": "Click to enable sound",
 		"incomplete": {
-			"title": "This OBS link is incomplete",
+			"title": "This source link is incomplete",
 			"desc": "Copy it again from MemeOver's Stream tab."
 		}
 	}

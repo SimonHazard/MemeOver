@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 
-const SESSION_HEADER = "X-MemeOver-OBS-Session";
+const SESSION_HEADER = "X-MemeOver-Source-Session";
 const CHECK_INTERVAL_MS = 1000;
 const CHECK_TIMEOUT_MS = 3000;
 
 type SourceState = "checking" | "active" | "stopped";
 
 /** A loaded page must stop receiving memes when its serving app exits or restarts. */
-export function useObsSourceSession(): SourceState {
+export function useSourceSession(): SourceState {
 	const [state, setState] = useState<SourceState>("checking");
 
 	useEffect(() => {
@@ -32,7 +32,7 @@ export function useObsSourceSession(): SourceState {
 			const timeout = setTimeout(() => request.abort(), CHECK_TIMEOUT_MS);
 			try {
 				// No fragment, credentials or referrer. A fresh HEAD also avoids cached liveness.
-				const response = await fetch(new URL("/obs.html", window.location.origin), {
+				const response = await fetch(new URL("/browser-source.html", window.location.origin), {
 					method: "HEAD",
 					cache: "no-store",
 					credentials: "omit",

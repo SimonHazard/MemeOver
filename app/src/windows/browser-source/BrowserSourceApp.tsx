@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { OverlayStage } from "@/windows/overlay/OverlayStage";
-import { IN_OBS } from "./obs-browser";
-import { ObsStatusPill } from "./obs-status-pill";
 import { SoundUnlock } from "./sound-unlock";
-import { useObsSourceSession } from "./use-obs-source-session";
+import { SourceStatusPill } from "./source-status-pill";
+import { useSourceSession } from "./use-source-session";
 
-/** The OBS browser source: the desktop overlay's stage, without history or window APIs. */
-export function ObsApp() {
-	const [audioUnlocked, setAudioUnlocked] = useState(IN_OBS);
-	const sourceState = useObsSourceSession();
+/**
+ * The browser source: the desktop overlay's stage, without history or window APIs.
+ * Preview aids appear only where sound needs a gesture, so nothing is drawn on stream.
+ */
+export function BrowserSourceApp({ autoplayAllowed }: { autoplayAllowed: boolean }) {
+	const [audioUnlocked, setAudioUnlocked] = useState(autoplayAllowed);
+	const sourceState = useSourceSession();
 
 	useEffect(() => {
 		if (audioUnlocked) return;
@@ -24,7 +26,7 @@ export function ObsApp() {
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
 			{sourceState === "active" && <OverlayStage muted={!audioUnlocked} />}
-			{!IN_OBS && <ObsStatusPill sourceStopped={sourceState === "stopped"} />}
+			{!autoplayAllowed && <SourceStatusPill sourceStopped={sourceState === "stopped"} />}
 			{sourceState === "active" && !audioUnlocked && (
 				<SoundUnlock onUnlock={() => setAudioUnlocked(true)} />
 			)}

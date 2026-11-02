@@ -10,7 +10,7 @@ use tauri::{
 use tauri_plugin_autostart::ManagerExt as _;
 
 mod auto_update;
-mod obs_source;
+mod browser_source;
 mod server_creator;
 
 const AUTOSTART_ARG: &str = "--autostart";
@@ -450,7 +450,7 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
     // Common properties for both modes
     let builder = WebviewWindowBuilder::new(app, "overlay", url)
         .title("MemeOver Overlay")
-        // Distinct from the settings window's default class, so an OBS source matching by
+        // Distinct from the settings window's default class, so an browser source matching by
         // type cannot fall back to the settings window. Sources saved with the old class
         // and that match by type must reselect the window; title and executable matching
         // still find it through the unchanged title.
@@ -652,8 +652,8 @@ pub fn run() {
         .manage(server_creator::ServerCreatorState::default())
         .manage(auto_update::AutoUpdateState::default())
         // The localhost plugin is not in this chain: it starts only once the user
-        // enables the OBS source (`obs_source::start_obs_source`).
-        .manage(obs_source::ObsSourceState::default())
+        // enables the browser source (`browser_source::start_browser_source`).
+        .manage(browser_source::BrowserSourceState::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -674,8 +674,8 @@ pub fn run() {
             quit_overlay,
             update_tray_labels,
             set_tray_overlay_muted,
-            obs_source::start_obs_source,
-            obs_source::obs_source_status,
+            browser_source::start_browser_source,
+            browser_source::browser_source_status,
             toggle_overlay_preview_mode,
             move_overlay_to_monitor,
             server_creator::server_creator_status,

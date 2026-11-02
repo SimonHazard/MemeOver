@@ -29,12 +29,12 @@ First configuration (back/next/finish), screen selection and the About dialog/up
 are also covered. Failure cases include invalid profile files and failed persistence.
 Overlay rendering tests also check centered author badges, a single badge background,
 text/media with the configurable background on/off, long names and anonymous media, normal/reduced-motion popup entrances, repeated exits and replacements, readable attribution after cancelling or disabling its entrance, and all six reaction presets at the fade bounds.
-The OBS browser source page (`/obs.html`) is tested with a mocked bot socket: link validation,
-JOIN with the link's credentials, muted preview until a gesture, sound at once inside OBS, and no
+The browser source page (`/browser-source.html`) is tested with a mocked bot socket: link validation,
+JOIN with the link's credentials, muted preview until a gesture, sound at once where autoplay is allowed, and no
 request carrying the token. The Stream tab tests cover the opt-in source, busy ports, restart and
 the desktop mute synchronized with the tray.
 
-OBS regressions also check that a changed link starts a new bot session without
+Browser source regressions also check that a changed link starts a new bot session without
 old playback/queued items, and that failed, timed-out or changed local HTTP sessions
 silence the current player, close the bot connection and leave the source blank until refreshed. HEAD probes
 must contain neither credentials nor a referrer.

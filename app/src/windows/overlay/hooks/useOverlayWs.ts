@@ -136,7 +136,7 @@ export function useOverlayWs(): void {
 					connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 					dismissConnectionNotification();
 					revokedRef.current = action.code;
-					// Read by the OBS page's status pill; the settings window keeps its own copy.
+					// Read by the browser source page's status pill; the settings window keeps its own copy.
 					useAppStore.getState().setWsRevokedReason(action.code);
 					setWsStatus("error");
 					void emitIfTauri("ws-session-revoked", action.code).then(() =>

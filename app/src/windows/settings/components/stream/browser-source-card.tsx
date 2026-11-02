@@ -21,18 +21,18 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/motion/copy-button";
 import {
-	buildObsSourceUrl,
-	isValidObsPort,
-	maskObsSourceUrl,
-	type ObsProfileChoice,
-	obsSourceNeedsRestart,
-	obsSourceOrigin,
-	resolveObsProfile,
-} from "@/shared/obs-source";
+	type BrowserSourceProfileChoice,
+	browserSourceNeedsRestart,
+	browserSourceOrigin,
+	buildBrowserSourceUrl,
+	isValidBrowserSourcePort,
+	maskBrowserSourceUrl,
+	resolveBrowserSourceProfile,
+} from "@/shared/browser-source";
 import { loadOverlayProfiles } from "@/shared/profiles";
 import { loadSettings, patchSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
-import { refreshObsSourceStatus, startObsSource } from "@/shared/stream-controls";
+import { refreshBrowserSourceStatus, startBrowserSource } from "@/shared/stream-controls";
 import type { Settings } from "@/shared/types";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -52,19 +52,19 @@ function RestartNotice() {
 	const { t } = useTranslation();
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-2 border-2 border-foreground p-3">
-			<p className="text-xs font-text">{t("stream.obsSource.restartNotice")}</p>
+			<p className="text-xs font-text">{t("stream.browserSource.restartNotice")}</p>
 			<NbButton size="sm" variant="outline" onClick={() => void relaunch()}>
 				<RotateCcw className="size-3.5" aria-hidden="true" />
-				{t("stream.obsSource.restartNow")}
+				{t("stream.browserSource.restartNow")}
 			</NbButton>
 		</div>
 	);
 }
 
-function ObsSourceLink({ settings, runningPort }: { settings: Settings; runningPort: number }) {
+function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runningPort: number }) {
 	const { t } = useTranslation();
 	const [revealed, setRevealed] = useState(false);
-	const [choice, setChoice] = useState<ObsProfileChoice>("current");
+	const [choice, setChoice] = useState<BrowserSourceProfileChoice>("current");
 	const { data: profiles = [] } = useQuery({
 		queryKey: ["overlayProfiles"],
 		queryFn: loadOverlayProfiles,
@@ -72,26 +72,26 @@ function ObsSourceLink({ settings, runningPort }: { settings: Settings; runningP
 
 	// `tauri dev` loads the frontend from Vite, not from embedded assets: in a debug
 	// build the plugin would serve a stale `app/dist`. Point the browser at Vite instead.
-	const origin = import.meta.env.DEV ? window.location.origin : obsSourceOrigin(runningPort);
-	const url = buildObsSourceUrl({
+	const origin = import.meta.env.DEV ? window.location.origin : browserSourceOrigin(runningPort);
+	const url = buildBrowserSourceUrl({
 		origin,
 		guildId: settings.guildId,
 		token: settings.token,
 		wsUrl: settings.wsUrl,
-		profile: resolveObsProfile(choice, settings, profiles),
+		profile: resolveBrowserSourceProfile(choice, settings, profiles),
 	});
 
 	return (
 		<div className="space-y-3">
 			<div className="flex flex-col gap-2">
-				<Label htmlFor="obs-source-url" className="font-display tracking-wide text-xs">
-					{t("stream.obsSource.urlLabel")}
+				<Label htmlFor="browser-source-url" className="font-display tracking-wide text-xs">
+					{t("stream.browserSource.urlLabel")}
 				</Label>
 				<div className="flex gap-2">
 					<Input
-						id="obs-source-url"
+						id="browser-source-url"
 						readOnly
-						value={revealed ? url : maskObsSourceUrl(url)}
+						value={revealed ? url : maskBrowserSourceUrl(url)}
 						className="font-mono text-xs"
 						onFocus={(event) => event.currentTarget.select()}
 					/>
@@ -99,7 +99,9 @@ function ObsSourceLink({ settings, runningPort }: { settings: Settings; runningP
 						size="icon"
 						variant="outline"
 						aria-pressed={revealed}
-						aria-label={t(revealed ? "stream.obsSource.hideUrl" : "stream.obsSource.showUrl")}
+						aria-label={t(
+							revealed ? "stream.browserSource.hideUrl" : "stream.browserSource.showUrl",
+						)}
 						onClick={() => setRevealed((value) => !value)}
 					>
 						{revealed ? (
@@ -113,46 +115,53 @@ function ObsSourceLink({ settings, runningPort }: { settings: Settings; runningP
 
 			<div className="flex flex-wrap items-end justify-between gap-3">
 				<div className="flex min-w-48 flex-1 flex-col gap-2">
-					<Label htmlFor="obs-source-profile" className="font-display tracking-wide text-xs">
-						{t("stream.obsSource.profileLabel")}
+					<Label htmlFor="browser-source-profile" className="font-display tracking-wide text-xs">
+						{t("stream.browserSource.profileLabel")}
 					</Label>
-					<Select value={choice} onValueChange={(value) => setChoice(value as ObsProfileChoice)}>
-						<SelectTrigger id="obs-source-profile" className="w-full">
+					<Select
+						value={choice}
+						onValueChange={(value) => setChoice(value as BrowserSourceProfileChoice)}
+					>
+						<SelectTrigger id="browser-source-profile" className="w-full">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectGroup>
-								<SelectItem value="current">{t("stream.obsSource.profileCurrent")}</SelectItem>
+								<SelectItem value="current">{t("stream.browserSource.profileCurrent")}</SelectItem>
 								{profiles.map((profile) => (
 									<SelectItem key={profile.id} value={profile.id}>
 										{profile.name}
 									</SelectItem>
 								))}
-								<SelectItem value="defaults">{t("stream.obsSource.profileDefaults")}</SelectItem>
+								<SelectItem value="defaults">
+									{t("stream.browserSource.profileDefaults")}
+								</SelectItem>
 							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</div>
-				<CopyButton value={url} label={t("stream.obsSource.copyUrl")} size="default" />
+				<CopyButton value={url} label={t("stream.browserSource.copyUrl")} size="default" />
 			</div>
 
-			<Notice tone="warn">{t("stream.obsSource.secretWarning")}</Notice>
-			<Notice>{t("stream.obsSource.copyAgain")}</Notice>
+			<Notice tone="warn">{t("stream.browserSource.secretWarning")}</Notice>
+			<Notice>{t("stream.browserSource.copyAgain")}</Notice>
 		</div>
 	);
 }
 
-function ObsRecommendedSettings() {
+function RecommendedSourceSettings() {
 	const { t } = useTranslation();
 	return (
 		<section className="space-y-2">
-			<h3 className="font-display text-sm tracking-wide">{t("stream.obsSource.obsTitle")}</h3>
+			<h3 className="font-display text-sm tracking-wide">
+				{t("stream.browserSource.softwareTitle")}
+			</h3>
 			<ul className="list-disc space-y-1.5 pl-5 text-sm font-text leading-relaxed">
-				<li>{t("stream.obsSource.obsAdd")}</li>
-				<li>{t("stream.obsSource.obsSize")}</li>
-				<li>{t("stream.obsSource.obsShutdown")}</li>
-				<li>{t("stream.obsSource.obsAudio")}</li>
-				<li>{t("stream.obsSource.obsMonitor")}</li>
+				<li>{t("stream.browserSource.softwareAdd")}</li>
+				<li>{t("stream.browserSource.softwareSize")}</li>
+				<li>{t("stream.browserSource.softwareKeepRunning")}</li>
+				<li>{t("stream.browserSource.softwareAudio")}</li>
+				<li>{t("stream.browserSource.softwareMonitor")}</li>
 			</ul>
 		</section>
 	);
@@ -160,29 +169,29 @@ function ObsRecommendedSettings() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ObsSourceCard() {
+export function BrowserSourceCard() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: loadSettings });
-	const runningPort = useAppStore((s) => s.obsSourceRunningPort);
-	const startError = useAppStore((s) => s.obsSourceError);
+	const runningPort = useAppStore((s) => s.browserSourceRunningPort);
+	const startError = useAppStore((s) => s.browserSourceError);
 	const [portDraft, setPortDraft] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 
 	useEffect(() => {
-		void refreshObsSourceStatus().catch((error) =>
-			console.warn("[OBS source] Could not read status:", error),
+		void refreshBrowserSourceStatus().catch((error) =>
+			console.warn("[Browser source] Could not read status:", error),
 		);
 	}, []);
 
 	if (!settings) return null;
 
-	const enabled = settings.obsSourceEnabled;
-	const portText = portDraft ?? String(settings.obsSourcePort);
+	const enabled = settings.browserSourceEnabled;
+	const portText = portDraft ?? String(settings.browserSourcePort);
 	const draftPort = Number(portText);
-	const portValid = isValidObsPort(draftPort);
-	const needsRestart = obsSourceNeedsRestart(runningPort, settings);
-	const serving = enabled && runningPort === settings.obsSourcePort;
+	const portValid = isValidBrowserSourcePort(draftPort);
+	const needsRestart = browserSourceNeedsRestart(runningPort, settings);
+	const serving = enabled && runningPort === settings.browserSourcePort;
 	const hasCredentials = Boolean(settings.guildId && settings.token);
 
 	async function save(patch: Partial<Settings>): Promise<Settings | null> {
@@ -199,25 +208,25 @@ export function ObsSourceCard() {
 	async function toggle(next: boolean) {
 		setBusy(true);
 		try {
-			const updated = await save({ obsSourceEnabled: next });
-			if (updated && next) await startObsSource(updated.obsSourcePort);
-			else useAppStore.setState({ obsSourceError: null });
+			const updated = await save({ browserSourceEnabled: next });
+			if (updated && next) await startBrowserSource(updated.browserSourcePort);
+			else useAppStore.setState({ browserSourceError: null });
 		} finally {
 			setBusy(false);
 		}
 	}
 
 	async function commitPort() {
-		if (!portValid || draftPort === settings?.obsSourcePort) {
+		if (!portValid || draftPort === settings?.browserSourcePort) {
 			if (portValid) setPortDraft(null);
 			return;
 		}
 		setBusy(true);
 		try {
-			const updated = await save({ obsSourcePort: draftPort });
+			const updated = await save({ browserSourcePort: draftPort });
 			setPortDraft(null);
-			if (updated?.obsSourceEnabled && runningPort === null) {
-				await startObsSource(updated.obsSourcePort);
+			if (updated?.browserSourceEnabled && runningPort === null) {
+				await startBrowserSource(updated.browserSourcePort);
 			}
 		} finally {
 			setBusy(false);
@@ -226,9 +235,9 @@ export function ObsSourceCard() {
 
 	const errorMessage =
 		startError === "port_in_use"
-			? t("stream.obsSource.portInUse", { port: settings.obsSourcePort })
+			? t("stream.browserSource.portInUse", { port: settings.browserSourcePort })
 			: startError === "unknown" || startError === "invalid_port"
-				? t("stream.obsSource.startError")
+				? t("stream.browserSource.startError")
 				: null;
 
 	return (
@@ -241,27 +250,27 @@ export function ObsSourceCard() {
 					<div className="min-w-0 flex-1">
 						<div className="flex items-start justify-between gap-4">
 							<h2 className="font-display text-base tracking-wide">
-								<Label htmlFor="obs-source-enabled">{t("stream.obsSource.title")}</Label>
+								<Label htmlFor="browser-source-enabled">{t("stream.browserSource.title")}</Label>
 							</h2>
 							<NbSwitch
-								id="obs-source-enabled"
+								id="browser-source-enabled"
 								checked={enabled}
 								disabled={busy}
 								onCheckedChange={(checked) => void toggle(checked)}
 							/>
 						</div>
 						<p className="text-sm font-text text-muted-foreground mt-1">
-							{t("stream.obsSource.desc")}
+							{t("stream.browserSource.desc")}
 						</p>
 					</div>
 				</div>
 
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="obs-source-port" className="font-display tracking-wide text-xs">
-						{t("stream.obsSource.portLabel")}
+					<Label htmlFor="browser-source-port" className="font-display tracking-wide text-xs">
+						{t("stream.browserSource.portLabel")}
 					</Label>
 					<Input
-						id="obs-source-port"
+						id="browser-source-port"
 						type="number"
 						inputMode="numeric"
 						min={1024}
@@ -278,7 +287,7 @@ export function ObsSourceCard() {
 					/>
 					{!portValid && (
 						<p className="text-xs text-destructive font-text">
-							{t("stream.obsSource.portInvalid")}
+							{t("stream.browserSource.portInvalid")}
 						</p>
 					)}
 				</div>
@@ -290,12 +299,12 @@ export function ObsSourceCard() {
 					<>
 						<Separator />
 						{hasCredentials ? (
-							<ObsSourceLink settings={settings} runningPort={runningPort} />
+							<BrowserSourceLink settings={settings} runningPort={runningPort} />
 						) : (
-							<Notice>{t("stream.obsSource.missingCredentials")}</Notice>
+							<Notice>{t("stream.browserSource.missingCredentials")}</Notice>
 						)}
 						<Separator />
-						<ObsRecommendedSettings />
+						<RecommendedSourceSettings />
 					</>
 				)}
 			</div>

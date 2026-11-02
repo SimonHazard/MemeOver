@@ -1,7 +1,7 @@
-//! Opt-in local OBS browser source.
+//! Opt-in local browser source.
 //!
 //! The official `tauri-plugin-localhost` serves the built frontend (including
-//! `obs.html`) on `127.0.0.1:<port>`. It is registered at runtime, only once the
+//! `browser-source.html`) on `127.0.0.1:<port>`. It is registered at runtime, only once the
 //! user enables the source, and has no stop mechanism: disabling it or changing
 //! the port takes effect after a restart. The server only serves public assets;
 //! credentials stay in the URL fragment, which browsers never send.
@@ -14,10 +14,10 @@ use tauri::{AppHandle, Runtime, State};
 /// Loopback only: never reachable from the LAN.
 const LOOPBACK: &str = "127.0.0.1";
 const MIN_PORT: u16 = 1024;
-const SESSION_HEADER: &str = "X-MemeOver-OBS-Session";
+const SESSION_HEADER: &str = "X-MemeOver-Source-Session";
 
 #[derive(Default)]
-pub struct ObsSourceState {
+pub struct BrowserSourceState {
     port: Mutex<Option<u16>>,
 }
 
@@ -44,13 +44,13 @@ impl StartError {
 
 pub fn start<R: Runtime>(
     app: &AppHandle<R>,
-    state: &ObsSourceState,
+    state: &BrowserSourceState,
     port: u16,
 ) -> Result<u16, StartError> {
     let mut running = state
         .port
         .lock()
-        .map_err(|_| StartError::Plugin("ObsSourceState lock poisoned".into()))?;
+        .map_err(|_| StartError::Plugin("BrowserSourceState lock poisoned".into()))?;
     match *running {
         Some(current) if current == port => return Ok(port),
         Some(_) => return Err(StartError::RestartRequired),
@@ -84,19 +84,19 @@ pub fn start<R: Runtime>(
     Ok(port)
 }
 
-/// Start serving the OBS page. Idempotent for the running port.
+/// Start serving the browser source page. Idempotent for the running port.
 #[tauri::command]
-pub fn start_obs_source(
+pub fn start_browser_source(
     app: AppHandle,
-    state: State<'_, ObsSourceState>,
+    state: State<'_, BrowserSourceState>,
     port: u16,
 ) -> Result<u16, String> {
     start(&app, &state, port).map_err(|e| e.code())
 }
 
-/// Port the OBS page is served on in this session, if any.
+/// Port the browser source page is served on in this session, if any.
 #[tauri::command]
-pub fn obs_source_status(state: State<'_, ObsSourceState>) -> Option<u16> {
+pub fn browser_source_status(state: State<'_, BrowserSourceState>) -> Option<u16> {
     state.port.lock().ok().and_then(|port| *port)
 }
 
@@ -110,13 +110,13 @@ mod tests {
     use tauri::utils::assets::{AssetKey, AssetsIter, CspHash};
     use tauri::Assets;
 
-    const OBS_HTML: &[u8] = b"<!doctype html><title>MemeOver OBS</title>";
+    const SOURCE_HTML: &[u8] = b"<!doctype html><title>MemeOver Browser Source</title>";
 
-    struct ObsAssets;
+    struct SourceAssets;
 
-    impl<R: Runtime> Assets<R> for ObsAssets {
+    impl<R: Runtime> Assets<R> for SourceAssets {
         fn get(&self, key: &AssetKey) -> Option<Cow<'_, [u8]>> {
-            (key.as_ref() == "/obs.html").then_some(Cow::Borrowed(OBS_HTML))
+            (key.as_ref() == "/browser-source.html").then_some(Cow::Borrowed(SOURCE_HTML))
         }
         fn iter(&self) -> Box<AssetsIter<'_>> {
             Box::new(std::iter::empty())
@@ -151,7 +151,7 @@ mod tests {
             }
             std::thread::sleep(Duration::from_millis(20));
         }
-        panic!("the OBS source never accepted a connection on port {port}");
+        panic!("the browser source never accepted a connection on port {port}");
     }
 
     fn get(port: u16, path: &str) -> String {
@@ -159,7 +159,7 @@ mod tests {
     }
 
     fn app() -> tauri::App<tauri::test::MockRuntime> {
-        let context = tauri::test::mock_context(ObsAssets);
+        let context = tauri::test::mock_context(SourceAssets);
         tauri::test::mock_builder().build(context).unwrap()
     }
 
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn serves_obs_html_on_loopback_once_enabled() {
         let app = app();
-        let state = ObsSourceState::default();
+        let state = BrowserSourceState::default();
         let port = free_port();
         assert!(
             TcpStream::connect((LOOPBACK, port)).is_err(),
@@ -181,20 +181,20 @@ mod tests {
         );
 
         assert_eq!(start(app.handle(), &state, port), Ok(port));
-        let response = get(port, "/obs.html");
+        let response = get(port, "/browser-source.html");
         assert!(response.starts_with("HTTP/1.1 200"), "{response}");
         assert!(response.contains("Cache-Control: no-cache"), "{response}");
-        assert!(response.contains("MemeOver OBS"), "{response}");
+        assert!(response.contains("MemeOver Browser Source"), "{response}");
         let session = session_header(&response);
         assert!(!session.is_empty());
-        let head = request(port, "/obs.html", "HEAD");
+        let head = request(port, "/browser-source.html", "HEAD");
         assert!(head.starts_with("HTTP/1.1 200"), "{head}");
         assert_eq!(session_header(&head), session);
-        assert!(!head.contains("MemeOver OBS"), "HEAD sends no asset body");
+        assert!(!head.contains("MemeOver Browser Source"), "HEAD sends no asset body");
 
         // Idempotent for the same port, restart required for another one.
         assert_eq!(start(app.handle(), &state, port), Ok(port));
-        assert_eq!(session_header(&get(port, "/obs.html")), session);
+        assert_eq!(session_header(&get(port, "/browser-source.html")), session);
         assert_eq!(
             start(app.handle(), &state, free_port()),
             Err(StartError::RestartRequired)
@@ -205,13 +205,13 @@ mod tests {
     fn a_restarted_source_has_a_different_session_header() {
         let first = app();
         let first_port = free_port();
-        start(first.handle(), &ObsSourceState::default(), first_port).unwrap();
-        let first_response = get(first_port, "/obs.html");
+        start(first.handle(), &BrowserSourceState::default(), first_port).unwrap();
+        let first_response = get(first_port, "/browser-source.html");
 
         let restarted = app();
         let second_port = free_port();
-        start(restarted.handle(), &ObsSourceState::default(), second_port).unwrap();
-        let second_response = get(second_port, "/obs.html");
+        start(restarted.handle(), &BrowserSourceState::default(), second_port).unwrap();
+        let second_response = get(second_port, "/browser-source.html");
         assert_ne!(
             session_header(&first_response),
             session_header(&second_response)
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn a_taken_port_is_reported_instead_of_panicking_the_server_thread() {
         let app = app();
-        let state = ObsSourceState::default();
+        let state = BrowserSourceState::default();
         let taken = TcpListener::bind((LOOPBACK, 0)).unwrap();
         let port = taken.local_addr().unwrap().port();
         assert_eq!(

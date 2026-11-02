@@ -194,35 +194,38 @@ async function streamTab(page: Page) {
 		});
 	});
 	await page.getByRole("button", { name: "Stream", exact: true }).click();
-	await expect(page.getByText("OBS browser source", { exact: true })).toBeVisible();
+	await expect(page.getByText("Browser source", { exact: true })).toBeVisible();
 }
 
-test("the OBS browser source is opt-in and copies a link with credentials only after #", async ({
+test("the browser source is opt-in and copies a link with credentials only after #", async ({
 	page,
 }) => {
 	await streamTab(page);
-	const toggle = page.getByRole("switch", { name: "OBS browser source" });
+	const toggle = page.getByRole("switch", { name: "Browser source" });
 	await expect(toggle).toHaveAttribute("aria-checked", "false");
-	await expect(page.getByLabel("OBS link", { exact: true })).toHaveCount(0);
-	expect(await page.evaluate(() => sessionStorage.getItem("test-obs-running"))).toBeNull();
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBeNull();
 
 	await toggle.click();
-	const link = page.getByLabel("OBS link", { exact: true });
-	await expect(link).toHaveValue(/\/obs\.html#••••••$/);
-	expect((await settings(page)).obsSourceEnabled).toBe(true);
-	expect(await page.evaluate(() => sessionStorage.getItem("test-obs-running"))).toBe("4466");
-	await expect(page.getByText(/“Shutdown source when not visible” off/)).toBeVisible();
+	const link = page.getByLabel("Source link", { exact: true });
+	await expect(link).toHaveValue(/\/browser-source\.html#••••••$/);
+	expect((await settings(page)).browserSourceEnabled).toBe(true);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
+	await expect(page.getByText(/Keep the source running while it is hidden/)).toBeVisible();
 	await expect(page.getByText(/never show it on stream/)).toBeVisible();
+	// Enabled, the tab still names no third-party product, the displayed link included.
+	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
+	await expect(link).not.toHaveValue(/obs/i);
 
-	await page.getByRole("button", { name: "Show the OBS link" }).click();
+	await page.getByRole("button", { name: "Show the source link" }).click();
 	await expect(link).toHaveValue(/test-only-token/);
-	await page.getByRole("button", { name: "Hide the OBS link" }).click();
+	await page.getByRole("button", { name: "Hide the source link" }).click();
 	await expect(link).not.toHaveValue(/test-only-token/);
 
-	await page.getByRole("button", { name: "Copy OBS URL" }).click();
+	await page.getByRole("button", { name: "Copy source link" }).click();
 	const copied = await expect
 		.poll(() => page.evaluate(() => localStorage.getItem("test-clipboard")))
-		.toContain("/obs.html#")
+		.toContain("/browser-source.html#")
 		.then(() => page.evaluate(() => localStorage.getItem("test-clipboard") ?? ""));
 	const url = new URL(copied);
 	expect(url.search).toBe("");
@@ -234,28 +237,28 @@ test("the OBS browser source is opt-in and copies a link with credentials only a
 
 	// The plugin cannot stop: turning it off asks for a restart.
 	await toggle.click();
-	expect((await settings(page)).obsSourceEnabled).toBe(false);
+	expect((await settings(page)).browserSourceEnabled).toBe(false);
 	await page.getByRole("button", { name: "Restart MemeOver" }).click();
 	await expect.poll(() => page.evaluate(() => localStorage.getItem("test-restarted"))).toBe("1");
 });
 
-test("a busy OBS source port is reported and another port can be chosen", async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem("test-obs-busy-port", "4466"));
+test("a busy browser source port is reported and another port can be chosen", async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem("test-source-busy-port", "4466"));
 	await streamTab(page);
-	await page.getByRole("switch", { name: "OBS browser source" }).click();
+	await page.getByRole("switch", { name: "Browser source" }).click();
 	await expect(
 		page.getByText("Port 4466 is used by another program — choose another."),
 	).toBeVisible();
-	await expect(page.getByLabel("OBS link", { exact: true })).toHaveCount(0);
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
 
 	const port = page.getByLabel("Local port", { exact: true });
 	await port.fill("80");
 	await expect(page.getByText("Choose a port between 1024 and 65535.")).toBeVisible();
 	await port.fill("5123");
 	await port.press("Enter");
-	await expect(page.getByLabel("OBS link", { exact: true })).toBeVisible();
-	expect((await settings(page)).obsSourcePort).toBe(5123);
-	expect(await page.evaluate(() => sessionStorage.getItem("test-obs-running"))).toBe("5123");
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	expect((await settings(page)).browserSourcePort).toBe(5123);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("5123");
 });
 
 test("the desktop overlay mute follows the Stream tab and the tray", async ({ page }) => {

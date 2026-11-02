@@ -27,7 +27,7 @@ interface MediaPopupProps {
 	onVideoEnd: () => void;
 	startTimer: () => void;
 	onMediaError: () => void;
-	/** Mutes media sound on this surface (desktop overlay mute, OBS preview before a gesture). */
+	/** Mutes media sound on this surface (desktop overlay mute, browser source preview before a gesture). */
 	muted?: boolean;
 }
 

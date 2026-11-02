@@ -276,40 +276,40 @@
 			"isolateHint": "Un câble audio virtuel peut aider, mais c'est une manipulation avancée : elle peut toucher d'autres applications et les rendre muettes quand votre logiciel de stream est fermé.",
 			"testTip": "Avant de passer en direct, faites un enregistrement d'essai avec un meme qui a du son."
 		},
-		"obsSource": {
-			"title": "Source navigateur OBS",
-			"desc": "Affiche les memes dans OBS comme une source « Browser » : transparente au-dessus de n'importe quelle scène, capture de jeu comprise, avec son propre son dans le mixeur OBS. Désactivée par défaut ; une fois activée, MemeOver sert la page sur cet ordinateur uniquement (127.0.0.1).",
+		"browserSource": {
+			"title": "Source navigateur",
+			"desc": "Affiche les memes dans votre logiciel de stream avec une source navigateur : transparente au-dessus de n'importe quelle scène, capture de jeu comprise. Selon votre logiciel, son son peut avoir sa propre entrée dans le mixeur. Désactivée par défaut ; une fois activée, MemeOver sert la page sur cet ordinateur uniquement (127.0.0.1).",
 			"portLabel": "Port local",
 			"portInvalid": "Choisissez un port entre 1024 et 65535.",
 			"portInUse": "Le port {{port}} est utilisé par un autre programme — choisissez-en un autre.",
-			"startError": "La source navigateur OBS n'a pas pu démarrer. Redémarrez MemeOver et réessayez.",
+			"startError": "La source navigateur n'a pas pu démarrer. Redémarrez MemeOver et réessayez.",
 			"restartNotice": "La page locale garde son état actuel jusqu'au redémarrage de MemeOver.",
 			"restartNow": "Redémarrer MemeOver",
-			"urlLabel": "Lien OBS",
-			"showUrl": "Afficher le lien OBS",
-			"hideUrl": "Masquer le lien OBS",
+			"urlLabel": "Lien de la source",
+			"showUrl": "Afficher le lien de la source",
+			"hideUrl": "Masquer le lien de la source",
 			"profileLabel": "Profil d'affichage à intégrer",
 			"profileCurrent": "Réglages actuels",
 			"profileDefaults": "Réglages par défaut",
-			"copyUrl": "Copier l'URL OBS",
+			"copyUrl": "Copier le lien de la source",
 			"secretWarning": "Ce lien contient le token de votre serveur : ne le montrez jamais en stream. S'il fuite, lancez /memeover rotate sur Discord, puis copiez le nouveau lien.",
-			"copyAgain": "La page OBS ne suit pas les changements ultérieurs : copiez à nouveau le lien après avoir modifié vos réglages d'affichage ou de connexion.",
-			"missingCredentials": "Connectez d'abord MemeOver à votre serveur Discord (onglet Connexion) pour obtenir le lien OBS.",
-			"obsTitle": "Dans OBS",
-			"obsAdd": "Ajoutez une source « Browser » et collez le lien dans URL.",
-			"obsSize": "Réglez Width et Height sur la résolution de votre stream, par exemple 1920 × 1080.",
-			"obsShutdown": "Laissez « Shutdown source when not visible » désactivé, sinon les memes envoyés pendant que la source est masquée sont perdus.",
-			"obsAudio": "Cochez « Control audio via OBS » pour que la source ait sa propre entrée dans le mixeur OBS.",
-			"obsMonitor": "Pour entendre vous-même les memes, ouvrez « Advanced Audio Properties » et réglez l'Audio Monitoring de la source sur « Monitor and Output »."
+			"copyAgain": "La page de la source ne suit pas les changements ultérieurs : copiez à nouveau le lien après avoir modifié vos réglages d'affichage ou de connexion.",
+			"missingCredentials": "Connectez d'abord MemeOver à votre serveur Discord (onglet Connexion) pour obtenir le lien de la source.",
+			"softwareTitle": "Dans votre logiciel de stream",
+			"softwareAdd": "Ajoutez une source navigateur et collez le lien comme URL.",
+			"softwareSize": "Réglez sa largeur et sa hauteur sur la résolution de votre stream, par exemple 1920 × 1080.",
+			"softwareKeepRunning": "Laissez la source active quand elle est masquée, sinon les memes envoyés entre-temps sont perdus.",
+			"softwareAudio": "Si possible, laissez votre logiciel contrôler le son de la source pour qu'elle ait sa propre entrée dans le mixeur.",
+			"softwareMonitor": "Pour entendre vous-même les memes, activez le monitoring audio de cette source."
 		},
 		"desktopMute": {
 			"title": "Son de l'overlay sur le bureau",
-			"desc": "Coupe le son des memes sur votre écran uniquement. La source navigateur OBS garde son son. Aussi disponible depuis le menu de la barre système.",
+			"desc": "Coupe le son des memes sur votre écran uniquement. La source navigateur garde son son. Aussi disponible depuis le menu de la barre système.",
 			"mute": "Couper le son de l'overlay",
 			"unmute": "Rétablir le son de l'overlay",
 			"stateMuted": "Le son de l'overlay est coupé.",
 			"stateAudible": "L'overlay joue le son.",
-			"doubleHint": "Avec la source navigateur OBS activée, vous risquez d'entendre les memes deux fois et de les envoyer deux fois au stream : coupez le son de l'overlay."
+			"doubleHint": "Avec la source navigateur activée, vous risquez d'entendre les memes deux fois et de les envoyer deux fois au stream : coupez le son de l'overlay."
 		}
 	},
 	"server": {
@@ -525,7 +525,7 @@
 		"sampleCaption": "Exemple local — les réglages d’affichage enregistrés s’appliquent ici.",
 		"error": "Impossible d’envoyer la commande de test local."
 	},
-	"obs": {
+	"browserSource": {
 		"status": {
 			"connecting": "MemeOver · connexion…",
 			"connected": "MemeOver · connecté",
@@ -535,7 +535,7 @@
 		},
 		"enableSound": "Cliquez pour activer le son",
 		"incomplete": {
-			"title": "Ce lien OBS est incomplet",
+			"title": "Ce lien de source est incomplet",
 			"desc": "Copiez-le à nouveau depuis l'onglet Stream de MemeOver."
 		}
 	}

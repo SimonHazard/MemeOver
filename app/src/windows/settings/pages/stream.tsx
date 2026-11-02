@@ -6,8 +6,8 @@ import { FlaskConical } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useTauriEventVersion } from "@/hooks/useTauriEvent";
+import { BrowserSourceCard } from "@/windows/settings/components/stream/browser-source-card";
 import { DesktopMuteCard } from "@/windows/settings/components/stream/desktop-mute-card";
-import { ObsSourceCard } from "@/windows/settings/components/stream/obs-source-card";
 import { StreamIssues } from "@/windows/settings/components/stream/stream-issues";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ export function StreamPage() {
 						{t("stream.beta.badge")}
 					</NbBadge>
 				</Alert>
-				<ObsSourceCard />
+				<BrowserSourceCard />
 				<DesktopMuteCard />
 				<StreamIssues />
 			</div>

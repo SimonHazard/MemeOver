@@ -3,16 +3,16 @@ import { cn } from "@memeover/ui/lib/utils";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/shared/store";
-import { obsPreviewStatus } from "./obs-browser";
+import { sourcePreviewStatus } from "./source-environment";
 
 const CONNECTED_VISIBLE_MS = 3000;
 
-/** Browser preview aid only: ObsApp never renders it inside OBS, so it is never on stream. */
-export function ObsStatusPill({ sourceStopped }: { sourceStopped: boolean }) {
+/** Browser preview aid only: never rendered where sound plays without a gesture. */
+export function SourceStatusPill({ sourceStopped }: { sourceStopped: boolean }) {
 	const { t } = useTranslation();
 	const wsStatus = useAppStore((s) => s.wsStatus);
 	const revoked = useAppStore((s) => s.wsRevokedReason);
-	const status = sourceStopped ? "stopped" : obsPreviewStatus(wsStatus, revoked);
+	const status = sourceStopped ? "stopped" : sourcePreviewStatus(wsStatus, revoked);
 	const [hidden, setHidden] = useState(false);
 
 	useEffect(() => {
@@ -33,7 +33,7 @@ export function ObsStatusPill({ sourceStopped }: { sourceStopped: boolean }) {
 				status === "revoked" && "bg-destructive text-white",
 			)}
 		>
-			{t(`obs.status.${status}`)}
+			{t(`browserSource.status.${status}`)}
 		</div>
 	);
 }

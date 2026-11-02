@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
-	buildObsSourceUrl,
-	isValidObsPort,
-	maskObsSourceUrl,
-	obsSourceNeedsRestart,
-	obsSourceOrigin,
-	parseObsSourceFragment,
-	resolveObsProfile,
-} from "./obs-source";
+	browserSourceNeedsRestart,
+	browserSourceOrigin,
+	buildBrowserSourceUrl,
+	isValidBrowserSourcePort,
+	maskBrowserSourceUrl,
+	parseBrowserSourceFragment,
+	resolveBrowserSourceProfile,
+} from "./browser-source";
 import { pickOverlayProfileSettings } from "./profiles";
 import { DEFAULT_SETTINGS, type OverlayProfile } from "./types";
 
@@ -16,8 +16,8 @@ const TOKEN = "s3cr3t+token/with=chars&more";
 const WS_URL = "wss://bot.example.com/ws";
 
 function build(profile = DEFAULT_SETTINGS) {
-	return buildObsSourceUrl({
-		origin: obsSourceOrigin(4466),
+	return buildBrowserSourceUrl({
+		origin: browserSourceOrigin(4466),
 		guildId: GUILD_ID,
 		token: TOKEN,
 		wsUrl: WS_URL,
@@ -38,10 +38,10 @@ function fragmentWith(overrides: Record<string, string | null>) {
 	return `#${params.toString()}`;
 }
 
-describe("OBS source URL", () => {
+describe("browser source URL", () => {
 	test("round trips credentials and the display profile", () => {
 		const profile = { ...DEFAULT_SETTINGS, volume: 25, position: "top-left" as const };
-		const parsed = parseObsSourceFragment(hashOf(build(profile)));
+		const parsed = parseBrowserSourceFragment(hashOf(build(profile)));
 		expect(parsed).toEqual({
 			guildId: GUILD_ID,
 			token: TOKEN,
@@ -52,7 +52,7 @@ describe("OBS source URL", () => {
 
 	test("serves the page from loopback and carries the token only after #", () => {
 		const url = build();
-		expect(url.startsWith("http://127.0.0.1:4466/obs.html#")).toBe(true);
+		expect(url.startsWith("http://127.0.0.1:4466/browser-source.html#")).toBe(true);
 		const beforeHash = url.slice(0, url.indexOf("#"));
 		expect(beforeHash).not.toContain(encodeURIComponent(TOKEN));
 		expect(beforeHash).not.toContain(GUILD_ID);
@@ -60,9 +60,16 @@ describe("OBS source URL", () => {
 	});
 
 	test("never embeds machine preferences or credentials in the profile", () => {
-		const url = build({ ...DEFAULT_SETTINGS, token: TOKEN, obsSourcePort: 5000 });
-		const profile = parseObsSourceFragment(hashOf(url))?.profile as Record<string, unknown>;
-		for (const key of ["token", "guildId", "wsUrl", "obsSourcePort", "mutedAuthors", "clientId"]) {
+		const url = build({ ...DEFAULT_SETTINGS, token: TOKEN, browserSourcePort: 5000 });
+		const profile = parseBrowserSourceFragment(hashOf(url))?.profile as Record<string, unknown>;
+		for (const key of [
+			"token",
+			"guildId",
+			"wsUrl",
+			"browserSourcePort",
+			"mutedAuthors",
+			"clientId",
+		]) {
 			expect(key in profile).toBe(false);
 		}
 	});
@@ -72,13 +79,13 @@ describe("OBS source URL", () => {
 			.replace(/\+/g, "-")
 			.replace(/\//g, "_")
 			.replace(/=+$/, "");
-		const parsed = parseObsSourceFragment(fragmentWith({ p: tampered }));
+		const parsed = parseBrowserSourceFragment(fragmentWith({ p: tampered }));
 		expect(parsed?.profile).toEqual({ volume: 100 });
 	});
 
 	test("an undecodable profile is ignored, not fatal", () => {
 		for (const p of ["%%%", "bm90IGpzb24", "WzEsMl0", null]) {
-			const parsed = parseObsSourceFragment(fragmentWith({ p }));
+			const parsed = parseBrowserSourceFragment(fragmentWith({ p }));
 			expect(parsed?.token).toBe(TOKEN);
 			expect(parsed?.profile).toBeNull();
 		}
@@ -97,27 +104,27 @@ describe("OBS source URL", () => {
 			{ w: "not a url" },
 		];
 		for (const overrides of invalid) {
-			expect(parseObsSourceFragment(fragmentWith(overrides))).toBeNull();
+			expect(parseBrowserSourceFragment(fragmentWith(overrides))).toBeNull();
 		}
-		expect(parseObsSourceFragment("")).toBeNull();
-		expect(parseObsSourceFragment(fragmentWith({ w: "ws://localhost:3001/ws" }))?.wsUrl).toBe(
+		expect(parseBrowserSourceFragment("")).toBeNull();
+		expect(parseBrowserSourceFragment(fragmentWith({ w: "ws://localhost:3001/ws" }))?.wsUrl).toBe(
 			"ws://localhost:3001/ws",
 		);
 	});
 
 	test("masking hides the fragment", () => {
-		const masked = maskObsSourceUrl(build());
-		expect(masked).toBe("http://127.0.0.1:4466/obs.html#••••••");
+		const masked = maskBrowserSourceUrl(build());
+		expect(masked).toBe("http://127.0.0.1:4466/browser-source.html#••••••");
 		expect(masked).not.toContain("s3cr3t");
-		expect(maskObsSourceUrl("http://127.0.0.1:4466/obs.html")).toBe(
-			"http://127.0.0.1:4466/obs.html",
+		expect(maskBrowserSourceUrl("http://127.0.0.1:4466/browser-source.html")).toBe(
+			"http://127.0.0.1:4466/browser-source.html",
 		);
 	});
 
 	test("port bounds", () => {
-		for (const port of [1024, 4466, 65535]) expect(isValidObsPort(port)).toBe(true);
+		for (const port of [1024, 4466, 65535]) expect(isValidBrowserSourcePort(port)).toBe(true);
 		for (const port of [0, 80, 1023, 65536, 4466.5, Number.NaN, "4466"]) {
-			expect(isValidObsPort(port)).toBe(false);
+			expect(isValidBrowserSourcePort(port)).toBe(false);
 		}
 	});
 });
@@ -133,28 +140,30 @@ describe("Stream tab decisions", () => {
 	};
 
 	test("the embedded profile follows the selected source", () => {
-		expect(resolveObsProfile("current", settings, [profile])).toMatchObject({
+		expect(resolveBrowserSourceProfile("current", settings, [profile])).toMatchObject({
 			volume: 30,
 			position: "top-left",
 		});
-		expect(resolveObsProfile("defaults", settings, [profile])).toMatchObject({
+		expect(resolveBrowserSourceProfile("defaults", settings, [profile])).toMatchObject({
 			volume: DEFAULT_SETTINGS.volume,
 			position: DEFAULT_SETTINGS.position,
 		});
 		// Fields a saved profile does not define keep the current values.
-		expect(resolveObsProfile("stream", settings, [profile])).toMatchObject({
+		expect(resolveBrowserSourceProfile("stream", settings, [profile])).toMatchObject({
 			volume: 90,
 			position: "top-left",
 		});
-		expect(resolveObsProfile("deleted", settings, [profile])).toMatchObject({ volume: 30 });
+		expect(resolveBrowserSourceProfile("deleted", settings, [profile])).toMatchObject({
+			volume: 30,
+		});
 	});
 
 	test("a running server only stops or moves after a restart", () => {
-		const on = { obsSourceEnabled: true, obsSourcePort: 4466 };
-		expect(obsSourceNeedsRestart(null, on)).toBe(false);
-		expect(obsSourceNeedsRestart(null, { ...on, obsSourceEnabled: false })).toBe(false);
-		expect(obsSourceNeedsRestart(4466, on)).toBe(false);
-		expect(obsSourceNeedsRestart(4466, { ...on, obsSourceEnabled: false })).toBe(true);
-		expect(obsSourceNeedsRestart(4466, { ...on, obsSourcePort: 5000 })).toBe(true);
+		const on = { browserSourceEnabled: true, browserSourcePort: 4466 };
+		expect(browserSourceNeedsRestart(null, on)).toBe(false);
+		expect(browserSourceNeedsRestart(null, { ...on, browserSourceEnabled: false })).toBe(false);
+		expect(browserSourceNeedsRestart(4466, on)).toBe(false);
+		expect(browserSourceNeedsRestart(4466, { ...on, browserSourceEnabled: false })).toBe(true);
+		expect(browserSourceNeedsRestart(4466, { ...on, browserSourcePort: 5000 })).toBe(true);
 	});
 });

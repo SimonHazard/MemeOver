@@ -8,8 +8,8 @@ import { useMediaDisplay } from "./hooks/useMediaDisplay";
 import { useOverlayWs } from "./hooks/useOverlayWs";
 
 // ─── Shared stage ─────────────────────────────────────────────────────────────
-// Rendered by the desktop overlay and by the OBS browser source page. Nothing on
-// this import path may call a Tauri API at import time: the OBS page runs in a
+// Rendered by the desktop overlay and by the browser source page. Nothing on
+// this import path may call a Tauri API at import time: the browser source page runs in a
 // plain browser. Window events go through `emitIfTauri`.
 
 interface OverlayStageProps {

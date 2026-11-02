@@ -46,7 +46,7 @@ export function DesktopMuteCard() {
 						{t(muted ? "stream.desktopMute.stateMuted" : "stream.desktopMute.stateAudible")}
 					</p>
 				</div>
-				{settings.obsSourceEnabled && !muted && (
+				{settings.browserSourceEnabled && !muted && (
 					<p className="flex gap-2 text-xs font-text text-muted-foreground">
 						<TriangleAlert className="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
 						{t("stream.desktopMute.doubleHint")}

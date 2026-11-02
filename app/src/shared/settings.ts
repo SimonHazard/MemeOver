@@ -4,14 +4,14 @@ import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	type ConnectionNotificationPosition,
 	CURRENT_SCHEMA_VERSION,
-	DEFAULT_OBS_SOURCE_PORT,
+	DEFAULT_BROWSER_SOURCE_PORT,
 	DEFAULT_SETTINGS,
 	DEFAULT_WS_URL,
 	FLOATING_REACTION_PRESETS,
 	type FloatingReactionPreset,
 	LEGACY_DEFAULT_WS_URL,
-	MAX_OBS_SOURCE_PORT,
-	MIN_OBS_SOURCE_PORT,
+	MAX_BROWSER_SOURCE_PORT,
+	MIN_BROWSER_SOURCE_PORT,
 	type Settings,
 } from "../shared/types";
 import { normalizeMutedAuthors } from "./muted-authors";
@@ -159,17 +159,17 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		30,
 		DEFAULT_SETTINGS.connectionNotificationDuration,
 	);
-	// v14 → v15: opt-in local OBS browser source and the desktop overlay mute,
+	// v14 → v15: opt-in local browser source and the desktop overlay mute,
 	// both machine preferences. A fractional or out-of-range port falls back to
 	// the default instead of being rounded into another program's port.
-	if (typeof out.obsSourceEnabled !== "boolean") out.obsSourceEnabled = false;
+	if (typeof out.browserSourceEnabled !== "boolean") out.browserSourceEnabled = false;
 	if (
-		typeof out.obsSourcePort !== "number" ||
-		!Number.isInteger(out.obsSourcePort) ||
-		out.obsSourcePort < MIN_OBS_SOURCE_PORT ||
-		out.obsSourcePort > MAX_OBS_SOURCE_PORT
+		typeof out.browserSourcePort !== "number" ||
+		!Number.isInteger(out.browserSourcePort) ||
+		out.browserSourcePort < MIN_BROWSER_SOURCE_PORT ||
+		out.browserSourcePort > MAX_BROWSER_SOURCE_PORT
 	) {
-		out.obsSourcePort = DEFAULT_OBS_SOURCE_PORT;
+		out.browserSourcePort = DEFAULT_BROWSER_SOURCE_PORT;
 	}
 	if (typeof out.desktopOverlayMuted !== "boolean") out.desktopOverlayMuted = false;
 	// Idempotent validation also applies to hand-edited files at the current schema version.

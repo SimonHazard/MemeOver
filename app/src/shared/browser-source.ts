@@ -6,22 +6,22 @@ import {
 } from "./profiles";
 import {
 	DEFAULT_SETTINGS,
-	MAX_OBS_SOURCE_PORT,
-	MIN_OBS_SOURCE_PORT,
+	MAX_BROWSER_SOURCE_PORT,
+	MIN_BROWSER_SOURCE_PORT,
 	type OverlayProfile,
 	type OverlayProfileSettings,
 	type Settings,
 } from "./types";
 
-// ─── OBS browser source URL ───────────────────────────────────────────────────
+// ─── browser source URL ───────────────────────────────────────────────────
 // The local server only serves public assets. Credentials and the display profile
 // travel in the fragment, which browsers never send in an HTTP request.
 
-export const OBS_SOURCE_PATH = "/obs.html";
+export const BROWSER_SOURCE_PATH = "/browser-source.html";
 const MAX_TOKEN_LENGTH = 256;
 const MASK = "••••••";
 
-export interface ObsSourceConfig {
+export interface BrowserSourceConfig {
 	guildId: string;
 	token: string;
 	wsUrl: string;
@@ -29,7 +29,7 @@ export interface ObsSourceConfig {
 	profile: Partial<OverlayProfileSettings> | null;
 }
 
-interface ObsSourceUrlInput {
+interface BrowserSourceUrlInput {
 	origin: string;
 	guildId: string;
 	token: string;
@@ -37,17 +37,17 @@ interface ObsSourceUrlInput {
 	profile: Partial<Settings> | OverlayProfileSettings;
 }
 
-export function isValidObsPort(port: unknown): port is number {
+export function isValidBrowserSourcePort(port: unknown): port is number {
 	return (
 		typeof port === "number" &&
 		Number.isInteger(port) &&
-		port >= MIN_OBS_SOURCE_PORT &&
-		port <= MAX_OBS_SOURCE_PORT
+		port >= MIN_BROWSER_SOURCE_PORT &&
+		port <= MAX_BROWSER_SOURCE_PORT
 	);
 }
 
 /** Loopback only: the plugin is bound to 127.0.0.1, never to the LAN. */
-export function obsSourceOrigin(port: number): string {
+export function browserSourceOrigin(port: number): string {
 	return `http://127.0.0.1:${port}`;
 }
 
@@ -65,7 +65,13 @@ function decodeBase64Url(value: string): string {
 	);
 }
 
-export function buildObsSourceUrl({ origin, guildId, token, wsUrl, profile }: ObsSourceUrlInput) {
+export function buildBrowserSourceUrl({
+	origin,
+	guildId,
+	token,
+	wsUrl,
+	profile,
+}: BrowserSourceUrlInput) {
 	const encodedProfile = encodeBase64Url(JSON.stringify(pickOverlayProfileSettings(profile)));
 	const fragment = [
 		["g", guildId],
@@ -75,7 +81,7 @@ export function buildObsSourceUrl({ origin, guildId, token, wsUrl, profile }: Ob
 	]
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join("&");
-	return `${origin}${OBS_SOURCE_PATH}#${fragment}`;
+	return `${origin}${BROWSER_SOURCE_PATH}#${fragment}`;
 }
 
 function isWebSocketUrl(value: string): boolean {
@@ -99,7 +105,7 @@ function decodeProfile(value: string | null): Partial<OverlayProfileSettings> | 
 }
 
 /** Returns null when the link lacks valid credentials; an unreadable profile is only ignored. */
-export function parseObsSourceFragment(hash: string): ObsSourceConfig | null {
+export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | null {
 	let params: URLSearchParams;
 	try {
 		params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
@@ -116,7 +122,7 @@ export function parseObsSourceFragment(hash: string): ObsSourceConfig | null {
 }
 
 /** Keeps the origin and path so the user recognizes the link, hides everything after `#`. */
-export function maskObsSourceUrl(url: string): string {
+export function maskBrowserSourceUrl(url: string): string {
 	const hashIndex = url.indexOf("#");
 	return hashIndex === -1 ? url : `${url.slice(0, hashIndex)}#${MASK}`;
 }
@@ -124,11 +130,11 @@ export function maskObsSourceUrl(url: string): string {
 // ─── Stream tab decisions ─────────────────────────────────────────────────────
 
 /** "current" embeds the live settings, "defaults" the factory display, otherwise a saved profile id. */
-export type ObsProfileChoice = "current" | "defaults" | (string & {});
+export type BrowserSourceProfileChoice = "current" | "defaults" | (string & {});
 
 /** A saved profile only defines some fields: the rest come from the current settings. */
-export function resolveObsProfile(
-	choice: ObsProfileChoice,
+export function resolveBrowserSourceProfile(
+	choice: BrowserSourceProfileChoice,
 	settings: Settings,
 	profiles: readonly OverlayProfile[],
 ): OverlayProfileSettings {
@@ -142,10 +148,10 @@ export function resolveObsProfile(
  * The plugin cannot stop or rebind: a server running this session only goes away,
  * or moves to a new port, after a restart.
  */
-export function obsSourceNeedsRestart(
+export function browserSourceNeedsRestart(
 	runningPort: number | null,
-	settings: Pick<Settings, "obsSourceEnabled" | "obsSourcePort">,
+	settings: Pick<Settings, "browserSourceEnabled" | "browserSourcePort">,
 ): boolean {
 	if (runningPort === null) return false;
-	return !settings.obsSourceEnabled || runningPort !== settings.obsSourcePort;
+	return !settings.browserSourceEnabled || runningPort !== settings.browserSourcePort;
 }
