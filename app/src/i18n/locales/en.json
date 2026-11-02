@@ -252,27 +252,28 @@
 		"stream": "Stream"
 	},
 	"stream": {
-		"desktop": {
-			"title": "Stream with OBS",
-			"desc": "MemeOver shows memes in a transparent window above your games. In OBS, a screen capture is enough to show them on stream.",
-			"quickTitle": "Quick setup",
-			"quickVideo": "In OBS, add a “Display Capture” source and pick the screen where MemeOver shows memes (Overlay tab → Overlay screen).",
-			"quickAudio": "Keep OBS's “Desktop Audio”: it already includes MemeOver's sound, along with everything else your computer plays. If it is missing from the OBS mixer, enable it in OBS Settings → Audio → Global Audio Devices.",
-			"quickGameCapture": "“Game Capture” does not show MemeOver: it only captures the game, and the overlay is a separate window.",
-			"cableTitle": "Only MemeOver's sound on stream (Windows)",
-			"cableIntro": "OBS's “Application Audio Capture” does not list MemeOver: Windows plays its sound as “Microsoft Edge WebView2”. OBS recommends a virtual audio cable for such apps.",
-			"cableInstall": "Install VB-Audio Virtual Cable.",
-			"cableDisableDesktop": "This setup replaces the Desktop Audio step above: in OBS Settings → Audio → Global Audio Devices, disable “Desktop Audio” and “Desktop Audio 2” to stop streaming all your PC's sounds.",
-			"cableMixer": "Open Windows Settings → System → Sound → Volume mixer. Under Apps, set the output device of “Microsoft Edge WebView2” to “CABLE Input”. If it is not listed, play a meme with sound first.",
-			"cableObsInput": "In OBS, add an “Audio Input Capture” source on “CABLE Output”.",
-			"cableMonitorDevice": "In OBS's audio settings, choose your headphones or speakers as the monitoring device, never “CABLE Input”. No other OBS source should capture this device, or the sound may reach the stream twice.",
-			"cableMonitor": "To keep hearing memes, open “Advanced Audio Properties” in the OBS mixer and set its Audio Monitoring to “Monitor and Output”.",
-			"cableWarning": "Windows routes sound per application: other WebView2 apps open at the same time also go to the cable.",
-			"cableDownload": "VB-Cable website",
-			"obsGuide": "OBS guide",
-			"otherPlatforms": "On macOS and Linux, use a screen capture too; the audio steps above are written for Windows.",
-			"windowName": "Overlay window name in OBS lists",
-			"copyWindowName": "Copy window name"
+		"beta": {
+			"badge": "Beta",
+			"title": "Tab in testing",
+			"text": "Its content may change, and it may disappear at any time."
+		},
+		"issues": {
+			"title": "Streaming with MemeOver",
+			"desc": "MemeOver shows memes in a transparent window, separate from your game. Depending on your streaming software and setup, they may be missing from the picture or the sound. Here are the known problems and a few ideas.",
+			"hintLabel": "Idea:",
+			"videoTitle": "Memes do not appear on stream",
+			"videoProblem": "A capture limited to the game does not see the overlay.",
+			"videoHint": "Capture the whole screen where MemeOver shows memes (Overlay tab → Overlay screen). Everything on that screen then becomes visible: notifications, messages, open windows.",
+			"fullscreenTitle": "Memes do not appear on your screen",
+			"fullscreenProblem": "The exclusive fullscreen mode of some games can block the overlay, on your screen and on stream.",
+			"fullscreenHint": "Switch your game to borderless or windowed fullscreen.",
+			"mixedTitle": "Meme sound comes with all your other sounds",
+			"mixedProblem": "Capturing desktop audio includes MemeOver, along with everything else your computer plays.",
+			"mixedHint": "This is the simplest setup. If the level is wrong, adjust “Media volume” in the Overlay tab.",
+			"isolateTitle": "MemeOver's sound is hard to isolate",
+			"isolateProblem": "Depending on your system, it may not be listed under the MemeOver name, and a per-app capture may not find it.",
+			"isolateHint": "A virtual audio cable can help, but it is an advanced setup: it may affect other apps and silence them when your streaming software is closed.",
+			"testTip": "Before going live, make a test recording with a meme that has sound."
 		}
 	},
 	"server": {

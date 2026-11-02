@@ -151,37 +151,36 @@ test("navigation, language, theme, history and dashboard controls", async ({ pag
 	await expect.poll(() => page.locator("html").getAttribute("class")).not.toBe(before);
 });
 
-test("stream tab explains the OBS capture routes and copies the overlay window name", async ({
-	page,
-}) => {
+test("stream tab warns it is in beta and lists the known problems with ideas", async ({ page }) => {
 	await page.goto("/test/browser/settings.html");
 	await page.getByRole("button", { name: "Stream", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "Stream with OBS" })).toBeVisible();
-	await expect(page.getByText(/add a “Display Capture” source/)).toBeVisible();
-	await expect(page.getByText(/“Desktop Audio”/)).toBeVisible();
+	await expect(page.getByText("Beta", { exact: true })).toBeVisible();
+	await expect(page.getByText(/may disappear at any time/)).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Streaming with MemeOver" })).toBeVisible();
+	for (const heading of [
+		"Memes do not appear on stream",
+		"Memes do not appear on your screen",
+		"Meme sound comes with all your other sounds",
+		"MemeOver's sound is hard to isolate",
+	]) {
+		await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+	}
+	await expect(page.getByText(/Everything on that screen then becomes visible/)).toBeVisible();
+	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
+});
 
-	const cable = page.getByRole("button", { name: /Only MemeOver's sound on stream/ });
-	await cable.focus();
-	await page.keyboard.press("Enter");
-	await expect(page.getByText(/Windows Settings.*“CABLE Input”/)).toBeVisible();
-	await expect(page.getByText(/disable “Desktop Audio” and “Desktop Audio 2”/)).toBeVisible();
-	await expect(
-		page.getByText(/choose your headphones or speakers as the monitoring device/),
-	).toBeVisible();
-	await expect(page.getByRole("button", { name: "OBS guide", exact: true })).toBeVisible();
+test("settings tabs fit the minimum window width in French", async ({ page }) => {
+	await page.setViewportSize({ width: 800, height: 560 });
+	await page.goto("/test/browser/settings.html");
+	await page.getByRole("button", { name: "About", exact: true }).click();
+	await page.getByRole("button", { name: "Français", exact: true }).click();
+	const tabs = page.getByRole("button", { name: "Tableau de bord", exact: true }).locator("..");
+	await expect(tabs).toBeVisible();
 
-	await page.evaluate(() => {
-		Object.defineProperty(navigator, "clipboard", {
-			configurable: true,
-			value: {
-				writeText: async (text: string) => localStorage.setItem("test-clipboard", text),
-			},
-		});
-	});
-	await page.getByRole("button", { name: "Copy window name" }).click();
-	await expect
-		.poll(() => page.evaluate(() => localStorage.getItem("test-clipboard")))
-		.toBe("MemeOver Overlay");
+	const box = await tabs.boundingBox();
+	expect(box?.x).toBeGreaterThanOrEqual(0);
+	expect((box?.x ?? 0) + (box?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(800);
+	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(800);
 });
 
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {

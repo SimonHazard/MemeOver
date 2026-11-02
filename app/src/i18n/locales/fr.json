@@ -252,27 +252,28 @@
 		"stream": "Stream"
 	},
 	"stream": {
-		"desktop": {
-			"title": "Streamer avec OBS",
-			"desc": "MemeOver affiche les memes dans une fenêtre transparente au-dessus de vos jeux. Dans OBS, une capture d'écran suffit pour les montrer en stream.",
-			"quickTitle": "Configuration rapide",
-			"quickVideo": "Dans OBS, ajoutez une source « Display Capture » et choisissez l'écran où MemeOver affiche les memes (onglet Overlay → Écran de l'overlay).",
-			"quickAudio": "Gardez la source « Desktop Audio » d'OBS : elle inclut déjà le son de MemeOver, avec tout ce que joue votre ordinateur. Si elle n'apparaît pas dans le mixeur OBS, activez-la dans les paramètres OBS → Audio → Global Audio Devices.",
-			"quickGameCapture": "« Game Capture » n'affiche pas MemeOver : elle capture uniquement le jeu, et l'overlay est une fenêtre séparée.",
-			"cableTitle": "Uniquement le son de MemeOver en stream (Windows)",
-			"cableIntro": "« Application Audio Capture » d'OBS ne liste pas MemeOver : Windows joue son son sous le nom « Microsoft Edge WebView2 ». OBS recommande un câble audio virtuel pour ces applications.",
-			"cableInstall": "Installez VB-Audio Virtual Cable.",
-			"cableDisableDesktop": "Cette configuration remplace l'étape Desktop Audio ci-dessus : dans les paramètres OBS → Audio → Global Audio Devices, désactivez « Desktop Audio » et « Desktop Audio 2 » pour ne plus diffuser tous les sons du PC.",
-			"cableMixer": "Ouvrez Paramètres Windows → Système → Son → Mélangeur de volume. Dans Applications, réglez le périphérique de sortie de « Microsoft Edge WebView2 » sur « CABLE Input ». S'il n'apparaît pas, jouez d'abord un meme avec du son.",
-			"cableObsInput": "Dans OBS, ajoutez une source « Audio Input Capture » sur « CABLE Output ».",
-			"cableMonitorDevice": "Dans les paramètres audio OBS, choisissez votre casque ou vos enceintes comme périphérique de monitoring, jamais « CABLE Input ». Ce périphérique ne doit pas être capturé par une autre source OBS, sinon le son risque d'être diffusé deux fois.",
-			"cableMonitor": "Pour continuer à entendre les memes, ouvrez « Advanced Audio Properties » dans le mixeur OBS et réglez son Audio Monitoring sur « Monitor and Output ».",
-			"cableWarning": "Windows route le son par application : les autres applications WebView2 ouvertes en même temps passent aussi par le câble.",
-			"cableDownload": "Site de VB-Cable",
-			"obsGuide": "Guide OBS",
-			"otherPlatforms": "Sur macOS et Linux, utilisez aussi une capture d'écran ; les étapes audio ci-dessus sont écrites pour Windows.",
-			"windowName": "Nom de la fenêtre de l'overlay dans les listes OBS",
-			"copyWindowName": "Copier le nom de la fenêtre"
+		"beta": {
+			"badge": "Bêta",
+			"title": "Onglet en test",
+			"text": "Son contenu peut changer, et il peut disparaître à tout moment."
+		},
+		"issues": {
+			"title": "Streamer avec MemeOver",
+			"desc": "MemeOver affiche les memes dans une fenêtre transparente, séparée de votre jeu. Selon votre logiciel de stream et votre configuration, ils peuvent manquer à l'image ou au son. Voici les problèmes connus et quelques pistes.",
+			"hintLabel": "Piste :",
+			"videoTitle": "Les memes n'apparaissent pas en stream",
+			"videoProblem": "Une capture limitée au jeu ne voit pas l'overlay.",
+			"videoHint": "Capturez l'écran entier où MemeOver affiche les memes (onglet Overlay → Écran de l'overlay). Tout ce qui s'affiche sur cet écran devient alors visible : notifications, messages, fenêtres ouvertes.",
+			"fullscreenTitle": "Les memes n'apparaissent pas sur votre écran",
+			"fullscreenProblem": "Le plein écran exclusif de certains jeux peut bloquer l'overlay, sur votre écran comme en stream.",
+			"fullscreenHint": "Passez votre jeu en mode sans bordure ou fenêtré plein écran.",
+			"mixedTitle": "Le son des memes arrive avec tous les autres sons",
+			"mixedProblem": "Capturer le son du bureau inclut MemeOver, mais aussi tout ce que joue votre ordinateur.",
+			"mixedHint": "C'est le réglage le plus simple. Si le niveau ne convient pas, ajustez « Volume des médias » dans l'onglet Overlay.",
+			"isolateTitle": "Le son de MemeOver est difficile à isoler",
+			"isolateProblem": "Selon votre système, il peut ne pas apparaître sous le nom MemeOver, et une capture par application peut ne pas le trouver.",
+			"isolateHint": "Un câble audio virtuel peut aider, mais c'est une manipulation avancée : elle peut toucher d'autres applications et les rendre muettes quand votre logiciel de stream est fermé.",
+			"testTip": "Avant de passer en direct, faites un enregistrement d'essai avec un meme qui a du son."
 		}
 	},
 	"server": {

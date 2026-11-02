@@ -58,7 +58,7 @@ export function TabNav() {
 							onClick={() => navigate({ to: tab.route })}
 							aria-current={isActive ? "page" : undefined}
 							className={cn(
-								"relative h-8 gap-1.5 rounded-lg text-sm font-display tracking-wide border-2 border-transparent bg-transparent transition-[color,background-color,transform,translate,scale] duration-300 ease-out cursor-pointer",
+								"relative h-8 gap-1 rounded-lg has-[>svg]:px-1.5 text-sm font-display tracking-wide border-2 border-transparent bg-transparent transition-[color,background-color,transform,translate,scale] duration-300 ease-out cursor-pointer",
 								isActive
 									? "text-primary-foreground hover:bg-transparent hover:text-primary-foreground dark:hover:bg-transparent"
 									: "text-muted-foreground hover:text-foreground hover:bg-accent",
