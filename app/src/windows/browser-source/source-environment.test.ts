@@ -1,12 +1,57 @@
 import { describe, expect, test } from "bun:test";
 import {
+	type AutoplayProbeResult,
+	classifyAutoplayError,
 	INITIAL_LIVENESS,
 	type LivenessResult,
 	MAX_LIVENESS_FAILURES,
 	nextLiveness,
+	resolveAutoplay,
 	type SourceLiveness,
 	sourcePreviewStatus,
 } from "./source-environment";
+
+describe("autoplay detection", () => {
+	const probing = (...results: AutoplayProbeResult[]) => {
+		const calls = { count: 0 };
+		const probe = async () => results[calls.count++] ?? "inconclusive";
+		return { calls, probe };
+	};
+
+	test("only NotAllowedError counts as a refusal", () => {
+		expect(classifyAutoplayError(new DOMException("Blocked", "NotAllowedError"))).toBe("blocked");
+		expect(classifyAutoplayError(new Error("Autoplay probe timed out"))).toBe("inconclusive");
+		expect(classifyAutoplayError(new DOMException("No codec", "NotSupportedError"))).toBe(
+			"inconclusive",
+		);
+		expect(classifyAutoplayError(new DOMException("Interrupted", "AbortError"))).toBe(
+			"inconclusive",
+		);
+		expect(classifyAutoplayError("NotAllowedError")).toBe("inconclusive");
+	});
+
+	test("a clear answer ends the detection at once", async () => {
+		const allowed = probing("allowed");
+		expect(await resolveAutoplay(allowed.probe)).toBe(true);
+		expect(allowed.calls.count).toBe(1);
+
+		const blocked = probing("blocked");
+		expect(await resolveAutoplay(blocked.probe)).toBe(false);
+		expect(blocked.calls.count).toBe(1);
+	});
+
+	test("an inconclusive probe is retried and can still be refused", async () => {
+		const later = probing("inconclusive", "blocked");
+		expect(await resolveAutoplay(later.probe)).toBe(false);
+		expect(later.calls.count).toBe(2);
+	});
+
+	test("a probe that never concludes draws no preview aid", async () => {
+		const never = probing();
+		expect(await resolveAutoplay(never.probe, 3)).toBe(true);
+		expect(never.calls.count).toBe(3);
+	});
+});
 
 test("the preview pill maps socket states and keeps a revocation or rejection sticky", () => {
 	expect(sourcePreviewStatus("connecting", null, false)).toBe("connecting");

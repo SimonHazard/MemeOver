@@ -450,7 +450,7 @@ fn create_overlay_window(app: &tauri::AppHandle) -> tauri::Result<()> {
     // Common properties for both modes
     let builder = WebviewWindowBuilder::new(app, "overlay", url)
         .title("MemeOver Overlay")
-        // Distinct from the settings window's default class, so an browser source matching by
+        // Distinct from the settings window's default class, so a window capture matching by
         // type cannot fall back to the settings window. Sources saved with the old class
         // and that match by type must reselect the window; title and executable matching
         // still find it through the unchanged title.

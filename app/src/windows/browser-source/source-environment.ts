@@ -2,6 +2,7 @@ import type { SessionRevocationCode } from "@memeover/shared";
 import type { WsStatus } from "@/shared/types";
 
 const PROBE_TIMEOUT_MS = 1000;
+const PROBE_ATTEMPTS = 3;
 const PROBE_SAMPLE_RATE = 8000;
 const PROBE_SAMPLES = 80;
 
@@ -27,12 +28,29 @@ function silentWav(): Blob {
 	return new Blob([header, new Uint8Array(PROBE_SAMPLES).fill(128)], { type: "audio/wav" });
 }
 
+export type AutoplayProbeResult = "allowed" | "blocked" | "inconclusive";
+
+/** Only `NotAllowedError` is a refusal; a timeout or a playback failure says nothing about autoplay. */
+export function classifyAutoplayError(error: unknown): AutoplayProbeResult {
+	return error instanceof Error && error.name === "NotAllowedError" ? "blocked" : "inconclusive";
+}
+
 /**
- * Whether this page may play sound without a user gesture. Streaming software loads
- * browser sources with that permission, while a regular browser tab normally lacks it.
- * Testing the capability keeps the page independent of any particular software.
+ * Retries an inconclusive probe, then assumes sound is allowed: browsers refuse at once, so
+ * a probe that never settles comes from a busy machine, and the preview aids must not reach a stream.
  */
-export async function canAutoplayWithSound(): Promise<boolean> {
+export async function resolveAutoplay(
+	probe: () => Promise<AutoplayProbeResult>,
+	attempts = PROBE_ATTEMPTS,
+): Promise<boolean> {
+	for (let attempt = 0; attempt < attempts; attempt++) {
+		const result = await probe();
+		if (result !== "inconclusive") return result === "allowed";
+	}
+	return true;
+}
+
+async function probeAutoplay(): Promise<AutoplayProbeResult> {
 	const url = URL.createObjectURL(silentWav());
 	const probe = new Audio(url);
 	let timer: ReturnType<typeof setTimeout> | undefined;
@@ -43,9 +61,9 @@ export async function canAutoplayWithSound(): Promise<boolean> {
 				timer = setTimeout(() => reject(new Error("Autoplay probe timed out")), PROBE_TIMEOUT_MS);
 			}),
 		]);
-		return true;
-	} catch {
-		return false;
+		return "allowed";
+	} catch (error) {
+		return classifyAutoplayError(error);
 	} finally {
 		clearTimeout(timer);
 		probe.pause();
@@ -54,6 +72,15 @@ export async function canAutoplayWithSound(): Promise<boolean> {
 		probe.load();
 		URL.revokeObjectURL(url);
 	}
+}
+
+/**
+ * Whether this page may play sound without a user gesture. Streaming software loads
+ * browser sources with that permission, while a regular browser tab normally lacks it.
+ * Testing the capability keeps the page independent of any particular software.
+ */
+export function canAutoplayWithSound(): Promise<boolean> {
+	return resolveAutoplay(probeAutoplay);
 }
 
 export type SourcePreviewStatus =

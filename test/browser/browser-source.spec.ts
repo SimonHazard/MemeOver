@@ -14,19 +14,25 @@ function fragment(overrides: Record<string, string> = {}) {
 }
 
 /** Decides the page's autoplay probe; `autoplay` attributes on real players are unaffected. */
-async function stubAutoplay(page: Page, allowed: boolean) {
-	await page.addInitScript((isAllowed) => {
-		HTMLMediaElement.prototype.play = () =>
-			isAllowed
+async function stubAutoplay(page: Page, allowed: boolean | "never-settles") {
+	await page.addInitScript((behavior) => {
+		HTMLMediaElement.prototype.play = () => {
+			if (behavior === "never-settles") return new Promise(() => {});
+			return behavior
 				? Promise.resolve()
 				: Promise.reject(new DOMException("Blocked by test", "NotAllowedError"));
+		};
 	}, allowed);
 }
 
 /** Opens the real page with a mocked bot; the media request hangs so the video stays mounted. */
 async function openSource(
 	page: Page,
-	{ autoplay = false, joinAccepted = true, overrides = {} as Record<string, string> } = {},
+	{
+		autoplay = false as boolean | "never-settles",
+		joinAccepted = true,
+		overrides = {} as Record<string, string>,
+	} = {},
 ) {
 	const errors: string[] = [];
 	const requests: string[] = [];
@@ -133,6 +139,30 @@ test("a source allowed to autoplay plays sound at once and draws no preview aid"
 	await expect(page.getByRole("status")).toHaveCount(0);
 	await expect(page.getByRole("button", { name: "Click to enable sound" })).toHaveCount(0);
 	expect(source.errors).toEqual([]);
+});
+
+test("a busy machine whose autoplay probe never settles draws nothing on stream", async ({
+	page,
+}) => {
+	const source = await openSource(page, { autoplay: "never-settles" });
+	const video = page.locator("video");
+	await expect(video).toHaveCount(1, { timeout: 8000 });
+	expect(await video.evaluate((el: HTMLVideoElement) => el.muted)).toBe(false);
+	await expect(page.getByRole("status")).toHaveCount(0);
+	await expect(page.getByRole("button", { name: "Click to enable sound" })).toHaveCount(0);
+	expect(source.errors).toEqual([]);
+});
+
+// Imgur answers 403 to a 127.0.0.1 referrer, which would silently skip its memes on stream.
+test("media requests carry no referrer", async ({ page }) => {
+	const referrers: (string | undefined)[] = [];
+	page.on("request", (request) => {
+		if (request.url().startsWith(videoUrl)) referrers.push(request.headers().referer);
+	});
+	await openSource(page, { autoplay: true });
+	await expect(page.locator("video")).toHaveCount(1);
+	await expect.poll(() => referrers.length).toBeGreaterThan(0);
+	expect(referrers.every((referrer) => referrer === undefined)).toBe(true);
 });
 
 const credentialChanges: { name: string; values: Record<string, string> }[] = [

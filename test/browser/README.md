@@ -38,7 +38,9 @@ Browser source regressions also check that a changed link starts a new bot sessi
 old playback/queued items, that the link's moderation filters and install id apply, that one failed
 liveness check changes nothing, and that consecutive failures silence the player and close the bot
 connection until MemeOver serves the page again. A new instance reloads the page; an answer without
-the instance header is never followed. HEAD probes must contain neither credentials nor a referrer.
+the instance header is never followed. HEAD probes must contain neither credentials nor a referrer,
+and media requests carry no referrer either: Imgur answers 403 to a 127.0.0.1 referrer. An autoplay
+probe that never settles draws no preview aid.
 
 `app/test/browser/settings.ts` mounts the actual settings application with Tauri's
 official IPC/event mocks. Stores live only in the browser context's localStorage;

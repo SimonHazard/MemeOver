@@ -9,17 +9,25 @@
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
 use std::sync::Mutex;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Runtime, State};
 
 /// Loopback only: never reachable from the LAN.
 const LOOPBACK: &str = "127.0.0.1";
 const MIN_PORT: u16 = 1024;
 const SESSION_HEADER: &str = "X-MemeOver-Source-Session";
-/// A refused connection returns at once; this only bounds a server that accepts and stays silent.
+/// Bounds one connection or read. Windows can also spend this long on a closed port, so
+/// running out of time proves nothing about the server.
 const PROBE_TIMEOUT: Duration = Duration::from_secs(1);
-const START_ATTEMPTS: u32 = 100;
+const START_TIMEOUT: Duration = Duration::from_secs(3);
 const START_RETRY_DELAY: Duration = Duration::from_millis(20);
+
+#[derive(Debug, PartialEq, Eq)]
+enum ProbeAnswer {
+    OurSession,
+    AnotherServer,
+    NoAnswer,
+}
 
 struct RunningServer {
     port: u16,
@@ -52,12 +60,11 @@ impl StartError {
     }
 }
 
-/// Whether our server still answers on `port`. The plugin's thread can end without
-/// notice, and a port alone could belong to another program: require our session header.
-fn serves_session(port: u16, session: &str) -> bool {
+/// Asks `port` for the page. Only our session header proves that the answer comes from us.
+fn probe_session(port: u16, session: &str) -> ProbeAnswer {
     let address = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
     let Ok(mut stream) = TcpStream::connect_timeout(&address, PROBE_TIMEOUT) else {
-        return false;
+        return ProbeAnswer::NoAnswer;
     };
     if stream.set_read_timeout(Some(PROBE_TIMEOUT)).is_err()
         || stream.set_write_timeout(Some(PROBE_TIMEOUT)).is_err()
@@ -67,19 +74,40 @@ fn serves_session(port: u16, session: &str) -> bool {
         )
         .is_err()
     {
-        return false;
+        return ProbeAnswer::NoAnswer;
     }
-    let mut response = String::new();
-    let _ = stream.read_to_string(&mut response);
+    let mut response = Vec::new();
+    let _ = stream.read_to_end(&mut response);
+    if response.is_empty() {
+        return ProbeAnswer::NoAnswer;
+    }
     let expected = format!("{SESSION_HEADER}: {session}");
-    response.lines().any(|line| line == expected)
+    if String::from_utf8_lossy(&response)
+        .lines()
+        .any(|line| line == expected)
+    {
+        ProbeAnswer::OurSession
+    } else {
+        ProbeAnswer::AnotherServer
+    }
+}
+
+/// Whether our server still runs. Its thread answers one request at a time and can end
+/// without notice, so silence alone proves nothing: only a free port shows that it has ended.
+/// Forgetting a busy server would report its own port as taken until the next restart.
+fn server_is_alive(port: u16, session: &str) -> bool {
+    match probe_session(port, session) {
+        ProbeAnswer::OurSession => true,
+        ProbeAnswer::AnotherServer => false,
+        ProbeAnswer::NoAnswer => TcpListener::bind((LOOPBACK, port)).is_err(),
+    }
 }
 
 /// Port of the server this app really runs; forgets one whose thread has ended.
 fn live_port(running: &mut Option<RunningServer>) -> Option<u16> {
     let alive = running
         .as_ref()
-        .is_some_and(|server| serves_session(server.port, &server.session));
+        .is_some_and(|server| server_is_alive(server.port, &server.session));
     if !alive {
         *running = None;
     }
@@ -127,15 +155,16 @@ pub fn start<R: Runtime>(
             .build(),
     )
     .map_err(|e| StartError::Plugin(e.to_string()))?;
-    let started = (0..START_ATTEMPTS).any(|_| {
-        let answered = serves_session(port, &session);
-        if !answered {
-            std::thread::sleep(START_RETRY_DELAY);
+    // Only HTTP while the thread may still be binding: a bind here could make it panic.
+    let deadline = Instant::now() + START_TIMEOUT;
+    while probe_session(port, &session) != ProbeAnswer::OurSession {
+        if Instant::now() >= deadline {
+            if !server_is_alive(port, &session) {
+                return Err(StartError::PortInUse);
+            }
+            break;
         }
-        answered
-    });
-    if !started {
-        return Err(StartError::PortInUse);
+        std::thread::sleep(START_RETRY_DELAY);
     }
     *running = Some(RunningServer { port, session });
     Ok(port)
@@ -339,10 +368,39 @@ mod tests {
     fn another_program_on_the_port_does_not_count_as_our_server() {
         let taken = TcpListener::bind((LOOPBACK, 0)).unwrap();
         let port = taken.local_addr().unwrap().port();
+        let other_program = std::thread::spawn(move || {
+            let (mut stream, _) = taken.accept().unwrap();
+            let mut request = [0; 512];
+            let _ = stream.read(&mut request);
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                .unwrap();
+        });
         let mut running = Some(RunningServer {
             port,
             session: "ours".into(),
         });
         assert_eq!(live_port(&mut running), None);
+        other_program.join().unwrap();
+    }
+
+    #[test]
+    fn a_silent_server_holding_its_port_is_not_forgotten() {
+        // Accepts nothing, like a server thread stuck on a slow client.
+        let held = TcpListener::bind((LOOPBACK, 0)).unwrap();
+        let port = held.local_addr().unwrap().port();
+        let app = app();
+        let state = BrowserSourceState::default();
+        *state.running.lock().unwrap() = Some(RunningServer {
+            port,
+            session: "busy".into(),
+        });
+
+        assert_eq!(start(app.handle(), &state, port), Ok(port));
+        assert_eq!(
+            start(app.handle(), &state, free_port()),
+            Err(StartError::RestartRequired)
+        );
+        assert_eq!(live_port(&mut state.running.lock().unwrap()), Some(port));
     }
 }

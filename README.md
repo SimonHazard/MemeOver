@@ -79,6 +79,8 @@ le mixeur.
   lancé, actualisez la source.
 - Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
   l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
+- La page demande un moteur de navigateur récent (Chromium 111 ou plus) : si l'affichage est
+  incomplet ou vide, mettez à jour votre logiciel de stream.
 
 ## Commandes Discord
 
@@ -275,6 +277,8 @@ sound can have its own mixer entry.
   refresh the source.
 - To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
   tray menu ("Mute overlay").
+- The page needs a recent browser engine (Chromium 111 or later): if it renders incompletely
+  or stays empty, update your streaming software.
 
 ## Discord Commands
 
