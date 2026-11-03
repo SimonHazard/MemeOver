@@ -12,7 +12,8 @@ export function SourceStatusPill({ sourceStopped }: { sourceStopped: boolean }) 
 	const { t } = useTranslation();
 	const wsStatus = useAppStore((s) => s.wsStatus);
 	const revoked = useAppStore((s) => s.wsRevokedReason);
-	const status = sourceStopped ? "stopped" : sourcePreviewStatus(wsStatus, revoked);
+	const joinRejected = useAppStore((s) => s.wsJoinRejected);
+	const status = sourceStopped ? "stopped" : sourcePreviewStatus(wsStatus, revoked, joinRejected);
 	const [hidden, setHidden] = useState(false);
 
 	useEffect(() => {
@@ -30,7 +31,8 @@ export function SourceStatusPill({ sourceStopped }: { sourceStopped: boolean }) 
 				NB_BADGE,
 				NB_SHADOW_SM,
 				"fixed bottom-4 left-4 bg-background px-3 py-1.5 text-foreground",
-				status === "revoked" && "bg-destructive text-white",
+				(status === "revoked" || status === "rejected" || status === "stopped") &&
+					"bg-destructive text-white",
 			)}
 		>
 			{t(`browserSource.status.${status}`)}

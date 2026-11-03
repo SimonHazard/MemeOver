@@ -58,6 +58,9 @@ interface AppStore {
 	setCurrentAuthorId: (id: string | null) => void;
 	wsRevokedReason: SessionRevocationCode | null;
 	setWsRevokedReason: (reason: SessionRevocationCode | null) => void;
+	/** The bot refused this socket's JOIN (unknown guild or invalid token); it stays open and idle. */
+	wsJoinRejected: boolean;
+	setWsJoinRejected: (rejected: boolean) => void;
 	// Settings (loaded from Tauri Store by initOverlayStore / initSettingsStore)
 	settings: Settings;
 	updateSettings: (partial: Partial<Settings>) => void;
@@ -129,6 +132,8 @@ export const useAppStore = create<AppStore>((set) => ({
 		}),
 	wsRevokedReason: null,
 	setWsRevokedReason: (reason) => set({ wsRevokedReason: reason }),
+	wsJoinRejected: false,
+	setWsJoinRejected: (rejected) => set({ wsJoinRejected: rejected }),
 	currentAuthorId: null,
 	setCurrentAuthorId: (id) => set({ currentAuthorId: id }),
 	settings: DEFAULT_SETTINGS,

@@ -278,12 +278,13 @@
 		},
 		"browserSource": {
 			"title": "Browser source",
-			"desc": "Shows memes in your streaming software through a browser source: transparent over any scene, game capture included. Depending on your software, its sound can have its own mixer entry. Off by default; while enabled, MemeOver serves the page on this computer only (127.0.0.1).",
+			"desc": "Shows memes in your streaming software through a browser source: transparent over any scene, game capture included. Depending on your software, its sound can have its own mixer entry. While enabled, MemeOver serves the page on this computer only (127.0.0.1).",
 			"portLabel": "Local port",
 			"portInvalid": "Choose a port between 1024 and 65535.",
 			"portInUse": "Port {{port}} is used by another program — choose another.",
 			"startError": "The browser source could not start. Restart MemeOver and try again.",
-			"restartNotice": "The local page keeps its current state until MemeOver restarts.",
+			"restartNotice": "This change takes effect when MemeOver restarts. Browser sources stop during the restart and resume on their own; copy the link again if the port changed.",
+			"restartError": "Could not restart MemeOver. Quit it and open it again.",
 			"restartNow": "Restart MemeOver",
 			"urlLabel": "Source link",
 			"showUrl": "Show the source link",
@@ -292,15 +293,17 @@
 			"profileCurrent": "Current settings",
 			"profileDefaults": "Default settings",
 			"copyUrl": "Copy source link",
-			"secretWarning": "This link contains your server's token: never show it on stream. If it leaks, run /memeover rotate on Discord, then copy the new link.",
-			"copyAgain": "The source page does not follow later changes: copy the link again after changing your display or connection settings.",
-			"missingCredentials": "Connect MemeOver to your Discord server first (Connection tab) to get the source link.",
+			"secretWarning": "This link contains your server's token: never show it on stream and do not share your streaming software's scene files, which may store it in clear text. If it leaks, have a server manager run /memeover rotate on Discord, paste the new code in the Dashboard, then copy the new link.",
+			"copyAgain": "The source page does not follow later changes: copy the link again after changing your display or connection settings, or your muted authors.",
+			"noRemote": "Skipping a meme or clearing the queue only affects the desktop overlay. To cut a meme on stream, hide or mute the source in your streaming software.",
+			"missingCredentials": "Connect MemeOver to your Discord server first (Dashboard tab) to get the source link.",
 			"softwareTitle": "In your streaming software",
 			"softwareAdd": "Add a browser source and paste the link as its URL.",
-			"softwareSize": "Set its width and height to your stream resolution, e.g. 1920 × 1080.",
+			"softwareSize": "Set its width and height to your scene's resolution (canvas), e.g. 1920 × 1080.",
 			"softwareKeepRunning": "Keep the source running while it is hidden, otherwise memes sent in the meantime are lost.",
 			"softwareAudio": "If available, let your software control the source's audio so it gets its own mixer entry.",
-			"softwareMonitor": "To hear memes yourself, enable audio monitoring for that source."
+			"softwareMonitor": "To hear memes yourself, enable audio monitoring for that source.",
+			"softwareRefresh": "If your software opens before MemeOver, the page cannot load: once MemeOver is running, refresh the source. After that, it resumes on its own when MemeOver restarts."
 		},
 		"desktopMute": {
 			"title": "Desktop overlay sound",
@@ -308,7 +311,7 @@
 			"mute": "Mute the desktop overlay",
 			"unmute": "Unmute the desktop overlay",
 			"stateMuted": "The desktop overlay is muted.",
-			"stateAudible": "The desktop overlay plays sound.",
+			"stateAudible": "The desktop overlay's sound is on.",
 			"doubleHint": "With the browser source on, you may hear memes twice and send them twice to the stream: mute the desktop overlay."
 		}
 	},
@@ -443,7 +446,7 @@
 		"nothingToPurge": "No expired media to remove",
 		"muteAuthor": "Hide this author",
 		"mutedAuthorsTitle": "Hidden authors",
-		"mutedAuthorsHint": "These preferences only affect your overlay.",
+		"mutedAuthorsHint": "These preferences apply to your overlay. To apply them to the browser source, copy its link again.",
 		"unmute": "Show again",
 		"mutedOn": "Hidden on {{date}}",
 		"hideAnonymous": "Hide anonymous /memeover secret memes",
@@ -530,8 +533,9 @@
 			"connecting": "MemeOver · connecting…",
 			"connected": "MemeOver · connected",
 			"reconnecting": "MemeOver · reconnecting…",
-			"stopped": "MemeOver · source stopped: restart MemeOver, then refresh this page",
-			"revoked": "MemeOver · link revoked: copy a new one from the Stream tab"
+			"stopped": "MemeOver · source stopped: start MemeOver with the source enabled and this page resumes on its own",
+			"revoked": "MemeOver · link revoked: copy a new one from the Stream tab",
+			"rejected": "MemeOver · link refused by the bot: copy a new one from the Stream tab"
 		},
 		"enableSound": "Click to enable sound",
 		"incomplete": {

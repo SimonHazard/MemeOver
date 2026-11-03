@@ -8,12 +8,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Added
 
-- App/site (1.10.0): add an opt-in browser source to the Stream tab. When enabled, MemeOver serves a page on 127.0.0.1 only (port 4466 by default) that streaming software can load to show memes over any scene, game capture included, with its own sound when the software supports it. The copied link carries the server credentials and display profile after `#`, so they never reach the local server; disabling the source or changing its port takes effect after a restart. Add a one-click mute for the desktop overlay's sound, in the Stream tab and the tray menu, so streamers do not hear memes twice.
+- App/site (1.10.0): add an opt-in browser source to the Stream tab. When enabled, MemeOver serves a page on 127.0.0.1 only (port 4466 by default) that streaming software can load to show memes over any scene, game capture included, with its own sound when the software supports it. The copied link carries the server credentials and display profile after `#`, so they never reach the local server; disabling the source or changing its port takes effect after a restart. The link also applies muted authors and the anonymous-meme choice, shares the desktop's install id so the bot counts one streamer, and never shows connection notifications on stream. A loaded source stops within a few seconds when MemeOver closes and resumes on its own once MemeOver serves the page again. Add a one-click mute for the desktop overlay's sound, in the Stream tab and the tray menu, so streamers do not hear memes twice.
 - App/site (1.9.0): add a beta Stream tab to the settings that lists the known picture and sound problems when streaming MemeOver, with a few ideas that name no third-party product. The tab may change or disappear at any time. The overlay window now uses its own Windows class (`MemeOverOverlay`) and keeps its title "MemeOver Overlay". An existing OBS source that matches the overlay by type must reselect the window; matching by title or executable is unaffected. Tighten the settings tabs so the sixth one fits at the 800 px minimum width in French.
 
 ### Fixed
-
-- App/site (1.10.0): stop already loaded browser sources when MemeOver closes or restarts, and reset the connection and pending content when switching the source link to another Discord server or token. Refresh the source in your streaming software after relaunching MemeOver to resume.
 
 - App/site (1.8.8): clear a connection field's validation error as soon as its value is corrected. The error previously disappeared only on blur, moving "Save & connect" between mouse press and release so the click could be lost. Retry WebKit browser tests once in CI after intermittent Linux WebKit page freezes.
 

@@ -15,7 +15,7 @@ import { Separator } from "@memeover/ui/components/ui/separator";
 import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { Eye, EyeOff, MonitorPlay, RotateCcw, TriangleAlert } from "lucide-react";
+import { Eye, EyeOff, Info, MonitorPlay, RotateCcw, TriangleAlert } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -38,11 +38,12 @@ import type { Settings } from "@/shared/types";
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Notice({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "warn" }) {
+	const Icon = tone === "warn" ? TriangleAlert : Info;
 	return (
 		<p
 			className={`flex gap-2 text-xs font-text ${tone === "warn" ? "text-destructive" : "text-muted-foreground"}`}
 		>
-			<TriangleAlert className="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+			<Icon className="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
 			<span>{children}</span>
 		</p>
 	);
@@ -53,7 +54,13 @@ function RestartNotice() {
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-2 border-2 border-foreground p-3">
 			<p className="text-xs font-text">{t("stream.browserSource.restartNotice")}</p>
-			<NbButton size="sm" variant="outline" onClick={() => void relaunch()}>
+			<NbButton
+				size="sm"
+				variant="outline"
+				onClick={() => {
+					relaunch().catch(() => toast.error(t("stream.browserSource.restartError")));
+				}}
+			>
 				<RotateCcw className="size-3.5" aria-hidden="true" />
 				{t("stream.browserSource.restartNow")}
 			</NbButton>
@@ -78,8 +85,16 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 		guildId: settings.guildId,
 		token: settings.token,
 		wsUrl: settings.wsUrl,
+		clientId: settings.clientId,
 		profile: resolveBrowserSourceProfile(choice, settings, profiles),
+		mutedAuthors: settings.mutedAuthors,
+		hideAnonymous: settings.hideAnonymous,
 	});
+	const profileItems = [
+		{ value: "current", label: t("stream.browserSource.profileCurrent") },
+		...profiles.map((profile) => ({ value: profile.id, label: profile.name })),
+		{ value: "defaults", label: t("stream.browserSource.profileDefaults") },
+	];
 
 	return (
 		<div className="space-y-3">
@@ -93,12 +108,19 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 						readOnly
 						value={revealed ? url : maskBrowserSourceUrl(url)}
 						className="font-mono text-xs"
-						onFocus={(event) => event.currentTarget.select()}
+						// Selecting the mask would let Ctrl+C copy a link that cannot work.
+						onFocus={(event) => {
+							if (revealed) event.currentTarget.select();
+						}}
+						onCopy={(event) => {
+							if (revealed) return;
+							event.preventDefault();
+							event.clipboardData.setData("text/plain", url);
+						}}
 					/>
 					<NbButton
 						size="icon"
 						variant="outline"
-						aria-pressed={revealed}
 						aria-label={t(
 							revealed ? "stream.browserSource.hideUrl" : "stream.browserSource.showUrl",
 						)}
@@ -119,6 +141,7 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 						{t("stream.browserSource.profileLabel")}
 					</Label>
 					<Select
+						items={profileItems}
 						value={choice}
 						onValueChange={(value) => setChoice(value as BrowserSourceProfileChoice)}
 					>
@@ -127,15 +150,11 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 						</SelectTrigger>
 						<SelectContent>
 							<SelectGroup>
-								<SelectItem value="current">{t("stream.browserSource.profileCurrent")}</SelectItem>
-								{profiles.map((profile) => (
-									<SelectItem key={profile.id} value={profile.id}>
-										{profile.name}
+								{profileItems.map(({ value, label }) => (
+									<SelectItem key={value} value={value}>
+										{label}
 									</SelectItem>
 								))}
-								<SelectItem value="defaults">
-									{t("stream.browserSource.profileDefaults")}
-								</SelectItem>
 							</SelectGroup>
 						</SelectContent>
 					</Select>
@@ -145,6 +164,7 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 
 			<Notice tone="warn">{t("stream.browserSource.secretWarning")}</Notice>
 			<Notice>{t("stream.browserSource.copyAgain")}</Notice>
+			<Notice>{t("stream.browserSource.noRemote")}</Notice>
 		</div>
 	);
 }
@@ -162,6 +182,7 @@ function RecommendedSourceSettings() {
 				<li>{t("stream.browserSource.softwareKeepRunning")}</li>
 				<li>{t("stream.browserSource.softwareAudio")}</li>
 				<li>{t("stream.browserSource.softwareMonitor")}</li>
+				<li>{t("stream.browserSource.softwareRefresh")}</li>
 			</ul>
 		</section>
 	);
@@ -172,7 +193,12 @@ function RecommendedSourceSettings() {
 export function BrowserSourceCard() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
-	const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: loadSettings });
+	// Always refetch on mount: the link must reflect a mute made in another tab just before.
+	const { data: settings } = useQuery({
+		queryKey: ["settings"],
+		queryFn: loadSettings,
+		staleTime: 0,
+	});
 	const runningPort = useAppStore((s) => s.browserSourceRunningPort);
 	const startError = useAppStore((s) => s.browserSourceError);
 	const [portDraft, setPortDraft] = useState<string | null>(null);
@@ -278,6 +304,7 @@ export function BrowserSourceCard() {
 						value={portText}
 						disabled={busy}
 						aria-invalid={!portValid}
+						aria-describedby={portValid ? undefined : "browser-source-port-error"}
 						onChange={(event) => setPortDraft(event.target.value)}
 						onBlur={() => void commitPort()}
 						onKeyDown={(event) => {
@@ -286,13 +313,21 @@ export function BrowserSourceCard() {
 						className="w-32 font-mono"
 					/>
 					{!portValid && (
-						<p className="text-xs text-destructive font-text">
+						<p
+							id="browser-source-port-error"
+							role="alert"
+							className="text-xs text-destructive font-text"
+						>
 							{t("stream.browserSource.portInvalid")}
 						</p>
 					)}
 				</div>
 
-				{errorMessage && <Notice tone="warn">{errorMessage}</Notice>}
+				{errorMessage && (
+					<div role="alert">
+						<Notice tone="warn">{errorMessage}</Notice>
+					</div>
+				)}
 				{needsRestart && <RestartNotice />}
 
 				{serving && runningPort !== null && (

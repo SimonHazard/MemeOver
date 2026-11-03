@@ -117,9 +117,12 @@ export function useOverlayWs(): void {
 						void emitIfTauri("ws-features-changed", action.features ?? []);
 						revokedRef.current = null;
 						useAppStore.getState().setWsRevokedReason(null);
+						useAppStore.getState().setWsJoinRejected(false);
 						setWsStatus("connected");
 						void emitIfTauri("ws-status-changed", "connected");
 					} else {
+						// Read by the browser source's status pill; the settings window uses ws-join-error.
+						useAppStore.getState().setWsJoinRejected(true);
 						setWsStatus("error");
 						void emitIfTauri("ws-status-changed", "error");
 						console.warn("[WS] JOIN_ACK error:", action.error);

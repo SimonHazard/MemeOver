@@ -65,12 +65,18 @@ scène, capture de jeu comprise. Selon le logiciel, leur son peut avoir sa propr
 le mixeur.
 
 - Le lien contient le token du serveur, après le `#` (jamais envoyé au serveur local) :
-  ne le montrez pas en stream. S'il fuite, lancez `/memeover rotate`.
-- La page ne suit pas les changements de réglages : copiez à nouveau le lien.
+  ne le montrez pas en stream et ne partagez pas les fichiers de scènes de votre logiciel, qui
+  peuvent le conserver en clair. S'il fuite, faites lancer `/memeover rotate` par un gestionnaire
+  du serveur, collez le nouveau code dans le Tableau de bord, puis copiez le nouveau lien.
+- La page ne suit pas les changements de réglages ni d'auteurs masqués : copiez à nouveau le
+  lien. Le lien applique vos auteurs masqués et votre choix sur les memes anonymes.
+- Passer un meme ou vider la file n'agit que sur l'overlay du bureau : pour couper un meme en
+  stream, masquez la source ou coupez son son dans votre logiciel.
 - Désactiver la source ou changer de port prend effet au redémarrage de MemeOver.
-- Fermer ou redémarrer MemeOver arrête aussi les sources déjà chargées en quelques secondes.
-  Pour reprendre, relancez MemeOver avec la source activée, puis actualisez-la dans votre logiciel
-  (recopiez le lien si le port a changé).
+- Fermer MemeOver arrête les sources déjà chargées en quelques secondes. Elles reprennent
+  seules quand MemeOver sert à nouveau la page (recopiez le lien si le port a changé).
+- Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver
+  lancé, actualisez la source.
 - Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
   l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
 
@@ -255,12 +261,18 @@ hidden: memes show over any scene, game capture included. Depending on the softw
 sound can have its own mixer entry.
 
 - The link carries the server token after the `#` (never sent to the local server):
-  do not show it on stream. If it leaks, run `/memeover rotate`.
-- The page does not follow settings changes: copy the link again.
+  do not show it on stream and do not share your software's scene files, which may store it in
+  clear text. If it leaks, have a server manager run `/memeover rotate`, paste the new code in
+  the Dashboard, then copy the new link.
+- The page does not follow settings or muted-author changes: copy the link again. The link
+  applies your muted authors and your choice about anonymous memes.
+- Skipping a meme or clearing the queue only affects the desktop overlay: to cut a meme on
+  stream, hide or mute the source in your software.
 - Disabling the source or changing its port takes effect after restarting MemeOver.
-- Closing or restarting MemeOver also stops already loaded sources within a few seconds.
-  To resume, launch MemeOver with the source enabled, then refresh it in your software
-  (copy the link again if the port changed).
+- Closing MemeOver stops already loaded sources within a few seconds. They resume on their
+  own once MemeOver serves the page again (copy the link again if the port changed).
+- If your software opens before MemeOver, the page cannot load: once MemeOver is running,
+  refresh the source.
 - To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
   tray menu ("Mute overlay").
 

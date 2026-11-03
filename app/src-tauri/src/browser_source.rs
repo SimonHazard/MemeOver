@@ -6,19 +6,29 @@
 //! the port takes effect after a restart. The server only serves public assets;
 //! credentials stay in the URL fragment, which browsers never send.
 
-use std::net::TcpListener;
+use std::io::{Read, Write};
+use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
 use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Runtime, State};
 
 /// Loopback only: never reachable from the LAN.
 const LOOPBACK: &str = "127.0.0.1";
 const MIN_PORT: u16 = 1024;
 const SESSION_HEADER: &str = "X-MemeOver-Source-Session";
+/// A refused connection returns at once; this only bounds a server that accepts and stays silent.
+const PROBE_TIMEOUT: Duration = Duration::from_secs(1);
+const START_ATTEMPTS: u32 = 100;
+const START_RETRY_DELAY: Duration = Duration::from_millis(20);
+
+struct RunningServer {
+    port: u16,
+    session: String,
+}
 
 #[derive(Default)]
 pub struct BrowserSourceState {
-    port: Mutex<Option<u16>>,
+    running: Mutex<Option<RunningServer>>,
 }
 
 /// Why the source could not start, as a stable code the settings page translates.
@@ -42,16 +52,50 @@ impl StartError {
     }
 }
 
+/// Whether our server still answers on `port`. The plugin's thread can end without
+/// notice, and a port alone could belong to another program: require our session header.
+fn serves_session(port: u16, session: &str) -> bool {
+    let address = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
+    let Ok(mut stream) = TcpStream::connect_timeout(&address, PROBE_TIMEOUT) else {
+        return false;
+    };
+    if stream.set_read_timeout(Some(PROBE_TIMEOUT)).is_err()
+        || stream.set_write_timeout(Some(PROBE_TIMEOUT)).is_err()
+        || write!(
+            stream,
+            "HEAD /browser-source.html HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n"
+        )
+        .is_err()
+    {
+        return false;
+    }
+    let mut response = String::new();
+    let _ = stream.read_to_string(&mut response);
+    let expected = format!("{SESSION_HEADER}: {session}");
+    response.lines().any(|line| line == expected)
+}
+
+/// Port of the server this app really runs; forgets one whose thread has ended.
+fn live_port(running: &mut Option<RunningServer>) -> Option<u16> {
+    let alive = running
+        .as_ref()
+        .is_some_and(|server| serves_session(server.port, &server.session));
+    if !alive {
+        *running = None;
+    }
+    running.as_ref().map(|server| server.port)
+}
+
 pub fn start<R: Runtime>(
     app: &AppHandle<R>,
     state: &BrowserSourceState,
     port: u16,
 ) -> Result<u16, StartError> {
     let mut running = state
-        .port
+        .running
         .lock()
         .map_err(|_| StartError::Plugin("BrowserSourceState lock poisoned".into()))?;
-    match *running {
+    match live_port(&mut running) {
         Some(current) if current == port => return Ok(port),
         Some(_) => return Err(StartError::RestartRequired),
         None => {}
@@ -61,7 +105,7 @@ pub fn start<R: Runtime>(
     }
     // The plugin binds on its own thread and panics there when the port is taken,
     // with no feedback. Probe first; a race with another program in between only
-    // ends that thread, because the release profile unwinds.
+    // ends that thread, because the release profile unwinds, and is reported below.
     drop(TcpListener::bind((LOOPBACK, port)).map_err(|_| StartError::PortInUse)?);
     // This is a public instance identifier, not a credential. A new process gets
     // a new value even if it restarts between two browser liveness checks.
@@ -76,16 +120,30 @@ pub fn start<R: Runtime>(
     app.plugin(
         tauri_plugin_localhost::Builder::new(port)
             .host(LOOPBACK)
-            .on_request(move |_, response| response.add_header(SESSION_HEADER, &session))
+            .on_request({
+                let session = session.clone();
+                move |_, response| response.add_header(SESSION_HEADER, &session)
+            })
             .build(),
     )
     .map_err(|e| StartError::Plugin(e.to_string()))?;
-    *running = Some(port);
+    let started = (0..START_ATTEMPTS).any(|_| {
+        let answered = serves_session(port, &session);
+        if !answered {
+            std::thread::sleep(START_RETRY_DELAY);
+        }
+        answered
+    });
+    if !started {
+        return Err(StartError::PortInUse);
+    }
+    *running = Some(RunningServer { port, session });
     Ok(port)
 }
 
-/// Start serving the browser source page. Idempotent for the running port.
-#[tauri::command]
+/// Start serving the browser source page. Idempotent for the running port. Async so the
+/// liveness checks never block the main thread.
+#[tauri::command(async)]
 pub fn start_browser_source(
     app: AppHandle,
     state: State<'_, BrowserSourceState>,
@@ -94,19 +152,17 @@ pub fn start_browser_source(
     start(&app, &state, port).map_err(|e| e.code())
 }
 
-/// Port the browser source page is served on in this session, if any.
-#[tauri::command]
+/// Port the browser source page is really served on in this session, if any.
+#[tauri::command(async)]
 pub fn browser_source_status(state: State<'_, BrowserSourceState>) -> Option<u16> {
-    state.port.lock().ok().and_then(|port| *port)
+    let mut running = state.running.lock().ok()?;
+    live_port(&mut running)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::borrow::Cow;
-    use std::io::{Read, Write};
-    use std::net::TcpStream;
-    use std::time::Duration;
     use tauri::utils::assets::{AssetKey, AssetsIter, CspHash};
     use tauri::Assets;
 
@@ -171,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn serves_obs_html_on_loopback_once_enabled() {
+    fn serves_the_source_page_on_loopback_once_enabled() {
         let app = app();
         let state = BrowserSourceState::default();
         let port = free_port();
@@ -190,7 +246,10 @@ mod tests {
         let head = request(port, "/browser-source.html", "HEAD");
         assert!(head.starts_with("HTTP/1.1 200"), "{head}");
         assert_eq!(session_header(&head), session);
-        assert!(!head.contains("MemeOver Browser Source"), "HEAD sends no asset body");
+        assert!(
+            !head.contains("MemeOver Browser Source"),
+            "HEAD sends no asset body"
+        );
 
         // Idempotent for the same port, restart required for another one.
         assert_eq!(start(app.handle(), &state, port), Ok(port));
@@ -210,7 +269,12 @@ mod tests {
 
         let restarted = app();
         let second_port = free_port();
-        start(restarted.handle(), &BrowserSourceState::default(), second_port).unwrap();
+        start(
+            restarted.handle(),
+            &BrowserSourceState::default(),
+            second_port,
+        )
+        .unwrap();
         let second_response = get(second_port, "/browser-source.html");
         assert_ne!(
             session_header(&first_response),
@@ -232,6 +296,53 @@ mod tests {
             start(app.handle(), &state, 80),
             Err(StartError::InvalidPort)
         );
-        assert_eq!(*state.port.lock().unwrap(), None);
+        assert!(state.running.lock().unwrap().is_none());
+    }
+
+    #[test]
+    fn a_server_whose_thread_ended_is_forgotten_and_restarted() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        let port = free_port();
+        *state.running.lock().unwrap() = Some(RunningServer {
+            port,
+            session: "ended".into(),
+        });
+        assert_eq!(live_port(&mut state.running.lock().unwrap()), None);
+
+        *state.running.lock().unwrap() = Some(RunningServer {
+            port: free_port(),
+            session: "ended".into(),
+        });
+        // A dead server on another port does not require a restart.
+        assert_eq!(start(app.handle(), &state, port), Ok(port));
+        let response = get(port, "/browser-source.html");
+        assert!(response.starts_with("HTTP/1.1 200"), "{response}");
+    }
+
+    #[test]
+    fn the_plugin_can_be_registered_again_on_the_same_app() {
+        // What restarting a dead server does: the first registration stays in the plugin store.
+        let app = app();
+        let first = free_port();
+        start(app.handle(), &BrowserSourceState::default(), first).unwrap();
+        let second = free_port();
+        assert_eq!(
+            start(app.handle(), &BrowserSourceState::default(), second),
+            Ok(second)
+        );
+        let response = get(second, "/browser-source.html");
+        assert!(response.starts_with("HTTP/1.1 200"), "{response}");
+    }
+
+    #[test]
+    fn another_program_on_the_port_does_not_count_as_our_server() {
+        let taken = TcpListener::bind((LOOPBACK, 0)).unwrap();
+        let port = taken.local_addr().unwrap().port();
+        let mut running = Some(RunningServer {
+            port,
+            session: "ours".into(),
+        });
+        assert_eq!(live_port(&mut running), None);
     }
 }

@@ -35,9 +35,10 @@ request carrying the token. The Stream tab tests cover the opt-in source, busy p
 the desktop mute synchronized with the tray.
 
 Browser source regressions also check that a changed link starts a new bot session without
-old playback/queued items, and that failed, timed-out or changed local HTTP sessions
-silence the current player, close the bot connection and leave the source blank until refreshed. HEAD probes
-must contain neither credentials nor a referrer.
+old playback/queued items, that the link's moderation filters and install id apply, that one failed
+liveness check changes nothing, and that consecutive failures silence the player and close the bot
+connection until MemeOver serves the page again. A new instance reloads the page; an answer without
+the instance header is never followed. HEAD probes must contain neither credentials nor a referrer.
 
 `app/test/browser/settings.ts` mounts the actual settings application with Tauri's
 official IPC/event mocks. Stores live only in the browser context's localStorage;

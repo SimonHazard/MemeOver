@@ -33,9 +33,13 @@ export async function startBrowserSource(port: number): Promise<BrowserSourceSta
 	}
 }
 
+/** Mirrors the server's real state and restarts an enabled source whose server has died. */
 export async function refreshBrowserSourceStatus(): Promise<void> {
 	const running = await invoke<number | null>("browser_source_status");
 	useAppStore.setState({ browserSourceRunningPort: running });
+	if (running !== null) return;
+	const settings = await loadSettings();
+	if (settings.browserSourceEnabled) await startBrowserSource(settings.browserSourcePort);
 }
 
 /** Clicking the tray check item toggles it natively: always reassert the persisted value. */

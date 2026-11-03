@@ -14,6 +14,8 @@ import { DEFAULT_SETTINGS, type OverlayProfile } from "./types";
 const GUILD_ID = "123456789012345678";
 const TOKEN = "s3cr3t+token/with=chars&more";
 const WS_URL = "wss://bot.example.com/ws";
+const CLIENT_ID = "desktop-install-id";
+const NOW = 1_700_000_000_000;
 
 function build(profile = DEFAULT_SETTINGS) {
 	return buildBrowserSourceUrl({
@@ -21,7 +23,10 @@ function build(profile = DEFAULT_SETTINGS) {
 		guildId: GUILD_ID,
 		token: TOKEN,
 		wsUrl: WS_URL,
+		clientId: CLIENT_ID,
 		profile,
+		mutedAuthors: [],
+		hideAnonymous: false,
 	});
 }
 
@@ -46,8 +51,48 @@ describe("browser source URL", () => {
 			guildId: GUILD_ID,
 			token: TOKEN,
 			wsUrl: WS_URL,
+			clientId: CLIENT_ID,
 			profile: pickOverlayProfileSettings(profile),
+			mutedAuthors: [],
+			hideAnonymous: false,
 		});
+	});
+
+	test("carries the moderation filters as ids, without names or avatars", () => {
+		const url = buildBrowserSourceUrl({
+			origin: browserSourceOrigin(4466),
+			guildId: GUILD_ID,
+			token: TOKEN,
+			wsUrl: WS_URL,
+			clientId: CLIENT_ID,
+			profile: DEFAULT_SETTINGS,
+			mutedAuthors: [{ id: "111", username: "Troll", avatarUrl: "https://a.test/x", mutedAt: NOW }],
+			hideAnonymous: true,
+		});
+		const parsed = parseBrowserSourceFragment(hashOf(url));
+		expect(parsed?.mutedAuthors.map((author) => author.id)).toEqual(["111"]);
+		expect(parsed?.mutedAuthors[0]?.username).toBe("");
+		expect(parsed?.hideAnonymous).toBe(true);
+		expect(atob(new URLSearchParams(hashOf(url).slice(1)).get("f") ?? "")).not.toContain("Troll");
+	});
+
+	test("unreadable or tampered filters are ignored, not fatal", () => {
+		for (const f of ["%%%", "bm90IGpzb24", null]) {
+			const parsed = parseBrowserSourceFragment(fragmentWith({ f }));
+			expect(parsed?.token).toBe(TOKEN);
+			expect(parsed?.mutedAuthors).toEqual([]);
+			expect(parsed?.hideAnonymous).toBe(false);
+		}
+		const tampered = btoa(JSON.stringify({ m: ["222", 5, null], a: "yes" })).replace(/=+$/, "");
+		const parsed = parseBrowserSourceFragment(fragmentWith({ f: tampered }));
+		expect(parsed?.mutedAuthors.map((author) => author.id)).toEqual(["222"]);
+		expect(parsed?.hideAnonymous).toBe(false);
+	});
+
+	test("ignores a client id the bot's protocol would refuse", () => {
+		for (const c of ["short", "x".repeat(129), null]) {
+			expect(parseBrowserSourceFragment(fragmentWith({ c }))?.clientId).toBeNull();
+		}
 	});
 
 	test("serves the page from loopback and carries the token only after #", () => {

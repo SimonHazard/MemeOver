@@ -1,6 +1,7 @@
 import { MotionConfig } from "framer-motion";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import i18n from "./i18n";
 import { parseBrowserSourceFragment } from "./shared/browser-source";
 import { useAppStore } from "./shared/store";
 import { DEFAULT_SETTINGS } from "./shared/types";
@@ -8,28 +9,12 @@ import { BrowserSourceApp } from "./windows/browser-source/BrowserSourceApp";
 import { IncompleteLink } from "./windows/browser-source/incomplete-link";
 import { canAutoplayWithSound } from "./windows/browser-source/source-environment";
 import "./App.css";
-import "./i18n";
 
 // Browser source entry. It runs in a plain browser (streaming software or a preview tab):
 // no Tauri store, events, invoke or window API. Everything comes from the URL fragment,
 // which browsers never send to the local server.
 
-const CLIENT_ID_KEY = "memeover-source-client-id";
-let memoryClientId: string | null = null;
-
-/** One stable id per browser profile, so the bot counts this page as a single client. */
-function sourceClientId(): string {
-	try {
-		const saved = localStorage.getItem(CLIENT_ID_KEY);
-		if (saved && saved.length >= 8) return saved;
-		const created = crypto.randomUUID();
-		localStorage.setItem(CLIENT_ID_KEY, created);
-		return created;
-	} catch {
-		memoryClientId ??= crypto.randomUUID();
-		return memoryClientId;
-	}
-}
+document.documentElement.lang = i18n.language;
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
@@ -42,7 +27,12 @@ function render(autoplayAllowed: boolean) {
 			guildId: config.guildId,
 			token: config.token,
 			wsUrl: config.wsUrl,
-			clientId: sourceClientId(),
+			// The desktop's install id: the bot counts this page and the overlay as one streamer.
+			clientId: config.clientId ?? "",
+			mutedAuthors: config.mutedAuthors,
+			hideAnonymous: config.hideAnonymous,
+			// These toasts are for the streamer's own screen, never for the stream.
+			connectionNotificationsEnabled: false,
 			desktopOverlayMuted: false,
 		});
 	} else if (autoplayAllowed) {

@@ -26,7 +26,7 @@ tauri-plugin-process = "2"
 tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-dialog = "2"
-# Opt-in OBS browser source; registered at runtime only (see obs_source.rs).
+# Opt-in browser source; registered at runtime only (see browser_source.rs).
 tauri-plugin-localhost = "2"
 # Already in the tree via tauri-plugin-updater (rustls); used for public IP detection.
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
@@ -35,7 +35,7 @@ serde_json = "1"
 raw-window-handle = "0.6"
 
 [dev-dependencies]
-# Mock runtime for the OBS source integration test.
+# Mock runtime for the browser source integration test.
 tauri = { version = "2", features = ["test"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]

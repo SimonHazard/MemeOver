@@ -11,7 +11,12 @@ import { setDesktopOverlayMuted } from "@/shared/stream-controls";
 export function DesktopMuteCard() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
-	const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: loadSettings });
+	// Always refetch on mount: the tray may have changed the mute while another tab was open.
+	const { data: settings } = useQuery({
+		queryKey: ["settings"],
+		queryFn: loadSettings,
+		staleTime: 0,
+	});
 	const { mutate, isPending } = useMutation({
 		mutationFn: (muted: boolean) => setDesktopOverlayMuted(muted),
 		onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["settings"] }),
@@ -35,7 +40,6 @@ export function DesktopMuteCard() {
 					<NbButton
 						size="lg"
 						variant={muted ? "default" : "outline"}
-						aria-pressed={muted}
 						disabled={isPending}
 						onClick={() => mutate(!muted)}
 					>

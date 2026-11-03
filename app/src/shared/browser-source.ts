@@ -1,4 +1,5 @@
 import { DISCORD_SNOWFLAKE_REGEX } from "@memeover/shared";
+import { normalizeMutedAuthors } from "./muted-authors";
 import {
 	pickOverlayProfileSettings,
 	pickStoredProfileSettings,
@@ -8,25 +9,32 @@ import {
 	DEFAULT_SETTINGS,
 	MAX_BROWSER_SOURCE_PORT,
 	MIN_BROWSER_SOURCE_PORT,
+	type MutedAuthor,
 	type OverlayProfile,
 	type OverlayProfileSettings,
 	type Settings,
 } from "./types";
 
 // ─── browser source URL ───────────────────────────────────────────────────
-// The local server only serves public assets. Credentials and the display profile
-// travel in the fragment, which browsers never send in an HTTP request.
+// The local server only serves public assets. Credentials, the display profile and the
+// moderation filters travel in the fragment, which browsers never send in an HTTP request.
 
 export const BROWSER_SOURCE_PATH = "/browser-source.html";
 const MAX_TOKEN_LENGTH = 256;
+const MIN_CLIENT_ID_LENGTH = 8;
+const MAX_CLIENT_ID_LENGTH = 128;
 const MASK = "••••••";
 
 export interface BrowserSourceConfig {
 	guildId: string;
 	token: string;
 	wsUrl: string;
+	/** The desktop install id, so the bot counts this page and the overlay once; null when absent. */
+	clientId: string | null;
 	/** Only the profile fields the link defines; null when absent or undecodable. */
 	profile: Partial<OverlayProfileSettings> | null;
+	mutedAuthors: MutedAuthor[];
+	hideAnonymous: boolean;
 }
 
 interface BrowserSourceUrlInput {
@@ -34,7 +42,10 @@ interface BrowserSourceUrlInput {
 	guildId: string;
 	token: string;
 	wsUrl: string;
+	clientId: string;
 	profile: Partial<Settings> | OverlayProfileSettings;
+	mutedAuthors: readonly MutedAuthor[];
+	hideAnonymous: boolean;
 }
 
 export function isValidBrowserSourcePort(port: unknown): port is number {
@@ -70,14 +81,23 @@ export function buildBrowserSourceUrl({
 	guildId,
 	token,
 	wsUrl,
+	clientId,
 	profile,
+	mutedAuthors,
+	hideAnonymous,
 }: BrowserSourceUrlInput) {
 	const encodedProfile = encodeBase64Url(JSON.stringify(pickOverlayProfileSettings(profile)));
+	// Ids only: the page filters on them, and names and avatars would only lengthen the link.
+	const encodedFilters = encodeBase64Url(
+		JSON.stringify({ m: mutedAuthors.map((author) => author.id), a: hideAnonymous }),
+	);
 	const fragment = [
 		["g", guildId],
 		["t", token],
 		["w", wsUrl],
+		["c", clientId],
 		["p", encodedProfile],
+		["f", encodedFilters],
 	]
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join("&");
@@ -104,7 +124,31 @@ function decodeProfile(value: string | null): Partial<OverlayProfileSettings> | 
 	}
 }
 
-/** Returns null when the link lacks valid credentials; an unreadable profile is only ignored. */
+function decodeFilters(
+	value: string | null,
+): Pick<BrowserSourceConfig, "mutedAuthors" | "hideAnonymous"> {
+	const none = { mutedAuthors: [], hideAnonymous: false };
+	if (!value) return none;
+	try {
+		const parsed: unknown = JSON.parse(decodeBase64Url(value));
+		if (!parsed || typeof parsed !== "object") return none;
+		const { m, a } = parsed as { m?: unknown; a?: unknown };
+		return {
+			mutedAuthors: normalizeMutedAuthors(Array.isArray(m) ? m.map((id) => ({ id })) : []),
+			hideAnonymous: a === true,
+		};
+	} catch {
+		return none;
+	}
+}
+
+function parseClientId(value: string | null): string | null {
+	return value && value.length >= MIN_CLIENT_ID_LENGTH && value.length <= MAX_CLIENT_ID_LENGTH
+		? value
+		: null;
+}
+
+/** Returns null when the link lacks valid credentials; unreadable optional parts are only ignored. */
 export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | null {
 	let params: URLSearchParams;
 	try {
@@ -118,7 +162,14 @@ export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | 
 	if (!DISCORD_SNOWFLAKE_REGEX.test(guildId)) return null;
 	if (token.length === 0 || token.length > MAX_TOKEN_LENGTH) return null;
 	if (!isWebSocketUrl(wsUrl)) return null;
-	return { guildId, token, wsUrl, profile: decodeProfile(params.get("p")) };
+	return {
+		guildId,
+		token,
+		wsUrl,
+		clientId: parseClientId(params.get("c")),
+		profile: decodeProfile(params.get("p")),
+		...decodeFilters(params.get("f")),
+	};
 }
 
 /** Keeps the origin and path so the user recognizes the link, hides everything after `#`. */

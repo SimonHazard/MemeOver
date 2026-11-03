@@ -4,9 +4,10 @@ const guildId = "123456789012345678";
 const token = "source-test-token";
 const wsUrl = "ws://source.test/ws";
 const videoUrl = "https://media.source.test/meme.mp4";
+const clientId = "desktop-install-id";
 
 function fragment(overrides: Record<string, string> = {}) {
-	const params = { g: guildId, t: token, w: wsUrl, ...overrides };
+	const params = { g: guildId, t: token, w: wsUrl, c: clientId, ...overrides };
 	return Object.entries(params)
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join("&");
@@ -23,7 +24,10 @@ async function stubAutoplay(page: Page, allowed: boolean) {
 }
 
 /** Opens the real page with a mocked bot; the media request hangs so the video stays mounted. */
-async function openSource(page: Page, { autoplay = false } = {}) {
+async function openSource(
+	page: Page,
+	{ autoplay = false, joinAccepted = true, overrides = {} as Record<string, string> } = {},
+) {
 	const errors: string[] = [];
 	const requests: string[] = [];
 	const joins: unknown[] = [];
@@ -48,6 +52,18 @@ async function openSource(page: Page, { autoplay = false } = {}) {
 			if (message.type !== "JOIN") return;
 			joined = true;
 			joins.push(message);
+			if (!joinAccepted) {
+				// The bot refuses a stale token without closing the socket.
+				ws.send(
+					JSON.stringify({
+						type: "JOIN_ACK",
+						guild_id: message.guild_id,
+						success: false,
+						error: "Invalid token",
+					}),
+				);
+				return;
+			}
 			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: message.guild_id, success: true }));
 			ws.send(
 				JSON.stringify({
@@ -65,7 +81,7 @@ async function openSource(page: Page, { autoplay = false } = {}) {
 			);
 		});
 	});
-	await page.goto(`/browser-source.html#${fragment()}`);
+	await page.goto(`/browser-source.html#${fragment(overrides)}`);
 	return { errors, requests, joins, sockets, closed };
 }
 
@@ -173,8 +189,69 @@ test("a source cannot join the bot before its local server is verified", async (
 	await expect(page.locator("video")).toHaveCount(0);
 });
 
-for (const failure of ["unreachable", "timeout", "restarted"] as const) {
-	test(`a ${failure} local server stops an already loaded browser source`, async ({ page }) => {
+test("a link's moderation filters and install id apply, and no connection toast reaches the stream", async ({
+	page,
+}) => {
+	const filters = Buffer.from(JSON.stringify({ m: ["2"], a: true })).toString("base64url");
+	const source = await openSource(page, { autoplay: true, overrides: { f: filters } });
+	await expect.poll(() => source.joins.length).toBe(1);
+	expect(source.joins[0]).toEqual(expect.objectContaining({ client_id: clientId }));
+	const socket = source.sockets[source.sockets.length - 1];
+	const media = (values: Record<string, unknown>) =>
+		socket?.send(
+			JSON.stringify({
+				type: "MEDIA",
+				guild_id: guildId,
+				channel_id: "1",
+				message_id: String(values.author_id),
+				author_username: "Author",
+				author_avatar_url: "",
+				media_type: "video",
+				timestamp: Date.now(),
+				...values,
+			}),
+		);
+	// The join's media comes from muted author 2; an anonymous one must be dropped as well.
+	media({ author_id: "secret", anonymous: true, media_url: `${videoUrl}?from=anonymous` });
+	media({ author_id: "3", media_url: `${videoUrl}?from=3` });
+	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?from=3`);
+
+	for (const count of [1, 2]) {
+		socket?.send(JSON.stringify({ type: "MEMBER_COUNT_UPDATE", guild_id: guildId, count }));
+	}
+	await page.waitForTimeout(300);
+	await expect(page.getByText(/connected/i)).toHaveCount(0);
+});
+
+test("a preview says the bot refused the link instead of reconnecting forever", async ({
+	page,
+}) => {
+	const source = await openSource(page, { joinAccepted: false });
+	await expect(page.getByRole("status")).toHaveText(/link refused by the bot/);
+	expect(source.joins).toHaveLength(1);
+	await expect(page.locator("html")).toHaveAttribute("lang", "en");
+});
+
+test("one failed liveness check neither stops the source nor reconnects it", async ({ page }) => {
+	const source = await openSource(page, { autoplay: true });
+	await expect(page.locator("video")).toHaveCount(1);
+	let failures = 0;
+	await page.route("**/browser-source.html", (route) => {
+		if (route.request().method() !== "HEAD" || failures > 0) return route.continue();
+		failures++;
+		return route.abort();
+	});
+	await expect.poll(() => failures).toBe(1);
+	await page.waitForTimeout(2500);
+	await expect(page.locator("video")).toHaveCount(1);
+	expect(source.joins).toHaveLength(1);
+	expect(source.closed.size).toBe(0);
+});
+
+for (const failure of ["unreachable", "timeout"] as const) {
+	test(`a ${failure} local server stops the source until MemeOver serves it again`, async ({
+		page,
+	}) => {
 		const source = await openSource(page, { autoplay: true });
 		await expect(page.locator("video")).toHaveCount(1);
 		await page.locator("video").evaluate((player) => {
@@ -194,31 +271,25 @@ for (const failure of ["unreachable", "timeout", "restarted"] as const) {
 				url: route.request().url(),
 				referrer: route.request().headers().referer,
 			});
-			if (failure === "timeout") return;
-			return failure === "unreachable"
-				? route.abort()
-				: route.fulfill({
-						status: 200,
-						headers: { "X-MemeOver-Source-Session": "another-app-instance" },
-					});
+			return failure === "timeout" ? undefined : route.abort();
 		});
-		await expect(page.locator("video")).toHaveCount(0, { timeout: 8000 });
-		expect(
-			await page.evaluate(() => {
-				const { player, pauseCalls } = (
-					window as unknown as {
-						stoppedPlayer: { player: HTMLVideoElement; pauseCalls: number };
-					}
-				).stoppedPlayer;
-				return { muted: player.muted, pauseCalls };
-			}),
-		).toEqual({ muted: true, pauseCalls: 1 });
-		await expect.poll(() => source.closed.size).toBe(1);
+		await expect.poll(() => source.closed.size, { timeout: 15000 }).toBe(1);
+		await expect(page.locator("video")).toHaveCount(0);
+		// A hanging server takes longer to declare than the unplayable media's safety timer.
+		if (failure === "unreachable") {
+			expect(
+				await page.evaluate(() => {
+					const { player, pauseCalls } = (
+						window as unknown as {
+							stoppedPlayer: { player: HTMLVideoElement; pauseCalls: number };
+						}
+					).stoppedPlayer;
+					return { muted: player.muted, pauseCalls };
+				}),
+			).toEqual({ muted: true, pauseCalls: 1 });
+		}
 		await expect(page.getByRole("status")).toHaveCount(0);
 		await expect(page.getByRole("button")).toHaveCount(0);
-		// A recovered server must not reconnect this stale page: refresh is required.
-		await page.unroute("**/browser-source.html");
-		await page.waitForTimeout(1500);
 		expect(source.joins).toHaveLength(1);
 		expect(probes).not.toHaveLength(0);
 		for (const probe of probes) {
@@ -227,8 +298,44 @@ for (const failure of ["unreachable", "timeout", "restarted"] as const) {
 			expect(probe.referrer).toBeUndefined();
 		}
 		expect(source.requests.filter((url) => url.includes(token))).toEqual([]);
+
+		// MemeOver serves the page again: a fresh session resumes without any click.
+		await page.unroute("**/browser-source.html");
+		await expect.poll(() => source.joins.length, { timeout: 8000 }).toBe(2);
+		await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?join=2`);
 	});
 }
+
+test("a restarted MemeOver reloads the source into a fresh session", async ({ page }) => {
+	const source = await openSource(page, { autoplay: true });
+	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?join=1`);
+	await page.route("**/browser-source.html", (route) =>
+		route.request().method() === "HEAD"
+			? route.fulfill({
+					status: 200,
+					headers: { "X-MemeOver-Source-Session": "another-app-instance" },
+				})
+			: route.continue(),
+	);
+	await expect.poll(() => source.joins.length, { timeout: 8000 }).toBe(2);
+	await expect.poll(() => source.closed.size).toBe(1);
+	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?join=2`);
+});
+
+test("another program answering on the port stops the source and is never followed", async ({
+	page,
+}) => {
+	const source = await openSource(page, { autoplay: true });
+	await expect(page.locator("video")).toHaveCount(1);
+	await page.route("**/browser-source.html", (route) =>
+		route.request().method() === "HEAD"
+			? route.fulfill({ status: 200, headers: { "Content-Type": "text/html" } })
+			: route.continue(),
+	);
+	await expect(page.locator("video")).toHaveCount(0, { timeout: 8000 });
+	await page.waitForTimeout(1500);
+	expect(source.joins).toHaveLength(1);
+});
 
 // The flag browser sources embedded in streaming software use: the real probe, without a stub.
 test("with autoplay permission, the real probe grants sound and hides the preview aids", async ({

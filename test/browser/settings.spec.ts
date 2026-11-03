@@ -234,12 +234,80 @@ test("the browser source is opt-in and copies a link with credentials only after
 	expect(params.get("g")).toBe("123456789012345678");
 	expect(params.get("t")).toBe("test-only-token");
 	expect(params.get("p")).toBeTruthy();
+	expect(params.get("c")).toBe("browser-test-client");
+	expect(params.get("f")).toBeTruthy();
 
 	// The plugin cannot stop: turning it off asks for a restart.
 	await toggle.click();
 	expect((await settings(page)).browserSourceEnabled).toBe(false);
 	await page.getByRole("button", { name: "Restart MemeOver" }).click();
 	await expect.poll(() => page.evaluate(() => localStorage.getItem("test-restarted"))).toBe("1");
+});
+
+test("the source's profile select shows names, and the link follows it and muted authors", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		if (localStorage.getItem("test-store:overlay-profiles.json")) return;
+		localStorage.setItem(
+			"test-store:overlay-profiles.json",
+			JSON.stringify({
+				profiles: [
+					{
+						id: "7f3c9a10-saved-profile",
+						name: "Evening stream",
+						settings: { mediaSize: 40 },
+						createdAt: 1,
+						updatedAt: 1,
+					},
+				],
+			}),
+		);
+	});
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	const select = page.getByRole("combobox", { name: "Display profile to embed" });
+	await expect(select).toHaveText("Current settings");
+	await select.click();
+	await page.getByRole("option", { name: "Evening stream" }).click();
+	await expect(select).toHaveText("Evening stream");
+	await expect(select).not.toContainText("7f3c9a10");
+
+	// The link reflects a mute made elsewhere as soon as the tab is shown again.
+	await page.getByRole("button", { name: "Overlay", exact: true }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+	await page.evaluate(() => {
+		const key = "test-store:settings.json";
+		const data = JSON.parse(localStorage.getItem(key) ?? "{}");
+		data.settings.mutedAuthors = [{ id: "111", username: "Troll", avatarUrl: "", mutedAt: 1 }];
+		localStorage.setItem(key, JSON.stringify(data));
+	});
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("button", { name: "Show the source link" }).click();
+	const link = page.getByLabel("Source link", { exact: true });
+	await expect
+		.poll(async () => {
+			const value = await link.inputValue();
+			const filters = new URLSearchParams(new URL(value).hash.slice(1)).get("f") ?? "";
+			return Buffer.from(filters, "base64url").toString();
+		})
+		.toContain('"111"');
+	await expect(link).not.toHaveValue(/Troll/);
+});
+
+test("copying the masked source link copies the working link", async ({ page }) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	const link = page.getByLabel("Source link", { exact: true });
+	await expect(link).toHaveValue(/#••••••$/);
+	const copied = await link.evaluate((input) => {
+		const data = new DataTransfer();
+		input.dispatchEvent(
+			new ClipboardEvent("copy", { bubbles: true, cancelable: true, clipboardData: data }),
+		);
+		return data.getData("text/plain");
+	});
+	expect(copied).toContain("t=test-only-token");
 });
 
 test("a busy browser source port is reported and another port can be chosen", async ({ page }) => {
@@ -279,7 +347,7 @@ test("the desktop overlay mute follows the Stream tab and the tray", async ({ pa
 
 	await page.reload();
 	await page.getByRole("button", { name: "Stream", exact: true }).click();
-	await expect(page.getByText("The desktop overlay plays sound.")).toBeVisible();
+	await expect(page.getByText("The desktop overlay's sound is on.")).toBeVisible();
 	await expect(page.getByText(/you may hear memes twice/)).toHaveCount(0);
 });
 
