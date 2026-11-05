@@ -1,10 +1,34 @@
-import { expect, type Page, test, type WebSocketRoute } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { type Browser, expect, type Page, test, type WebSocketRoute } from "@playwright/test";
 
 const guildId = "123456789012345678";
 const token = "source-test-token";
 const wsUrl = "ws://source.test/ws";
 const videoUrl = "https://media.source.test/meme.mp4";
 const clientId = "desktop-install-id";
+/** The page's liveness checks: only they carry a query. */
+const SOURCE_CHECK = /\/browser-source\.html\?/;
+
+// A liveness check can still be in flight when a test ends, with its route about to answer.
+test.afterEach(({ page }) => page.unrouteAll({ behavior: "ignoreErrors" }));
+
+const base64Json = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
+
+/** What the local server does: adds the desktop's published controls to each check's answer. */
+async function publishControls(
+	page: Page,
+	controls: { s: number; c: number; m: string[]; a: boolean },
+) {
+	await page.unroute(SOURCE_CHECK);
+	await page.route(SOURCE_CHECK, async (route) => {
+		const response = await route.fetch();
+		await route.fulfill({
+			response,
+			headers: { ...response.headers(), "x-memeover-source-controls": base64Json(controls) },
+		});
+	});
+}
 
 function fragment(overrides: Record<string, string> = {}) {
 	const params = { g: guildId, t: token, w: wsUrl, c: clientId, ...overrides };
@@ -32,6 +56,9 @@ async function openSource(
 		autoplay = false as boolean | "never-settles",
 		joinAccepted = true,
 		overrides = {} as Record<string, string>,
+		mediaUrl = null as string | null,
+		mediaType = "video",
+		mediaOnJoin = true,
 	} = {},
 ) {
 	const errors: string[] = [];
@@ -71,6 +98,7 @@ async function openSource(
 				return;
 			}
 			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: message.guild_id, success: true }));
+			if (!mediaOnJoin) return;
 			ws.send(
 				JSON.stringify({
 					type: "MEDIA",
@@ -80,8 +108,8 @@ async function openSource(
 					author_id: "2",
 					author_username: "Streamer",
 					author_avatar_url: "",
-					media_url: `${videoUrl}?join=${joins.length}`,
-					media_type: "video",
+					media_url: mediaUrl ?? `${videoUrl}?join=${joins.length}`,
+					media_type: mediaType,
 					timestamp: Date.now(),
 				}),
 			);
@@ -153,6 +181,27 @@ test("a busy machine whose autoplay probe never settles draws nothing on stream"
 	expect(source.errors).toEqual([]);
 });
 
+// The page runs in a plain browser: reading Tauri's internals would mean a native call slipped in.
+test("the whole page runs without ever reaching a Tauri API", async ({ page }) => {
+	await page.addInitScript(() => {
+		const trap = window as unknown as { tauriAccesses: number };
+		trap.tauriAccesses = 0;
+		Object.defineProperty(window, "__TAURI_INTERNALS__", {
+			get() {
+				trap.tauriAccesses++;
+				return undefined;
+			},
+		});
+	});
+	const source = await openSource(page, { autoplay: true });
+	await expect(page.locator("video")).toHaveCount(1);
+	const accesses = await page.evaluate(
+		() => (window as unknown as { tauriAccesses: number }).tauriAccesses,
+	);
+	expect(accesses).toBe(0);
+	expect(source.errors).toEqual([]);
+});
+
 // Imgur answers 403 to a 127.0.0.1 referrer, which would silently skip its memes on stream.
 test("media requests carry no referrer", async ({ page }) => {
 	const referrers: (string | undefined)[] = [];
@@ -208,7 +257,7 @@ for (const change of credentialChanges) {
 }
 
 test("a source cannot join the bot before its local server is verified", async ({ page }) => {
-	await page.route("**/browser-source.html", (route) =>
+	await page.route(SOURCE_CHECK, (route) =>
 		route.request().method() === "HEAD"
 			? route.fulfill({ status: 200, headers: { "Content-Type": "text/html" } })
 			: route.continue(),
@@ -266,7 +315,7 @@ test("one failed liveness check neither stops the source nor reconnects it", asy
 	const source = await openSource(page, { autoplay: true });
 	await expect(page.locator("video")).toHaveCount(1);
 	let failures = 0;
-	await page.route("**/browser-source.html", (route) => {
+	await page.route(SOURCE_CHECK, (route) => {
 		if (route.request().method() !== "HEAD" || failures > 0) return route.continue();
 		failures++;
 		return route.abort();
@@ -295,7 +344,7 @@ for (const failure of ["unreachable", "timeout"] as const) {
 			Object.assign(window, { stoppedPlayer: observation });
 		});
 		const probes: { url: string; referrer: string | undefined }[] = [];
-		await page.route("**/browser-source.html", (route) => {
+		await page.route(SOURCE_CHECK, (route) => {
 			if (route.request().method() !== "HEAD") return route.continue();
 			probes.push({
 				url: route.request().url(),
@@ -330,7 +379,7 @@ for (const failure of ["unreachable", "timeout"] as const) {
 		expect(source.requests.filter((url) => url.includes(token))).toEqual([]);
 
 		// MemeOver serves the page again: a fresh session resumes without any click.
-		await page.unroute("**/browser-source.html");
+		await page.unroute(SOURCE_CHECK);
 		await expect.poll(() => source.joins.length, { timeout: 8000 }).toBe(2);
 		await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?join=2`);
 	});
@@ -339,7 +388,7 @@ for (const failure of ["unreachable", "timeout"] as const) {
 test("a restarted MemeOver reloads the source into a fresh session", async ({ page }) => {
 	const source = await openSource(page, { autoplay: true });
 	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?join=1`);
-	await page.route("**/browser-source.html", (route) =>
+	await page.route(SOURCE_CHECK, (route) =>
 		route.request().method() === "HEAD"
 			? route.fulfill({
 					status: 200,
@@ -357,7 +406,7 @@ test("another program answering on the port stops the source and is never follow
 }) => {
 	const source = await openSource(page, { autoplay: true });
 	await expect(page.locator("video")).toHaveCount(1);
-	await page.route("**/browser-source.html", (route) =>
+	await page.route(SOURCE_CHECK, (route) =>
 		route.request().method() === "HEAD"
 			? route.fulfill({ status: 200, headers: { "Content-Type": "text/html" } })
 			: route.continue(),
@@ -367,7 +416,433 @@ test("another program answering on the port stops the source and is never follow
 	expect(source.joins).toHaveLength(1);
 });
 
-// The flag browser sources embedded in streaming software use: the real probe, without a stub.
+// Software refusing autoplay lands in preview mode, with nobody to dismiss the aids on air.
+test("preview aids leave the picture after a while, and the sound can still be enabled", async ({
+	page,
+}) => {
+	await page.clock.install();
+	await openSource(page, { overrides: { p: base64Json({ duration: 60 }) } });
+	const button = page.getByRole("button", { name: "Click to enable sound" });
+	await expect(button).toBeVisible();
+
+	await page.clock.fastForward(16_000);
+	await expect(button).toHaveCount(0);
+	await expect(page.getByRole("status")).toHaveCount(0);
+
+	// A preview tab gets them back with the pointer.
+	await page.mouse.move(20, 20);
+	await expect(button).toBeVisible();
+	await page.clock.fastForward(16_000);
+	await expect(button).toHaveCount(0);
+
+	await page.keyboard.press("Space");
+	await expect
+		.poll(() => page.locator("video").evaluate((el: HTMLVideoElement) => el.muted))
+		.toBe(false);
+});
+
+test("the media volume applies to audio files", async ({ page }) => {
+	const soundUrl = "https://media.source.test/sound.wav";
+	const wav = Buffer.alloc(44 + 800, 128);
+	wav.write("RIFF", 0);
+	wav.writeUInt32LE(36 + 800, 4);
+	wav.write("WAVEfmt ", 8);
+	wav.writeUInt32LE(16, 16);
+	wav.writeUInt16LE(1, 20);
+	wav.writeUInt16LE(1, 22);
+	wav.writeUInt32LE(8000, 24);
+	wav.writeUInt32LE(8000, 28);
+	wav.writeUInt16LE(1, 32);
+	wav.writeUInt16LE(8, 34);
+	wav.write("data", 36);
+	wav.writeUInt32LE(800, 40);
+	await page.route(soundUrl, (route) => route.fulfill({ contentType: "audio/wav", body: wav }));
+	await openSource(page, {
+		autoplay: true,
+		mediaUrl: soundUrl,
+		mediaType: "audio",
+		overrides: { p: base64Json({ volume: 30, duration: 60 }) },
+	});
+	await expect
+		.poll(() => page.locator("audio").evaluate((el: HTMLAudioElement) => el.volume))
+		.toBeCloseTo(0.3);
+});
+
+test("a loaded source follows the desktop's skip, clear and mute without a new link", async ({
+	page,
+}) => {
+	const source = await openSource(page, {
+		autoplay: true,
+		overrides: { p: base64Json({ duration: 60 }) },
+	});
+	const video = page.locator("video");
+	await expect(video).toHaveAttribute("src", `${videoUrl}?join=1`);
+	const media = (author: string) =>
+		source.sockets[source.sockets.length - 1]?.send(
+			JSON.stringify({
+				type: "MEDIA",
+				guild_id: guildId,
+				channel_id: "1",
+				message_id: author,
+				author_id: author,
+				author_username: "Author",
+				author_avatar_url: "",
+				media_url: `${videoUrl}?from=${author}`,
+				media_type: "video",
+				timestamp: Date.now(),
+			}),
+		);
+	const nextCheck = () => page.waitForRequest(SOURCE_CHECK);
+
+	// The first value is a baseline: actions from before this page loaded never replay.
+	await publishControls(page, { s: 5, c: 5, m: [], a: false });
+	await nextCheck();
+	await nextCheck();
+	await expect(video).toHaveAttribute("src", `${videoUrl}?join=1`);
+
+	media("3");
+	media("4");
+	await publishControls(page, { s: 6, c: 5, m: [], a: false });
+	await expect(video).toHaveAttribute("src", `${videoUrl}?from=3`);
+
+	// Muting the author on screen cuts them, and what they send next stays out.
+	await publishControls(page, { s: 6, c: 5, m: ["3"], a: false });
+	await expect(video).toHaveAttribute("src", `${videoUrl}?from=4`);
+	await page.setViewportSize({ width: 1000, height: 700 });
+	media("3");
+
+	media("5");
+	media("6");
+	await publishControls(page, { s: 6, c: 6, m: ["3"], a: false });
+	await nextCheck();
+	await nextCheck();
+	await publishControls(page, { s: 7, c: 6, m: ["3"], a: false });
+	await expect(video).toHaveCount(0);
+	expect(source.joins).toHaveLength(1);
+});
+
+test("each check reports the page's state to the app, without credentials", async ({ page }) => {
+	const reports: URLSearchParams[] = [];
+	page.on("request", (request) => {
+		if (SOURCE_CHECK.test(request.url())) {
+			expect(request.url()).not.toContain(token);
+			reports.push(new URL(request.url()).searchParams);
+		}
+	});
+	const latest = (name: string) => reports[reports.length - 1]?.get(name);
+
+	await openSource(page);
+	await expect.poll(() => latest("bot")).toBe("connected");
+	await expect.poll(() => latest("sound")).toBe("blocked");
+	expect(latest("source")).toBe("1");
+	await page.getByRole("button", { name: "Click to enable sound" }).click();
+	await expect.poll(() => latest("sound")).toBe("on");
+});
+
+test("a refused link is reported to the app", async ({ page }) => {
+	let bot: string | null = null;
+	page.on("request", (request) => {
+		if (SOURCE_CHECK.test(request.url())) bot = new URL(request.url()).searchParams.get("bot");
+	});
+	await openSource(page, { autoplay: true, joinAccepted: false });
+	await expect.poll(() => bot).toBe("rejected");
+});
+
+// Nothing else sends this header: Vite's dev client needs inline scripts, and preview serves none.
+test("the page works under the CSP the app really serves", async ({ page }) => {
+	test.skip(process.env.BROWSER_PRODUCTION !== "1", "Needs the production bundle");
+	const config = join(__dirname, "../../app/src-tauri/tauri.conf.json");
+	const csp: string = JSON.parse(readFileSync(config, "utf8")).app.security.csp;
+	const imageUrl = "https://i.imgur.com/csp-test.svg";
+	await page.addInitScript(() => {
+		const seen: { directive: string; blocked: string }[] = [];
+		Object.assign(window, { cspViolations: seen });
+		document.addEventListener("securitypolicyviolation", (event) => {
+			seen.push({ directive: event.effectiveDirective, blocked: event.blockedURI });
+		});
+	});
+	// Like Tauri's asset protocol: a nonce on each inline <style>, which voids 'unsafe-inline'.
+	await page.route("**/browser-source.html", async (route) => {
+		const response = await route.fetch();
+		const nonce = "123456789";
+		await route.fulfill({
+			response,
+			body: (await response.text()).replace(/<style>/g, `<style nonce="${nonce}">`),
+			headers: {
+				...response.headers(),
+				"content-security-policy": csp.replace(
+					"style-src 'self' 'unsafe-inline'",
+					`style-src 'self' 'unsafe-inline' 'nonce-${nonce}'`,
+				),
+			},
+		});
+	});
+	await page.route(imageUrl, (route) =>
+		route.fulfill({
+			contentType: "image/svg+xml",
+			body: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"/>',
+		}),
+	);
+	const source = await openSource(page, {
+		autoplay: true,
+		mediaUrl: imageUrl,
+		mediaType: "image",
+		overrides: { p: base64Json({ duration: 60 }) },
+	});
+
+	const image = page.locator("img").first();
+	await expect(image).toHaveAttribute("src", imageUrl);
+	await expect.poll(() => image.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(64);
+	expect(source.joins).toHaveLength(1);
+	expect(
+		await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor),
+	).toBe("rgba(0, 0, 0, 0)");
+
+	// Known and harmless: Sonner's runtime <style>, which the app bundles anyway (see 1.8.5), and
+	// Zod's guarded `new Function` probe. The audio probe, checks, socket and media must all pass.
+	const violations = await page.evaluate(
+		() =>
+			(window as unknown as { cspViolations: { directive: string; blocked: string }[] })
+				.cspViolations,
+	);
+	expect(
+		violations.filter(
+			({ directive, blocked }) => !directive.startsWith("style-src") && blocked !== "eval",
+		),
+	).toEqual([]);
+});
+
+function mediaMessage(author: string, url = `${videoUrl}?from=${author}`, type = "video") {
+	return JSON.stringify({
+		type: "MEDIA",
+		guild_id: guildId,
+		channel_id: "1",
+		message_id: author,
+		author_id: author,
+		author_username: "Author",
+		author_avatar_url: "",
+		media_url: url,
+		media_type: type,
+		timestamp: Date.now(),
+	});
+}
+
+/** The promise of the feature: over any scene, only the memes themselves cover the picture. */
+function countVisiblePixels(page: Page, screenshot: Buffer) {
+	return page.evaluate(async (data) => {
+		const image = new Image();
+		image.src = `data:image/png;base64,${data}`;
+		await image.decode();
+		const canvas = document.createElement("canvas");
+		canvas.width = image.naturalWidth;
+		canvas.height = image.naturalHeight;
+		const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+		context.drawImage(image, 0, 0);
+		const { data: pixels } = context.getImageData(0, 0, canvas.width, canvas.height);
+		let visible = 0;
+		for (let alpha = 3; alpha < pixels.length; alpha += 4) {
+			if ((pixels[alpha] ?? 0) > 0) visible++;
+		}
+		return visible;
+	}, screenshot.toString("base64"));
+}
+
+test("the page is fully transparent until a meme shows, and again after", async ({ page }) => {
+	const imageUrl = "https://media.source.test/meme.svg";
+	await page.route(imageUrl, (route) =>
+		route.fulfill({
+			contentType: "image/svg+xml",
+			body: '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#777"/></svg>',
+		}),
+	);
+	const source = await openSource(page, {
+		autoplay: true,
+		mediaOnJoin: false,
+		overrides: { p: base64Json({ duration: 1 }) },
+	});
+	await expect.poll(() => source.joins.length).toBe(1);
+	const visible = async () =>
+		countVisiblePixels(page, await page.screenshot({ omitBackground: true }));
+	expect(await visible()).toBe(0);
+
+	source.sockets[source.sockets.length - 1]?.send(mediaMessage("2", imageUrl, "image"));
+	await expect(page.locator("img").first()).toBeVisible();
+	await expect.poll(visible).toBeGreaterThan(1000);
+
+	await expect(page.locator("img")).toHaveCount(0, { timeout: 8000 });
+	await expect.poll(visible).toBe(0);
+});
+
+test("the link's display profile decides which messages show", async ({ page }) => {
+	const enabledTypes = {
+		image: true,
+		gif: true,
+		video: false,
+		audio: true,
+		text: true,
+		sticker: true,
+	};
+	const source = await openSource(page, {
+		autoplay: true,
+		overrides: { p: base64Json({ duration: 30, enabledTypes }) },
+	});
+	await expect.poll(() => source.joins.length).toBe(1);
+	source.sockets[source.sockets.length - 1]?.send(
+		JSON.stringify({
+			type: "TEXT",
+			guild_id: guildId,
+			channel_id: "1",
+			message_id: "t",
+			author_id: "3",
+			author_username: "Author",
+			author_avatar_url: "",
+			text: "Text still shows",
+			timestamp: Date.now(),
+		}),
+	);
+	// TextDisplay renders a hidden copy to measure the text.
+	await expect(
+		page.getByText("Text still shows", { exact: true }).locator("visible=true"),
+	).toBeVisible();
+	await expect(page.locator("video")).toHaveCount(0);
+});
+
+for (const enabled of [true, false]) {
+	test(`floating reactions ${enabled ? "reach" : "stay off"} the stream as the profile says`, async ({
+		page,
+	}) => {
+		const source = await openSource(page, {
+			autoplay: true,
+			mediaOnJoin: false,
+			overrides: { p: base64Json({ floatingReactionsEnabled: enabled }) },
+		});
+		await expect.poll(() => source.joins.length).toBe(1);
+		source.sockets[source.sockets.length - 1]?.send(
+			JSON.stringify({
+				type: "REACTION",
+				guild_id: guildId,
+				channel_id: "1",
+				message_id: "1",
+				emoji: "🔥",
+				user_id: "2",
+				timestamp: Date.now(),
+			}),
+		);
+		const reaction = page.getByText("🔥");
+		if (enabled) await expect(reaction.first()).toBeAttached();
+		else {
+			await page.waitForTimeout(500);
+			await expect(reaction).toHaveCount(0);
+		}
+	});
+}
+
+test("a guild pause holds memes on stream and lifting it lets them through", async ({ page }) => {
+	const source = await openSource(page, { autoplay: true, mediaOnJoin: false });
+	await expect.poll(() => source.joins.length).toBe(1);
+	const socket = source.sockets[source.sockets.length - 1];
+	const state = (pausedUntil: number | null) =>
+		socket?.send(
+			JSON.stringify({ type: "GUILD_STATE", guild_id: guildId, paused_until: pausedUntil }),
+		);
+	state(Date.now() + 60_000);
+	await page.waitForTimeout(200);
+	socket?.send(mediaMessage("3"));
+	await page.waitForTimeout(500);
+	await expect(page.locator("video")).toHaveCount(0);
+
+	state(null);
+	await page.waitForTimeout(200);
+	socket?.send(mediaMessage("4"));
+	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?from=4`);
+});
+
+test("a revoked link stays idle, says so in a preview and tells the app", async ({ page }) => {
+	const reports: (string | null)[] = [];
+	page.on("request", (request) => {
+		if (SOURCE_CHECK.test(request.url())) {
+			reports.push(new URL(request.url()).searchParams.get("bot"));
+		}
+	});
+	const source = await openSource(page, { mediaOnJoin: false });
+	await expect.poll(() => source.joins.length).toBe(1);
+	const socket = source.sockets[source.sockets.length - 1];
+	socket?.send(JSON.stringify({ type: "ERROR", code: "TOKEN_ROTATED", message: "Rotated" }));
+	await expect(page.getByRole("status")).toHaveText(/link revoked/);
+	await expect.poll(() => reports[reports.length - 1]).toBe("revoked");
+	await socket?.close();
+	await page.waitForTimeout(2500);
+	expect(source.joins).toHaveLength(1);
+});
+
+test("a lost bot connection reconnects with the same link, without a click", async ({ page }) => {
+	const source = await openSource(page, { autoplay: true, mediaOnJoin: false });
+	await expect.poll(() => source.joins.length).toBe(1);
+	await source.sockets[source.sockets.length - 1]?.close();
+	await expect.poll(() => source.joins.length, { timeout: 15_000 }).toBe(2);
+	expect(source.joins[1]).toEqual(source.joins[0]);
+	source.sockets[source.sockets.length - 1]?.send(mediaMessage("3"));
+	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?from=3`);
+});
+
+test("resizing the source keeps the desktop's live moderation", async ({ page }) => {
+	const source = await openSource(page, {
+		autoplay: true,
+		overrides: { p: base64Json({ duration: 30 }) },
+	});
+	const video = page.locator("video");
+	await expect(video).toHaveAttribute("src", `${videoUrl}?join=1`);
+	await publishControls(page, { s: 0, c: 0, m: ["3"], a: false });
+	await page.waitForRequest(SOURCE_CHECK);
+	await page.waitForRequest(SOURCE_CHECK);
+
+	await page.setViewportSize({ width: 1000, height: 700 });
+	const socket = source.sockets[source.sockets.length - 1];
+	socket?.send(mediaMessage("3"));
+	socket?.send(mediaMessage("4"));
+	await publishControls(page, { s: 1, c: 0, m: ["3"], a: false });
+	await expect(video).toHaveAttribute("src", `${videoUrl}?from=4`);
+});
+
+test("an unreadable controls value changes nothing", async ({ page }) => {
+	const source = await openSource(page, {
+		autoplay: true,
+		overrides: { p: base64Json({ duration: 30 }) },
+	});
+	const video = page.locator("video");
+	await expect(video).toHaveAttribute("src", `${videoUrl}?join=1`);
+	await page.route(SOURCE_CHECK, async (route) => {
+		const response = await route.fetch();
+		await route.fulfill({
+			response,
+			headers: { ...response.headers(), "x-memeover-source-controls": "not base64 json" },
+		});
+	});
+	await page.waitForRequest(SOURCE_CHECK);
+	await page.waitForRequest(SOURCE_CHECK);
+	await expect(video).toHaveAttribute("src", `${videoUrl}?join=1`);
+	expect(source.closed.size).toBe(0);
+});
+
+/** Opens the page in Chrome with a real autoplay policy: the real probe, without a stub. */
+async function openWithAutoplayPolicy(
+	browser: Browser,
+	baseURL: string | undefined,
+): Promise<Page> {
+	const page = await (await browser.newContext({ baseURL })).newPage();
+	await page.route(`${videoUrl}*`, () => {});
+	await page.routeWebSocket(wsUrl, (ws) => {
+		ws.onMessage((raw) => {
+			if (JSON.parse(String(raw)).type !== "JOIN") return;
+			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: guildId, success: true }));
+			ws.send(mediaMessage("2", videoUrl));
+		});
+	});
+	await page.goto(`/browser-source.html#${fragment()}`);
+	return page;
+}
+
+// The flag browser sources embedded in streaming software use.
 test("with autoplay permission, the real probe grants sound and hides the preview aids", async ({
 	playwright,
 	baseURL,
@@ -379,34 +854,37 @@ test("with autoplay permission, the real probe grants sound and hides the previe
 		args: ["--autoplay-policy=no-user-gesture-required"],
 	});
 	try {
-		const page = await (await browser.newContext({ baseURL })).newPage();
-		await page.route(`${videoUrl}*`, () => {});
-		await page.routeWebSocket(wsUrl, (ws) => {
-			ws.onMessage((raw) => {
-				if (JSON.parse(String(raw)).type !== "JOIN") return;
-				ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: guildId, success: true }));
-				ws.send(
-					JSON.stringify({
-						type: "MEDIA",
-						guild_id: guildId,
-						channel_id: "1",
-						message_id: "1",
-						author_id: "2",
-						author_username: "Streamer",
-						author_avatar_url: "",
-						media_url: videoUrl,
-						media_type: "video",
-						timestamp: Date.now(),
-					}),
-				);
-			});
-		});
-		await page.goto(`/browser-source.html#${fragment()}`);
+		const page = await openWithAutoplayPolicy(browser, baseURL);
 		const video = page.locator("video");
 		await expect(video).toHaveCount(1);
 		expect(await video.evaluate((el: HTMLVideoElement) => el.muted)).toBe(false);
 		await expect(page.getByRole("status")).toHaveCount(0);
 		await expect(page.getByRole("button")).toHaveCount(0);
+	} finally {
+		await browser.close();
+	}
+});
+
+// A regular tab, or streaming software that refuses autoplay.
+test("without autoplay permission, the real probe keeps the sound off and offers to enable it", async ({
+	playwright,
+	baseURL,
+	browserName,
+}) => {
+	test.skip(browserName !== "chromium", "The autoplay flag exists only in Chromium");
+	// Under Vite's dev server Chrome accepts this probe on every run; the bundle gets the refusal.
+	test.skip(process.env.BROWSER_PRODUCTION !== "1", "Needs the production bundle");
+	const browser = await playwright.chromium.launch({
+		channel: "chrome",
+		args: ["--autoplay-policy=document-user-activation-required"],
+	});
+	try {
+		const page = await openWithAutoplayPolicy(browser, baseURL);
+		const video = page.locator("video");
+		await expect(video).toHaveCount(1);
+		expect(await video.evaluate((el: HTMLVideoElement) => el.muted)).toBe(true);
+		await page.getByRole("button", { name: "Click to enable sound" }).click();
+		await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.muted)).toBe(false);
 	} finally {
 		await browser.close();
 	}

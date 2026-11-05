@@ -236,6 +236,7 @@ test("the browser source is opt-in and copies a link with credentials only after
 	expect(params.get("p")).toBeTruthy();
 	expect(params.get("c")).toBe("browser-test-client");
 	expect(params.get("f")).toBeTruthy();
+	expect(params.get("r")).toBe("1080");
 
 	// The plugin cannot stop: turning it off asks for a restart.
 	await toggle.click();
@@ -308,6 +309,168 @@ test("copying the masked source link copies the working link", async ({ page }) 
 		return data.getData("text/plain");
 	});
 	expect(copied).toContain("t=test-only-token");
+});
+
+test("the desktop's skip, clear and moderation actions are published for loaded sources", async ({
+	page,
+}) => {
+	await streamTab(page);
+	const published = async () => {
+		const value = await page.evaluate(() => localStorage.getItem("test-source-controls"));
+		return JSON.parse(Buffer.from(value ?? "", "base64url").toString() || "{}");
+	};
+	const send = (event: string, payload?: unknown) =>
+		page.evaluate(
+			([name, data]) =>
+				(window as unknown as { testEmit: (e: unknown, p: unknown) => Promise<void> }).testEmit(
+					name,
+					data,
+				),
+			[event, payload],
+		);
+	await expect.poll(published).toEqual({ m: [], a: false, s: 0, c: 0 });
+	await send("skip-current");
+	await expect.poll(published).toMatchObject({ s: 1, c: 0 });
+	await send("clear-queue");
+	await expect.poll(published).toMatchObject({ s: 1, c: 1 });
+	await send("settings-changed", {
+		mutedAuthors: [{ id: "111", username: "Troll", avatarUrl: "", mutedAt: 1 }],
+		hideAnonymous: true,
+	});
+	await expect.poll(published).toEqual({ m: ["111"], a: true, s: 1, c: 1 });
+});
+
+test("the stream tab says what a loaded source reports", async ({ page }) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/No source connected yet/)).toBeVisible();
+	const report = (query: string) =>
+		page.evaluate((value) => localStorage.setItem("test-source-heartbeat", value), query);
+	await report("source=1&sound=on&bot=connected");
+	await expect(page.getByText("A source is connected and its sound can play.")).toBeVisible();
+	await report("source=1&sound=blocked&bot=connected");
+	await expect(page.getByText(/its sound stays off until someone clicks/)).toBeVisible();
+	await report("source=1&sound=on&bot=rejected");
+	await expect(page.getByText(/The bot refused this source's link/)).toBeVisible();
+	await report("source=1&sound=on&bot=reconnecting");
+	await expect(
+		page.getByText("A source is loaded but not connected to the bot yet."),
+	).toBeVisible();
+	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
+});
+
+test("an enabled source starts again at launch, before the Stream tab is opened", async ({
+	page,
+}) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	// A new launch: the server is gone and the settings window loads hidden, on its first tab.
+	await page.evaluate(() => sessionStorage.removeItem("test-source-running"));
+	await page.reload();
+	await expect
+		.poll(() => page.evaluate(() => sessionStorage.getItem("test-source-running")))
+		.toBe("4466");
+});
+
+test("a source without Discord credentials explains what to do instead of a dead link", async ({
+	page,
+}) => {
+	await page.goto("/test/browser/settings.html");
+	await expect(page.getByRole("button", { name: "Stream", exact: true })).toBeVisible();
+	await page.evaluate(() => {
+		const key = "test-store:settings.json";
+		const data = JSON.parse(localStorage.getItem(key) ?? "{}");
+		data.settings.guildId = "";
+		data.settings.token = "";
+		localStorage.setItem(key, JSON.stringify(data));
+	});
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/Connect MemeOver to your Discord server first/)).toBeVisible();
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+});
+
+test("changing the port of a running source asks for a restart and keeps it serving", async ({
+	page,
+}) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+
+	const port = page.getByLabel("Local port", { exact: true });
+	await port.fill("5123");
+	await port.press("Enter");
+	await expect(page.getByRole("button", { name: "Restart MemeOver" })).toBeVisible();
+	await expect.poll(async () => (await settings(page)).browserSourcePort).toBe(5123);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
+	// That old link is about to stop working: only the new port's link may be copied, after the restart.
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+
+	await port.fill("4466");
+	await port.press("Enter");
+	await expect(page.getByRole("button", { name: "Restart MemeOver" })).toHaveCount(0);
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+});
+
+test("an unexpected start failure is explained without exposing the native error", async ({
+	page,
+}) => {
+	await page.addInitScript(() =>
+		localStorage.setItem("test-source-start-error", "plugin exploded"),
+	);
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/The browser source could not start/)).toBeVisible();
+	await expect(page.getByText(/plugin exploded/)).toHaveCount(0);
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+});
+
+test("the default display profile can be embedded instead of the current settings", async ({
+	page,
+}) => {
+	await page.goto("/test/browser/settings.html");
+	await expect(page.getByRole("button", { name: "Stream", exact: true })).toBeVisible();
+	await page.evaluate(() => {
+		const key = "test-store:settings.json";
+		const data = JSON.parse(localStorage.getItem(key) ?? "{}");
+		data.settings.mediaSize = 77;
+		localStorage.setItem(key, JSON.stringify(data));
+	});
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await page.getByRole("button", { name: "Show the source link" }).click();
+	const link = page.getByLabel("Source link", { exact: true });
+	const embeddedSize = async () => {
+		const profile = new URLSearchParams(new URL(await link.inputValue()).hash.slice(1)).get("p");
+		return JSON.parse(Buffer.from(profile ?? "", "base64url").toString()).mediaSize;
+	};
+	await expect.poll(embeddedSize).toBe(77);
+	await page.getByRole("combobox", { name: "Display profile to embed" }).click();
+	await page.getByRole("option", { name: "Default settings" }).click();
+	await expect.poll(embeddedSize).not.toBe(77);
+});
+
+test("a source that cannot start is announced once and retried until the port is free", async ({
+	page,
+}) => {
+	await page.clock.install();
+	await page.addInitScript(() => localStorage.setItem("test-source-busy-port", "4466"));
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/Port 4466 is used by another program/)).toBeVisible();
+	const announced = () => page.evaluate(() => localStorage.getItem("test-source-start-failed"));
+	expect(await announced()).toBeNull();
+
+	await page.clock.fastForward(31_000);
+	await expect.poll(announced).toBe("1");
+
+	await page.evaluate(() => localStorage.removeItem("test-source-busy-port"));
+	await page.clock.fastForward(31_000);
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
 });
 
 test("a busy browser source port is reported and another port can be chosen", async ({ page }) => {

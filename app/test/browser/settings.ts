@@ -1,4 +1,4 @@
-import { emit } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import appPackage from "../../package.json";
 import { DEFAULT_SETTINGS } from "../../src/shared/types";
@@ -69,6 +69,8 @@ mockIPC(
 		}
 		// browser source: the native server is never started; a busy port is simulated per test.
 		if (cmd === "start_browser_source") {
+			const failure = localStorage.getItem("test-source-start-error");
+			if (failure) throw failure;
 			const running = sessionStorage.getItem("test-source-running");
 			if (running && running !== String(args.port)) throw "restart_required";
 			if (localStorage.getItem("test-source-busy-port") === String(args.port)) throw "port_in_use";
@@ -78,6 +80,14 @@ mockIPC(
 		if (cmd === "browser_source_status") {
 			const running = sessionStorage.getItem("test-source-running");
 			return running ? Number(running) : null;
+		}
+		if (cmd === "set_browser_source_controls") {
+			localStorage.setItem("test-source-controls", String(args.value));
+			return null;
+		}
+		if (cmd === "browser_source_heartbeat") {
+			const query = localStorage.getItem("test-source-heartbeat");
+			return query ? { ageMs: 500, query } : null;
 		}
 		if (cmd === "set_tray_overlay_muted") {
 			localStorage.setItem("test-tray-muted", String(args.muted));
@@ -114,5 +124,10 @@ mockIPC(
 	{ shouldMockEvents: true },
 );
 // Lets tests simulate native events, such as a click on the tray's "Mute overlay" item.
-Object.assign(window, { testEmit: (event: string) => emit(event) });
+Object.assign(window, {
+	testEmit: (event: string, payload?: unknown) => emit(event, payload),
+});
+void listen("browser-source-start-failed", () => {
+	localStorage.setItem("test-source-start-failed", "1");
+});
 await import("../../src/main-settings");
