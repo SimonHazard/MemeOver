@@ -68,10 +68,14 @@ le mixeur.
   ne le montrez pas en stream et ne partagez pas les fichiers de scènes de votre logiciel, qui
   peuvent le conserver en clair. S'il fuite, faites lancer `/memeover rotate` par un gestionnaire
   du serveur, collez le nouveau code dans le Tableau de bord, puis copiez le nouveau lien.
-- La page ne suit pas les changements de réglages ni d'auteurs masqués : copiez à nouveau le
-  lien. Le lien applique vos auteurs masqués et votre choix sur les memes anonymes.
-- Passer un meme ou vider la file n'agit que sur l'overlay du bureau : pour couper un meme en
-  stream, masquez la source ou coupez son son dans votre logiciel.
+- La page ne suit pas les changements d'affichage ni de connexion : copiez à nouveau le lien.
+- Passer un meme, vider la file, masquer un auteur et le choix sur les memes anonymes agissent
+  aussi sur une source déjà chargée en une ou deux secondes, tant que MemeOver est lancé.
+- L'onglet **Stream** indique si une source est connectée, si son lien est refusé ou si son son
+  est bloqué. Si le serveur local ne peut pas démarrer, MemeOver réessaie et le signale sur
+  l'overlay du bureau.
+- Une source masquée mais active reçoit toujours les memes : ils passent sans être vus, et leur
+  son peut rester audible selon le logiciel.
 - Désactiver la source ou changer de port prend effet au redémarrage de MemeOver.
 - Fermer MemeOver arrête les sources déjà chargées en quelques secondes. Elles reprennent
   seules quand MemeOver sert à nouveau la page (recopiez le lien si le port a changé).
@@ -79,8 +83,11 @@ le mixeur.
   lancé, actualisez la source.
 - Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
   l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
-- La page demande un moteur de navigateur récent (Chromium 111 ou plus) : si l'affichage est
-  incomplet ou vide, mettez à jour votre logiciel de stream.
+- Le lien retient la taille de l'écran de l'overlay : le texte et les bordures gardent les mêmes
+  proportions qu'à l'écran, quelle que soit la résolution de la source. Recopiez-le si vous
+  déplacez l'overlay sur un écran d'une autre taille.
+- La page demande un moteur de navigateur récent (Chromium 111, Safari 16.4 ou équivalent) : si
+  l'affichage est incomplet ou vide, mettez à jour votre logiciel de stream.
 
 ## Commandes Discord
 
@@ -266,10 +273,13 @@ sound can have its own mixer entry.
   do not show it on stream and do not share your software's scene files, which may store it in
   clear text. If it leaks, have a server manager run `/memeover rotate`, paste the new code in
   the Dashboard, then copy the new link.
-- The page does not follow settings or muted-author changes: copy the link again. The link
-  applies your muted authors and your choice about anonymous memes.
-- Skipping a meme or clearing the queue only affects the desktop overlay: to cut a meme on
-  stream, hide or mute the source in your software.
+- The page does not follow display or connection changes: copy the link again.
+- Skipping a meme, clearing the queue, muting an author and your choice about anonymous memes
+  also reach a loaded source within a couple of seconds, as long as MemeOver is running.
+- The **Stream** tab shows whether a source is connected, its link refused or its sound blocked.
+  If the local server cannot start, MemeOver retries and says so on the desktop overlay.
+- A source that is hidden but running still receives memes: they play out of sight, and their
+  sound may stay audible depending on the software.
 - Disabling the source or changing its port takes effect after restarting MemeOver.
 - Closing MemeOver stops already loaded sources within a few seconds. They resume on their
   own once MemeOver serves the page again (copy the link again if the port changed).
@@ -277,8 +287,11 @@ sound can have its own mixer entry.
   refresh the source.
 - To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
   tray menu ("Mute overlay").
-- The page needs a recent browser engine (Chromium 111 or later): if it renders incompletely
-  or stays empty, update your streaming software.
+- The link remembers the size of the overlay's screen: text and borders keep the proportions
+  they have on screen, whatever the source's resolution. Copy it again if you move the overlay
+  to a screen of another size.
+- The page needs a recent browser engine (Chromium 111, Safari 16.4 or equivalent): if it renders
+  incompletely or stays empty, update your streaming software.
 
 ## Discord Commands
 

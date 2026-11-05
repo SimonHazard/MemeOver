@@ -40,7 +40,24 @@ liveness check changes nothing, and that consecutive failures silence the player
 connection until MemeOver serves the page again. A new instance reloads the page; an answer without
 the instance header is never followed. HEAD probes must contain neither credentials nor a referrer,
 and media requests carry no referrer either: Imgur answers 403 to a 127.0.0.1 referrer. An autoplay
-probe that never settles draws no preview aid.
+probe that never settles draws no preview aid, and the whole page runs without reaching a Tauri API.
+Preview aids fade unless the pointer moves. Live skip, clear and moderation controls travel in the
+HEAD response, and the request reports the page's state. In production mode, one test serves the
+page under `tauri.conf.json`'s CSP with the nonce Tauri adds, since no other test sends that header.
+
+The source page must stay fully transparent outside memes (checked on real screenshot pixels), and
+both real autoplay policies run in Chrome without a stub. `source-flow.spec.ts` follows the whole
+feature on the real pages: enable the source, copy the link, load it, then skip, mute and clear from
+the desktop. `desktop-overlay.spec.ts` runs the real `overlay.html` on the stub of `desktop-stub.ts`:
+live desktop mute, the start-failure notice and history logging.
+
+Nothing here runs the packaged app, the native server or streaming software: `browser_source.rs`
+tests the server, and the checks needing real software stay manual.
+
+`overlay-parity.spec.ts` opens the real `overlay.html` and `browser-source.html`, sends both the same
+message with the same display settings, and compares their stylesheets, boxes and every computed
+property. At different viewport sizes, it checks that every box and font size keeps the desktop's
+proportions. The native side of `overlay.html` is a small stub that only provides the settings.
 
 `app/test/browser/settings.ts` mounts the actual settings application with Tauri's
 official IPC/event mocks. Stores live only in the browser context's localStorage;
