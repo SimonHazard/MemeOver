@@ -13,13 +13,14 @@ describe("browser source live controls", () => {
 		const value = encodeSourceControls({
 			skip: 3,
 			clear: 1,
+			commandLog: "sscs",
 			mutedAuthors: [author("111"), author("222")],
 			hideAnonymous: true,
 		});
 		expect(value).toMatch(/^[A-Za-z0-9_-]+$/);
 		expect(Buffer.from(value, "base64url").toString()).not.toContain("Name");
 		const decoded = decodeSourceControls(value);
-		expect(decoded).toMatchObject({ skip: 3, clear: 1, hideAnonymous: true });
+		expect(decoded).toMatchObject({ skip: 3, clear: 1, commandLog: "sscs", hideAnonymous: true });
 		expect(decoded?.mutedAuthors.map((muted) => muted.id).sort()).toEqual(["111", "222"]);
 	});
 
@@ -29,6 +30,22 @@ describe("browser source live controls", () => {
 		expect(decodeSourceControls("not base64 json")).toBeNull();
 		const noCounters = Buffer.from(JSON.stringify({ m: [], a: false })).toString("base64url");
 		expect(decodeSourceControls(noCounters)).toBeNull();
+	});
+
+	test("invalid counters and malformed or unbounded command logs are rejected", () => {
+		for (const value of [
+			{ s: -1, c: 0 },
+			{ s: 0, c: 0.5 },
+			{ s: Number.MAX_SAFE_INTEGER, c: 1 },
+			{ s: 1, c: 0, q: "x" },
+			{ s: 1, c: 0, q: "c" },
+			{ s: 1, c: 0, q: "" },
+			{ s: 65, c: 0, q: "s".repeat(65) },
+		]) {
+			expect(
+				decodeSourceControls(Buffer.from(JSON.stringify(value)).toString("base64url")),
+			).toBeNull();
+		}
 	});
 });
 

@@ -1,7 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { availableMonitors, primaryMonitor } from "@tauri-apps/api/window";
-import { encodeSourceControls, type SourceHeartbeat } from "./browser-source";
+import {
+	encodeSourceControls,
+	SOURCE_COMMAND_LOG_LIMIT,
+	type SourceHeartbeat,
+} from "./browser-source";
 import { sameMonitorPosition } from "./helpers";
 import { loadSettings, patchSettings } from "./settings";
 import { useAppStore } from "./store";
@@ -85,18 +89,26 @@ export async function setDesktopOverlayMuted(
 async function publishSourceControls(initial: Settings): Promise<void> {
 	let skip = 0;
 	let clear = 0;
+	let commandLog = "";
 	let { mutedAuthors, hideAnonymous } = initial;
-	const publish = () =>
-		invoke("set_browser_source_controls", {
-			value: encodeSourceControls({ skip, clear, mutedAuthors, hideAnonymous }),
-		}).catch((error) => console.warn("[Browser source] Could not publish controls:", error));
+	let pending = Promise.resolve();
+	const publish = () => {
+		const value = encodeSourceControls({ skip, clear, commandLog, mutedAuthors, hideAnonymous });
+		// Preserve publication order even if a native invocation is slow.
+		pending = pending
+			.then(() => invoke<void>("set_browser_source_controls", { value }))
+			.catch((error) => console.warn("[Browser source] Could not publish controls:", error));
+		return pending;
+	};
 
 	await listen("skip-current", () => {
 		skip++;
+		commandLog = `${commandLog}s`.slice(-SOURCE_COMMAND_LOG_LIMIT);
 		void publish();
 	});
 	await listen("clear-queue", () => {
 		clear++;
+		commandLog = `${commandLog}c`.slice(-SOURCE_COMMAND_LOG_LIMIT);
 		void publish();
 	});
 	await listen<Settings>("settings-changed", (event) => {

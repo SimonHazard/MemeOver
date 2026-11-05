@@ -13,6 +13,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.10.0): keep Skip available for browser sources when the desktop overlay is empty or closed. Preserve repeated skip commands and their order with queue clears when several actions arrive in one check; repeated checks do not replay them. A source that missed more than the retained 64 actions discards stale playback instead of guessing the missing commands.
 - App/site (1.10.0): apply the media volume setting to audio files, which always played at full volume.
 - App/site (1.8.8): clear a connection field's validation error as soon as its value is corrected. The error previously disappeared only on blur, moving "Save & connect" between mouse press and release so the click could be lost. Retry WebKit browser tests once in CI after intermittent Linux WebKit page freezes.
 

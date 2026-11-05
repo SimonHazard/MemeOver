@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { createMemoryStoreModule } from "../test-utils/tauri-mocks";
-import { decodeSourceControls } from "./browser-source";
+import { decodeSourceControls, SOURCE_COMMAND_LOG_LIMIT } from "./browser-source";
 import { DEFAULT_SETTINGS, type Settings } from "./types";
 
 // ─── Native side, as the settings window sees it ──────────────────────────────
@@ -13,6 +13,8 @@ const native = {
 	running: null as number | null,
 	startError: null as string | null,
 	trayFails: false,
+	controlsDelay: null as Promise<void> | null,
+	controlsFail: false,
 	monitors: [] as unknown[],
 	primary: null as unknown,
 };
@@ -25,6 +27,10 @@ mock.module("@tauri-apps/api/core", () => ({
 		if (command === "browser_source_status") return native.running;
 		if (command === "browser_source_heartbeat") return { ageMs: 1, query: "source=1" };
 		if (command === "set_tray_overlay_muted" && native.trayFails) throw new Error("No tray");
+		if (command === "set_browser_source_controls") {
+			if (native.controlsFail) throw new Error("Could not publish");
+			await native.controlsDelay;
+		}
 		if (command === "start_browser_source") {
 			if (native.startError) throw native.startError;
 			native.running = args?.port as number;
@@ -93,6 +99,8 @@ beforeEach(() => {
 		running: null,
 		startError: null,
 		trayFails: false,
+		controlsDelay: null,
+		controlsFail: false,
 		monitors: [],
 		primary: null,
 	});
@@ -238,23 +246,64 @@ test("each desktop action is published for loaded sources", async () => {
 	const troll = { id: "111", username: "Troll", avatarUrl: "", mutedAt: 1 };
 	saveSettings({ mutedAuthors: [troll], hideAnonymous: true });
 	await initStreamControls();
-	expect(published()).toMatchObject({ skip: 0, clear: 0, hideAnonymous: true });
+	expect(published()).toMatchObject({ skip: 0, clear: 0, commandLog: "", hideAnonymous: true });
 	expect(published()?.mutedAuthors.map((author) => author.id)).toEqual(["111"]);
 
 	fire("skip-current");
 	await flush();
-	expect(published()).toMatchObject({ skip: 1, clear: 0 });
+	expect(published()).toMatchObject({ skip: 1, clear: 0, commandLog: "s" });
 	fire("clear-queue");
 	await flush();
-	expect(published()).toMatchObject({ skip: 1, clear: 1 });
+	expect(published()).toMatchObject({ skip: 1, clear: 1, commandLog: "sc" });
 	fire("settings-changed", { mutedAuthors: [], hideAnonymous: false });
 	await flush();
 	expect(published()).toMatchObject({
 		skip: 1,
 		clear: 1,
+		commandLog: "sc",
 		mutedAuthors: [],
 		hideAnonymous: false,
 	});
+});
+
+test("a burst preserves command order in a bounded header", async () => {
+	await initStreamControls();
+	for (let index = 0; index < SOURCE_COMMAND_LOG_LIMIT; index++) fire("skip-current");
+	fire("clear-queue");
+	fire("skip-current");
+	await flush();
+	expect(published()).toMatchObject({
+		skip: SOURCE_COMMAND_LOG_LIMIT + 1,
+		clear: 1,
+		commandLog: `${"s".repeat(SOURCE_COMMAND_LOG_LIMIT - 2)}cs`,
+	});
+});
+
+test("a delayed publication cannot be overtaken by the next command", async () => {
+	await initStreamControls();
+	let release = () => {};
+	native.controlsDelay = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	fire("skip-current");
+	fire("clear-queue");
+	await flush();
+	expect(calls("set_browser_source_controls")).toHaveLength(2);
+	expect(published()?.commandLog).toBe("s");
+	release();
+	await flush();
+	expect(published()?.commandLog).toBe("sc");
+});
+
+test("a failed publication does not block the next one from carrying all actions", async () => {
+	await initStreamControls();
+	native.controlsFail = true;
+	fire("skip-current");
+	await flush();
+	native.controlsFail = false;
+	fire("clear-queue");
+	await flush();
+	expect(published()).toMatchObject({ skip: 1, clear: 1, commandLog: "sc" });
 });
 
 test("published values carry ids only, never credentials", async () => {

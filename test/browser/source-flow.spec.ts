@@ -124,14 +124,20 @@ test("a copied link joins with the desktop's credentials and follows its actions
 		}),
 	);
 
-	// Skip from the desktop: the meme leaves the stream and the queue moves on.
-	await send(desktop, "skip-current");
+	// The real button must work even though the desktop overlay has nothing playing.
+	await desktop.getByRole("button", { name: "Overlay", exact: true }).click();
+	const skip = desktop.getByRole("button", { name: "Skip", exact: true });
+	await expect(skip).toBeEnabled();
+	await skip.click();
 	await expect(video).toHaveCount(0);
 	// TextDisplay renders a hidden copy to measure the text.
 	const text = source.getByText("Next in line", { exact: true }).locator("visible=true");
 	await expect(text).toBeVisible();
 	const fontSize = await text.evaluate((el) => getComputedStyle(el).fontSize);
 	expect(Number.parseFloat(fontSize)).toBeGreaterThan(20);
+	// Closing the desktop overlay must not remove control of the stream's own player.
+	await send(desktop, "overlay-health-changed", "closed");
+	await expect(skip).toBeEnabled();
 
 	// Mute from the desktop: the author on screen is cut, and stays out.
 	await send(desktop, "settings-changed", {
@@ -145,12 +151,12 @@ test("a copied link joins with the desktop's credentials and follows its actions
 
 	// Clear from the desktop: what is queued never appears, the meme on screen stays.
 	send_to_source(mediaFrom("9"));
-	await send(desktop, "clear-queue");
+	await desktop.getByRole("button", { name: "Clear queue", exact: true }).click();
 	const checked = source.waitForRequest(SOURCE_CHECK);
 	await checked;
 	await source.waitForRequest(SOURCE_CHECK);
 	await expect(video).toHaveAttribute("src", `${videoUrl}?from=8`);
-	await send(desktop, "skip-current");
+	await skip.click();
 	await expect(video).toHaveCount(0);
 
 	expect(joins).toHaveLength(1);

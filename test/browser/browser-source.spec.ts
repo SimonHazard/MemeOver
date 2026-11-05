@@ -18,7 +18,7 @@ const base64Json = (value: unknown) => Buffer.from(JSON.stringify(value)).toStri
 /** What the local server does: adds the desktop's published controls to each check's answer. */
 async function publishControls(
 	page: Page,
-	controls: { s: number; c: number; m: string[]; a: boolean },
+	controls: { s: number; c: number; m: string[]; a: boolean; q?: string },
 ) {
 	await page.unroute(SOURCE_CHECK);
 	await page.route(SOURCE_CHECK, async (route) => {
@@ -520,6 +520,44 @@ test("a loaded source follows the desktop's skip, clear and mute without a new l
 	await expect(video).toHaveCount(0);
 	expect(source.joins).toHaveLength(1);
 });
+
+for (const commands of ["ss", "sc", "cs"]) {
+	test(`a batched ${commands} command preserves playback order`, async ({ page }) => {
+		await publishControls(page, { s: 0, c: 0, m: [], a: false, q: "" });
+		const source = await openSource(page, {
+			autoplay: true,
+			overrides: { p: base64Json({ duration: 30 }) },
+		});
+		const video = page.locator("video");
+		await expect(video).toHaveAttribute("src", `${videoUrl}?join=1`);
+		const socket = source.sockets[source.sockets.length - 1];
+		socket?.send(mediaMessage("3"));
+		socket?.send(mediaMessage("4"));
+		const skipped = [...commands].filter((command) => command === "s").length;
+		await publishControls(page, {
+			s: skipped,
+			c: commands.length - skipped,
+			m: [],
+			a: false,
+			q: commands,
+		});
+		if (commands === "cs") {
+			await expect(video).toHaveCount(0);
+		} else {
+			await expect(video).toHaveAttribute(
+				"src",
+				`${videoUrl}?from=${commands === "ss" ? "4" : "3"}`,
+			);
+			// A repeated header neither replays a skip nor consumes the remaining item.
+			await page.waitForRequest(SOURCE_CHECK);
+			await expect(video).toHaveAttribute(
+				"src",
+				`${videoUrl}?from=${commands === "ss" ? "4" : "3"}`,
+			);
+		}
+		expect(source.joins).toHaveLength(1);
+	});
+}
 
 test("each check reports the page's state to the app, without credentials", async ({ page }) => {
 	const reports: URLSearchParams[] = [];

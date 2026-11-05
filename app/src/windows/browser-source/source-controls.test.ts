@@ -10,24 +10,22 @@ const base: SourceControls = { skip: 2, clear: 1, mutedAuthors: [], hideAnonymou
 describe("browser source live controls", () => {
 	test("past actions never replay on a page that just loaded, but moderation applies", () => {
 		expect(controlActions(null, { ...base, skip: 9, clear: 9 })).toEqual({
-			skip: false,
-			clear: false,
+			commands: "",
 			moderation: true,
 		});
 	});
 
 	test("nothing changed means nothing happens", () => {
 		expect(controlActions(base, { ...base })).toEqual({
-			skip: false,
-			clear: false,
+			commands: "",
 			moderation: false,
 		});
 	});
 
-	test("each action is seen once, even after the counters restart", () => {
-		expect(controlActions(base, { ...base, skip: 3 }).skip).toBe(true);
-		expect(controlActions(base, { ...base, clear: 2 }).clear).toBe(true);
-		expect(controlActions(base, { ...base, skip: 0 }).skip).toBe(true);
+	test("each new action is read, and a restarted publisher establishes a fresh baseline", () => {
+		expect(controlActions(base, { ...base, skip: 4 }).commands).toBe("ss");
+		expect(controlActions(base, { ...base, clear: 2 }).commands).toBe("c");
+		expect(controlActions(base, { ...base, skip: 0 }).commands).toBe("");
 	});
 
 	test("muting, unmuting and the anonymous choice all count as moderation changes", () => {
@@ -62,11 +60,18 @@ describe("applying live controls to a loaded page", () => {
 	const queued = () => state().queue.map((entry) => entry.queueId);
 	const apply = (previous: SourceControls | null, next: SourceControls) =>
 		applySourceControls(previous, encodeSourceControls(next));
+	const batch = (commands: string): SourceControls => ({
+		...base,
+		skip: base.skip + [...commands].filter((command) => command === "s").length,
+		clear: base.clear + [...commands].filter((command) => command === "c").length,
+		commandLog: `ssc${commands}`.slice(-64),
+	});
 
 	beforeEach(() => {
 		useAppStore.setState({
 			queue: [item("a", "1"), item("b", "2"), item("c", "secret", true)],
 			skipVersion: 0,
+			isDisplaying: true,
 			currentAuthorId: null,
 			settings: DEFAULT_SETTINGS,
 		});
@@ -98,6 +103,49 @@ describe("applying live controls to a loaded page", () => {
 		apply(base, { ...base, clear: 2 });
 		expect(queued()).toEqual([]);
 		expect(state().skipVersion).toBe(0);
+	});
+
+	test("two skips in one check remove the visible item and the next queued item", () => {
+		const baseline = apply(base, batch("ss"));
+		expect(state().skipVersion).toBe(1);
+		expect(queued()).toEqual(["b", "c"]);
+		// The next check sees the same commands: nothing is consumed twice.
+		apply(baseline, batch("ss"));
+		expect(state().skipVersion).toBe(1);
+		expect(queued()).toEqual(["b", "c"]);
+	});
+
+	test("skip then clear preserves the next item; clear then skip leaves nothing", () => {
+		apply(base, batch("sc"));
+		expect(queued()).toEqual(["a"]);
+		expect(state().skipVersion).toBe(1);
+		apply(batch("sc"), batch("sccs"));
+		expect(queued()).toEqual([]);
+		expect(state().skipVersion).toBe(2);
+	});
+
+	test("two skips then clear preserve only the third item in playback order", () => {
+		apply(base, batch("ssc"));
+		expect(queued()).toEqual(["b"]);
+		expect(state().skipVersion).toBe(1);
+	});
+
+	test("skips with no visible player consume waiting items without skipping a future meme", () => {
+		useAppStore.setState({ isDisplaying: false });
+		apply(base, batch("ss"));
+		expect(queued()).toEqual(["c"]);
+		expect(state().skipVersion).toBe(0);
+		useAppStore.setState({ queue: [] });
+		apply(batch("ss"), batch("ssss"));
+		state().enqueue(item("future", "4"));
+		expect(queued()).toEqual(["future"]);
+		expect(state().skipVersion).toBe(0);
+	});
+
+	test("a source missing more than the retained log discards stale playback", () => {
+		apply(base, batch("s".repeat(65)));
+		expect(queued()).toEqual([]);
+		expect(state().skipVersion).toBe(1);
 	});
 
 	test("muting drops the author's queued items and cuts them on screen", () => {

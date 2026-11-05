@@ -1,12 +1,16 @@
-import { decodeSourceControls, type SourceControls } from "@/shared/browser-source";
+import {
+	decodeSourceControls,
+	SOURCE_COMMAND_LOG_LIMIT,
+	type SourceControls,
+} from "@/shared/browser-source";
 import { useAppStore } from "@/shared/store";
+import type { DisplayQueueItem } from "@/shared/types";
 
 // Applies what the desktop app publishes on each liveness check: the streamer's skip, clear
 // and moderation actions reach a loaded page without copying the link again.
 
 export interface ControlActions {
-	skip: boolean;
-	clear: boolean;
+	commands: string;
 	moderation: boolean;
 }
 
@@ -22,12 +26,58 @@ export function controlActions(
 	previous: SourceControls | null,
 	next: SourceControls,
 ): ControlActions {
-	if (!previous) return { skip: false, clear: false, moderation: true };
+	let commands = "";
+	if (previous && next.skip >= previous.skip && next.clear >= previous.clear) {
+		const skipped = next.skip - previous.skip;
+		const cleared = next.clear - previous.clear;
+		const count = skipped + cleared;
+		if (count > SOURCE_COMMAND_LOG_LIMIT) {
+			// A suspended page missed the retained history: discard stale content rather
+			// than guessing which commands were lost. Never carry skips into future memes.
+			commands = "cs";
+		} else if (count > 0) {
+			commands =
+				next.commandLog?.slice(-count) ?? `${cleared > 0 ? "c" : ""}${"s".repeat(skipped)}`;
+		}
+	}
 	return {
-		skip: next.skip !== previous.skip,
-		clear: next.clear !== previous.clear,
-		moderation: moderationKey(next) !== moderationKey(previous),
+		commands,
+		moderation: previous === null || moderationKey(next) !== moderationKey(previous),
 	};
+}
+
+/**
+ * React batches store updates: bumping skip twice would still hide only one player.
+ * Advance the waiting items here, in command order, then animate the visible item out once.
+ * A clear preserves the item a preceding skip would have admitted as the new current item.
+ */
+function applyCommands(commands: string): void {
+	if (!commands) return;
+	useAppStore.setState((state) => {
+		let originalPresent = state.isDisplaying;
+		let promoted: DisplayQueueItem | undefined;
+		let queue = state.queue;
+		let skipCurrent = false;
+		for (const command of commands) {
+			if (command === "c") {
+				queue = [];
+				continue;
+			}
+			if (originalPresent) {
+				originalPresent = false;
+				skipCurrent = true;
+			} else if (!promoted) {
+				if (queue.length === 0) continue;
+				queue = queue.slice(1);
+			}
+			promoted = queue[0];
+			queue = queue.slice(1);
+		}
+		return {
+			queue: promoted ? [promoted, ...queue] : queue,
+			skipVersion: state.skipVersion + (skipCurrent ? 1 : 0),
+		};
+	});
 }
 
 /** Returns the new baseline; a server sending no readable value changes nothing. */
@@ -43,7 +93,6 @@ export function applySourceControls(
 	if (actions.moderation) {
 		store.updateSettings({ mutedAuthors: next.mutedAuthors, hideAnonymous: next.hideAnonymous });
 	}
-	if (actions.clear) store.clearQueue();
-	if (actions.skip) store.bumpSkip();
+	applyCommands(actions.commands);
 	return next;
 }

@@ -71,6 +71,9 @@ le mixeur.
 - La page ne suit pas les changements d'affichage ni de connexion : copiez à nouveau le lien.
 - Passer un meme, vider la file, masquer un auteur et le choix sur les memes anonymes agissent
   aussi sur une source déjà chargée en une ou deux secondes, tant que MemeOver est lancé.
+  « Passer » reste disponible lorsque l'overlay du bureau est fermé ou vide. Les passages
+  successifs et les vidages de file gardent leur ordre ; si une source suspendue manque plus
+  de 64 actions, elle abandonne les memes en cours et en attente.
 - L'onglet **Stream** indique si une source est connectée, si son lien est refusé ou si son son
   est bloqué. Si le serveur local ne peut pas démarrer, MemeOver réessaie et le signale sur
   l'overlay du bureau.
@@ -276,6 +279,9 @@ sound can have its own mixer entry.
 - The page does not follow display or connection changes: copy the link again.
 - Skipping a meme, clearing the queue, muting an author and your choice about anonymous memes
   also reach a loaded source within a couple of seconds, as long as MemeOver is running.
+  Skip stays available when the desktop overlay is closed or empty. Repeated skips and queue
+  clears keep their order; a suspended source that misses more than 64 actions discards its
+  current and waiting memes.
 - The **Stream** tab shows whether a source is connected, its link refused or its sound blocked.
   If the local server cannot start, MemeOver retries and says so on the desktop overlay.
 - A source that is hidden but running still receives memes: they play out of sight, and their

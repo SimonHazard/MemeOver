@@ -28,6 +28,7 @@ export function OverlayControls() {
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
 	const queueSize = useAppStore((s) => s.queueSize);
 	const isDisplaying = useAppStore((s) => s.isDisplaying);
+	const sourceRunning = useAppStore((s) => s.browserSourceRunningPort !== null);
 	const overlayAlive = overlayHealth === "alive";
 
 	const [devPreviewActive, setDevPreviewActive] = useState(false);
@@ -132,7 +133,7 @@ export function OverlayControls() {
 					<NbButton
 						variant="outline"
 						size="sm"
-						disabled={!overlayAlive || (!isDisplaying && queueSize === 0)}
+						disabled={!sourceRunning && (!overlayAlive || (!isDisplaying && queueSize === 0))}
 						onClick={() => void skipCurrentItem()}
 					>
 						{t("actions.skipCurrent")}

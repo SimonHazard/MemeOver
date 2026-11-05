@@ -193,13 +193,18 @@ export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | 
 
 // ─── Live link between the app and loaded pages ───────────────────────────────
 // A loaded page's only contact with the app is its liveness check. These values travel over an
-// unauthenticated loopback server: author ids and counters only, never the link's credentials.
+// unauthenticated loopback server: author ids and commands only, never the link's credentials.
+
+/** Enough for a burst of clicks while keeping the HTTP header bounded. */
+export const SOURCE_COMMAND_LOG_LIMIT = 64;
 
 export interface SourceControls {
 	/** Changes each time the streamer skips the current item. */
 	skip: number;
 	/** Changes each time the streamer clears the queue. */
 	clear: number;
+	/** Ordered tail of actions: s = skip, c = clear. Absent on older headers. */
+	commandLog?: string;
 	mutedAuthors: MutedAuthor[];
 	hideAnonymous: boolean;
 }
@@ -207,11 +212,17 @@ export interface SourceControls {
 export function encodeSourceControls({
 	skip,
 	clear,
+	commandLog,
 	mutedAuthors,
 	hideAnonymous,
 }: SourceControls): string {
 	return encodeBase64Url(
-		JSON.stringify({ ...filtersPayload(mutedAuthors, hideAnonymous), s: skip, c: clear }),
+		JSON.stringify({
+			...filtersPayload(mutedAuthors, hideAnonymous),
+			s: skip,
+			c: clear,
+			q: commandLog,
+		}),
 	);
 }
 
@@ -221,9 +232,17 @@ export function decodeSourceControls(value: string | null): SourceControls | nul
 	try {
 		const parsed: unknown = JSON.parse(decodeBase64Url(value));
 		if (!parsed || typeof parsed !== "object") return null;
-		const { s, c } = parsed as { s?: unknown; c?: unknown };
-		if (!Number.isSafeInteger(s) || !Number.isSafeInteger(c)) return null;
-		return { skip: s as number, clear: c as number, ...decodeFilters(value) };
+		const { s, c, q } = parsed as { s?: unknown; c?: unknown; q?: unknown };
+		if (typeof s !== "number" || typeof c !== "number") return null;
+		if (!Number.isSafeInteger(s) || !Number.isSafeInteger(c) || s < 0 || c < 0) return null;
+		if (!Number.isSafeInteger(s + c)) return null;
+		if (q !== undefined) {
+			if (typeof q !== "string" || !/^[sc]*$/.test(q)) return null;
+			if (q.length !== Math.min(s + c, SOURCE_COMMAND_LOG_LIMIT)) return null;
+			const skips = [...q].filter((command) => command === "s").length;
+			if (skips > s || q.length - skips > c) return null;
+		}
+		return { skip: s, clear: c, commandLog: q as string | undefined, ...decodeFilters(value) };
 	} catch {
 		return null;
 	}
