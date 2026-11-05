@@ -271,6 +271,13 @@ export const DEFAULT_BROWSER_SOURCE_PORT = 4466;
 export const MIN_BROWSER_SOURCE_PORT = 1024;
 export const MAX_BROWSER_SOURCE_PORT = 65535;
 
+/** Error codes returned by `start_browser_source`; anything else is an unexpected failure. */
+export type BrowserSourceStartError =
+	| "restart_required"
+	| "port_in_use"
+	| "invalid_port"
+	| "unknown";
+
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
 /** Pre-v2 default. Migration treats anything matching this as "never touched" and upgrades it silently. */

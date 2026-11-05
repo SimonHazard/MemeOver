@@ -36,6 +36,7 @@
 	"overlay": {
 		"userConnected_one": "Un utilisateur s’est connecté",
 		"userConnected_other": "{{count}} utilisateurs se sont connectés",
+		"browserSourceStartFailed": "La source navigateur n'a pas pu démarrer : voyez l'onglet Stream.",
 		"controls": "Contrôles de l'overlay",
 		"show": "Afficher",
 		"reload": "Recharger",
@@ -294,13 +295,20 @@
 			"profileDefaults": "Réglages par défaut",
 			"copyUrl": "Copier le lien de la source",
 			"secretWarning": "Ce lien contient le token de votre serveur : ne le montrez jamais en stream et ne partagez pas les fichiers de scènes de votre logiciel de stream, qui peuvent le conserver en clair. S'il fuite, faites lancer /memeover rotate sur Discord par un gestionnaire du serveur, collez le nouveau code dans le Tableau de bord, puis copiez le nouveau lien.",
-			"copyAgain": "La page de la source ne suit pas les changements ultérieurs : copiez à nouveau le lien après avoir modifié vos réglages d'affichage ou de connexion, ou vos auteurs masqués.",
-			"noRemote": "Passer un meme ou vider la file n'agit que sur l'overlay du bureau. Pour couper un meme en stream, masquez la source ou coupez son son dans votre logiciel de stream.",
+			"connection": {
+				"waiting": "Aucune source connectée pour l'instant. Ajoutez le lien à votre logiciel de stream, ou actualisez la source si elle y est déjà.",
+				"connected": "Une source est connectée et son son peut être joué.",
+				"soundBlocked": "Une source est connectée, mais son son reste coupé tant que personne n'a cliqué dessus. S'il s'agit de votre logiciel de stream, cherchez une option pour autoriser l'audio ou interagir avec la source.",
+				"linkRefused": "Le bot a refusé le lien de cette source : copiez à nouveau le lien et collez-le dans votre logiciel de stream.",
+				"reconnecting": "Une source est chargée, mais pas encore connectée au bot."
+			},
+			"copyAgain": "La page de la source ne suit pas les changements ultérieurs d'affichage ou de connexion : copiez à nouveau le lien après les avoir faits, ou après avoir déplacé l'overlay sur un écran d'une autre taille.",
+			"liveControls": "Passer un meme, vider la file et masquer un auteur agissent aussi sur une source déjà chargée en une ou deux secondes, tant que MemeOver est lancé.",
 			"missingCredentials": "Connectez d'abord MemeOver à votre serveur Discord (onglet Tableau de bord) pour obtenir le lien de la source.",
 			"softwareTitle": "Dans votre logiciel de stream",
 			"softwareAdd": "Ajoutez une source navigateur et collez le lien comme URL.",
 			"softwareSize": "Réglez sa largeur et sa hauteur sur la résolution de votre scène (canevas), par exemple 1920 × 1080.",
-			"softwareKeepRunning": "Laissez la source active quand elle est masquée, sinon les memes envoyés entre-temps sont perdus.",
+			"softwareKeepRunning": "Laissez la source active quand elle est masquée, pour qu'elle n'ait jamais à se reconnecter. Les memes envoyés entre-temps passent quand même sans être vus, et leur son peut rester audible selon votre logiciel.",
 			"softwareAudio": "Si possible, laissez votre logiciel contrôler le son de la source pour qu'elle ait sa propre entrée dans le mixeur.",
 			"softwareMonitor": "Pour entendre vous-même les memes, activez le monitoring audio de cette source.",
 			"softwareRefresh": "Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver lancé, actualisez la source. Ensuite, elle reprend seule quand MemeOver redémarre."

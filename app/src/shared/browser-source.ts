@@ -1,4 +1,5 @@
 import { DISCORD_SNOWFLAKE_REGEX } from "@memeover/shared";
+import { BROWSER_SOURCE_HEARTBEAT_PREFIX, BROWSER_SOURCE_PATH } from "./browser-source-contract";
 import { normalizeMutedAuthors } from "./muted-authors";
 import {
 	pickOverlayProfileSettings,
@@ -19,11 +20,14 @@ import {
 // The local server only serves public assets. Credentials, the display profile and the
 // moderation filters travel in the fragment, which browsers never send in an HTTP request.
 
-export const BROWSER_SOURCE_PATH = "/browser-source.html";
 const MAX_TOKEN_LENGTH = 256;
 const MIN_CLIENT_ID_LENGTH = 8;
 const MAX_CLIENT_ID_LENGTH = 128;
 const MASK = "••••••";
+const MIN_REFERENCE_SIZE = 100;
+const MAX_REFERENCE_SIZE = 20000;
+const MIN_DISPLAY_SCALE = 0.25;
+const MAX_DISPLAY_SCALE = 4;
 
 export interface BrowserSourceConfig {
 	guildId: string;
@@ -35,6 +39,8 @@ export interface BrowserSourceConfig {
 	profile: Partial<OverlayProfileSettings> | null;
 	mutedAuthors: MutedAuthor[];
 	hideAnonymous: boolean;
+	/** Short side of the desktop overlay in CSS pixels, to keep its proportions; null when absent. */
+	referenceSize: number | null;
 }
 
 interface BrowserSourceUrlInput {
@@ -46,6 +52,7 @@ interface BrowserSourceUrlInput {
 	profile: Partial<Settings> | OverlayProfileSettings;
 	mutedAuthors: readonly MutedAuthor[];
 	hideAnonymous: boolean;
+	referenceSize: number | null;
 }
 
 export function isValidBrowserSourcePort(port: unknown): port is number {
@@ -76,6 +83,11 @@ function decodeBase64Url(value: string): string {
 	);
 }
 
+/** Ids only: the page filters on them, and names and avatars would only add length. */
+function filtersPayload(mutedAuthors: readonly MutedAuthor[], hideAnonymous: boolean) {
+	return { m: mutedAuthors.map((author) => author.id), a: hideAnonymous };
+}
+
 export function buildBrowserSourceUrl({
 	origin,
 	guildId,
@@ -85,11 +97,11 @@ export function buildBrowserSourceUrl({
 	profile,
 	mutedAuthors,
 	hideAnonymous,
+	referenceSize,
 }: BrowserSourceUrlInput) {
 	const encodedProfile = encodeBase64Url(JSON.stringify(pickOverlayProfileSettings(profile)));
-	// Ids only: the page filters on them, and names and avatars would only lengthen the link.
 	const encodedFilters = encodeBase64Url(
-		JSON.stringify({ m: mutedAuthors.map((author) => author.id), a: hideAnonymous }),
+		JSON.stringify(filtersPayload(mutedAuthors, hideAnonymous)),
 	);
 	const fragment = [
 		["g", guildId],
@@ -98,6 +110,7 @@ export function buildBrowserSourceUrl({
 		["c", clientId],
 		["p", encodedProfile],
 		["f", encodedFilters],
+		...(referenceSize === null ? [] : [["r", String(referenceSize)]]),
 	]
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join("&");
@@ -148,6 +161,11 @@ function parseClientId(value: string | null): string | null {
 		: null;
 }
 
+function parseReferenceSize(value: string | null): number | null {
+	const size = Number(value);
+	return value && size >= MIN_REFERENCE_SIZE && size <= MAX_REFERENCE_SIZE ? size : null;
+}
+
 /** Returns null when the link lacks valid credentials; unreadable optional parts are only ignored. */
 export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | null {
 	let params: URLSearchParams;
@@ -169,6 +187,102 @@ export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | 
 		clientId: parseClientId(params.get("c")),
 		profile: decodeProfile(params.get("p")),
 		...decodeFilters(params.get("f")),
+		referenceSize: parseReferenceSize(params.get("r")),
+	};
+}
+
+// ─── Live link between the app and loaded pages ───────────────────────────────
+// A loaded page's only contact with the app is its liveness check. These values travel over an
+// unauthenticated loopback server: author ids and counters only, never the link's credentials.
+
+export interface SourceControls {
+	/** Changes each time the streamer skips the current item. */
+	skip: number;
+	/** Changes each time the streamer clears the queue. */
+	clear: number;
+	mutedAuthors: MutedAuthor[];
+	hideAnonymous: boolean;
+}
+
+export function encodeSourceControls({
+	skip,
+	clear,
+	mutedAuthors,
+	hideAnonymous,
+}: SourceControls): string {
+	return encodeBase64Url(
+		JSON.stringify({ ...filtersPayload(mutedAuthors, hideAnonymous), s: skip, c: clear }),
+	);
+}
+
+/** Returns null for a missing or unreadable value: the page then keeps what it already applied. */
+export function decodeSourceControls(value: string | null): SourceControls | null {
+	if (!value) return null;
+	try {
+		const parsed: unknown = JSON.parse(decodeBase64Url(value));
+		if (!parsed || typeof parsed !== "object") return null;
+		const { s, c } = parsed as { s?: unknown; c?: unknown };
+		if (!Number.isSafeInteger(s) || !Number.isSafeInteger(c)) return null;
+		return { skip: s as number, clear: c as number, ...decodeFilters(value) };
+	} catch {
+		return null;
+	}
+}
+
+export function sourceHeartbeatQuery(soundBlocked: boolean, bot: string): string {
+	const sound = soundBlocked ? "blocked" : "on";
+	return `${BROWSER_SOURCE_HEARTBEAT_PREFIX}1&sound=${sound}&bot=${encodeURIComponent(bot)}`;
+}
+
+export interface SourceHeartbeat {
+	ageMs: number;
+	query: string;
+}
+
+export type SourceConnection =
+	| "waiting"
+	| "connected"
+	| "soundBlocked"
+	| "linkRefused"
+	| "reconnecting";
+
+/** Checks come every second: a few missed ones mean no page is running any more. */
+const HEARTBEAT_STALE_MS = 5000;
+
+/** What the Stream tab says about the page, from its latest report. */
+export function sourceConnection(heartbeat: SourceHeartbeat | null): SourceConnection {
+	if (!heartbeat || heartbeat.ageMs > HEARTBEAT_STALE_MS) return "waiting";
+	const report = new URLSearchParams(heartbeat.query);
+	const bot = report.get("bot");
+	if (bot === "revoked" || bot === "rejected") return "linkRefused";
+	if (bot !== "connected") return "reconnecting";
+	return report.get("sound") === "blocked" ? "soundBlocked" : "connected";
+}
+
+// ─── Proportions ──────────────────────────────────────────────────────────────
+// Media and reactions are sized in viewport units, so they already keep their share of the
+// screen. Text, borders and spacing are not: 28 px is a bigger share of a 125 % desktop
+// (1536 × 864) than of a 1920 × 1080 source. These two steps give them the same share.
+
+/** How much bigger than on the desktop the fixed sizes must be drawn in a source of this size. */
+export function browserSourceDisplayScale(
+	referenceSize: number | null,
+	width: number,
+	height: number,
+): number {
+	const shortSide = Math.min(width, height);
+	if (referenceSize === null || shortSide <= 0) return 1;
+	return Math.min(MAX_DISPLAY_SCALE, Math.max(MIN_DISPLAY_SCALE, shortSide / referenceSize));
+}
+
+/** The display settings given in pixels. Spacing follows the root font size instead. */
+export function scalePixelSettings(settings: Settings, scale: number): Settings {
+	return {
+		...settings,
+		textSize: settings.textSize * scale,
+		bgBorderWidth: settings.bgBorderWidth * scale,
+		bgBorderRadius: settings.bgBorderRadius * scale,
+		bgPadding: settings.bgPadding * scale,
 	};
 }
 

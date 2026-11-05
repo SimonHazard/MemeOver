@@ -13,10 +13,10 @@ import {
 } from "@memeover/ui/components/ui/select";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Eye, EyeOff, Info, MonitorPlay, RotateCcw, TriangleAlert } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/motion/copy-button";
@@ -25,15 +25,16 @@ import {
 	browserSourceNeedsRestart,
 	browserSourceOrigin,
 	buildBrowserSourceUrl,
-	isValidBrowserSourcePort,
 	maskBrowserSourceUrl,
 	resolveBrowserSourceProfile,
+	sourceConnection,
 } from "@/shared/browser-source";
 import { loadOverlayProfiles } from "@/shared/profiles";
-import { loadSettings, patchSettings } from "@/shared/settings";
-import { useAppStore } from "@/shared/store";
-import { refreshBrowserSourceStatus, startBrowserSource } from "@/shared/stream-controls";
+import { overlayReferenceSize, readSourceHeartbeat } from "@/shared/stream-controls";
 import type { Settings } from "@/shared/types";
+import { useBrowserSourceControls } from "./use-browser-source-controls";
+
+const HEARTBEAT_REFRESH_MS = 2000;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -68,6 +69,26 @@ function RestartNotice() {
 	);
 }
 
+/** What the page last reported, so problems invisible on stream show up here. */
+function SourceConnectionNotice() {
+	const { t } = useTranslation();
+	const { data: heartbeat = null } = useQuery({
+		queryKey: ["browserSourceHeartbeat"],
+		queryFn: readSourceHeartbeat,
+		staleTime: 0,
+		refetchInterval: HEARTBEAT_REFRESH_MS,
+	});
+	const connection = sourceConnection(heartbeat);
+	const healthy = connection === "connected" || connection === "waiting";
+	return (
+		<div role="status">
+			<Notice tone={healthy ? "muted" : "warn"}>
+				{t(`stream.browserSource.connection.${connection}`)}
+			</Notice>
+		</div>
+	);
+}
+
 function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runningPort: number }) {
 	const { t } = useTranslation();
 	const [revealed, setRevealed] = useState(false);
@@ -75,6 +96,11 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 	const { data: profiles = [] } = useQuery({
 		queryKey: ["overlayProfiles"],
 		queryFn: loadOverlayProfiles,
+	});
+	const { data: referenceSize = null } = useQuery({
+		queryKey: ["overlayReferenceSize", settings.overlayMonitor],
+		queryFn: () => overlayReferenceSize(settings.overlayMonitor),
+		staleTime: 0,
 	});
 
 	// `tauri dev` loads the frontend from Vite, not from embedded assets: in a debug
@@ -89,6 +115,7 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 		profile: resolveBrowserSourceProfile(choice, settings, profiles),
 		mutedAuthors: settings.mutedAuthors,
 		hideAnonymous: settings.hideAnonymous,
+		referenceSize,
 	});
 	const profileItems = [
 		{ value: "current", label: t("stream.browserSource.profileCurrent") },
@@ -164,7 +191,7 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 
 			<Notice tone="warn">{t("stream.browserSource.secretWarning")}</Notice>
 			<Notice>{t("stream.browserSource.copyAgain")}</Notice>
-			<Notice>{t("stream.browserSource.noRemote")}</Notice>
+			<Notice>{t("stream.browserSource.liveControls")}</Notice>
 		</div>
 	);
 }
@@ -192,73 +219,24 @@ function RecommendedSourceSettings() {
 
 export function BrowserSourceCard() {
 	const { t } = useTranslation();
-	const queryClient = useQueryClient();
-	// Always refetch on mount: the link must reflect a mute made in another tab just before.
-	const { data: settings } = useQuery({
-		queryKey: ["settings"],
-		queryFn: loadSettings,
-		staleTime: 0,
-	});
-	const runningPort = useAppStore((s) => s.browserSourceRunningPort);
-	const startError = useAppStore((s) => s.browserSourceError);
-	const [portDraft, setPortDraft] = useState<string | null>(null);
-	const [busy, setBusy] = useState(false);
-
-	useEffect(() => {
-		void refreshBrowserSourceStatus().catch((error) =>
-			console.warn("[Browser source] Could not read status:", error),
-		);
-	}, []);
+	const {
+		settings,
+		runningPort,
+		startError,
+		busy,
+		portText,
+		portValid,
+		setPortDraft,
+		toggle,
+		commitPort,
+	} = useBrowserSourceControls();
 
 	if (!settings) return null;
 
 	const enabled = settings.browserSourceEnabled;
-	const portText = portDraft ?? String(settings.browserSourcePort);
-	const draftPort = Number(portText);
-	const portValid = isValidBrowserSourcePort(draftPort);
 	const needsRestart = browserSourceNeedsRestart(runningPort, settings);
 	const serving = enabled && runningPort === settings.browserSourcePort;
 	const hasCredentials = Boolean(settings.guildId && settings.token);
-
-	async function save(patch: Partial<Settings>): Promise<Settings | null> {
-		try {
-			const updated = await patchSettings((s) => ({ ...s, ...patch }));
-			await queryClient.invalidateQueries({ queryKey: ["settings"] });
-			return updated;
-		} catch {
-			toast.error(t("toast.settingsError"));
-			return null;
-		}
-	}
-
-	async function toggle(next: boolean) {
-		setBusy(true);
-		try {
-			const updated = await save({ browserSourceEnabled: next });
-			if (updated && next) await startBrowserSource(updated.browserSourcePort);
-			else useAppStore.setState({ browserSourceError: null });
-		} finally {
-			setBusy(false);
-		}
-	}
-
-	async function commitPort() {
-		if (!portValid || draftPort === settings?.browserSourcePort) {
-			if (portValid) setPortDraft(null);
-			return;
-		}
-		setBusy(true);
-		try {
-			const updated = await save({ browserSourcePort: draftPort });
-			setPortDraft(null);
-			if (updated?.browserSourceEnabled && runningPort === null) {
-				await startBrowserSource(updated.browserSourcePort);
-			}
-		} finally {
-			setBusy(false);
-		}
-	}
-
 	const errorMessage =
 		startError === "port_in_use"
 			? t("stream.browserSource.portInUse", { port: settings.browserSourcePort })
@@ -334,7 +312,10 @@ export function BrowserSourceCard() {
 					<>
 						<Separator />
 						{hasCredentials ? (
-							<BrowserSourceLink settings={settings} runningPort={runningPort} />
+							<>
+								<SourceConnectionNotice />
+								<BrowserSourceLink settings={settings} runningPort={runningPort} />
+							</>
 						) : (
 							<Notice>{t("stream.browserSource.missingCredentials")}</Notice>
 						)}

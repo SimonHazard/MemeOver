@@ -8,9 +8,9 @@ import { useMediaDisplay } from "./hooks/useMediaDisplay";
 import { useOverlayWs } from "./hooks/useOverlayWs";
 
 // ─── Shared stage ─────────────────────────────────────────────────────────────
-// Rendered by the desktop overlay and by the browser source page. Nothing on
-// this import path may call a Tauri API at import time: the browser source page runs in a
-// plain browser. Window events go through `emitIfTauri`.
+// Rendered by the desktop overlay and by the browser source page, which runs in a plain
+// browser: nothing here may reach a Tauri API, and window events go through `emitIfTauri`.
+// `browser-source.spec.ts` enforces this, and `overlay-parity.spec.ts` compares the rendering.
 
 interface OverlayStageProps {
 	/** Mutes media sound on this surface only. */

@@ -62,8 +62,9 @@ export function TextDisplay({ text, width, textSize, textColor }: TextDisplayPro
 
 		function recalculate() {
 			if (!container || !measure) return;
-			// Subtract px-4 (1rem = 16px) on each side
-			const containerWidth = container.clientWidth - 32;
+			// Subtract px-4 (1rem) on each side; the browser source scales the root font size.
+			const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+			const containerWidth = container.clientWidth - 2 * rootFontSize;
 			const naturalWidth = measure.scrollWidth;
 
 			if (naturalWidth <= containerWidth || containerWidth <= 0) {

@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
 const host = process.env.TAURI_DEV_HOST;
-// Mirror the native localhost plugin's session header for dev and browser tests.
+// Mirror the native session header for dev and browser tests; every source test fails if it drifts
+// from src/shared/browser-source-contract.ts (not imported: outside the node tsconfig project).
 const sourceSessionHeaders = { "X-MemeOver-Source-Session": randomUUID() };
 
 // https://vite.dev/config/

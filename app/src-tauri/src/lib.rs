@@ -676,6 +676,8 @@ pub fn run() {
             set_tray_overlay_muted,
             browser_source::start_browser_source,
             browser_source::browser_source_status,
+            browser_source::set_browser_source_controls,
+            browser_source::browser_source_heartbeat,
             toggle_overlay_preview_mode,
             move_overlay_to_monitor,
             server_creator::server_creator_status,

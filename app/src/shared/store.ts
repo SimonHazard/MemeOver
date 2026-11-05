@@ -10,8 +10,8 @@ import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors"
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
-import type { BrowserSourceStartError } from "./stream-controls";
 import type {
+	BrowserSourceStartError,
 	DisplayQueueItem,
 	FloatingReaction,
 	FloatingReactionAnimation,

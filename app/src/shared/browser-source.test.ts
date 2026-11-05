@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+	browserSourceDisplayScale,
 	browserSourceNeedsRestart,
 	browserSourceOrigin,
 	buildBrowserSourceUrl,
@@ -7,6 +8,7 @@ import {
 	maskBrowserSourceUrl,
 	parseBrowserSourceFragment,
 	resolveBrowserSourceProfile,
+	scalePixelSettings,
 } from "./browser-source";
 import { pickOverlayProfileSettings } from "./profiles";
 import { DEFAULT_SETTINGS, type OverlayProfile } from "./types";
@@ -27,6 +29,7 @@ function build(profile = DEFAULT_SETTINGS) {
 		profile,
 		mutedAuthors: [],
 		hideAnonymous: false,
+		referenceSize: null,
 	});
 }
 
@@ -55,6 +58,7 @@ describe("browser source URL", () => {
 			profile: pickOverlayProfileSettings(profile),
 			mutedAuthors: [],
 			hideAnonymous: false,
+			referenceSize: null,
 		});
 	});
 
@@ -68,6 +72,7 @@ describe("browser source URL", () => {
 			profile: DEFAULT_SETTINGS,
 			mutedAuthors: [{ id: "111", username: "Troll", avatarUrl: "https://a.test/x", mutedAt: NOW }],
 			hideAnonymous: true,
+			referenceSize: null,
 		});
 		const parsed = parseBrowserSourceFragment(hashOf(url));
 		expect(parsed?.mutedAuthors.map((author) => author.id)).toEqual(["111"]);
@@ -93,6 +98,48 @@ describe("browser source URL", () => {
 		for (const c of ["short", "x".repeat(129), null]) {
 			expect(parseBrowserSourceFragment(fragmentWith({ c }))?.clientId).toBeNull();
 		}
+	});
+
+	test("reads the desktop's size and ignores an unusable one", () => {
+		expect(parseBrowserSourceFragment(fragmentWith({ r: "864" }))?.referenceSize).toBe(864);
+		for (const r of ["0", "-864", "99", "20001", "abc", "", null]) {
+			expect(parseBrowserSourceFragment(fragmentWith({ r }))?.referenceSize).toBeNull();
+		}
+	});
+
+	test("draws fixed sizes bigger only when the source is bigger than the desktop", () => {
+		expect(browserSourceDisplayScale(864, 1920, 1080)).toBe(1.25);
+		expect(browserSourceDisplayScale(1440, 1920, 1080)).toBe(0.75);
+		expect(browserSourceDisplayScale(1080, 1920, 1080)).toBe(1);
+		// Portrait sources compare their short side too.
+		expect(browserSourceDisplayScale(864, 1080, 1920)).toBe(1.25);
+		// An older link, or a source that has no size yet, keeps the sizes as they are.
+		expect(browserSourceDisplayScale(null, 1920, 1080)).toBe(1);
+		expect(browserSourceDisplayScale(864, 0, 0)).toBe(1);
+		// A tiny preview tab stays usable.
+		expect(browserSourceDisplayScale(4000, 100, 100)).toBe(0.25);
+	});
+
+	test("scales only the settings given in pixels", () => {
+		const scaled = scalePixelSettings(
+			{
+				...DEFAULT_SETTINGS,
+				textSize: 28,
+				bgBorderWidth: 4,
+				bgBorderRadius: 12,
+				bgPadding: 8,
+			},
+			1.25,
+		);
+		expect(scaled).toMatchObject({
+			textSize: 35,
+			bgBorderWidth: 5,
+			bgBorderRadius: 15,
+			bgPadding: 10,
+			mediaSize: DEFAULT_SETTINGS.mediaSize,
+			floatingReactionSize: DEFAULT_SETTINGS.floatingReactionSize,
+			positionOffsetX: DEFAULT_SETTINGS.positionOffsetX,
+		});
 	});
 
 	test("serves the page from loopback and carries the token only after #", () => {

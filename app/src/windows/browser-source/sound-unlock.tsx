@@ -2,7 +2,7 @@ import { NB_BTN_BASE } from "@memeover/ui/lib/nb-classes";
 import { Volume2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-/** Regular browsers block autoplay with sound until a gesture. */
+/** Preview mode only: regular browsers block autoplay with sound until a gesture. */
 export function SoundUnlock({ onUnlock }: { onUnlock: () => void }) {
 	const { t } = useTranslation();
 	return (

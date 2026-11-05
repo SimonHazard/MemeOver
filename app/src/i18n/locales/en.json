@@ -36,6 +36,7 @@
 	"overlay": {
 		"userConnected_one": "A user connected",
 		"userConnected_other": "{{count}} users connected",
+		"browserSourceStartFailed": "The browser source could not start: see the Stream tab.",
 		"controls": "Overlay controls",
 		"show": "Show",
 		"reload": "Reload",
@@ -294,13 +295,20 @@
 			"profileDefaults": "Default settings",
 			"copyUrl": "Copy source link",
 			"secretWarning": "This link contains your server's token: never show it on stream and do not share your streaming software's scene files, which may store it in clear text. If it leaks, have a server manager run /memeover rotate on Discord, paste the new code in the Dashboard, then copy the new link.",
-			"copyAgain": "The source page does not follow later changes: copy the link again after changing your display or connection settings, or your muted authors.",
-			"noRemote": "Skipping a meme or clearing the queue only affects the desktop overlay. To cut a meme on stream, hide or mute the source in your streaming software.",
+			"connection": {
+				"waiting": "No source connected yet. Add the link to your streaming software, or refresh the source if it is already there.",
+				"connected": "A source is connected and its sound can play.",
+				"soundBlocked": "A source is connected, but its sound stays off until someone clicks on it. If this is your streaming software, look for an option to allow audio or to interact with the source.",
+				"linkRefused": "The bot refused this source's link: copy the link again and paste it in your streaming software.",
+				"reconnecting": "A source is loaded but not connected to the bot yet."
+			},
+			"copyAgain": "The source page does not follow later display or connection changes: copy the link again after making them, or after moving the overlay to a screen of another size.",
+			"liveControls": "Skipping a meme, clearing the queue and muting an author also reach a loaded source within a couple of seconds, as long as MemeOver is running.",
 			"missingCredentials": "Connect MemeOver to your Discord server first (Dashboard tab) to get the source link.",
 			"softwareTitle": "In your streaming software",
 			"softwareAdd": "Add a browser source and paste the link as its URL.",
 			"softwareSize": "Set its width and height to your scene's resolution (canvas), e.g. 1920 × 1080.",
-			"softwareKeepRunning": "Keep the source running while it is hidden, otherwise memes sent in the meantime are lost.",
+			"softwareKeepRunning": "Keep the source running while it is hidden so it never has to reconnect. Memes sent meanwhile still play out of sight, and their sound may stay audible depending on your software.",
 			"softwareAudio": "If available, let your software control the source's audio so it gets its own mixer entry.",
 			"softwareMonitor": "To hear memes yourself, enable audio monitoring for that source.",
 			"softwareRefresh": "If your software opens before MemeOver, the page cannot load: once MemeOver is running, refresh the source. After that, it resumes on its own when MemeOver restarts."

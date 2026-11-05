@@ -1,5 +1,4 @@
 import type React from "react";
-import { useEffect, useRef } from "react";
 import type { DisplayQueueItem, Settings, TextPosition } from "@/shared/types";
 import { isVideoBackedGif } from "../media/media-kind";
 import { AudioEqualizer } from "./audio-equalizer";
@@ -70,6 +69,24 @@ export function mediaMaxHeight({
 	if (hasBadge) reservedPx += STACK_GAP_PX;
 	const badge = hasBadge ? ` - ${AUTHOR_BADGE_HEIGHT}` : "";
 	return `min(${boxSize}, calc(100vh - ${VIEWPORT_MARGIN}${badge} - ${reservedPx}px))`;
+}
+
+/** Set by the browser source only, to keep the desktop's proportions at another size. */
+export const NATURAL_SIZE_ZOOM_VAR = "--source-natural-size-zoom";
+const NATURAL_SIZE_ZOOM = `var(${NATURAL_SIZE_ZOOM_VAR}, 1)`;
+
+/**
+ * Lets a media shrink to fit the limits. One smaller than them keeps its natural size, in pixels,
+ * which only `zoom` can scale. `zoom` multiplies the limits as well, hence the division.
+ */
+function fitBox(maxWidth: string, maxHeight: string): React.CSSProperties {
+	return {
+		zoom: NATURAL_SIZE_ZOOM,
+		maxWidth: `calc(${maxWidth} / ${NATURAL_SIZE_ZOOM})`,
+		maxHeight: `calc(${maxHeight} / ${NATURAL_SIZE_ZOOM})`,
+		width: "auto",
+		height: "auto",
+	};
 }
 
 // ─── Caption variants ─────────────────────────────────────────────────────────
@@ -143,15 +160,6 @@ export function MediaDisplay({
 }: MediaDisplayProps) {
 	const videoBackedGif = item.type === "MEDIA" && isVideoBackedGif(item.media_type, item.media_url);
 	const soundMuted = muted || videoBackedGif || settings.volume === 0;
-	// React does not reliably update `muted` after mount: assign the property so a
-	// toggle during playback cuts or restores the sound immediately.
-	const playerRef = useRef<HTMLMediaElement | null>(null);
-	const attachPlayer = (element: HTMLMediaElement | null) => {
-		playerRef.current = element;
-	};
-	useEffect(() => {
-		if (playerRef.current) playerRef.current.muted = soundMuted;
-	}, [soundMuted]);
 
 	// Fit-box model: the media fits a `mediaSize × mediaSize` vmin square,
 	// preserving its aspect ratio. vmin (vs vw) keeps the visual size consistent
@@ -231,9 +239,9 @@ export function MediaDisplay({
 	const hasCaption = item.media_type !== "audio" && caption.length > 0;
 	const useOverlay = hasCaption && isOverlayMode(textPosition);
 	const useInlineCaption = hasCaption && !useOverlay;
-	const fitBoxStyle: React.CSSProperties = {
-		maxWidth: boxSize,
-		maxHeight: mediaMaxHeight({
+	const fitBoxStyle = fitBox(
+		boxSize,
+		mediaMaxHeight({
 			boxSize,
 			hasBadge,
 			bgEnabled,
@@ -241,15 +249,12 @@ export function MediaDisplay({
 			bgBorderWidth,
 			inlineCaptionSize: useInlineCaption ? textSize : null,
 		}),
-		width: "auto",
-		height: "auto",
-	};
+	);
 
 	const mediaNode = (() => {
 		if (item.media_type === "video" || videoBackedGif) {
 			return (
 				<video
-					ref={attachPlayer}
 					src={item.media_url}
 					autoPlay
 					loop={videoBackedGif}
@@ -292,11 +297,13 @@ export function MediaDisplay({
 				>
 					<AudioEqualizer />
 					<audio
-						ref={attachPlayer}
 						src={item.media_url}
 						autoPlay
 						muted={soundMuted}
 						className="hidden"
+						onLoadedMetadata={(e) => {
+							(e.currentTarget as HTMLAudioElement).volume = settings.volume / 100;
+						}}
 						onPlay={startTimer}
 						onEnded={onVideoEnd}
 						onError={onMediaError}
@@ -320,13 +327,7 @@ export function MediaDisplay({
 				alt=""
 				onLoad={startTimer}
 				onError={onMediaError}
-				style={{
-					maxWidth: stickerBox,
-					maxHeight: stickerBox,
-					width: "auto",
-					height: "auto",
-					opacity,
-				}}
+				style={{ ...fitBox(stickerBox, stickerBox), opacity }}
 				className="block"
 				draggable={false}
 			/>

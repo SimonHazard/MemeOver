@@ -1,7 +1,8 @@
-import { lazy, type ReactNode, Suspense } from "react";
-import { useTauriEvent } from "@/hooks/useTauriEvent";
+import { lazy, type ReactNode, Suspense, useEffect } from "react";
+import { useTauriEvent, useTauriEventVersion } from "@/hooks/useTauriEvent";
 import { useLanguageSync } from "@/i18n/use-language-sync";
 import { useAppStore } from "@/shared/store";
+import { showConnectionNotification } from "./components/connection-notifications";
 import { logDisplayedItem } from "./hooks/history-logger";
 import { OverlayStage } from "./OverlayStage";
 
@@ -24,6 +25,14 @@ const DevMediaWrapper = OverlayTestRuntime
 export function OverlayApp() {
 	useLanguageSync();
 	const muted = useAppStore((s) => s.settings.desktopOverlayMuted);
+
+	// The settings window is often hidden: this is where a streamer can see the source is down.
+	const sourceStartFailures = useTauriEventVersion("browser-source-start-failed");
+	useEffect(() => {
+		if (sourceStartFailures > 0) {
+			showConnectionNotification(1, "overlay.browserSourceStartFailed");
+		}
+	}, [sourceStartFailures]);
 
 	// Dev-only: simulated production background
 	const devPreview = useTauriEvent<boolean>("overlay-dev-preview") ?? false;

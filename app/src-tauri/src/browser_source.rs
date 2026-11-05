@@ -5,17 +5,28 @@
 //! user enables the source, and has no stop mechanism: disabling it or changing
 //! the port takes effect after a restart. The server only serves public assets;
 //! credentials stay in the URL fragment, which browsers never send.
+//!
+//! The page checks the server every second with a HEAD request. That check is also the only link
+//! between a loaded page and this app, in both directions: the response carries the live skip,
+//! clear and moderation state, and the request's query reports how the page is doing.
 
+use serde::Serialize;
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use tauri::{AppHandle, Runtime, State};
+use tauri::{AppHandle, Manager, Runtime, State};
 
 /// Loopback only: never reachable from the LAN.
 const LOOPBACK: &str = "127.0.0.1";
 const MIN_PORT: u16 = 1024;
+/// All four also live in `src/shared/browser-source-contract.ts`; a test keeps them equal.
+const PAGE_PATH: &str = "/browser-source.html";
 const SESSION_HEADER: &str = "X-MemeOver-Source-Session";
+const CONTROLS_HEADER: &str = "X-MemeOver-Source-Controls";
+const HEARTBEAT_PREFIX: &str = "source=";
+/// A page's report is three short fields: anything longer did not come from it.
+const MAX_HEARTBEAT_LENGTH: usize = 128;
 /// Bounds one connection or read. Windows can also spend this long on a closed port, so
 /// running out of time proves nothing about the server.
 const PROBE_TIMEOUT: Duration = Duration::from_secs(1);
@@ -34,9 +45,59 @@ struct RunningServer {
     session: String,
 }
 
+/// Latest report from a loaded page. Local programs can reach the server too, so the settings
+/// page only uses it to choose among fixed messages.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceHeartbeat {
+    age_ms: u64,
+    query: String,
+}
+
+/// Shared with the server thread, which outlives any single registration of the plugin.
+#[derive(Default)]
+struct PageLink {
+    /// Opaque to Rust: encoded and decoded by `src/shared/browser-source.ts`.
+    controls: Mutex<String>,
+    heartbeat: Mutex<Option<(Instant, String)>>,
+}
+
+impl PageLink {
+    fn on_request(
+        &self,
+        session: &str,
+        request: &tauri_plugin_localhost::Request,
+        response: &mut tauri_plugin_localhost::Response,
+    ) {
+        response.add_header(SESSION_HEADER, session);
+        if let Ok(controls) = self.controls.lock() {
+            if !controls.is_empty() {
+                response.add_header(CONTROLS_HEADER, controls.as_str());
+            }
+        }
+        let report = request.url().split_once('?').map(|(_, query)| query);
+        if let Some(query) = report.filter(|query| {
+            query.starts_with(HEARTBEAT_PREFIX) && query.len() <= MAX_HEARTBEAT_LENGTH
+        }) {
+            if let Ok(mut heartbeat) = self.heartbeat.lock() {
+                *heartbeat = Some((Instant::now(), query.to_owned()));
+            }
+        }
+    }
+
+    fn heartbeat(&self) -> Option<SourceHeartbeat> {
+        let heartbeat = self.heartbeat.lock().ok()?;
+        heartbeat.as_ref().map(|(at, query)| SourceHeartbeat {
+            age_ms: u64::try_from(at.elapsed().as_millis()).unwrap_or(u64::MAX),
+            query: query.clone(),
+        })
+    }
+}
+
 #[derive(Default)]
 pub struct BrowserSourceState {
     running: Mutex<Option<RunningServer>>,
+    page: Arc<PageLink>,
 }
 
 /// Why the source could not start, as a stable code the settings page translates.
@@ -70,7 +131,7 @@ fn probe_session(port: u16, session: &str) -> ProbeAnswer {
         || stream.set_write_timeout(Some(PROBE_TIMEOUT)).is_err()
         || write!(
             stream,
-            "HEAD /browser-source.html HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n"
+            "HEAD {PAGE_PATH} HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n"
         )
         .is_err()
     {
@@ -150,7 +211,8 @@ pub fn start<R: Runtime>(
             .host(LOOPBACK)
             .on_request({
                 let session = session.clone();
-                move |_, response| response.add_header(SESSION_HEADER, &session)
+                let page = Arc::clone(&state.page);
+                move |request, response| page.on_request(&session, request, response)
             })
             .build(),
     )
@@ -170,22 +232,43 @@ pub fn start<R: Runtime>(
     Ok(port)
 }
 
-/// Start serving the browser source page. Idempotent for the running port. Async so the
-/// liveness checks never block the main thread.
-#[tauri::command(async)]
-pub fn start_browser_source(
-    app: AppHandle,
-    state: State<'_, BrowserSourceState>,
-    port: u16,
-) -> Result<u16, String> {
-    start(&app, &state, port).map_err(|e| e.code())
+/// Start serving the browser source page. Idempotent for the running port. The checks can wait
+/// for seconds on sockets, a lock and sleeps: a blocking thread keeps them off the async runtime.
+#[tauri::command]
+pub async fn start_browser_source(app: AppHandle, port: u16) -> Result<u16, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        start(&app, &app.state::<BrowserSourceState>(), port).map_err(|e| e.code())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Port the browser source page is really served on in this session, if any.
-#[tauri::command(async)]
-pub fn browser_source_status(state: State<'_, BrowserSourceState>) -> Option<u16> {
-    let mut running = state.running.lock().ok()?;
-    live_port(&mut running)
+#[tauri::command]
+pub async fn browser_source_status(app: AppHandle) -> Result<Option<u16>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<BrowserSourceState>();
+        let mut running = state.running.lock().map_err(|e| e.to_string())?;
+        Ok(live_port(&mut running))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Sets what loaded pages read on their next check. Stored even with no server running.
+#[tauri::command]
+pub fn set_browser_source_controls(
+    state: State<'_, BrowserSourceState>,
+    value: String,
+) -> Result<(), String> {
+    *state.page.controls.lock().map_err(|e| e.to_string())? = value;
+    Ok(())
+}
+
+/// The latest report from a loaded page, if one has ever checked in during this session.
+#[tauri::command]
+pub fn browser_source_heartbeat(state: State<'_, BrowserSourceState>) -> Option<SourceHeartbeat> {
+    state.page.heartbeat()
 }
 
 #[cfg(test)]
@@ -201,7 +284,7 @@ mod tests {
 
     impl<R: Runtime> Assets<R> for SourceAssets {
         fn get(&self, key: &AssetKey) -> Option<Cow<'_, [u8]>> {
-            (key.as_ref() == "/browser-source.html").then_some(Cow::Borrowed(SOURCE_HTML))
+            (key.as_ref() == PAGE_PATH).then_some(Cow::Borrowed(SOURCE_HTML))
         }
         fn iter(&self) -> Box<AssetsIter<'_>> {
             Box::new(std::iter::empty())
@@ -256,6 +339,116 @@ mod tests {
     }
 
     #[test]
+    fn the_page_contract_matches_the_frontend() {
+        let contract = include_str!("../../src/shared/browser-source-contract.ts");
+        assert!(contract.contains(&format!("\"{PAGE_PATH}\"")));
+        assert!(contract.contains(&format!("\"{SESSION_HEADER}\"")));
+        assert!(contract.contains(&format!("\"{CONTROLS_HEADER}\"")));
+        assert!(contract.contains(&format!("\"{HEARTBEAT_PREFIX}\"")));
+    }
+
+    #[test]
+    fn start_errors_are_the_codes_the_frontend_translates() {
+        let frontend = include_str!("../../src/shared/stream-controls.ts");
+        for error in [
+            StartError::RestartRequired,
+            StartError::InvalidPort,
+            StartError::PortInUse,
+        ] {
+            assert!(
+                frontend.contains(&format!("\"{}\"", error.code())),
+                "{error:?}"
+            );
+        }
+        assert_eq!(StartError::Plugin("boom".into()).code(), "boom");
+    }
+
+    #[test]
+    fn a_heartbeat_reaches_the_frontend_in_camel_case() {
+        let heartbeat = SourceHeartbeat {
+            age_ms: 12,
+            query: "source=1".into(),
+        };
+        assert_eq!(
+            serde_json::to_value(heartbeat).unwrap(),
+            serde_json::json!({ "ageMs": 12, "query": "source=1" })
+        );
+    }
+
+    #[test]
+    fn nothing_is_reported_or_published_before_the_first_values() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        let response = request(port, PAGE_PATH, "HEAD");
+        assert!(!response.contains(CONTROLS_HEADER), "{response}");
+        assert_eq!(state.page.heartbeat(), None);
+    }
+
+    #[test]
+    fn a_reregistered_server_keeps_the_published_controls() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        *state.page.controls.lock().unwrap() = "kept".into();
+        *state.running.lock().unwrap() = Some(RunningServer {
+            port: free_port(),
+            session: "ended".into(),
+        });
+        let port = free_port();
+        assert_eq!(start(app.handle(), &state, port), Ok(port));
+        let response = request(port, PAGE_PATH, "HEAD");
+        assert!(
+            response.contains(&format!("{CONTROLS_HEADER}: kept")),
+            "{response}"
+        );
+    }
+
+    #[test]
+    fn an_unknown_path_is_answered_without_following_the_query() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        // The page's own path resolves whatever the query says: reports never change the asset.
+        let response = get(
+            port,
+            &format!("{PAGE_PATH}?source=1&sound=on&bot=connected"),
+        );
+        assert!(response.contains("MemeOver Browser Source"), "{response}");
+    }
+
+    #[test]
+    fn checks_read_the_live_controls_and_report_how_the_page_is_doing() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        *state.page.controls.lock().unwrap() = "before".into();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        let controls = format!("{CONTROLS_HEADER}: ");
+
+        // The app's own probes and page loads say nothing about a page.
+        assert!(get(port, PAGE_PATH).contains(&format!("{controls}before")));
+        assert_eq!(state.page.heartbeat(), None);
+
+        // The plugin answers from the store, so a change applies without a new registration.
+        *state.page.controls.lock().unwrap() = "after".into();
+        let report = "source=1&sound=on&bot=connected";
+        let check = request(port, &format!("{PAGE_PATH}?{report}"), "HEAD");
+        assert!(check.starts_with("HTTP/1.1 200"), "{check}");
+        assert!(check.contains(&format!("{controls}after")), "{check}");
+        let heartbeat = state.page.heartbeat().expect("the page checked in");
+        assert_eq!(heartbeat.query, report);
+        assert!(heartbeat.age_ms < 5000);
+
+        // Oversized or unrelated queries do not replace the last report.
+        let oversized = format!("{HEARTBEAT_PREFIX}{}", "x".repeat(MAX_HEARTBEAT_LENGTH));
+        request(port, &format!("{PAGE_PATH}?{oversized}"), "HEAD");
+        request(port, &format!("{PAGE_PATH}?other=1"), "HEAD");
+        assert_eq!(state.page.heartbeat().unwrap().query, report);
+    }
+
+    #[test]
     fn serves_the_source_page_on_loopback_once_enabled() {
         let app = app();
         let state = BrowserSourceState::default();
@@ -266,13 +459,13 @@ mod tests {
         );
 
         assert_eq!(start(app.handle(), &state, port), Ok(port));
-        let response = get(port, "/browser-source.html");
+        let response = get(port, PAGE_PATH);
         assert!(response.starts_with("HTTP/1.1 200"), "{response}");
         assert!(response.contains("Cache-Control: no-cache"), "{response}");
         assert!(response.contains("MemeOver Browser Source"), "{response}");
         let session = session_header(&response);
         assert!(!session.is_empty());
-        let head = request(port, "/browser-source.html", "HEAD");
+        let head = request(port, PAGE_PATH, "HEAD");
         assert!(head.starts_with("HTTP/1.1 200"), "{head}");
         assert_eq!(session_header(&head), session);
         assert!(
@@ -282,7 +475,7 @@ mod tests {
 
         // Idempotent for the same port, restart required for another one.
         assert_eq!(start(app.handle(), &state, port), Ok(port));
-        assert_eq!(session_header(&get(port, "/browser-source.html")), session);
+        assert_eq!(session_header(&get(port, PAGE_PATH)), session);
         assert_eq!(
             start(app.handle(), &state, free_port()),
             Err(StartError::RestartRequired)
@@ -294,7 +487,7 @@ mod tests {
         let first = app();
         let first_port = free_port();
         start(first.handle(), &BrowserSourceState::default(), first_port).unwrap();
-        let first_response = get(first_port, "/browser-source.html");
+        let first_response = get(first_port, PAGE_PATH);
 
         let restarted = app();
         let second_port = free_port();
@@ -304,7 +497,7 @@ mod tests {
             second_port,
         )
         .unwrap();
-        let second_response = get(second_port, "/browser-source.html");
+        let second_response = get(second_port, PAGE_PATH);
         assert_ne!(
             session_header(&first_response),
             session_header(&second_response)
@@ -345,7 +538,7 @@ mod tests {
         });
         // A dead server on another port does not require a restart.
         assert_eq!(start(app.handle(), &state, port), Ok(port));
-        let response = get(port, "/browser-source.html");
+        let response = get(port, PAGE_PATH);
         assert!(response.starts_with("HTTP/1.1 200"), "{response}");
     }
 
@@ -360,7 +553,7 @@ mod tests {
             start(app.handle(), &BrowserSourceState::default(), second),
             Ok(second)
         );
-        let response = get(second, "/browser-source.html");
+        let response = get(second, PAGE_PATH);
         assert!(response.starts_with("HTTP/1.1 200"), "{response}");
     }
 

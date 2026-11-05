@@ -2,7 +2,7 @@ import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { Link2Off } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-/** Shown only where sound needs a gesture; a streaming source renders nothing on stream. */
+/** Preview mode only: a streaming source renders nothing on stream. */
 export function IncompleteLink() {
 	const { t } = useTranslation();
 	return (
