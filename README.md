@@ -18,6 +18,47 @@ that works without streaming.
 
 ---
 
+## MemeOver at a glance
+
+Connect the app with the setup code from `/memeover setup`, then share memes with
+your connected friends. Streaming is optional.
+
+```mermaid
+flowchart TD
+    discord["Discord server<br/>Images · GIFs · videos · audio<br/>Stickers · text · reactions"]
+    bot["MemeOver bot — hosted or self-hosted<br/>Watched channels · anonymous sends<br/>Server-wide pause / resume"]
+
+    discord -->|Messages and reactions| bot
+
+    subgraph computer["Each friend's computer — Windows / macOS / Linux"]
+        app["MemeOver desktop app<br/>Display settings and saved profiles<br/>Author filters · skip · clear queue"]
+        desktop["Desktop overlay<br/>Memes over your desktop<br/>Independent desktop mute"]
+        history["Local history and replay<br/>Desktop playback only"]
+        server["Optional local web server<br/>127.0.0.1:4466 by default"]
+        source["Browser source in streaming software<br/>Transparent memes and source audio<br/>Own connection and playback queue"]
+
+        app -.->|Customize and control| desktop
+        desktop -->|Displayed media| history
+        app -->|Enable in the Stream tab| server
+        server -->|Copy the source link into your scene| source
+        app -.->|Live skip, clear and filters| source
+    end
+
+    bot -->|Live events over WebSocket| desktop
+    bot -->|Live events over a separate WebSocket| source
+    source --> viewers["Stream viewers<br/>Memes layered over the scene"]
+```
+
+- **Desktop and stream** (default): both players can show memes; their playback is independent.
+- **Stream only**: desktop media, text, reactions and sound are suppressed; history recording
+  and Replay are disabled. There is no desktop fallback if the browser source is unavailable.
+- The browser source is **off by default**. Keep MemeOver running on the same computer as
+  your streaming software. Disabling the source restores desktop playback immediately.
+- Display settings are copied into the source link; copy it again after changing them.
+  Skip, clear and moderation filters reach an already loaded source live.
+
+---
+
 <details>
 <summary><b>Version française</b></summary>
 
