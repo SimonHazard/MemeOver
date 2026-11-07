@@ -18,6 +18,47 @@ that works without streaming.
 
 ---
 
+## MemeOver at a glance
+
+Connect the app with the setup code from `/memeover setup`, then share memes with
+your connected friends. Streaming is optional.
+
+```mermaid
+flowchart TD
+    discord["Discord server<br/>Images · GIFs · videos · audio<br/>Stickers · text · reactions"]
+    bot["MemeOver bot — hosted or self-hosted<br/>Watched channels · anonymous sends<br/>Server-wide pause / resume"]
+
+    discord -->|Messages and reactions| bot
+
+    subgraph computer["Each friend's computer — Windows / macOS / Linux"]
+        app["MemeOver desktop app<br/>Display settings and saved profiles<br/>Author filters · skip · clear queue"]
+        desktop["Desktop overlay<br/>Memes over your desktop<br/>Independent desktop mute"]
+        history["Local history and replay<br/>Desktop playback only"]
+        server["Optional local web server<br/>127.0.0.1:4466 by default"]
+        source["Browser source in streaming software<br/>Transparent memes and source audio<br/>Own connection and playback queue"]
+
+        app -.->|Customize and control| desktop
+        desktop -->|Displayed media| history
+        app -->|Enable in the Stream tab| server
+        server -->|Copy the source link into your scene| source
+        app -.->|Live skip, clear and filters| source
+    end
+
+    bot -->|Live events over WebSocket| desktop
+    bot -->|Live events over a separate WebSocket| source
+    source --> viewers["Stream viewers<br/>Memes layered over the scene"]
+```
+
+- **Desktop and stream** (default): both players can show memes; their playback is independent.
+- **Stream only**: desktop media, text, reactions and sound are suppressed; history recording
+  and Replay are disabled. There is no desktop fallback if the browser source is unavailable.
+- The browser source is **off by default**. Keep MemeOver running on the same computer as
+  your streaming software. Disabling the source restores desktop playback immediately.
+- Display settings are copied into the source link; copy it again after changing them.
+  Skip, clear and moderation filters reach an already loaded source live.
+
+---
+
 <details>
 <summary><b>Version française</b></summary>
 
@@ -54,6 +95,50 @@ dans l'app et fournissez votre propre URL WebSocket.
 
 L'onglet **Stream** de l'app présente les problèmes connus à l'image et au son, avec quelques
 pistes. Il est en bêta : il peut changer ou disparaître à tout moment.
+
+### Source navigateur
+
+Désactivée par défaut. Une fois activée dans l'onglet **Stream**, MemeOver sert une page
+sur `127.0.0.1` uniquement (port 4466 par défaut, modifiable). Copiez le lien et ajoutez une
+source navigateur à la résolution de votre stream dans votre logiciel de stream, en la
+laissant active quand elle est masquée : les memes s'affichent au-dessus de n'importe quelle
+scène, capture de jeu comprise. Selon le logiciel, leur son peut avoir sa propre entrée dans
+le mixeur.
+
+- Le lien contient le token du serveur, après le `#` (jamais envoyé au serveur local) :
+  ne le montrez pas en stream et ne partagez pas les fichiers de scènes de votre logiciel, qui
+  peuvent le conserver en clair. S'il fuite, faites lancer `/memeover rotate` par un gestionnaire
+  du serveur, collez le nouveau code dans le Tableau de bord, puis copiez le nouveau lien.
+- La page ne suit pas les changements d'affichage ni de connexion : copiez à nouveau le lien.
+- Passer un meme, vider la file, masquer un auteur et le choix sur les memes anonymes agissent
+  aussi sur une source déjà chargée en une ou deux secondes, tant que MemeOver est lancé.
+  « Passer » reste disponible lorsqu'une source est chargée, même si l'overlay du bureau est
+  fermé ou vide. Les passages successifs et les vidages de file gardent leur ordre ; si une
+  source suspendue manque plus de 64 actions, elle abandonne les memes en cours et en attente.
+- L'onglet **Stream** indique si une source est connectée, si son lien est refusé ou si son son
+  est bloqué. Si le serveur local ne peut pas démarrer, MemeOver réessaie et le signale sur
+  l'overlay du bureau.
+- Une source masquée mais active reçoit toujours les memes : ils passent sans être vus, et leur
+  son peut rester audible selon le logiciel.
+- Désactiver la source ou changer de port prend effet au redémarrage de MemeOver.
+- Fermer MemeOver arrête les sources déjà chargées en quelques secondes. Elles reprennent
+  seules quand MemeOver sert à nouveau la page (recopiez le lien si le port a changé).
+- Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver
+  lancé, actualisez la source.
+- Dans **Stream**, choisissez **Bureau et stream** (par défaut) ou **Stream uniquement**.
+  Ce dernier masque immédiatement médias, textes, réactions et son du bureau tant que la source
+  est activée, même si elle ne fonctionne plus. Désactiver volontairement la source rétablit
+  l'affichage du bureau sans attendre le redémarrage ; le choix est conservé pour sa prochaine
+  activation. Le son coupé du bureau reste indépendant. Les contenus masqués ne sont pas
+  conservés pour être rejoués au retour sur le bureau. Dans ce mode, l'historique n'enregistre
+  rien et « Rejouer » est désactivé : l'onglet Historique le signale.
+- Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
+  l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
+- Le lien retient la taille de l'écran de l'overlay : le texte et les bordures gardent les mêmes
+  proportions qu'à l'écran, quelle que soit la résolution de la source. Recopiez-le si vous
+  déplacez l'overlay sur un écran d'une autre taille.
+- La page demande un moteur de navigateur récent (Chromium 111, Safari 16.4 ou équivalent) : si
+  l'affichage est incomplet ou vide, mettez à jour votre logiciel de stream.
 
 ## Commandes Discord
 
@@ -226,6 +311,47 @@ mode in the app and provide your own WebSocket URL.
 
 The app's **Stream** tab lists the known picture and sound problems, with a few ideas. It is in
 beta: it may change or disappear at any time.
+
+### Browser source
+
+Off by default. Once enabled in the **Stream** tab, MemeOver serves a page on
+`127.0.0.1` only (port 4466 by default, configurable). Copy the link and add a browser
+source at your stream resolution in your streaming software, keeping it running while
+hidden: memes show over any scene, game capture included. Depending on the software, their
+sound can have its own mixer entry.
+
+- The link carries the server token after the `#` (never sent to the local server):
+  do not show it on stream and do not share your software's scene files, which may store it in
+  clear text. If it leaks, have a server manager run `/memeover rotate`, paste the new code in
+  the Dashboard, then copy the new link.
+- The page does not follow display or connection changes: copy the link again.
+- Skipping a meme, clearing the queue, muting an author and your choice about anonymous memes
+  also reach a loaded source within a couple of seconds, as long as MemeOver is running.
+  Skip stays available while a source is loaded, even when the desktop overlay is closed or
+  empty. Repeated skips and queue clears keep their order; a suspended source that misses more
+  than 64 actions discards its current and waiting memes.
+- The **Stream** tab shows whether a source is connected, its link refused or its sound blocked.
+  If the local server cannot start, MemeOver retries and says so on the desktop overlay.
+- A source that is hidden but running still receives memes: they play out of sight, and their
+  sound may stay audible depending on the software.
+- Disabling the source or changing its port takes effect after restarting MemeOver.
+- Closing MemeOver stops already loaded sources within a few seconds. They resume on their
+  own once MemeOver serves the page again (copy the link again if the port changed).
+- If your software opens before MemeOver, the page cannot load: once MemeOver is running,
+  refresh the source.
+- In **Stream**, choose **Desktop and stream** (the default) or **Stream only**. The latter
+  immediately hides desktop media, text, reactions and sound while the source is enabled,
+  even if it stops working. Deliberately disabling the source restores desktop playback
+  without waiting for a restart; the choice is kept for its next activation. The desktop mute
+  remains independent. Hidden content is discarded rather than replayed on return to the desktop.
+  In this mode, history records nothing and Replay is disabled; the History tab says so.
+- To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
+  tray menu ("Mute overlay").
+- The link remembers the size of the overlay's screen: text and borders keep the proportions
+  they have on screen, whatever the source's resolution. Copy it again if you move the overlay
+  to a screen of another size.
+- The page needs a recent browser engine (Chromium 111, Safari 16.4 or equivalent): if it renders
+  incompletely or stays empty, update your streaming software.
 
 ## Discord Commands
 

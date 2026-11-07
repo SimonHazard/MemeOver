@@ -1,13 +1,11 @@
-import { lazy, Suspense } from "react";
-import { useTauriEvent } from "@/hooks/useTauriEvent";
+import { lazy, type ReactNode, Suspense, useEffect } from "react";
+import { useTauriEvent, useTauriEventVersion } from "@/hooks/useTauriEvent";
 import { useLanguageSync } from "@/i18n/use-language-sync";
 import { useAppStore } from "@/shared/store";
-import { ConnectionNotifications } from "./components/connection-notifications";
-import { FloatingReactions } from "./components/floating-reactions";
-import { MediaPopup } from "./components/media-popup";
-import { useHistoryLogger } from "./hooks/useHistoryLogger";
-import { useMediaDisplay } from "./hooks/useMediaDisplay";
-import { useOverlayWs } from "./hooks/useOverlayWs";
+import { desktopPlaybackEnabled } from "@/shared/stream-destination";
+import { showConnectionNotification } from "./components/connection-notifications";
+import { logDisplayedItem } from "./hooks/history-logger";
+import { OverlayStage } from "./OverlayStage";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -15,34 +13,40 @@ const OverlayTestRuntime = import.meta.env.DEV
 	? lazy(() => import("@/dev/overlay-test-runtime"))
 	: null;
 
-function LiveOverlayMedia() {
-	useOverlayWs();
-	const display = useMediaDisplay();
-	const settings = useAppStore((s) => s.settings);
-	useHistoryLogger(display.current);
-	return <MediaPopup {...display} settings={settings} />;
-}
+const DevMediaWrapper = OverlayTestRuntime
+	? function DevMediaWrapper({ children }: { children: ReactNode }) {
+			return (
+				<Suspense fallback={null}>
+					<OverlayTestRuntime>{children}</OverlayTestRuntime>
+				</Suspense>
+			);
+		}
+	: undefined;
 
 export function OverlayApp() {
 	useLanguageSync();
+	const muted = useAppStore((s) => s.settings.desktopOverlayMuted);
+	const playbackEnabled = useAppStore((s) => desktopPlaybackEnabled(s.settings));
+
+	// The settings window is often hidden: this is where a streamer can see the source is down.
+	const sourceStartFailures = useTauriEventVersion("browser-source-start-failed");
+	useEffect(() => {
+		if (sourceStartFailures > 0) {
+			showConnectionNotification(1, "overlay.browserSourceStartFailed");
+		}
+	}, [sourceStartFailures]);
 
 	// Dev-only: simulated production background
 	const devPreview = useTauriEvent<boolean>("overlay-dev-preview") ?? false;
 
 	return (
 		<div className="fixed inset-0 w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
-			{OverlayTestRuntime ? (
-				<Suspense fallback={null}>
-					<OverlayTestRuntime>
-						<LiveOverlayMedia />
-					</OverlayTestRuntime>
-				</Suspense>
-			) : (
-				<LiveOverlayMedia />
-			)}
-
-			<FloatingReactions />
-			<ConnectionNotifications />
+			<OverlayStage
+				muted={muted}
+				playbackEnabled={playbackEnabled}
+				onCurrentChange={logDisplayedItem}
+				MediaWrapper={DevMediaWrapper}
+			/>
 
 			{/* ── DEV badge (always visible in dev, not only in preview) ── */}
 			{import.meta.env.DEV && (

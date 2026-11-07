@@ -40,6 +40,7 @@
 }
 
 /* ─── Overlay window — fully transparent ──────────────────────────────────── */
+/* browser-source.html uses this data-window too, so both surfaces can never diverge. */
 
 [data-window="overlay"],
 [data-window="overlay"] body,

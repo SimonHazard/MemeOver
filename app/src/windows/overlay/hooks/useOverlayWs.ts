@@ -1,8 +1,8 @@
 import type { JoinMessage, SessionRevocationCode } from "@memeover/shared";
-import { emit } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fallbackExpiryDelay, isGuildPausedAt } from "@/shared/guild-pause";
 import { mutedIdSet } from "@/shared/muted-authors";
+import { emitIfTauri } from "@/shared/platform-events";
 import { useAppStore } from "@/shared/store";
 import {
 	dismissConnectionNotification,
@@ -20,7 +20,7 @@ import { routeServerMessage } from "./route-server-message";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useOverlayWs(): void {
+export function useOverlayWs(playbackEnabled = true): void {
 	// Granular selectors — only re-render when these specific values change.
 	// Zustand functions are stable references, never change.
 	const enqueue = useAppStore((s) => s.enqueue);
@@ -58,7 +58,7 @@ export function useOverlayWs(): void {
 
 	// Discard incoming media/text messages while the overlay is hidden.
 	const overlayHealthRef = useRef(overlayHealth);
-	overlayHealthRef.current = overlayHealth;
+	overlayHealthRef.current = playbackEnabled ? overlayHealth : "closed";
 
 	const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const connectionsRef = useRef<ConnectionTracker>(INITIAL_CONNECTION_TRACKER);
@@ -113,16 +113,20 @@ export function useOverlayWs(): void {
 					if (action.success) {
 						reconnectAttemptRef.current = 0;
 						setServerFeatures(action.features);
-						void emit("ws-join-error", null);
-						void emit("ws-features-changed", action.features ?? []);
+						void emitIfTauri("ws-join-error", null);
+						void emitIfTauri("ws-features-changed", action.features ?? []);
 						revokedRef.current = null;
+						useAppStore.getState().setWsRevokedReason(null);
+						useAppStore.getState().setWsJoinRejected(false);
 						setWsStatus("connected");
-						void emit("ws-status-changed", "connected");
+						void emitIfTauri("ws-status-changed", "connected");
 					} else {
+						// Read by the browser source's status pill; the settings window uses ws-join-error.
+						useAppStore.getState().setWsJoinRejected(true);
 						setWsStatus("error");
-						void emit("ws-status-changed", "error");
+						void emitIfTauri("ws-status-changed", "error");
 						console.warn("[WS] JOIN_ACK error:", action.error);
-						void emit("ws-join-error", action.error ?? null);
+						void emitIfTauri("ws-join-error", action.error ?? null);
 					}
 					break;
 				case "enqueue":
@@ -135,9 +139,11 @@ export function useOverlayWs(): void {
 					connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 					dismissConnectionNotification();
 					revokedRef.current = action.code;
+					// Read by the browser source page's status pill; the settings window keeps its own copy.
+					useAppStore.getState().setWsRevokedReason(action.code);
 					setWsStatus("error");
-					void emit("ws-session-revoked", action.code).then(() =>
-						emit("ws-status-changed", "error"),
+					void emitIfTauri("ws-session-revoked", action.code).then(() =>
+						emitIfTauri("ws-status-changed", "error"),
 					);
 					break;
 				case "server_error":
@@ -171,7 +177,7 @@ export function useOverlayWs(): void {
 					connectionsRef.current = tracker;
 					if (announce > 0) showConnectionNotification(announce);
 					setMemberCount(action.count);
-					void emit("member-count-changed", action.count);
+					void emitIfTauri("member-count-changed", action.count);
 					break;
 				}
 				case "drop":
@@ -193,20 +199,20 @@ export function useOverlayWs(): void {
 		connectionsRef.current = INITIAL_CONNECTION_TRACKER;
 		dismissConnectionNotification();
 		setWsStatus("disconnected");
-		void emit("ws-status-changed", "disconnected");
+		void emitIfTauri("ws-status-changed", "disconnected");
 	}, [setWsStatus]);
 
 	const onError = useCallback(() => {
 		dismissConnectionNotification();
 		setWsStatus("error");
-		void emit("ws-status-changed", "error");
+		void emitIfTauri("ws-status-changed", "error");
 	}, [setWsStatus]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: nonce deliberately restarts a revoked connection after credentials change.
 	useEffect(() => {
 		if (!shouldConnect) {
 			setWsStatus("disconnected");
-			void emit("ws-status-changed", "disconnected");
+			void emitIfTauri("ws-status-changed", "disconnected");
 			return;
 		}
 
@@ -245,7 +251,7 @@ export function useOverlayWs(): void {
 			ws.addEventListener("close", () => {
 				// A retired socket may close after its replacement has already joined.
 				if (disposed || wsRef.current !== ws) return;
-				void emit("ws-features-changed", []);
+				void emitIfTauri("ws-features-changed", []);
 				if (pauseTimerRef.current !== null) clearTimeout(pauseTimerRef.current);
 				useAppStore.getState().setGuildPausedUntil(null);
 				unbindSocket(ws);

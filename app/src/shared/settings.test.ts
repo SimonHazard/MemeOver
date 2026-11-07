@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
+import { extractDefaults } from "@/windows/settings/components/overlay-form/schema";
 import { pickOverlayProfileSettings } from "./profiles";
 import { normalizeSettings } from "./settings";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	CURRENT_SCHEMA_VERSION,
+	DEFAULT_BROWSER_SOURCE_PORT,
 	DEFAULT_SETTINGS,
 	OVERLAY_PROFILE_FIELDS,
 } from "./types";
@@ -68,6 +70,80 @@ test("connection notification duration migrates to four seconds and validates sa
 		expect(
 			normalizeSettings({ connectionNotificationDuration: saved }).connectionNotificationDuration,
 		).toBe(expected);
+	}
+});
+
+test("v14 → v15 adds the browser source, destination and desktop mute defaults without touching other fields", () => {
+	const migrated = normalizeSettings({ schemaVersion: 14, volume: 35, guildId: "123" });
+	expect(migrated).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		browserSourceEnabled: false,
+		browserSourcePort: DEFAULT_BROWSER_SOURCE_PORT,
+		streamDestination: "both",
+		desktopOverlayMuted: false,
+		volume: 35,
+		guildId: "123",
+	});
+	expect(
+		normalizeSettings({
+			browserSourceEnabled: true,
+			browserSourcePort: 5000,
+			desktopOverlayMuted: true,
+		}),
+	).toMatchObject({
+		browserSourceEnabled: true,
+		browserSourcePort: 5000,
+		desktopOverlayMuted: true,
+	});
+});
+
+test("an invalid browser source port falls back to the default", () => {
+	for (const port of [1023, 65536, 0, -1, 4466.5, "4466", null, Number.NaN]) {
+		expect(normalizeSettings({ browserSourcePort: port }).browserSourcePort).toBe(
+			DEFAULT_BROWSER_SOURCE_PORT,
+		);
+	}
+	expect(normalizeSettings({ browserSourcePort: 1024 }).browserSourcePort).toBe(1024);
+	expect(normalizeSettings({ browserSourcePort: 65535 }).browserSourcePort).toBe(65535);
+	expect(normalizeSettings({ browserSourceEnabled: "yes" }).browserSourceEnabled).toBe(false);
+	expect(normalizeSettings({ desktopOverlayMuted: 1 }).desktopOverlayMuted).toBe(false);
+});
+
+test("the destination preserves desktop playback and is validated", () => {
+	// Pre-release builds stored schema 16 for this field: it normalizes back to the current version.
+	expect(normalizeSettings({ schemaVersion: 16, desktopOverlayMuted: true })).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		streamDestination: "both",
+		desktopOverlayMuted: true,
+	});
+	for (const value of [null, "desktop", "", false, 1]) {
+		expect(normalizeSettings({ streamDestination: value }).streamDestination).toBe("both");
+	}
+	for (const browserSourceEnabled of [false, true]) {
+		expect(normalizeSettings({ browserSourceEnabled, streamDestination: "stream" })).toMatchObject({
+			browserSourceEnabled,
+			streamDestination: "stream",
+		});
+	}
+});
+
+test("browser source and desktop mute stay machine preferences, out of profiles", () => {
+	const profile = pickOverlayProfileSettings({
+		...DEFAULT_SETTINGS,
+		browserSourceEnabled: true,
+		browserSourcePort: 5000,
+		desktopOverlayMuted: true,
+		streamDestination: "stream",
+	}) as Record<string, unknown>;
+	for (const key of [
+		"browserSourceEnabled",
+		"browserSourcePort",
+		"desktopOverlayMuted",
+		"streamDestination",
+	]) {
+		expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain(key);
+		expect(key in profile).toBe(false);
+		expect(key in extractDefaults(DEFAULT_SETTINGS)).toBe(false);
 	}
 });
 

@@ -4,11 +4,14 @@ import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	type ConnectionNotificationPosition,
 	CURRENT_SCHEMA_VERSION,
+	DEFAULT_BROWSER_SOURCE_PORT,
 	DEFAULT_SETTINGS,
 	DEFAULT_WS_URL,
 	FLOATING_REACTION_PRESETS,
 	type FloatingReactionPreset,
 	LEGACY_DEFAULT_WS_URL,
+	MAX_BROWSER_SOURCE_PORT,
+	MIN_BROWSER_SOURCE_PORT,
 	type Settings,
 } from "../shared/types";
 import { normalizeMutedAuthors } from "./muted-authors";
@@ -156,6 +159,24 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		30,
 		DEFAULT_SETTINGS.connectionNotificationDuration,
 	);
+	// v14 → v15: opt-in local browser source, its meme destination and the desktop
+	// overlay mute, all machine preferences. A fractional or out-of-range port falls
+	// back to the default instead of being rounded into another program's port.
+	if (typeof out.browserSourceEnabled !== "boolean") out.browserSourceEnabled = false;
+	if (
+		typeof out.browserSourcePort !== "number" ||
+		!Number.isInteger(out.browserSourcePort) ||
+		out.browserSourcePort < MIN_BROWSER_SOURCE_PORT ||
+		out.browserSourcePort > MAX_BROWSER_SOURCE_PORT
+	) {
+		out.browserSourcePort = DEFAULT_BROWSER_SOURCE_PORT;
+	}
+	if (typeof out.desktopOverlayMuted !== "boolean") out.desktopOverlayMuted = false;
+	// Desktop playback by default. The destination is kept while the source is
+	// disabled, so enabling it again restores the preferred choice.
+	if (out.streamDestination !== "both" && out.streamDestination !== "stream") {
+		out.streamDestination = DEFAULT_SETTINGS.streamDestination;
+	}
 	// Idempotent validation also applies to hand-edited files at the current schema version.
 	out.mediaSize = clampNumber(out.mediaSize, 10, 90, DEFAULT_SETTINGS.mediaSize);
 	out.duration = clampNumber(out.duration, 1, 30, DEFAULT_SETTINGS.duration);

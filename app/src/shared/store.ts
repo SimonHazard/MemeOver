@@ -10,7 +10,9 @@ import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors"
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
+import { desktopPlaybackEnabled } from "./stream-destination";
 import type {
+	BrowserSourceStartError,
 	DisplayQueueItem,
 	FloatingReaction,
 	FloatingReactionAnimation,
@@ -57,6 +59,9 @@ interface AppStore {
 	setCurrentAuthorId: (id: string | null) => void;
 	wsRevokedReason: SessionRevocationCode | null;
 	setWsRevokedReason: (reason: SessionRevocationCode | null) => void;
+	/** The bot refused this socket's JOIN (unknown guild or invalid token); it stays open and idle. */
+	wsJoinRejected: boolean;
+	setWsJoinRejected: (rejected: boolean) => void;
 	// Settings (loaded from Tauri Store by initOverlayStore / initSettingsStore)
 	settings: Settings;
 	updateSettings: (partial: Partial<Settings>) => void;
@@ -104,6 +109,10 @@ interface AppStore {
 	// Release downloaded in the background, applied on the next launch
 	stagedUpdate: StagedUpdate | null;
 	setStagedUpdate: (update: StagedUpdate) => void;
+
+	// Settings window: port the local browser source page is served on this session, and the last start error
+	browserSourceRunningPort: number | null;
+	browserSourceError: BrowserSourceStartError | null;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -124,6 +133,8 @@ export const useAppStore = create<AppStore>((set) => ({
 		}),
 	wsRevokedReason: null,
 	setWsRevokedReason: (reason) => set({ wsRevokedReason: reason }),
+	wsJoinRejected: false,
+	setWsJoinRejected: (rejected) => set({ wsJoinRejected: rejected }),
 	currentAuthorId: null,
 	setCurrentAuthorId: (id) => set({ currentAuthorId: id }),
 	settings: DEFAULT_SETTINGS,
@@ -223,6 +234,9 @@ export const useAppStore = create<AppStore>((set) => ({
 
 	stagedUpdate: null,
 	setStagedUpdate: (update) => set({ stagedUpdate: update, updateAvailable: true }),
+
+	browserSourceRunningPort: null,
+	browserSourceError: null,
 }));
 
 // ─── Side-effect init (called from main.tsx, outside React) ───────────────────
@@ -261,6 +275,7 @@ export async function initOverlayStore(): Promise<void> {
 	});
 
 	await listen<DisplayQueueItem>("replay-item", (event) => {
+		if (!desktopPlaybackEnabled(useAppStore.getState().settings)) return;
 		useAppStore
 			.getState()
 			.enqueue(toReplayItem(event.payload, crypto.randomUUID()), { isReplay: true });

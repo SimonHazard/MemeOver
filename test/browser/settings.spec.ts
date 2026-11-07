@@ -183,6 +183,443 @@ test("settings tabs fit the minimum window width in French", async ({ page }) =>
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(800);
 });
 
+async function streamTab(page: Page) {
+	await page.goto("/test/browser/settings.html");
+	await page.evaluate(() => {
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: async (text: string) => localStorage.setItem("test-clipboard", text),
+			},
+		});
+	});
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await expect(page.getByText("Browser source", { exact: true })).toBeVisible();
+}
+
+test("the stream destination persists, is restored on reactivation and leaves mute unchanged", async ({
+	page,
+}) => {
+	await streamTab(page);
+	const source = page.getByRole("switch", { name: "Browser source" });
+	const destination = page.getByRole("group", { name: "Show memes on", exact: true });
+	await expect(destination).toHaveCount(0);
+	await source.click();
+	await expect(
+		destination.getByRole("button", { name: "Desktop and stream", exact: true }),
+	).toHaveAttribute("aria-pressed", "true");
+	const streamOnly = destination.getByRole("button", { name: "Stream only", exact: true });
+	await streamOnly.click();
+	await expect(streamOnly).toHaveAttribute("aria-pressed", "true");
+	expect((await settings(page)).streamDestination).toBe("stream");
+	expect((await settings(page)).desktopOverlayMuted).toBe(false);
+	await expect(
+		page.getByText(/Until a source connects, memes show neither on your desktop nor on stream/),
+	).toBeVisible();
+	await expect(
+		page.getByText("Desktop playback is hidden. This sound setting will apply when it resumes."),
+	).toBeVisible();
+	await expect(page.getByText(/You may hear memes twice/)).toHaveCount(0);
+	// The warning is about a missing source: it goes once one plays.
+	await page.evaluate(() =>
+		localStorage.setItem("test-source-heartbeat", "source=1&sound=on&bot=connected"),
+	);
+	await expect(page.getByText(/Until a source connects/)).toHaveCount(0);
+	await source.click();
+	await expect(destination).toHaveCount(0);
+	expect((await settings(page)).streamDestination).toBe("stream");
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await source.click();
+	await expect(streamOnly).toHaveAttribute("aria-pressed", "true");
+	// Keyboard selection applies the same persisted choice.
+	await streamOnly.focus();
+	await page.keyboard.press("ArrowLeft");
+	await page.keyboard.press("Space");
+	await expect(
+		destination.getByRole("button", { name: "Desktop and stream", exact: true }),
+	).toHaveAttribute("aria-pressed", "true");
+	expect((await settings(page)).streamDestination).toBe("both");
+	expect((await settings(page)).desktopOverlayMuted).toBe(false);
+});
+
+test("the browser source is opt-in and copies a link with credentials only after #", async ({
+	page,
+}) => {
+	await streamTab(page);
+	const toggle = page.getByRole("switch", { name: "Browser source" });
+	await expect(toggle).toHaveAttribute("aria-checked", "false");
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBeNull();
+
+	await toggle.click();
+	const link = page.getByLabel("Source link", { exact: true });
+	await expect(link).toHaveValue(/\/browser-source\.html#••••••$/);
+	expect((await settings(page)).browserSourceEnabled).toBe(true);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
+	// The reference steps stay folded until asked for.
+	await expect(page.getByText(/Keep the source running while it is hidden/)).toBeHidden();
+	await page.getByRole("button", { name: "In your streaming software" }).click();
+	await expect(page.getByText(/Keep the source running while it is hidden/)).toBeVisible();
+	await expect(page.getByText(/Never show this link on stream/)).toBeVisible();
+	// Enabled, the tab still names no third-party product, the displayed link included.
+	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
+	await expect(link).not.toHaveValue(/obs/i);
+
+	await page.getByRole("button", { name: "Show the source link" }).click();
+	await expect(link).toHaveValue(/test-only-token/);
+	await page.getByRole("button", { name: "Hide the source link" }).click();
+	await expect(link).not.toHaveValue(/test-only-token/);
+
+	await page.getByRole("button", { name: "Copy source link" }).click();
+	const copied = await expect
+		.poll(() => page.evaluate(() => localStorage.getItem("test-clipboard")))
+		.toContain("/browser-source.html#")
+		.then(() => page.evaluate(() => localStorage.getItem("test-clipboard") ?? ""));
+	const url = new URL(copied);
+	expect(url.search).toBe("");
+	expect(`${url.origin}${url.pathname}`).not.toContain("test-only-token");
+	const params = new URLSearchParams(url.hash.slice(1));
+	expect(params.get("g")).toBe("123456789012345678");
+	expect(params.get("t")).toBe("test-only-token");
+	expect(params.get("p")).toBeTruthy();
+	expect(params.get("c")).toBe("browser-test-client");
+	expect(params.get("f")).toBeTruthy();
+	expect(params.get("r")).toBe("1080");
+	expect(params.get("l")).toBe("en");
+
+	// The plugin cannot stop: turning it off asks for a restart.
+	await toggle.click();
+	expect((await settings(page)).browserSourceEnabled).toBe(false);
+	await page.getByRole("button", { name: "Restart MemeOver" }).click();
+	await expect.poll(() => page.evaluate(() => localStorage.getItem("test-restarted"))).toBe("1");
+});
+
+test("the source's profile select shows names, and the link follows it and muted authors", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		if (localStorage.getItem("test-store:overlay-profiles.json")) return;
+		localStorage.setItem(
+			"test-store:overlay-profiles.json",
+			JSON.stringify({
+				profiles: [
+					{
+						id: "7f3c9a10-saved-profile",
+						name: "Evening stream",
+						settings: { mediaSize: 40 },
+						createdAt: 1,
+						updatedAt: 1,
+					},
+				],
+			}),
+		);
+	});
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	const select = page.getByRole("combobox", { name: "Display profile to embed" });
+	await expect(select).toHaveText("Current settings");
+	await select.click();
+	await page.getByRole("option", { name: "Evening stream" }).click();
+	await expect(select).toHaveText("Evening stream");
+	await expect(select).not.toContainText("7f3c9a10");
+
+	// The link reflects a mute made elsewhere as soon as the tab is shown again.
+	await page.getByRole("button", { name: "Overlay", exact: true }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+	await page.evaluate(() => {
+		const key = "test-store:settings.json";
+		const data = JSON.parse(localStorage.getItem(key) ?? "{}");
+		data.settings.mutedAuthors = [{ id: "111", username: "Troll", avatarUrl: "", mutedAt: 1 }];
+		localStorage.setItem(key, JSON.stringify(data));
+	});
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("button", { name: "Show the source link" }).click();
+	const link = page.getByLabel("Source link", { exact: true });
+	await expect
+		.poll(async () => {
+			const value = await link.inputValue();
+			const filters = new URLSearchParams(new URL(value).hash.slice(1)).get("f") ?? "";
+			return Buffer.from(filters, "base64url").toString();
+		})
+		.toContain('"111"');
+	await expect(link).not.toHaveValue(/Troll/);
+});
+
+test("copying the masked source link copies the working link", async ({ page }) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	const link = page.getByLabel("Source link", { exact: true });
+	await expect(link).toHaveValue(/#••••••$/);
+	const copied = await link.evaluate((input) => {
+		const data = new DataTransfer();
+		input.dispatchEvent(
+			new ClipboardEvent("copy", { bubbles: true, cancelable: true, clipboardData: data }),
+		);
+		return data.getData("text/plain");
+	});
+	expect(copied).toContain("t=test-only-token");
+});
+
+test("the desktop's skip, clear and moderation actions are published for loaded sources", async ({
+	page,
+}) => {
+	await streamTab(page);
+	const published = async () => {
+		const value = await page.evaluate(() => localStorage.getItem("test-source-controls"));
+		return JSON.parse(Buffer.from(value ?? "", "base64url").toString() || "{}");
+	};
+	const send = (event: string, payload?: unknown) =>
+		page.evaluate(
+			([name, data]) =>
+				(window as unknown as { testEmit: (e: unknown, p: unknown) => Promise<void> }).testEmit(
+					name,
+					data,
+				),
+			[event, payload],
+		);
+	await expect.poll(published).toEqual({ m: [], a: false, s: 0, c: 0, q: "" });
+	await send("skip-current");
+	await expect.poll(published).toMatchObject({ s: 1, c: 0 });
+	await send("clear-queue");
+	await expect.poll(published).toMatchObject({ s: 1, c: 1 });
+	await send("settings-changed", {
+		mutedAuthors: [{ id: "111", username: "Troll", avatarUrl: "", mutedAt: 1 }],
+		hideAnonymous: true,
+	});
+	await expect.poll(published).toEqual({ m: ["111"], a: true, s: 1, c: 1, q: "sc" });
+});
+
+test("the stream tab says what a loaded source reports", async ({ page }) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/No source connected yet/)).toBeVisible();
+	const report = (query: string) =>
+		page.evaluate((value) => localStorage.setItem("test-source-heartbeat", value), query);
+	await report("source=1&sound=on&bot=connected");
+	await expect(page.getByText("A source is connected and its sound can play.")).toBeVisible();
+	await report("source=1&sound=blocked&bot=connected");
+	await expect(page.getByText(/its sound stays off until someone clicks/)).toBeVisible();
+	await report("source=1&sound=on&bot=rejected");
+	await expect(page.getByText(/The bot refused this source's link/)).toBeVisible();
+	await report("source=1&sound=on&bot=reconnecting");
+	await expect(
+		page.getByText("A source is loaded but not connected to the bot yet."),
+	).toBeVisible();
+	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
+});
+
+test("an enabled source starts again at launch, before the Stream tab is opened", async ({
+	page,
+}) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	// A new launch: the server is gone and the settings window loads hidden, on its first tab.
+	await page.evaluate(() => sessionStorage.removeItem("test-source-running"));
+	await page.reload();
+	await expect
+		.poll(() => page.evaluate(() => sessionStorage.getItem("test-source-running")))
+		.toBe("4466");
+});
+
+test("a source without Discord credentials explains what to do instead of a dead link", async ({
+	page,
+}) => {
+	await page.goto("/test/browser/settings.html");
+	await expect(page.getByRole("button", { name: "Stream", exact: true })).toBeVisible();
+	await page.evaluate(() => {
+		const key = "test-store:settings.json";
+		const data = JSON.parse(localStorage.getItem(key) ?? "{}");
+		data.settings.guildId = "";
+		data.settings.token = "";
+		localStorage.setItem(key, JSON.stringify(data));
+	});
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/Connect MemeOver to your Discord server first/)).toBeVisible();
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+});
+
+test("changing the port of a running source asks for a restart and keeps it serving", async ({
+	page,
+}) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+
+	const port = page.getByLabel("Local port", { exact: true });
+	await port.fill("5123");
+	await port.press("Enter");
+	await expect(page.getByRole("button", { name: "Restart MemeOver" })).toBeVisible();
+	await expect.poll(async () => (await settings(page)).browserSourcePort).toBe(5123);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
+	// That old link is about to stop working: only the new port's link may be copied, after the restart.
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+
+	await port.fill("4466");
+	await port.press("Enter");
+	await expect(page.getByRole("button", { name: "Restart MemeOver" })).toHaveCount(0);
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+});
+
+test("an unexpected start failure is explained without exposing the native error", async ({
+	page,
+}) => {
+	await page.addInitScript(() =>
+		localStorage.setItem("test-source-start-error", "plugin exploded"),
+	);
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/The browser source could not start/)).toBeVisible();
+	await expect(page.getByText(/plugin exploded/)).toHaveCount(0);
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+});
+
+test("the default display profile can be embedded instead of the current settings", async ({
+	page,
+}) => {
+	await page.goto("/test/browser/settings.html");
+	await expect(page.getByRole("button", { name: "Stream", exact: true })).toBeVisible();
+	await page.evaluate(() => {
+		const key = "test-store:settings.json";
+		const data = JSON.parse(localStorage.getItem(key) ?? "{}");
+		data.settings.mediaSize = 77;
+		localStorage.setItem(key, JSON.stringify(data));
+	});
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await page.getByRole("button", { name: "Show the source link" }).click();
+	const link = page.getByLabel("Source link", { exact: true });
+	const embeddedSize = async () => {
+		const profile = new URLSearchParams(new URL(await link.inputValue()).hash.slice(1)).get("p");
+		return JSON.parse(Buffer.from(profile ?? "", "base64url").toString()).mediaSize;
+	};
+	await expect.poll(embeddedSize).toBe(77);
+	await page.getByRole("combobox", { name: "Display profile to embed" }).click();
+	await page.getByRole("option", { name: "Default settings" }).click();
+	await expect.poll(embeddedSize).not.toBe(77);
+});
+
+test("a source that cannot start is announced once and retried until the port is free", async ({
+	page,
+}) => {
+	await page.clock.install();
+	await page.addInitScript(() => localStorage.setItem("test-source-busy-port", "4466"));
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByText(/Port 4466 is used by another program/)).toBeVisible();
+	const announced = () => page.evaluate(() => localStorage.getItem("test-source-start-failed"));
+	expect(await announced()).toBeNull();
+
+	await page.clock.fastForward(31_000);
+	await expect.poll(announced).toBe("1");
+
+	await page.evaluate(() => localStorage.removeItem("test-source-busy-port"));
+	await page.clock.fastForward(31_000);
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
+});
+
+test("a busy browser source port is reported and another port can be chosen", async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem("test-source-busy-port", "4466"));
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(
+		page.getByText("Port 4466 is used by another program — choose another."),
+	).toBeVisible();
+	await expect(page.getByLabel("Source link", { exact: true })).toHaveCount(0);
+
+	const port = page.getByLabel("Local port", { exact: true });
+	await port.fill("80");
+	await expect(page.getByText("Choose a port between 1024 and 65535.")).toBeVisible();
+	await port.fill("5123");
+	await port.press("Enter");
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	expect((await settings(page)).browserSourcePort).toBe(5123);
+	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("5123");
+});
+
+test("the desktop overlay mute follows the Stream tab and the tray", async ({ page }) => {
+	await streamTab(page);
+	const mute = page.getByRole("switch", { name: "Mute the desktop overlay" });
+	await expect(mute).toHaveAttribute("aria-checked", "false");
+	await mute.click();
+	await expect(mute).toHaveAttribute("aria-checked", "true");
+	await expect.poll(async () => (await settings(page)).desktopOverlayMuted).toBe(true);
+	expect(await page.evaluate(() => localStorage.getItem("test-tray-muted"))).toBe("true");
+
+	await page.evaluate(() =>
+		(window as unknown as { testEmit: (event: string) => Promise<void> }).testEmit(
+			"overlay-mute-toggle-requested",
+		),
+	);
+	await expect(mute).toHaveAttribute("aria-checked", "false");
+	expect((await settings(page)).desktopOverlayMuted).toBe(false);
+	expect(await page.evaluate(() => localStorage.getItem("test-tray-muted"))).toBe("false");
+
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await expect(mute).toHaveAttribute("aria-checked", "false");
+	await expect(page.getByText(/you may hear memes twice/)).toHaveCount(0);
+});
+
+test("Skip reaches a loaded browser source, not one that is only being served", async ({
+	page,
+}) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Overlay", exact: true }).click();
+	const skip = page.getByRole("button", { name: "Skip", exact: true });
+	// Served but no page loaded, and nothing on the desktop: nothing to skip.
+	await expect(skip).toBeDisabled();
+	await page.evaluate(() =>
+		localStorage.setItem("test-source-heartbeat", "source=1&sound=on&bot=connected"),
+	);
+	await expect(skip).toBeEnabled();
+});
+
+test("stream-only history explains why nothing is recorded and disables replay", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		if (localStorage.getItem("test-store:history.json")) return;
+		localStorage.setItem(
+			"test-store:history.json",
+			JSON.stringify({
+				history: [
+					{
+						type: "TEXT",
+						queueId: "stream-only-item",
+						author_id: "123456789012345678",
+						author_username: "Test Author",
+						author_avatar_url: "",
+						text: "Before stream-only",
+						timestamp: Date.now(),
+						recordedAt: Date.now(),
+					},
+				],
+			}),
+		);
+	});
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await page.getByRole("button", { name: "Stream only", exact: true }).click();
+	await page.getByRole("button", { name: "History", exact: true }).click();
+	await expect(page.getByText("Before stream-only", { exact: true })).toBeVisible();
+	await expect(page.getByText(/Stream only is on: history records nothing/)).toBeVisible();
+	await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeDisabled();
+
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("button", { name: "Desktop and stream", exact: true }).click();
+	await page.getByRole("button", { name: "History", exact: true }).click();
+	await expect(page.getByText(/Stream only is on/)).toHaveCount(0);
+	await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeEnabled();
+});
+
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {
 	await overlay(page);
 	await page.getByLabel("Profile name", { exact: true }).fill("Browser profile");
@@ -411,6 +848,7 @@ test("tray labels follow the interface language from startup", async ({ page }) 
 	await expect.poll(tray).toEqual({
 		showLabel: "Show settings",
 		hideLabel: "Hide settings",
+		muteLabel: "Mute overlay",
 		quitLabel: "Quit",
 	});
 	await page.getByRole("button", { name: "About", exact: true }).click();
@@ -418,6 +856,7 @@ test("tray labels follow the interface language from startup", async ({ page }) 
 	await expect.poll(tray).toEqual({
 		showLabel: "Afficher les paramètres",
 		hideLabel: "Masquer les paramètres",
+		muteLabel: "Couper le son de l'overlay",
 		quitLabel: "Quitter",
 	});
 });

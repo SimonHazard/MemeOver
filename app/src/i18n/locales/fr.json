@@ -36,6 +36,7 @@
 	"overlay": {
 		"userConnected_one": "Un utilisateur s’est connecté",
 		"userConnected_other": "{{count}} utilisateurs se sont connectés",
+		"browserSourceStartFailed": "La source navigateur n'a pas pu démarrer : voyez l'onglet Stream.",
 		"controls": "Contrôles de l'overlay",
 		"show": "Afficher",
 		"reload": "Recharger",
@@ -241,7 +242,8 @@
 	"tray": {
 		"show": "Afficher les paramètres",
 		"hide": "Masquer les paramètres",
-		"quit": "Quitter"
+		"quit": "Quitter",
+		"muteOverlay": "Couper le son de l'overlay"
 	},
 	"tabs": {
 		"dashboard": "Tableau de bord",
@@ -274,6 +276,52 @@
 			"isolateProblem": "Selon votre système, il peut ne pas apparaître sous le nom MemeOver, et une capture par application peut ne pas le trouver.",
 			"isolateHint": "Un câble audio virtuel peut aider, mais c'est une manipulation avancée : elle peut toucher d'autres applications et les rendre muettes quand votre logiciel de stream est fermé.",
 			"testTip": "Avant de passer en direct, faites un enregistrement d'essai avec un meme qui a du son."
+		},
+		"browserSource": {
+			"title": "Source navigateur",
+			"desc": "Affiche les memes dans votre logiciel de stream, au-dessus de n'importe quelle scène, capture de jeu comprise. Une fois activée, MemeOver sert la page sur cet ordinateur uniquement (127.0.0.1).",
+			"destinationLabel": "Afficher les memes sur",
+			"destinationBoth": "Bureau et stream",
+			"destinationStream": "Stream uniquement",
+			"destinationHint": "S'applique immédiatement. Désactiver la source navigateur ramène les memes sur le bureau.",
+			"streamOnlyNotice": "Tant qu'aucune source n'est connectée, les memes ne s'affichent ni sur le bureau ni en stream.",
+			"portLabel": "Port local",
+			"portInvalid": "Choisissez un port entre 1024 et 65535.",
+			"portInUse": "Le port {{port}} est utilisé par un autre programme — choisissez-en un autre.",
+			"startError": "La source navigateur n'a pas pu démarrer. Redémarrez MemeOver et réessayez.",
+			"restartNotice": "Ce changement prend effet au redémarrage de MemeOver. Les sources navigateur s'arrêtent pendant le redémarrage et reprennent seules ; recopiez le lien si le port a changé.",
+			"restartError": "Impossible de redémarrer MemeOver. Fermez-le et relancez-le.",
+			"restartNow": "Redémarrer MemeOver",
+			"urlLabel": "Lien de la source",
+			"showUrl": "Afficher le lien de la source",
+			"hideUrl": "Masquer le lien de la source",
+			"profileLabel": "Profil d'affichage à intégrer",
+			"profileCurrent": "Réglages actuels",
+			"profileDefaults": "Réglages par défaut",
+			"copyUrl": "Copier le lien de la source",
+			"secretWarning": "Ne montrez jamais ce lien en stream : il contient le token de votre serveur, et les fichiers de scènes peuvent le conserver en clair. En cas de fuite, faites /memeover rotate, mettez à jour le Tableau de bord, puis recopiez ce lien.",
+			"connection": {
+				"waiting": "Aucune source connectée pour l'instant. Ajoutez le lien à votre logiciel de stream, ou actualisez la source si elle y est déjà.",
+				"connected": "Une source est connectée et son son peut être joué.",
+				"soundBlocked": "Une source est connectée, mais son son reste coupé tant que personne n'a cliqué dessus. S'il s'agit de votre logiciel de stream, cherchez une option pour autoriser l'audio ou interagir avec la source.",
+				"linkRefused": "Le bot a refusé le lien de cette source : copiez à nouveau le lien et collez-le dans votre logiciel de stream.",
+				"reconnecting": "Une source est chargée, mais pas encore connectée au bot."
+			},
+			"missingCredentials": "Connectez d'abord MemeOver à votre serveur Discord (onglet Tableau de bord) pour obtenir le lien de la source.",
+			"softwareTitle": "Dans votre logiciel de stream",
+			"softwareAdd": "Ajoutez une source navigateur et collez le lien comme URL.",
+			"softwareSize": "Réglez sa largeur et sa hauteur sur la résolution de votre scène (canevas), par exemple 1920 × 1080.",
+			"softwareKeepRunning": "Laissez la source active quand elle est masquée, pour qu'elle n'ait jamais à se reconnecter. Les memes envoyés entre-temps passent quand même sans être vus, et leur son peut rester audible selon votre logiciel.",
+			"softwareAudio": "Si possible, laissez votre logiciel contrôler le son de la source pour qu'elle ait sa propre entrée dans le mixeur.",
+			"softwareMonitor": "Pour entendre vous-même les memes, activez le monitoring audio de cette source.",
+			"softwareRefresh": "Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver lancé, actualisez la source. Ensuite, elle reprend seule quand MemeOver redémarre.",
+			"linkScope": "Passer, vider la file et masquer un auteur atteignent une source chargée en quelques secondes. Après un changement d'affichage, de connexion ou d'écran de l'overlay, recopiez le lien."
+		},
+		"desktopMute": {
+			"title": "Couper le son de l'overlay",
+			"desc": "Coupe le son des memes sur votre écran uniquement. La source navigateur garde son son. Aussi disponible depuis le menu de la barre système.",
+			"stateHidden": "Le bureau est masqué. Ce réglage de son s'appliquera à son retour.",
+			"doubleHint": "Avec la source navigateur activée, vous risquez d'entendre les memes deux fois et de les envoyer deux fois au stream : coupez le son de l'overlay."
 		}
 	},
 	"server": {
@@ -407,11 +455,12 @@
 		"nothingToPurge": "Aucun média expiré à supprimer",
 		"muteAuthor": "Masquer cet auteur",
 		"mutedAuthorsTitle": "Auteurs masqués",
-		"mutedAuthorsHint": "Ces préférences concernent uniquement votre overlay.",
+		"mutedAuthorsHint": "Ces préférences s'appliquent à votre overlay et, en quelques secondes, à une source navigateur chargée.",
 		"unmute": "Afficher à nouveau",
 		"mutedOn": "Masqué le {{date}}",
 		"hideAnonymous": "Masquer les mèmes anonymes /memeover secret",
-		"hideAnonymousHint": "Les mèmes anonymes ne peuvent pas être masqués par auteur."
+		"hideAnonymousHint": "Les mèmes anonymes ne peuvent pas être masqués par auteur.",
+		"streamOnlyNotice": "Le mode Stream uniquement est actif : l'historique n'enregistre rien et Rejouer est indisponible. Modifiez-le dans l'onglet Stream."
 	},
 	"memberCount": {
 		"alone": "Seul",
@@ -488,5 +537,20 @@
 		"sampleText": "Aperçu local de l’overlay : modifiez les réglages d’affichage, puis enregistrez. Ce texte reste à l’écran.",
 		"sampleCaption": "Exemple local — les réglages d’affichage enregistrés s’appliquent ici.",
 		"error": "Impossible d’envoyer la commande de test local."
+	},
+	"browserSource": {
+		"status": {
+			"connecting": "MemeOver · connexion…",
+			"connected": "MemeOver · connecté",
+			"reconnecting": "MemeOver · reconnexion…",
+			"stopped": "MemeOver · source arrêtée : lancez MemeOver avec la source activée, cette page reprendra seule",
+			"revoked": "MemeOver · lien révoqué : copiez-en un nouveau depuis l'onglet Stream",
+			"rejected": "MemeOver · lien refusé par le bot : copiez-en un nouveau depuis l'onglet Stream"
+		},
+		"enableSound": "Cliquez pour activer le son",
+		"incomplete": {
+			"title": "Ce lien de source est incomplet",
+			"desc": "Copiez-le à nouveau depuis l'onglet Stream de MemeOver."
+		}
 	}
 }

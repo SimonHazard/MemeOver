@@ -27,6 +27,8 @@ interface MediaPopupProps {
 	onVideoEnd: () => void;
 	startTimer: () => void;
 	onMediaError: () => void;
+	/** Mutes media sound on this surface (desktop overlay mute, browser source preview before a gesture). */
+	muted?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -39,6 +41,7 @@ export function MediaPopup({
 	onVideoEnd,
 	startTimer,
 	onMediaError,
+	muted = false,
 }: MediaPopupProps) {
 	const reduceMotion = useReducedMotion();
 
@@ -76,6 +79,7 @@ export function MediaPopup({
 								onVideoEnd={onVideoEnd}
 								startTimer={startTimer}
 								onMediaError={onMediaError}
+								muted={muted}
 							/>
 						</motion.div>
 					</div>

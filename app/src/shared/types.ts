@@ -206,6 +206,14 @@ export interface Settings {
 	floatingReactionOpacity: number;
 	/** Emoji size for floating reactions, in vmin. */
 	floatingReactionSize: number;
+	/** Serve the browser source page on 127.0.0.1. Off by default; machine preference. */
+	browserSourceEnabled: boolean;
+	/** TCP port of the local browser source (1024–65535). */
+	browserSourcePort: number;
+	/** Machine preference, applied only while the browser source is enabled. */
+	streamDestination: "both" | "stream";
+	/** Mutes media sound in the desktop overlay only; the browser source keeps its sound. */
+	desktopOverlayMuted: boolean;
 }
 
 export const OVERLAY_PROFILE_FIELDS = [
@@ -254,7 +262,23 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 14;
+export const CURRENT_SCHEMA_VERSION = 15;
+
+/**
+ * Default port of the local browser source. Below the dynamic range (49152+)
+ * and listed as "Unassigned" in the IANA Service Name and Transport Protocol Port
+ * Number Registry, checked on 2026-11-01.
+ */
+export const DEFAULT_BROWSER_SOURCE_PORT = 4466;
+export const MIN_BROWSER_SOURCE_PORT = 1024;
+export const MAX_BROWSER_SOURCE_PORT = 65535;
+
+/** Error codes returned by `start_browser_source`; anything else is an unexpected failure. */
+export type BrowserSourceStartError =
+	| "restart_required"
+	| "port_in_use"
+	| "invalid_port"
+	| "unknown";
 
 /** WS URL shipped by default (hosted bot). Only swapped-in for fresh installs or users who still had the legacy localhost default. */
 export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
@@ -303,4 +327,8 @@ export const DEFAULT_SETTINGS: Settings = {
 	floatingReactionDuration: 5,
 	floatingReactionOpacity: 82,
 	floatingReactionSize: 6,
+	browserSourceEnabled: false,
+	browserSourcePort: DEFAULT_BROWSER_SOURCE_PORT,
+	streamDestination: "both",
+	desktopOverlayMuted: false,
 };

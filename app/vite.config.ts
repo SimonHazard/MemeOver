@@ -3,8 +3,12 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
 
 const host = process.env.TAURI_DEV_HOST;
+// Mirror the native session header for dev and browser tests; every source test fails if it drifts
+// from src/shared/browser-source-contract.ts (not imported: outside the node tsconfig project).
+const sourceSessionHeaders = { "X-MemeOver-Source-Session": randomUUID() };
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -31,6 +35,7 @@ export default defineConfig({
 	clearScreen: false,
 	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
+		headers: sourceSessionHeaders,
 		port: 1420,
 		strictPort: true,
 		host: host || false,
@@ -46,12 +51,14 @@ export default defineConfig({
 			ignored: ["**/src-tauri/**"],
 		},
 	},
+	preview: { headers: sourceSessionHeaders },
 	// Multi-page : un bundle par fenêtre Tauri
 	build: {
 		rolldownOptions: {
 			input: {
 				main: fileURLToPath(new URL("./index.html", import.meta.url)),
 				overlay: fileURLToPath(new URL("./overlay.html", import.meta.url)),
+				"browser-source": fileURLToPath(new URL("./browser-source.html", import.meta.url)),
 			},
 		},
 	},
