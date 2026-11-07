@@ -20,7 +20,7 @@ import { routeServerMessage } from "./route-server-message";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useOverlayWs(): void {
+export function useOverlayWs(playbackEnabled = true): void {
 	// Granular selectors — only re-render when these specific values change.
 	// Zustand functions are stable references, never change.
 	const enqueue = useAppStore((s) => s.enqueue);
@@ -58,7 +58,7 @@ export function useOverlayWs(): void {
 
 	// Discard incoming media/text messages while the overlay is hidden.
 	const overlayHealthRef = useRef(overlayHealth);
-	overlayHealthRef.current = overlayHealth;
+	overlayHealthRef.current = playbackEnabled ? overlayHealth : "closed";
 
 	const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const connectionsRef = useRef<ConnectionTracker>(INITIAL_CONNECTION_TRACKER);

@@ -26,7 +26,7 @@ interface UseMediaDisplayReturn {
 	onMediaError: () => void;
 }
 
-export function useMediaDisplay(): UseMediaDisplayReturn {
+export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 	// Granular selectors — avoids re-rendering on unrelated store changes
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
@@ -35,6 +35,7 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	const duration = useAppStore((s) => s.settings.duration);
 	const syncMediaDuration = useAppStore((s) => s.settings.syncMediaDuration);
 	const overlayHealth = useAppStore((s) => s.overlayHealth);
+	const canDisplay = playbackEnabled && overlayHealth !== "closed";
 
 	const [current, setCurrent] = useState<DisplayQueueItem | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
@@ -98,14 +99,14 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 
 	// ── Effect 1: Stop current item when overlay is hidden ────────────────────
 	useEffect(() => {
-		if (overlayHealth === "closed") {
+		if (!canDisplay) {
 			document.querySelectorAll("video, audio").forEach((el) => {
 				(el as HTMLMediaElement).pause();
 			});
 			setCurrent(null);
 			hide();
 		}
-	}, [overlayHealth, hide]);
+	}, [canDisplay, hide]);
 
 	// ── Effect 2: Sync isDisplaying to the store so settings window can read it ─
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setIsDisplaying is a stable Zustand setter — omitted from deps intentionally
@@ -119,14 +120,14 @@ export function useMediaDisplay(): UseMediaDisplayReturn {
 	// Admit the current queue head immediately. A guild pause empties the queue and drops
 	// server events upstream, so only explicit history replays can be admitted while paused.
 	useEffect(() => {
-		if (overlayHealth === "closed" || !shouldDequeue(current, queue.length)) return;
+		if (!canDisplay || !shouldDequeue(current, queue.length)) return;
 		const next = queue[0];
 		if (!next) return;
 		dequeue();
 		currentRef.current = next;
 		setCurrent(next);
 		setIsVisible(true);
-	}, [queue, current, dequeue, overlayHealth]);
+	}, [queue, current, dequeue, canDisplay]);
 
 	// ── Effect 4: Safety fallback ─────────────────────────────────────────────
 	// TEXT items have no DOM event to call startTimer → fire immediately (delay=0).

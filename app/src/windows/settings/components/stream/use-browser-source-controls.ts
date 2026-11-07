@@ -72,6 +72,15 @@ export function useBrowserSourceControls() {
 		}
 	}
 
+	async function setDestination(streamDestination: Settings["streamDestination"]) {
+		setBusy(true);
+		try {
+			await save({ streamDestination });
+		} finally {
+			setBusy(false);
+		}
+	}
+
 	return {
 		settings,
 		runningPort,
@@ -82,5 +91,6 @@ export function useBrowserSourceControls() {
 		setPortDraft,
 		toggle,
 		commitPort,
+		setDestination,
 	};
 }

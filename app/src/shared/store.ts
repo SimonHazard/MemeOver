@@ -10,6 +10,7 @@ import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors"
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
 import { loadSettings } from "./settings";
+import { desktopPlaybackEnabled } from "./stream-destination";
 import type {
 	BrowserSourceStartError,
 	DisplayQueueItem,
@@ -274,6 +275,7 @@ export async function initOverlayStore(): Promise<void> {
 	});
 
 	await listen<DisplayQueueItem>("replay-item", (event) => {
+		if (!desktopPlaybackEnabled(useAppStore.getState().settings)) return;
 		useAppStore
 			.getState()
 			.enqueue(toReplayItem(event.payload, crypto.randomUUID()), { isReplay: true });

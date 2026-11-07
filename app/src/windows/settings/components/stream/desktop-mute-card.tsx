@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { loadSettings } from "@/shared/settings";
 import { setDesktopOverlayMuted } from "@/shared/stream-controls";
+import { desktopPlaybackEnabled } from "@/shared/stream-destination";
 
 /** One action, mirrored by the tray's "Mute overlay" item. No motion: it is a frequent toggle. */
 export function DesktopMuteCard() {
@@ -25,6 +26,7 @@ export function DesktopMuteCard() {
 	if (!settings) return null;
 
 	const muted = settings.desktopOverlayMuted;
+	const desktopHidden = !desktopPlaybackEnabled(settings);
 	const Icon = muted ? VolumeX : Volume2;
 
 	return (
@@ -47,10 +49,16 @@ export function DesktopMuteCard() {
 						{t(muted ? "stream.desktopMute.unmute" : "stream.desktopMute.mute")}
 					</NbButton>
 					<p role="status" className="text-sm font-text">
-						{t(muted ? "stream.desktopMute.stateMuted" : "stream.desktopMute.stateAudible")}
+						{t(
+							desktopHidden
+								? "stream.desktopMute.stateHidden"
+								: muted
+									? "stream.desktopMute.stateMuted"
+									: "stream.desktopMute.stateAudible",
+						)}
 					</p>
 				</div>
-				{settings.browserSourceEnabled && !muted && (
+				{settings.browserSourceEnabled && settings.streamDestination === "both" && !muted && (
 					<p className="flex gap-2 text-xs font-text text-muted-foreground">
 						<TriangleAlert className="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
 						{t("stream.desktopMute.doubleHint")}

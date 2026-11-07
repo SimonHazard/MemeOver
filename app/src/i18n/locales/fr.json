@@ -280,6 +280,11 @@
 		"browserSource": {
 			"title": "Source navigateur",
 			"desc": "Affiche les memes dans votre logiciel de stream avec une source navigateur : transparente au-dessus de n'importe quelle scène, capture de jeu comprise. Selon votre logiciel, son son peut avoir sa propre entrée dans le mixeur. Une fois activée, MemeOver sert la page sur cet ordinateur uniquement (127.0.0.1).",
+			"destinationLabel": "Afficher les memes sur",
+			"destinationBoth": "Bureau et stream",
+			"destinationStream": "Stream uniquement",
+			"destinationHint": "S’applique immédiatement aux médias, textes et réactions. Désactiver la source navigateur rétablit l’affichage du bureau ; votre choix est conservé pour la prochaine activation. Le mute du bureau reste inchangé.",
+			"streamOnlyNotice": "Le bureau reste masqué tant que la source navigateur est activée, même si aucune source n’est connectée ou si elle tombe en panne. Vérifiez son état ci-dessous avant de lancer votre stream.",
 			"portLabel": "Port local",
 			"portInvalid": "Choisissez un port entre 1024 et 65535.",
 			"portInUse": "Le port {{port}} est utilisé par un autre programme — choisissez-en un autre.",
@@ -318,6 +323,7 @@
 			"desc": "Coupe le son des memes sur votre écran uniquement. La source navigateur garde son son. Aussi disponible depuis le menu de la barre système.",
 			"mute": "Couper le son de l'overlay",
 			"unmute": "Rétablir le son de l'overlay",
+			"stateHidden": "Le bureau est masqué. Ce réglage de son s’appliquera à son retour.",
 			"stateMuted": "Le son de l'overlay est coupé.",
 			"stateAudible": "Le son de l'overlay est actif.",
 			"doubleHint": "Avec la source navigateur activée, vous risquez d'entendre les memes deux fois et de les envoyer deux fois au stream : coupez le son de l'overlay."

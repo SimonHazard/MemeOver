@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { extractDefaults } from "@/windows/settings/components/overlay-form/schema";
 import { pickOverlayProfileSettings } from "./profiles";
 import { normalizeSettings } from "./settings";
 import {
@@ -107,16 +108,40 @@ test("an invalid browser source port falls back to the default", () => {
 	expect(normalizeSettings({ desktopOverlayMuted: 1 }).desktopOverlayMuted).toBe(false);
 });
 
+test("v15 → v16 preserves desktop playback and validates the destination", () => {
+	expect(normalizeSettings({ schemaVersion: 15, desktopOverlayMuted: true })).toMatchObject({
+		schemaVersion: CURRENT_SCHEMA_VERSION,
+		streamDestination: "both",
+		desktopOverlayMuted: true,
+	});
+	for (const value of [null, "desktop", "", false, 1]) {
+		expect(normalizeSettings({ streamDestination: value }).streamDestination).toBe("both");
+	}
+	for (const browserSourceEnabled of [false, true]) {
+		expect(normalizeSettings({ browserSourceEnabled, streamDestination: "stream" })).toMatchObject({
+			browserSourceEnabled,
+			streamDestination: "stream",
+		});
+	}
+});
+
 test("browser source and desktop mute stay machine preferences, out of profiles", () => {
 	const profile = pickOverlayProfileSettings({
 		...DEFAULT_SETTINGS,
 		browserSourceEnabled: true,
 		browserSourcePort: 5000,
 		desktopOverlayMuted: true,
+		streamDestination: "stream",
 	}) as Record<string, unknown>;
-	for (const key of ["browserSourceEnabled", "browserSourcePort", "desktopOverlayMuted"]) {
+	for (const key of [
+		"browserSourceEnabled",
+		"browserSourcePort",
+		"desktopOverlayMuted",
+		"streamDestination",
+	]) {
 		expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain(key);
 		expect(key in profile).toBe(false);
+		expect(key in extractDefaults(DEFAULT_SETTINGS)).toBe(false);
 	}
 });
 

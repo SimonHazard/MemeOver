@@ -210,6 +210,8 @@ export interface Settings {
 	browserSourceEnabled: boolean;
 	/** TCP port of the local browser source (1024–65535). */
 	browserSourcePort: number;
+	/** Machine preference, applied only while the browser source is enabled. */
+	streamDestination: "both" | "stream";
 	/** Mutes media sound in the desktop overlay only; the browser source keeps its sound. */
 	desktopOverlayMuted: boolean;
 }
@@ -260,7 +262,7 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 15;
+export const CURRENT_SCHEMA_VERSION = 16;
 
 /**
  * Default port of the local browser source. Below the dynamic range (49152+)
@@ -327,5 +329,6 @@ export const DEFAULT_SETTINGS: Settings = {
 	floatingReactionSize: 6,
 	browserSourceEnabled: false,
 	browserSourcePort: DEFAULT_BROWSER_SOURCE_PORT,
+	streamDestination: "both",
 	desktopOverlayMuted: false,
 };

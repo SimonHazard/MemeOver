@@ -172,6 +172,11 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		out.browserSourcePort = DEFAULT_BROWSER_SOURCE_PORT;
 	}
 	if (typeof out.desktopOverlayMuted !== "boolean") out.desktopOverlayMuted = false;
+	// v15 → v16: preserve desktop playback by default. Keep this choice when the
+	// source is disabled so enabling it again restores the preferred destination.
+	if (out.streamDestination !== "both" && out.streamDestination !== "stream") {
+		out.streamDestination = DEFAULT_SETTINGS.streamDestination;
+	}
 	// Idempotent validation also applies to hand-edited files at the current schema version.
 	out.mediaSize = clampNumber(out.mediaSize, 10, 90, DEFAULT_SETTINGS.mediaSize);
 	out.duration = clampNumber(out.duration, 1, 30, DEFAULT_SETTINGS.duration);

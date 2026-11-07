@@ -197,6 +197,47 @@ async function streamTab(page: Page) {
 	await expect(page.getByText("Browser source", { exact: true })).toBeVisible();
 }
 
+test("the stream destination persists, is restored on reactivation and leaves mute unchanged", async ({
+	page,
+}) => {
+	await streamTab(page);
+	const source = page.getByRole("switch", { name: "Browser source" });
+	const destination = page.getByRole("group", { name: "Show memes on", exact: true });
+	await expect(destination).toHaveCount(0);
+	await source.click();
+	await expect(
+		destination.getByRole("button", { name: "Desktop and stream", exact: true }),
+	).toHaveAttribute("aria-pressed", "true");
+	const streamOnly = destination.getByRole("button", { name: "Stream only", exact: true });
+	await streamOnly.click();
+	await expect(streamOnly).toHaveAttribute("aria-pressed", "true");
+	expect((await settings(page)).streamDestination).toBe("stream");
+	expect((await settings(page)).desktopOverlayMuted).toBe(false);
+	await expect(
+		page.getByText(/The desktop stays hidden while the browser source is enabled/),
+	).toBeVisible();
+	await expect(
+		page.getByText("Desktop playback is hidden. This sound setting will apply when it resumes."),
+	).toBeVisible();
+	await expect(page.getByText(/You may hear memes twice/)).toHaveCount(0);
+	await source.click();
+	await expect(destination).toHaveCount(0);
+	expect((await settings(page)).streamDestination).toBe("stream");
+	await page.reload();
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await source.click();
+	await expect(streamOnly).toHaveAttribute("aria-pressed", "true");
+	// Keyboard selection applies the same persisted choice.
+	await streamOnly.focus();
+	await page.keyboard.press("ArrowLeft");
+	await page.keyboard.press("Space");
+	await expect(
+		destination.getByRole("button", { name: "Desktop and stream", exact: true }),
+	).toHaveAttribute("aria-pressed", "true");
+	expect((await settings(page)).streamDestination).toBe("both");
+	expect((await settings(page)).desktopOverlayMuted).toBe(false);
+});
+
 test("the browser source is opt-in and copies a link with credentials only after #", async ({
 	page,
 }) => {

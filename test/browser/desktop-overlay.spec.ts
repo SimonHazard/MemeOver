@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test, type WebSocketRoute } from "@playwright/test";
 import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS } from "../../app/src/shared/types";
 import { type DesktopStubWindow, installDesktopStub } from "./desktop-stub";
 
@@ -34,16 +34,19 @@ const savedSettings = (patch: object = {}) => ({
 });
 
 async function openOverlay(page: Page, patch: object = {}, message: unknown = media) {
+	const sockets: WebSocketRoute[] = [];
 	await page.route(`${videoUrl}*`, () => {});
 	await page.routeWebSocket(wsUrl, (ws) => {
 		ws.onMessage((raw) => {
 			if (JSON.parse(String(raw)).type !== "JOIN") return;
+			sockets.push(ws);
 			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: guildId, success: true }));
 			if (message) ws.send(JSON.stringify(message));
 		});
 	});
 	await installDesktopStub(page, savedSettings(patch));
 	await page.goto("/overlay.html");
+	return sockets;
 }
 
 const emit = (page: Page, event: string, payload?: unknown) =>
@@ -51,6 +54,128 @@ const emit = (page: Page, event: string, payload?: unknown) =>
 		([name, data]) => (window as unknown as DesktopStubWindow).desktopEmit(String(name), data),
 		[event, payload],
 	);
+
+const textMessage = (text: string) => ({
+	type: "TEXT",
+	guild_id: guildId,
+	channel_id: "1",
+	message_id: text,
+	author_id: "2",
+	author_username: "Streamer",
+	author_avatar_url: "",
+	text,
+	timestamp: 1,
+});
+const reactionMessage = {
+	type: "REACTION",
+	guild_id: guildId,
+	channel_id: "1",
+	message_id: "1",
+	user_id: "2",
+	emoji: "🔥",
+	timestamp: 1,
+};
+
+test("stream-only cuts current desktop playback, drops queued and incoming content, and keeps the socket", async ({
+	page,
+}) => {
+	const sockets = await openOverlay(page, { browserSourceEnabled: true });
+	await expect(page.locator("video")).toHaveCount(1);
+	await page.locator("video").evaluate((player: HTMLVideoElement) => {
+		const pause = player.pause.bind(player);
+		Object.assign(window, { destinationPauseCount: 0 });
+		player.pause = () => {
+			(window as unknown as { destinationPauseCount: number }).destinationPauseCount++;
+			pause();
+		};
+	});
+	const socket = sockets[0];
+	if (!socket) throw new Error("The overlay never joined");
+	socket.send(JSON.stringify(textMessage("Queued before stream-only")));
+	socket.send(JSON.stringify(reactionMessage));
+	await expect(page.getByText("🔥").first()).toBeVisible();
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({ browserSourceEnabled: true, streamDestination: "stream" }),
+	);
+	await expect(page.locator("video")).not.toBeVisible();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => (window as unknown as { destinationPauseCount: number }).destinationPauseCount,
+			),
+		)
+		.toBeGreaterThan(0);
+	await expect(page.locator("video")).toHaveCount(0);
+	await expect(page.getByText("🔥")).toHaveCount(0);
+	socket.send(JSON.stringify(media));
+	socket.send(JSON.stringify(textMessage("Sent while stream-only")));
+	socket.send(JSON.stringify(reactionMessage));
+	await emit(page, "replay-item", {
+		...textMessage("Replayed while stream-only"),
+		queueId: "replay",
+	});
+	// Native source failure cannot change the selected desktop destination.
+	await emit(page, "browser-source-start-failed");
+	await expect(page.getByText(/The browser source could not start/)).toBeVisible();
+	await expect(page.locator("video")).toHaveCount(0);
+	await expect(page.getByText("🔥")).toHaveCount(0);
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({
+			browserSourceEnabled: false,
+			streamDestination: "stream",
+			desktopOverlayMuted: true,
+		}),
+	);
+	socket.send(JSON.stringify({ ...media, media_url: `${videoUrl}?new` }));
+	await expect(page.locator("video")).toHaveAttribute("src", `${videoUrl}?new`);
+	expect(await page.locator("video").evaluate((player: HTMLVideoElement) => player.muted)).toBe(
+		true,
+	);
+	await page.locator("video").evaluate((player) => player.dispatchEvent(new Event("error")));
+	await expect(page.locator("video")).toHaveCount(0);
+	await expect(
+		page.getByText(/Queued before stream-only|Sent while stream-only|Replayed while stream-only/),
+	).toHaveCount(0);
+	expect(sockets).toHaveLength(1);
+});
+
+test("saved stream-only stays blank at launch and on reactivation, both restores playback", async ({
+	page,
+}) => {
+	const sockets = await openOverlay(page, {
+		browserSourceEnabled: true,
+		streamDestination: "stream",
+	});
+	await expect.poll(() => sockets.length).toBe(1);
+	await expect(page.locator("video")).toHaveCount(0);
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({ browserSourceEnabled: false, streamDestination: "stream" }),
+	);
+	sockets[0]?.send(JSON.stringify(media));
+	await expect(page.locator("video")).toHaveCount(1);
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({ browserSourceEnabled: true, streamDestination: "stream" }),
+	);
+	await expect(page.locator("video")).toHaveCount(0);
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({ browserSourceEnabled: true, streamDestination: "both" }),
+	);
+	sockets[0]?.send(JSON.stringify(textMessage("Desktop restored")));
+	await expect(
+		page.getByText("Desktop restored", { exact: true }).locator("visible=true"),
+	).toBeVisible();
+	expect(sockets).toHaveLength(1);
+});
 
 test("the desktop mute cuts and restores the sound of the playing media, live", async ({
 	page,

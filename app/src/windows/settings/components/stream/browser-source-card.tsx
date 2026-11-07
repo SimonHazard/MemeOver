@@ -12,7 +12,8 @@ import {
 	SelectValue,
 } from "@memeover/ui/components/ui/select";
 import { Separator } from "@memeover/ui/components/ui/separator";
-import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
+import { ToggleGroup, ToggleGroupItem } from "@memeover/ui/components/ui/toggle-group";
+import { NB_SHADOW_SM, NB_TOGGLE_ITEM } from "@memeover/ui/lib/nb-classes";
 import { useQuery } from "@tanstack/react-query";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Eye, EyeOff, Info, MonitorPlay, RotateCcw, TriangleAlert } from "lucide-react";
@@ -70,7 +71,7 @@ function RestartNotice() {
 }
 
 /** What the page last reported, so problems invisible on stream show up here. */
-function SourceConnectionNotice() {
+function SourceConnectionNotice({ streamOnly }: { streamOnly: boolean }) {
 	const { t } = useTranslation();
 	const { data: heartbeat = null } = useQuery({
 		queryKey: ["browserSourceHeartbeat"],
@@ -79,7 +80,7 @@ function SourceConnectionNotice() {
 		refetchInterval: HEARTBEAT_REFRESH_MS,
 	});
 	const connection = sourceConnection(heartbeat);
-	const healthy = connection === "connected" || connection === "waiting";
+	const healthy = connection === "connected" || (connection === "waiting" && !streamOnly);
 	return (
 		<div role="status">
 			<Notice tone={healthy ? "muted" : "warn"}>
@@ -229,6 +230,7 @@ export function BrowserSourceCard() {
 		setPortDraft,
 		toggle,
 		commitPort,
+		setDestination,
 	} = useBrowserSourceControls();
 
 	if (!settings) return null;
@@ -308,12 +310,43 @@ export function BrowserSourceCard() {
 				)}
 				{needsRestart && <RestartNotice />}
 
+				{enabled && (
+					<section aria-labelledby="stream-destination-label" className="flex flex-col gap-2">
+						<Label id="stream-destination-label" className="font-display tracking-wide text-xs">
+							{t("stream.browserSource.destinationLabel")}
+						</Label>
+						<ToggleGroup
+							value={[settings.streamDestination]}
+							onValueChange={([value]) => {
+								if (value === "both" || value === "stream") void setDestination(value);
+							}}
+							disabled={busy}
+							aria-labelledby="stream-destination-label"
+							aria-describedby="stream-destination-hint"
+							className="flex-wrap"
+						>
+							<ToggleGroupItem value="both" className={NB_TOGGLE_ITEM}>
+								{t("stream.browserSource.destinationBoth")}
+							</ToggleGroupItem>
+							<ToggleGroupItem value="stream" className={NB_TOGGLE_ITEM}>
+								{t("stream.browserSource.destinationStream")}
+							</ToggleGroupItem>
+						</ToggleGroup>
+						<p id="stream-destination-hint" className="text-xs font-text text-muted-foreground">
+							{t("stream.browserSource.destinationHint")}
+						</p>
+						{settings.streamDestination === "stream" && (
+							<Notice tone="warn">{t("stream.browserSource.streamOnlyNotice")}</Notice>
+						)}
+					</section>
+				)}
+
 				{serving && runningPort !== null && (
 					<>
 						<Separator />
 						{hasCredentials ? (
 							<>
-								<SourceConnectionNotice />
+								<SourceConnectionNotice streamOnly={settings.streamDestination === "stream"} />
 								<BrowserSourceLink settings={settings} runningPort={runningPort} />
 							</>
 						) : (

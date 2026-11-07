@@ -84,6 +84,12 @@ le mixeur.
   seules quand MemeOver sert à nouveau la page (recopiez le lien si le port a changé).
 - Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver
   lancé, actualisez la source.
+- Dans **Stream**, choisissez **Bureau et stream** (par défaut) ou **Stream uniquement**.
+  Ce dernier masque immédiatement médias, textes, réactions et son du bureau tant que la source
+  est activée, même si elle ne fonctionne plus. Désactiver volontairement la source rétablit
+  l’affichage du bureau sans attendre le redémarrage ; le choix est conservé pour sa prochaine
+  activation. Le réglage de mute du bureau reste indépendant. Les contenus masqués ne sont pas
+  conservés pour être rejoués au retour sur le bureau.
 - Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
   l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
 - Le lien retient la taille de l'écran de l'overlay : le texte et les bordures gardent les mêmes
@@ -291,6 +297,11 @@ sound can have its own mixer entry.
   own once MemeOver serves the page again (copy the link again if the port changed).
 - If your software opens before MemeOver, the page cannot load: once MemeOver is running,
   refresh the source.
+- In **Stream**, choose **Desktop and stream** (the default) or **Stream only**. The latter
+  immediately hides desktop media, text, reactions and sound while the source is enabled,
+  even if it stops working. Deliberately disabling the source restores desktop playback
+  without waiting for a restart; the choice is kept for its next activation. The desktop mute
+  remains independent. Hidden content is discarded rather than replayed on return to the desktop.
 - To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
   tray menu ("Mute overlay").
 - The link remembers the size of the overlay's screen: text and borders keep the proportions

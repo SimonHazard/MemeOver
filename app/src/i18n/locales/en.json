@@ -280,6 +280,11 @@
 		"browserSource": {
 			"title": "Browser source",
 			"desc": "Shows memes in your streaming software through a browser source: transparent over any scene, game capture included. Depending on your software, its sound can have its own mixer entry. While enabled, MemeOver serves the page on this computer only (127.0.0.1).",
+			"destinationLabel": "Show memes on",
+			"destinationBoth": "Desktop and stream",
+			"destinationStream": "Stream only",
+			"destinationHint": "Applies immediately to media, text and reactions. Turning the browser source off restores desktop playback; your choice is kept for the next activation. The desktop mute stays unchanged.",
+			"streamOnlyNotice": "The desktop stays hidden while the browser source is enabled, even if no source is connected or it stops working. Check the source status below before going live.",
 			"portLabel": "Local port",
 			"portInvalid": "Choose a port between 1024 and 65535.",
 			"portInUse": "Port {{port}} is used by another program — choose another.",
@@ -318,6 +323,7 @@
 			"desc": "Mutes memes on your screen only. The browser source keeps its sound. Also available from the tray menu.",
 			"mute": "Mute the desktop overlay",
 			"unmute": "Unmute the desktop overlay",
+			"stateHidden": "Desktop playback is hidden. This sound setting will apply when it resumes.",
 			"stateMuted": "The desktop overlay is muted.",
 			"stateAudible": "The desktop overlay's sound is on.",
 			"doubleHint": "With the browser source on, you may hear memes twice and send them twice to the stream: mute the desktop overlay."

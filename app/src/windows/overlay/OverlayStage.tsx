@@ -15,34 +15,57 @@ import { useOverlayWs } from "./hooks/useOverlayWs";
 interface OverlayStageProps {
 	/** Mutes media sound on this surface only. */
 	muted: boolean;
+	/** Keeps the socket and status live while suppressing this surface's playback. */
+	playbackEnabled?: boolean;
 	/** Called whenever the displayed item changes (desktop history logging). */
 	onCurrentChange?: (current: DisplayQueueItem | null) => void;
 	/** Wraps the live media, e.g. the desktop dev simulation runtime. */
 	MediaWrapper?: ComponentType<{ children: ReactNode }>;
 }
 
-function LiveOverlayMedia({ muted, onCurrentChange }: Omit<OverlayStageProps, "MediaWrapper">) {
-	useOverlayWs();
-	const display = useMediaDisplay();
+function LiveOverlayMedia({
+	muted,
+	playbackEnabled = true,
+	onCurrentChange,
+}: Omit<OverlayStageProps, "MediaWrapper">) {
+	useOverlayWs(playbackEnabled);
+	const display = useMediaDisplay(playbackEnabled);
 	const settings = useAppStore((s) => s.settings);
 	const { current } = display;
 	useEffect(() => {
 		onCurrentChange?.(current);
 	}, [current, onCurrentChange]);
-	return <MediaPopup {...display} settings={settings} muted={muted} />;
+	// Hide immediately, but leave players attached until useMediaDisplay has paused
+	// them and cleared the current item. Detached media can otherwise keep playing.
+	return (
+		<div hidden={!playbackEnabled}>
+			<MediaPopup {...display} settings={settings} muted={muted || !playbackEnabled} />
+		</div>
+	);
 }
 
 export function OverlayStage({
 	muted,
+	playbackEnabled = true,
 	onCurrentChange,
 	MediaWrapper = Fragment,
 }: OverlayStageProps) {
+	useEffect(() => {
+		if (playbackEnabled) return;
+		useAppStore.getState().clearQueue();
+		useAppStore.getState().clearReactions();
+	}, [playbackEnabled]);
+
 	return (
 		<>
 			<MediaWrapper>
-				<LiveOverlayMedia muted={muted} onCurrentChange={onCurrentChange} />
+				<LiveOverlayMedia
+					muted={muted}
+					playbackEnabled={playbackEnabled}
+					onCurrentChange={onCurrentChange}
+				/>
 			</MediaWrapper>
-			<FloatingReactions />
+			{playbackEnabled && <FloatingReactions />}
 			<ConnectionNotifications />
 		</>
 	);
