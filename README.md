@@ -71,9 +71,9 @@ le mixeur.
 - La page ne suit pas les changements d'affichage ni de connexion : copiez à nouveau le lien.
 - Passer un meme, vider la file, masquer un auteur et le choix sur les memes anonymes agissent
   aussi sur une source déjà chargée en une ou deux secondes, tant que MemeOver est lancé.
-  « Passer » reste disponible lorsque l'overlay du bureau est fermé ou vide. Les passages
-  successifs et les vidages de file gardent leur ordre ; si une source suspendue manque plus
-  de 64 actions, elle abandonne les memes en cours et en attente.
+  « Passer » reste disponible lorsqu'une source est chargée, même si l'overlay du bureau est
+  fermé ou vide. Les passages successifs et les vidages de file gardent leur ordre ; si une
+  source suspendue manque plus de 64 actions, elle abandonne les memes en cours et en attente.
 - L'onglet **Stream** indique si une source est connectée, si son lien est refusé ou si son son
   est bloqué. Si le serveur local ne peut pas démarrer, MemeOver réessaie et le signale sur
   l'overlay du bureau.
@@ -87,9 +87,10 @@ le mixeur.
 - Dans **Stream**, choisissez **Bureau et stream** (par défaut) ou **Stream uniquement**.
   Ce dernier masque immédiatement médias, textes, réactions et son du bureau tant que la source
   est activée, même si elle ne fonctionne plus. Désactiver volontairement la source rétablit
-  l’affichage du bureau sans attendre le redémarrage ; le choix est conservé pour sa prochaine
-  activation. Le réglage de mute du bureau reste indépendant. Les contenus masqués ne sont pas
-  conservés pour être rejoués au retour sur le bureau.
+  l'affichage du bureau sans attendre le redémarrage ; le choix est conservé pour sa prochaine
+  activation. Le son coupé du bureau reste indépendant. Les contenus masqués ne sont pas
+  conservés pour être rejoués au retour sur le bureau. Dans ce mode, l'historique n'enregistre
+  rien et « Rejouer » est désactivé : l'onglet Historique le signale.
 - Pour ne pas entendre les memes deux fois, coupez le son de l'overlay du bureau depuis
   l'onglet **Stream** ou le menu de la barre système (« Couper le son de l'overlay »).
 - Le lien retient la taille de l'écran de l'overlay : le texte et les bordures gardent les mêmes
@@ -285,9 +286,9 @@ sound can have its own mixer entry.
 - The page does not follow display or connection changes: copy the link again.
 - Skipping a meme, clearing the queue, muting an author and your choice about anonymous memes
   also reach a loaded source within a couple of seconds, as long as MemeOver is running.
-  Skip stays available when the desktop overlay is closed or empty. Repeated skips and queue
-  clears keep their order; a suspended source that misses more than 64 actions discards its
-  current and waiting memes.
+  Skip stays available while a source is loaded, even when the desktop overlay is closed or
+  empty. Repeated skips and queue clears keep their order; a suspended source that misses more
+  than 64 actions discards its current and waiting memes.
 - The **Stream** tab shows whether a source is connected, its link refused or its sound blocked.
   If the local server cannot start, MemeOver retries and says so on the desktop overlay.
 - A source that is hidden but running still receives memes: they play out of sight, and their
@@ -302,6 +303,7 @@ sound can have its own mixer entry.
   even if it stops working. Deliberately disabling the source restores desktop playback
   without waiting for a restart; the choice is kept for its next activation. The desktop mute
   remains independent. Hidden content is discarded rather than replayed on return to the desktop.
+  In this mode, history records nothing and Replay is disabled; the History tab says so.
 - To avoid hearing memes twice, mute the desktop overlay from the **Stream** tab or the
   tray menu ("Mute overlay").
 - The link remembers the size of the overlay's screen: text and borders keep the proportions

@@ -73,4 +73,4 @@ require testing inside the packaged Tauri application.
 On failure, `test-results/` contains Playwright's trace and error context. Both
 `test-results/` and `playwright-report/` are ignored by Git.
 
-The stream destination regressions cover live desktop suppression (including queued content, reactions, audio pause and history replays), persistence and keyboard selection, restoration on source disable, no fallback on source failure, and copied-link controls in both destinations.
+The stream destination regressions cover live desktop suppression (including queued content, reactions, audio pause and history replays), persistence and keyboard selection, restoration on source disable, no fallback on source failure, and copied-link controls in both destinations. The History tab explains stream-only mode and disables Replay there, and Skip is enabled for the source only once a loaded page reports in.

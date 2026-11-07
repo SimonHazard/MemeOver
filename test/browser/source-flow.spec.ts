@@ -89,8 +89,14 @@ for (const destination of ["both", "stream"] as const) {
 				ws.send(mediaFrom("2"));
 			});
 		});
-		// What the local server does: answers checks with what the desktop window really published.
+		// What the local server does: answers checks with what the desktop window really published,
+		// and hands the page's report to the desktop.
 		await source.route(SOURCE_CHECK, async (route) => {
+			const report = new URL(route.request().url()).search.slice(1);
+			await desktop.evaluate(
+				(query) => localStorage.setItem("test-source-heartbeat", query),
+				report,
+			);
 			const response = await route.fetch();
 			const controls = await desktop.evaluate(() => localStorage.getItem("test-source-controls"));
 			await route.fulfill({
@@ -127,7 +133,8 @@ for (const destination of ["both", "stream"] as const) {
 			}),
 		);
 
-		// The real button must work even though the desktop overlay has nothing playing.
+		// The real button must work even though the desktop overlay has nothing playing,
+		// because the desktop knows a source is loaded.
 		await desktop.getByRole("button", { name: "Overlay", exact: true }).click();
 		const skip = desktop.getByRole("button", { name: "Skip", exact: true });
 		await expect(skip).toBeEnabled();

@@ -1,3 +1,9 @@
+import {
+	NbAccordion,
+	NbAccordionContent,
+	NbAccordionItem,
+	NbAccordionTrigger,
+} from "@memeover/ui/components/branded/nb-accordion";
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
 import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
@@ -28,14 +34,13 @@ import {
 	buildBrowserSourceUrl,
 	maskBrowserSourceUrl,
 	resolveBrowserSourceProfile,
-	sourceConnection,
+	type SourceConnection,
 } from "@/shared/browser-source";
 import { loadOverlayProfiles } from "@/shared/profiles";
-import { overlayReferenceSize, readSourceHeartbeat } from "@/shared/stream-controls";
+import { overlayReferenceSize } from "@/shared/stream-controls";
 import type { Settings } from "@/shared/types";
 import { useBrowserSourceControls } from "./use-browser-source-controls";
-
-const HEARTBEAT_REFRESH_MS = 2000;
+import { useSourceConnection } from "./use-source-connection";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -71,15 +76,14 @@ function RestartNotice() {
 }
 
 /** What the page last reported, so problems invisible on stream show up here. */
-function SourceConnectionNotice({ streamOnly }: { streamOnly: boolean }) {
+function SourceConnectionNotice({
+	connection,
+	streamOnly,
+}: {
+	connection: SourceConnection;
+	streamOnly: boolean;
+}) {
 	const { t } = useTranslation();
-	const { data: heartbeat = null } = useQuery({
-		queryKey: ["browserSourceHeartbeat"],
-		queryFn: readSourceHeartbeat,
-		staleTime: 0,
-		refetchInterval: HEARTBEAT_REFRESH_MS,
-	});
-	const connection = sourceConnection(heartbeat);
 	const healthy = connection === "connected" || (connection === "waiting" && !streamOnly);
 	return (
 		<div role="status">
@@ -91,7 +95,7 @@ function SourceConnectionNotice({ streamOnly }: { streamOnly: boolean }) {
 }
 
 function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runningPort: number }) {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const [revealed, setRevealed] = useState(false);
 	const [choice, setChoice] = useState<BrowserSourceProfileChoice>("current");
 	const { data: profiles = [] } = useQuery({
@@ -117,6 +121,7 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 		mutedAuthors: settings.mutedAuthors,
 		hideAnonymous: settings.hideAnonymous,
 		referenceSize,
+		language: i18n.language === "en" ? "en" : "fr",
 	});
 	const profileItems = [
 		{ value: "current", label: t("stream.browserSource.profileCurrent") },
@@ -191,28 +196,30 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 			</div>
 
 			<Notice tone="warn">{t("stream.browserSource.secretWarning")}</Notice>
-			<Notice>{t("stream.browserSource.copyAgain")}</Notice>
-			<Notice>{t("stream.browserSource.liveControls")}</Notice>
+			<Notice>{t("stream.browserSource.linkScope")}</Notice>
 		</div>
 	);
 }
 
+/** Reference steps, folded so the card stays short once the source is set up. */
 function RecommendedSourceSettings() {
 	const { t } = useTranslation();
 	return (
-		<section className="space-y-2">
-			<h3 className="font-display text-sm tracking-wide">
-				{t("stream.browserSource.softwareTitle")}
-			</h3>
-			<ul className="list-disc space-y-1.5 pl-5 text-sm font-text leading-relaxed">
-				<li>{t("stream.browserSource.softwareAdd")}</li>
-				<li>{t("stream.browserSource.softwareSize")}</li>
-				<li>{t("stream.browserSource.softwareKeepRunning")}</li>
-				<li>{t("stream.browserSource.softwareAudio")}</li>
-				<li>{t("stream.browserSource.softwareMonitor")}</li>
-				<li>{t("stream.browserSource.softwareRefresh")}</li>
-			</ul>
-		</section>
+		<NbAccordion>
+			<NbAccordionItem value="software">
+				<NbAccordionTrigger>{t("stream.browserSource.softwareTitle")}</NbAccordionTrigger>
+				<NbAccordionContent className="pb-3">
+					<ul className="list-disc space-y-1.5 pl-5 text-sm font-text leading-relaxed">
+						<li>{t("stream.browserSource.softwareAdd")}</li>
+						<li>{t("stream.browserSource.softwareSize")}</li>
+						<li>{t("stream.browserSource.softwareKeepRunning")}</li>
+						<li>{t("stream.browserSource.softwareAudio")}</li>
+						<li>{t("stream.browserSource.softwareMonitor")}</li>
+						<li>{t("stream.browserSource.softwareRefresh")}</li>
+					</ul>
+				</NbAccordionContent>
+			</NbAccordionItem>
+		</NbAccordion>
 	);
 }
 
@@ -232,13 +239,18 @@ export function BrowserSourceCard() {
 		commitPort,
 		setDestination,
 	} = useBrowserSourceControls();
+	const serving = Boolean(
+		settings?.browserSourceEnabled && runningPort === settings.browserSourcePort,
+	);
+	const connection = useSourceConnection(serving);
 
 	if (!settings) return null;
 
 	const enabled = settings.browserSourceEnabled;
+	const streamOnly = settings.streamDestination === "stream";
 	const needsRestart = browserSourceNeedsRestart(runningPort, settings);
-	const serving = enabled && runningPort === settings.browserSourcePort;
 	const hasCredentials = Boolean(settings.guildId && settings.token);
+	const sourcePlaying = connection === "connected" || connection === "soundBlocked";
 	const errorMessage =
 		startError === "port_in_use"
 			? t("stream.browserSource.portInUse", { port: settings.browserSourcePort })
@@ -246,6 +258,8 @@ export function BrowserSourceCard() {
 				? t("stream.browserSource.startError")
 				: null;
 
+	// Setup order: switch, link and its status, then where memes go, then the reference steps.
+	// The port is an advanced setting, kept last with the errors and restart it can cause.
 	return (
 		<NbCard>
 			<div className="space-y-4">
@@ -271,37 +285,89 @@ export function BrowserSourceCard() {
 					</div>
 				</div>
 
-				<div className="flex flex-col gap-2">
-					<Label htmlFor="browser-source-port" className="font-display tracking-wide text-xs">
-						{t("stream.browserSource.portLabel")}
-					</Label>
-					<Input
-						id="browser-source-port"
-						type="number"
-						inputMode="numeric"
-						min={1024}
-						max={65535}
-						value={portText}
-						disabled={busy}
-						aria-invalid={!portValid}
-						aria-describedby={portValid ? undefined : "browser-source-port-error"}
-						onChange={(event) => setPortDraft(event.target.value)}
-						onBlur={() => void commitPort()}
-						onKeyDown={(event) => {
-							if (event.key === "Enter") void commitPort();
-						}}
-						className="w-32 font-mono"
-					/>
-					{!portValid && (
-						<p
-							id="browser-source-port-error"
-							role="alert"
-							className="text-xs text-destructive font-text"
-						>
-							{t("stream.browserSource.portInvalid")}
-						</p>
-					)}
-				</div>
+				{serving && (
+					<>
+						<Separator />
+						{hasCredentials ? (
+							<>
+								<SourceConnectionNotice connection={connection} streamOnly={streamOnly} />
+								<BrowserSourceLink settings={settings} runningPort={settings.browserSourcePort} />
+							</>
+						) : (
+							<Notice>{t("stream.browserSource.missingCredentials")}</Notice>
+						)}
+					</>
+				)}
+
+				{enabled && (
+					<>
+						<Separator />
+						<section aria-labelledby="stream-destination-label" className="flex flex-col gap-2">
+							<Label id="stream-destination-label" className="font-display tracking-wide text-xs">
+								{t("stream.browserSource.destinationLabel")}
+							</Label>
+							<ToggleGroup
+								value={[settings.streamDestination]}
+								onValueChange={([value]) => {
+									if (value === "both" || value === "stream") void setDestination(value);
+								}}
+								disabled={busy}
+								aria-labelledby="stream-destination-label"
+								aria-describedby="stream-destination-hint"
+								className="flex-wrap"
+							>
+								<ToggleGroupItem value="both" className={NB_TOGGLE_ITEM}>
+									{t("stream.browserSource.destinationBoth")}
+								</ToggleGroupItem>
+								<ToggleGroupItem value="stream" className={NB_TOGGLE_ITEM}>
+									{t("stream.browserSource.destinationStream")}
+								</ToggleGroupItem>
+							</ToggleGroup>
+							<p id="stream-destination-hint" className="text-xs font-text text-muted-foreground">
+								{t("stream.browserSource.destinationHint")}
+							</p>
+							{streamOnly && !sourcePlaying && (
+								<Notice tone="warn">{t("stream.browserSource.streamOnlyNotice")}</Notice>
+							)}
+						</section>
+					</>
+				)}
+
+				{serving && <RecommendedSourceSettings />}
+
+				{enabled && (
+					<div className="flex flex-col gap-2">
+						<Label htmlFor="browser-source-port" className="font-display tracking-wide text-xs">
+							{t("stream.browserSource.portLabel")}
+						</Label>
+						<Input
+							id="browser-source-port"
+							type="number"
+							inputMode="numeric"
+							min={1024}
+							max={65535}
+							value={portText}
+							disabled={busy}
+							aria-invalid={!portValid}
+							aria-describedby={portValid ? undefined : "browser-source-port-error"}
+							onChange={(event) => setPortDraft(event.target.value)}
+							onBlur={() => void commitPort()}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") void commitPort();
+							}}
+							className="w-32 font-mono"
+						/>
+						{!portValid && (
+							<p
+								id="browser-source-port-error"
+								role="alert"
+								className="text-xs text-destructive font-text"
+							>
+								{t("stream.browserSource.portInvalid")}
+							</p>
+						)}
+					</div>
+				)}
 
 				{errorMessage && (
 					<div role="alert">
@@ -309,53 +375,6 @@ export function BrowserSourceCard() {
 					</div>
 				)}
 				{needsRestart && <RestartNotice />}
-
-				{enabled && (
-					<section aria-labelledby="stream-destination-label" className="flex flex-col gap-2">
-						<Label id="stream-destination-label" className="font-display tracking-wide text-xs">
-							{t("stream.browserSource.destinationLabel")}
-						</Label>
-						<ToggleGroup
-							value={[settings.streamDestination]}
-							onValueChange={([value]) => {
-								if (value === "both" || value === "stream") void setDestination(value);
-							}}
-							disabled={busy}
-							aria-labelledby="stream-destination-label"
-							aria-describedby="stream-destination-hint"
-							className="flex-wrap"
-						>
-							<ToggleGroupItem value="both" className={NB_TOGGLE_ITEM}>
-								{t("stream.browserSource.destinationBoth")}
-							</ToggleGroupItem>
-							<ToggleGroupItem value="stream" className={NB_TOGGLE_ITEM}>
-								{t("stream.browserSource.destinationStream")}
-							</ToggleGroupItem>
-						</ToggleGroup>
-						<p id="stream-destination-hint" className="text-xs font-text text-muted-foreground">
-							{t("stream.browserSource.destinationHint")}
-						</p>
-						{settings.streamDestination === "stream" && (
-							<Notice tone="warn">{t("stream.browserSource.streamOnlyNotice")}</Notice>
-						)}
-					</section>
-				)}
-
-				{serving && runningPort !== null && (
-					<>
-						<Separator />
-						{hasCredentials ? (
-							<>
-								<SourceConnectionNotice streamOnly={settings.streamDestination === "stream"} />
-								<BrowserSourceLink settings={settings} runningPort={runningPort} />
-							</>
-						) : (
-							<Notice>{t("stream.browserSource.missingCredentials")}</Notice>
-						)}
-						<Separator />
-						<RecommendedSourceSettings />
-					</>
-				)}
 			</div>
 		</NbCard>
 	);

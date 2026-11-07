@@ -214,12 +214,17 @@ test("the stream destination persists, is restored on reactivation and leaves mu
 	expect((await settings(page)).streamDestination).toBe("stream");
 	expect((await settings(page)).desktopOverlayMuted).toBe(false);
 	await expect(
-		page.getByText(/The desktop stays hidden while the browser source is enabled/),
+		page.getByText(/Until a source connects, memes show neither on your desktop nor on stream/),
 	).toBeVisible();
 	await expect(
 		page.getByText("Desktop playback is hidden. This sound setting will apply when it resumes."),
 	).toBeVisible();
 	await expect(page.getByText(/You may hear memes twice/)).toHaveCount(0);
+	// The warning is about a missing source: it goes once one plays.
+	await page.evaluate(() =>
+		localStorage.setItem("test-source-heartbeat", "source=1&sound=on&bot=connected"),
+	);
+	await expect(page.getByText(/Until a source connects/)).toHaveCount(0);
 	await source.click();
 	await expect(destination).toHaveCount(0);
 	expect((await settings(page)).streamDestination).toBe("stream");
@@ -252,8 +257,11 @@ test("the browser source is opt-in and copies a link with credentials only after
 	await expect(link).toHaveValue(/\/browser-source\.html#••••••$/);
 	expect((await settings(page)).browserSourceEnabled).toBe(true);
 	expect(await page.evaluate(() => sessionStorage.getItem("test-source-running"))).toBe("4466");
+	// The reference steps stay folded until asked for.
+	await expect(page.getByText(/Keep the source running while it is hidden/)).toBeHidden();
+	await page.getByRole("button", { name: "In your streaming software" }).click();
 	await expect(page.getByText(/Keep the source running while it is hidden/)).toBeVisible();
-	await expect(page.getByText(/never show it on stream/)).toBeVisible();
+	await expect(page.getByText(/Never show this link on stream/)).toBeVisible();
 	// Enabled, the tab still names no third-party product, the displayed link included.
 	await expect(page.getByText(/OBS|VB-Cable|WebView2/)).toHaveCount(0);
 	await expect(link).not.toHaveValue(/obs/i);
@@ -278,6 +286,7 @@ test("the browser source is opt-in and copies a link with credentials only after
 	expect(params.get("c")).toBe("browser-test-client");
 	expect(params.get("f")).toBeTruthy();
 	expect(params.get("r")).toBe("1080");
+	expect(params.get("l")).toBe("en");
 
 	// The plugin cannot stop: turning it off asks for a restart.
 	await toggle.click();
@@ -535,9 +544,11 @@ test("a busy browser source port is reported and another port can be chosen", as
 
 test("the desktop overlay mute follows the Stream tab and the tray", async ({ page }) => {
 	await streamTab(page);
-	await page.getByRole("button", { name: "Mute the desktop overlay" }).click();
-	await expect(page.getByText("The desktop overlay is muted.")).toBeVisible();
-	expect((await settings(page)).desktopOverlayMuted).toBe(true);
+	const mute = page.getByRole("switch", { name: "Mute the desktop overlay" });
+	await expect(mute).toHaveAttribute("aria-checked", "false");
+	await mute.click();
+	await expect(mute).toHaveAttribute("aria-checked", "true");
+	await expect.poll(async () => (await settings(page)).desktopOverlayMuted).toBe(true);
 	expect(await page.evaluate(() => localStorage.getItem("test-tray-muted"))).toBe("true");
 
 	await page.evaluate(() =>
@@ -545,14 +556,68 @@ test("the desktop overlay mute follows the Stream tab and the tray", async ({ pa
 			"overlay-mute-toggle-requested",
 		),
 	);
-	await expect(page.getByRole("button", { name: "Mute the desktop overlay" })).toBeVisible();
+	await expect(mute).toHaveAttribute("aria-checked", "false");
 	expect((await settings(page)).desktopOverlayMuted).toBe(false);
 	expect(await page.evaluate(() => localStorage.getItem("test-tray-muted"))).toBe("false");
 
 	await page.reload();
 	await page.getByRole("button", { name: "Stream", exact: true }).click();
-	await expect(page.getByText("The desktop overlay's sound is on.")).toBeVisible();
+	await expect(mute).toHaveAttribute("aria-checked", "false");
 	await expect(page.getByText(/you may hear memes twice/)).toHaveCount(0);
+});
+
+test("Skip reaches a loaded browser source, not one that is only being served", async ({
+	page,
+}) => {
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await expect(page.getByLabel("Source link", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Overlay", exact: true }).click();
+	const skip = page.getByRole("button", { name: "Skip", exact: true });
+	// Served but no page loaded, and nothing on the desktop: nothing to skip.
+	await expect(skip).toBeDisabled();
+	await page.evaluate(() =>
+		localStorage.setItem("test-source-heartbeat", "source=1&sound=on&bot=connected"),
+	);
+	await expect(skip).toBeEnabled();
+});
+
+test("stream-only history explains why nothing is recorded and disables replay", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		if (localStorage.getItem("test-store:history.json")) return;
+		localStorage.setItem(
+			"test-store:history.json",
+			JSON.stringify({
+				history: [
+					{
+						type: "TEXT",
+						queueId: "stream-only-item",
+						author_id: "123456789012345678",
+						author_username: "Test Author",
+						author_avatar_url: "",
+						text: "Before stream-only",
+						timestamp: Date.now(),
+						recordedAt: Date.now(),
+					},
+				],
+			}),
+		);
+	});
+	await streamTab(page);
+	await page.getByRole("switch", { name: "Browser source" }).click();
+	await page.getByRole("button", { name: "Stream only", exact: true }).click();
+	await page.getByRole("button", { name: "History", exact: true }).click();
+	await expect(page.getByText("Before stream-only", { exact: true })).toBeVisible();
+	await expect(page.getByText(/Stream only is on: history records nothing/)).toBeVisible();
+	await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeDisabled();
+
+	await page.getByRole("button", { name: "Stream", exact: true }).click();
+	await page.getByRole("button", { name: "Desktop and stream", exact: true }).click();
+	await page.getByRole("button", { name: "History", exact: true }).click();
+	await expect(page.getByText(/Stream only is on/)).toHaveCount(0);
+	await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeEnabled();
 });
 
 test("profiles create, replace, apply, export, import and confirmed delete", async ({ page }) => {

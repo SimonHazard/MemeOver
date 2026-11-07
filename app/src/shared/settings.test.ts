@@ -73,12 +73,13 @@ test("connection notification duration migrates to four seconds and validates sa
 	}
 });
 
-test("v14 → v15 adds the browser source and desktop mute defaults without touching other fields", () => {
+test("v14 → v15 adds the browser source, destination and desktop mute defaults without touching other fields", () => {
 	const migrated = normalizeSettings({ schemaVersion: 14, volume: 35, guildId: "123" });
 	expect(migrated).toMatchObject({
 		schemaVersion: CURRENT_SCHEMA_VERSION,
 		browserSourceEnabled: false,
 		browserSourcePort: DEFAULT_BROWSER_SOURCE_PORT,
+		streamDestination: "both",
 		desktopOverlayMuted: false,
 		volume: 35,
 		guildId: "123",
@@ -108,8 +109,9 @@ test("an invalid browser source port falls back to the default", () => {
 	expect(normalizeSettings({ desktopOverlayMuted: 1 }).desktopOverlayMuted).toBe(false);
 });
 
-test("v15 → v16 preserves desktop playback and validates the destination", () => {
-	expect(normalizeSettings({ schemaVersion: 15, desktopOverlayMuted: true })).toMatchObject({
+test("the destination preserves desktop playback and is validated", () => {
+	// Pre-release builds stored schema 16 for this field: it normalizes back to the current version.
+	expect(normalizeSettings({ schemaVersion: 16, desktopOverlayMuted: true })).toMatchObject({
 		schemaVersion: CURRENT_SCHEMA_VERSION,
 		streamDestination: "both",
 		desktopOverlayMuted: true,

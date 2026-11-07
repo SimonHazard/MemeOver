@@ -20,8 +20,6 @@ import "./App.css";
 // no Tauri store, events, invoke or window API. Everything comes from the URL fragment,
 // which browsers never send to the local server.
 
-document.documentElement.lang = i18n.language;
-
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 /** Seeds the store from the link, with fixed sizes matching this source's size. */
@@ -59,6 +57,9 @@ function applyLink(
 
 function render(mode: SourceMode) {
 	const config = parseBrowserSourceFragment(window.location.hash);
+	// The preview aids speak the app's language, not the streaming software's.
+	if (config?.language) void i18n.changeLanguage(config.language);
+	document.documentElement.lang = i18n.language;
 	if (config) {
 		applyLink(config, config);
 		// Keep the live moderation state: it may be newer than the link's copy.

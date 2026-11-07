@@ -159,9 +159,9 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		30,
 		DEFAULT_SETTINGS.connectionNotificationDuration,
 	);
-	// v14 → v15: opt-in local browser source and the desktop overlay mute,
-	// both machine preferences. A fractional or out-of-range port falls back to
-	// the default instead of being rounded into another program's port.
+	// v14 → v15: opt-in local browser source, its meme destination and the desktop
+	// overlay mute, all machine preferences. A fractional or out-of-range port falls
+	// back to the default instead of being rounded into another program's port.
 	if (typeof out.browserSourceEnabled !== "boolean") out.browserSourceEnabled = false;
 	if (
 		typeof out.browserSourcePort !== "number" ||
@@ -172,8 +172,8 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 		out.browserSourcePort = DEFAULT_BROWSER_SOURCE_PORT;
 	}
 	if (typeof out.desktopOverlayMuted !== "boolean") out.desktopOverlayMuted = false;
-	// v15 → v16: preserve desktop playback by default. Keep this choice when the
-	// source is disabled so enabling it again restores the preferred destination.
+	// Desktop playback by default. The destination is kept while the source is
+	// disabled, so enabling it again restores the preferred choice.
 	if (out.streamDestination !== "both" && out.streamDestination !== "stream") {
 		out.streamDestination = DEFAULT_SETTINGS.streamDestination;
 	}

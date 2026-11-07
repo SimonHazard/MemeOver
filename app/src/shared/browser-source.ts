@@ -41,7 +41,11 @@ export interface BrowserSourceConfig {
 	hideAnonymous: boolean;
 	/** Short side of the desktop overlay in CSS pixels, to keep its proportions; null when absent. */
 	referenceSize: number | null;
+	/** The app's interface language, for the preview aids; null when absent. */
+	language: BrowserSourceLanguage | null;
 }
+
+export type BrowserSourceLanguage = "en" | "fr";
 
 interface BrowserSourceUrlInput {
 	origin: string;
@@ -53,6 +57,7 @@ interface BrowserSourceUrlInput {
 	mutedAuthors: readonly MutedAuthor[];
 	hideAnonymous: boolean;
 	referenceSize: number | null;
+	language: BrowserSourceLanguage;
 }
 
 export function isValidBrowserSourcePort(port: unknown): port is number {
@@ -98,6 +103,7 @@ export function buildBrowserSourceUrl({
 	mutedAuthors,
 	hideAnonymous,
 	referenceSize,
+	language,
 }: BrowserSourceUrlInput) {
 	const encodedProfile = encodeBase64Url(JSON.stringify(pickOverlayProfileSettings(profile)));
 	const encodedFilters = encodeBase64Url(
@@ -111,6 +117,7 @@ export function buildBrowserSourceUrl({
 		["p", encodedProfile],
 		["f", encodedFilters],
 		...(referenceSize === null ? [] : [["r", String(referenceSize)]]),
+		["l", language],
 	]
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join("&");
@@ -166,6 +173,10 @@ function parseReferenceSize(value: string | null): number | null {
 	return value && size >= MIN_REFERENCE_SIZE && size <= MAX_REFERENCE_SIZE ? size : null;
 }
 
+function parseLanguage(value: string | null): BrowserSourceLanguage | null {
+	return value === "en" || value === "fr" ? value : null;
+}
+
 /** Returns null when the link lacks valid credentials; unreadable optional parts are only ignored. */
 export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | null {
 	let params: URLSearchParams;
@@ -188,6 +199,7 @@ export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | 
 		profile: decodeProfile(params.get("p")),
 		...decodeFilters(params.get("f")),
 		referenceSize: parseReferenceSize(params.get("r")),
+		language: parseLanguage(params.get("l")),
 	};
 }
 

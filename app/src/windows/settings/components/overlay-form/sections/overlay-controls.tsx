@@ -21,6 +21,7 @@ import {
 } from "@/shared/helpers";
 import { useAppStore } from "@/shared/store";
 import { PauseIndicator } from "@/windows/overlay/components/pause-indicator";
+import { useSourceConnection } from "@/windows/settings/components/stream/use-source-connection";
 
 export function OverlayControls() {
 	const { t } = useTranslation();
@@ -29,6 +30,8 @@ export function OverlayControls() {
 	const queueSize = useAppStore((s) => s.queueSize);
 	const isDisplaying = useAppStore((s) => s.isDisplaying);
 	const sourceRunning = useAppStore((s) => s.browserSourceRunningPort !== null);
+	// A loaded browser source has its own player: Skip reaches it even with the desktop empty.
+	const sourceLoaded = useSourceConnection(sourceRunning) !== "waiting";
 	const overlayAlive = overlayHealth === "alive";
 
 	const [devPreviewActive, setDevPreviewActive] = useState(false);
@@ -133,7 +136,7 @@ export function OverlayControls() {
 					<NbButton
 						variant="outline"
 						size="sm"
-						disabled={!sourceRunning && (!overlayAlive || (!isDisplaying && queueSize === 0))}
+						disabled={!sourceLoaded && (!overlayAlive || (!isDisplaying && queueSize === 0))}
 						onClick={() => void skipCurrentItem()}
 					>
 						{t("actions.skipCurrent")}

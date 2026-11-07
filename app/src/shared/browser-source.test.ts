@@ -30,6 +30,7 @@ function build(profile = DEFAULT_SETTINGS) {
 		mutedAuthors: [],
 		hideAnonymous: false,
 		referenceSize: null,
+		language: "fr",
 	});
 }
 
@@ -59,6 +60,7 @@ describe("browser source URL", () => {
 			mutedAuthors: [],
 			hideAnonymous: false,
 			referenceSize: null,
+			language: "fr",
 		});
 	});
 
@@ -73,6 +75,7 @@ describe("browser source URL", () => {
 			mutedAuthors: [{ id: "111", username: "Troll", avatarUrl: "https://a.test/x", mutedAt: NOW }],
 			hideAnonymous: true,
 			referenceSize: null,
+			language: "en",
 		});
 		const parsed = parseBrowserSourceFragment(hashOf(url));
 		expect(parsed?.mutedAuthors.map((author) => author.id)).toEqual(["111"]);
@@ -104,6 +107,13 @@ describe("browser source URL", () => {
 		expect(parseBrowserSourceFragment(fragmentWith({ r: "864" }))?.referenceSize).toBe(864);
 		for (const r of ["0", "-864", "99", "20001", "abc", "", null]) {
 			expect(parseBrowserSourceFragment(fragmentWith({ r }))?.referenceSize).toBeNull();
+		}
+	});
+
+	test("carries the app language and ignores an unsupported one", () => {
+		expect(parseBrowserSourceFragment(fragmentWith({ l: "en" }))?.language).toBe("en");
+		for (const l of ["de", "EN", "", null]) {
+			expect(parseBrowserSourceFragment(fragmentWith({ l }))?.language).toBeNull();
 		}
 	});
 

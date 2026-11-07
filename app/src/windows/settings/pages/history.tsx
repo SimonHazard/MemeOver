@@ -1,8 +1,10 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbSwitch } from "@memeover/ui/components/branded/nb-switch";
+import { Alert, AlertDescription } from "@memeover/ui/components/ui/alert";
 import { Separator } from "@memeover/ui/components/ui/separator";
 import { Skeleton } from "@memeover/ui/components/ui/skeleton";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MonitorOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ConfirmActionButton } from "@/components/confirm-action-button";
@@ -18,6 +20,7 @@ import {
 import { addMutedAuthor, removeMutedAuthor } from "@/shared/muted-authors";
 import { loadSettings, patchSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
+import { desktopPlaybackEnabled } from "@/shared/stream-destination";
 import { HistoryItemCard } from "@/windows/settings/components/history-item";
 import { MutedAuthorsCard } from "../components/muted-authors-card";
 
@@ -47,6 +50,8 @@ export function HistoryPage() {
 		onError: () => toast.error(t("toast.clearError")),
 	});
 	const overlayAlive = useAppStore((s) => s.overlayHealth === "alive");
+	// Stream only: the desktop plays nothing, so nothing is recorded and replays would be dropped.
+	const streamOnly = settings ? !desktopPlaybackEnabled(settings) : false;
 
 	// Increment on every "history-updated" Tauri event — used as a query key suffix
 	// to trigger automatic refetches without any useEffect or listen() subscription.
@@ -134,6 +139,14 @@ export function HistoryPage() {
 					)}
 				</div>
 				<p className="text-sm font-text text-muted-foreground">{t("history.localNote")}</p>
+				{streamOnly && (
+					<Alert role="status" className="border-2 border-foreground">
+						<MonitorOff />
+						<AlertDescription className="text-foreground">
+							{t("history.streamOnlyNotice")}
+						</AlertDescription>
+					</Alert>
+				)}
 
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<div className="flex items-center gap-3">
@@ -165,7 +178,7 @@ export function HistoryPage() {
 						<HistoryItemCard
 							item={item}
 							onMuteAuthor={muteAuthor}
-							disabled={!overlayAlive}
+							disabled={!overlayAlive || streamOnly}
 							onReplay={(i) => doReplay(i)}
 						/>
 					)}
