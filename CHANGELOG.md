@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.10.6): the browser source's liveness check reads a bounded response within one second, so a different program on its port cannot keep the Stream tab waiting.
+
 - App/site (1.10.5): serialize start, stop, restart and shutdown of the app-managed bot so overlapping actions cannot leave a second process running that Stop cannot reach.
 
 - App/site (1.10.4): with media-duration sync enabled, stalled video and audio no longer block the queue indefinitely. Media that never starts uses the normal display duration after the safety delay; playback is capped at ten minutes if it never ends.
