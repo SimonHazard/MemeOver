@@ -7,7 +7,7 @@ description: Add or change a MemeOver Discord subcommand with permissions, local
 
 1. Read [AGENTS.md](../../../AGENTS.md) and inspect `bot/src/commands/commands.ts`.
 
-2. Implement the subcommand in `bot/src/commands/subcommands/`, register its builder and dispatch, and add it to `PRIVILEGED_SUBS` only when ManageGuild is required.
+2. Implement the subcommand in `bot/src/commands/subcommands/`, add its catalogue entry in `commands.ts` with builder options and handler, and set `privileged: true` only when ManageGuild is required.
 
 3. Add English/French strings in `bot/src/i18n.ts`; update help and both README command tables. Update site command content if present.
 
