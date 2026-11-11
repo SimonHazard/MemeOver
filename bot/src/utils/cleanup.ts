@@ -222,11 +222,17 @@ export async function runGuildCleanup(client: Client, now = Date.now()): Promise
 	}
 }
 
+function runScheduledCleanup(client: Client): void {
+	runGuildCleanup(client).catch((err: unknown) => {
+		log.error({ event: "guild_cleanup_failed", err }, "Guild cleanup run failed");
+	});
+}
+
 export function startGuildCleanupScheduler(client: Client): void {
 	if (cleanupTimer) return;
 
-	void runGuildCleanup(client);
+	runScheduledCleanup(client);
 	cleanupTimer = setInterval(() => {
-		void runGuildCleanup(client);
+		runScheduledCleanup(client);
 	}, CLEANUP_CHECK_INTERVAL_MS);
 }

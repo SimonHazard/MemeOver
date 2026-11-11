@@ -1,6 +1,6 @@
-import { expect, mock, test } from "bun:test";
+import { expect, mock, spyOn, test } from "bun:test";
 import type { ChatInputCommandInteraction, Interaction } from "discord.js";
-import { PAUSE_INDEFINITE } from "../utils/guild-pause";
+import { isPausedAt, PAUSE_INDEFINITE } from "../utils/guild-pause";
 
 const events: { guild: string; event: { type: string; paused_until: number | null } }[] = [];
 mock.module("../server", () => ({
@@ -95,6 +95,21 @@ test("expiry resumes and removal prevents late broadcasts", async () => {
 	const count = events.length;
 	await Bun.sleep(60);
 	expect(events).toHaveLength(count);
+});
+test("an expiry write failure does not throw or keep the guild paused", async () => {
+	guildRegistry.register(guild, null);
+	applyGuildPause(guild, Date.now() + 20);
+	const pauseWrite = spyOn(guildRegistry, "setPausedUntil").mockImplementationOnce(() => {
+		throw new Error("Fixture disk failure");
+	});
+	try {
+		await Bun.sleep(80);
+		expect(pauseWrite).toHaveBeenCalledWith(guild, null);
+		expect(isPausedAt(guildRegistry.getConfig(guild), Date.now())).toBe(false);
+	} finally {
+		pauseWrite.mockRestore();
+		guildRegistry.unregister(guild);
+	}
 });
 test("startup clears expired values and rearms active values", async () => {
 	guildRegistry.register(guild, null);

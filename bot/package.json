@@ -1,6 +1,6 @@
 {
 	"name": "@memeover/bot",
-	"version": "1.6.18",
+	"version": "1.6.19",
 	"engines": {
 		"bun": ">=1.4.2"
 	},

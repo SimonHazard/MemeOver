@@ -155,6 +155,44 @@ test("member counts follow second join, close, leave", async () => {
 	first.send("not json");
 	expect(await first.next()).toMatchObject({ code: "PARSE_ERROR" });
 });
+test("a failed activity write still removes the disconnected client", async () => {
+	const staying = await joined();
+	const leaving = await client();
+	await joinGuild(leaving, guildId, token);
+	expect(await staying.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 2 });
+	const activity = spyOn(guildRegistry, "recordGuildActivity").mockImplementation(() => {
+		throw new Error("Fixture disk failure");
+	});
+	try {
+		leaving.close();
+		await leaving.closed;
+		expect(await staying.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
+		expect(store.getGuildMembers(guildId).size).toBe(1);
+		expect(activity.mock.calls).toEqual([[guildId]]);
+	} finally {
+		activity.mockRestore();
+	}
+});
+test("a failed activity write still lets a joined client leave", async () => {
+	const staying = await joined();
+	const leaving = await client();
+	await joinGuild(leaving, guildId, token);
+	await staying.next();
+	await leaving.next();
+	const activity = spyOn(guildRegistry, "recordGuildActivity").mockImplementation(() => {
+		throw new Error("Fixture disk failure");
+	});
+	try {
+		leaving.send({ type: "LEAVE", guild_id: guildId });
+		expect(await staying.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
+		expect(store.getGuildMembers(guildId).size).toBe(1);
+		expect(activity.mock.calls).toEqual([[guildId]]);
+		leaving.send("not json");
+		expect(await leaving.next()).toMatchObject({ code: "PARSE_ERROR" });
+	} finally {
+		activity.mockRestore();
+	}
+});
 test("LEAVE from a socket that never joined leaves the guild untouched", async () => {
 	const member = await joined();
 	const outsider = await client();

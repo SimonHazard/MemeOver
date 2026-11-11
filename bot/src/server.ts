@@ -179,16 +179,28 @@ function clearHeartbeat(wsId: string): void {
 	heartbeats.delete(wsId);
 }
 
+/** Activity only feeds inactivity cleanup: losing one update must not break session cleanup. */
+function recordGuildActivitySafely(guildId: string): void {
+	try {
+		guildRegistry.recordGuildActivity(guildId);
+	} catch (err) {
+		log.error(
+			{ ...discordRefLogFields({ guildId }), event: "activity_write_failed", err },
+			"Could not record guild activity",
+		);
+	}
+}
+
 function removeClientSession(wsId: string): void {
 	clearHeartbeat(wsId);
 	rateLimiters.delete(wsId);
 	const client = store.getClient(wsId);
 	if (!client) return;
 	const guilds = [...client.joined_guilds];
-	for (const guildId of guilds) {
-		guildRegistry.recordGuildActivity(guildId);
-	}
 	store.removeClient(wsId);
+	for (const guildId of guilds) {
+		recordGuildActivitySafely(guildId);
+	}
 	for (const guildId of guilds) {
 		broadcastMemberCount(guildId);
 	}
@@ -290,8 +302,8 @@ function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 	// LEAVE carries no token: only a socket admitted by JOIN may touch the guild's
 	// retention timestamp, member count and presence.
 	if (!store.isClientInGuild(ws.id, msg.guild_id)) return;
-	guildRegistry.recordGuildActivity(msg.guild_id);
 	store.leaveGuild(ws.id, msg.guild_id);
+	recordGuildActivitySafely(msg.guild_id);
 	log
 		.child(discordRefLogFields({ wsId: ws.id, guildId: msg.guild_id }))
 		.info({ event: "leave" }, "Client left guild");

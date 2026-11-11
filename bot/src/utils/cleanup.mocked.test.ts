@@ -14,7 +14,8 @@ mock.module("../server", () => ({
 }));
 const { guildRegistry } = await import("./registry");
 const { store } = await import("./store");
-const { cleanupReason, runGuildCleanup, unregisterRemovedGuild } = await import("./cleanup");
+const { cleanupReason, runGuildCleanup, startGuildCleanupScheduler, unregisterRemovedGuild } =
+	await import("./cleanup");
 
 const HOUR = 60 * 60 * 1000;
 const guild = "123456789012345678";
@@ -108,6 +109,53 @@ test("the cleanup job deletes an expired registration even when Discord is unava
 	expect(evictions).toHaveLength(1);
 	expect(evictions[0].slice(0, 2)).toEqual([guild, "GUILD_UNREGISTERED"]);
 	expect(unregisteredAtEviction).toEqual([true]);
+});
+
+test("a failed registry deletion does not block the next cleanup run", async () => {
+	registerOldGuild();
+	spyOn(guildRegistry, "unregister").mockImplementationOnce(() => {
+		throw new Error("Fixture disk failure");
+	});
+	await expect(runGuildCleanup(client)).rejects.toThrow("Fixture disk failure");
+	expect(guildRegistry.getConfig(guild)).toBeDefined();
+	await runGuildCleanup(client);
+	expect(guildRegistry.getConfig(guild)).toBeUndefined();
+	expect(evictions).toHaveLength(1);
+});
+
+test("the cleanup scheduler contains a failed run and retries on its next tick", async () => {
+	registerOldGuild();
+	const removal = spyOn(guildRegistry, "unregister").mockImplementationOnce(() => {
+		throw new Error("Fixture disk failure");
+	});
+	let tick: (() => void) | undefined;
+	let clearTimer: (() => void) | undefined;
+	const nativeSetInterval = globalThis.setInterval;
+	const scheduler = spyOn(globalThis, "setInterval").mockImplementation(((
+		handler: TimerHandler,
+		delay?: number,
+		...args: unknown[]
+	) => {
+		if (delay === HOUR && typeof handler === "function") tick = () => handler(...args);
+		const timer = nativeSetInterval(handler, delay, ...args);
+		clearTimer = () => clearInterval(timer);
+		return timer;
+	}) as typeof globalThis.setInterval);
+	try {
+		startGuildCleanupScheduler(client);
+		await Bun.sleep(0);
+		expect(removal).toHaveBeenCalledTimes(1);
+		expect(guildRegistry.getConfig(guild)).toBeDefined();
+		if (!tick) throw new Error("Missing cleanup callback");
+		tick();
+		await Bun.sleep(0);
+		expect(removal).toHaveBeenCalledTimes(2);
+		expect(guildRegistry.getConfig(guild)).toBeUndefined();
+		expect(evictions).toHaveLength(1);
+	} finally {
+		scheduler.mockRestore();
+		clearTimer?.();
+	}
 });
 
 test("reconnecting during the Discord notice preserves the registration", async () => {
