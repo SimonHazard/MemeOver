@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- Bot (1.6.13): omit failed Discord request bodies from error logs so rejected setup, token and rotation replies cannot write their credentials to the logs. Bound deep or circular error metadata without returning unfiltered payloads.
+
 - Bot (1.6.11): ignore `LEAVE` from a socket that never joined the guild, so an unauthenticated connection can no longer refresh another server's inactivity timestamp, and scope `/memeover secret` duplicate detection to the server so one server cannot block the same meme in another for 60 seconds.
 - App/site (1.10.0): keep Skip available while a browser source is loaded, even when the desktop overlay is empty or closed. Preserve repeated skip commands and their order with queue clears when several actions arrive in one check; repeated checks do not replay them. A source that missed more than the retained 64 actions discards stale playback instead of guessing the missing commands.
 - App/site (1.10.0): apply the media volume setting to audio files, which always played at full volume.
