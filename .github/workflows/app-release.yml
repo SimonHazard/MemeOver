@@ -34,7 +34,7 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           # Keep the write token out of the checkout that runs repository scripts.
           persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
       - name: Verify synchronized versions
@@ -95,7 +95,7 @@ jobs:
 
       # ── Bun ──────────────────────────────────────────────────────────────────
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
 
@@ -112,13 +112,14 @@ jobs:
 
       # ── Rust ─────────────────────────────────────────────────────────────────
       - name: Setup Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
+          toolchain: stable
           # macOS : les deux cibles sont nécessaires pour le binaire universel
           targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Cache Rust build artifacts
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: "./app/src-tauri -> target"
 
@@ -126,7 +127,7 @@ jobs:
       # L'action gère automatiquement beforeBuildCommand (bun run build = Vite)
       # et détecte Bun via la présence de bun.lock.
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
