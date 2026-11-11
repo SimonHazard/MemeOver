@@ -24,6 +24,8 @@ on:
       - "site/**"
       - "packages/ui/**"
       - "shared/**"
+      - "CHANGELOG.md"
+      - "app/package.json"
       - "bun.lock"
       - "package.json"
       - ".github/workflows/site-deploy.yml"
@@ -32,6 +34,8 @@ on:
       - "site/**"
       - "packages/ui/**"
       - "shared/**"
+      - "CHANGELOG.md"
+      - "app/package.json"
       - "bun.lock"
       - "package.json"
       - ".github/workflows/site-deploy.yml"
@@ -74,6 +78,8 @@ jobs:
               - 'site/**'
               - 'packages/ui/**'
               - 'shared/**'
+              - 'CHANGELOG.md'
+              - 'app/package.json'
               - 'package.json'
               - '.github/workflows/site-deploy.yml'
             dependencies:
