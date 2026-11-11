@@ -208,7 +208,7 @@ export function useOverlayWs(playbackEnabled = true): void {
 		void emitIfTauri("ws-status-changed", "error");
 	}, [setWsStatus]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: nonce deliberately restarts a revoked connection after credentials change.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: nonce, guild id and token deliberately restart the connection when credentials change.
 	useEffect(() => {
 		if (!shouldConnect) {
 			setWsStatus("disconnected");
@@ -229,7 +229,15 @@ export function useOverlayWs(playbackEnabled = true): void {
 			clearReconnect();
 			if (disposed || revokedRef.current !== null) return;
 
-			const ws = new WebSocket(wsUrl);
+			let ws: WebSocket;
+			try {
+				ws = new WebSocket(wsUrl);
+			} catch (error) {
+				// An unparsable URL cannot start working by retrying: wait for a settings change.
+				console.warn("[WS] Invalid bot URL", error);
+				onError();
+				return;
+			}
 			wsRef.current = ws;
 			bindSocket(ws);
 			setWsStatus("connecting");
@@ -284,5 +292,16 @@ export function useOverlayWs(playbackEnabled = true): void {
 			}
 			wsRef.current = null;
 		};
-	}, [shouldConnect, wsUrl, reconnectNonce, onOpen, onMessage, onClose, onError, setWsStatus]);
+	}, [
+		shouldConnect,
+		wsUrl,
+		guildId,
+		token,
+		reconnectNonce,
+		onOpen,
+		onMessage,
+		onClose,
+		onError,
+		setWsStatus,
+	]);
 }

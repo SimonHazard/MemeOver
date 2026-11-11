@@ -4,7 +4,10 @@ type Handler = (event: { event: string; id: number; payload: unknown }) => void;
 
 export interface DesktopStubWindow {
 	/** Every native call the page made. */
-	desktopInvoked: { command: string; args: { key?: string; value?: unknown } }[];
+	desktopInvoked: {
+		command: string;
+		args: { key?: string; value?: unknown; event?: string; payload?: unknown };
+	}[];
 	/** Delivers an event as if another window or Rust had emitted it. */
 	desktopEmit: (event: string, payload?: unknown) => void;
 }
@@ -23,6 +26,15 @@ export async function installDesktopStub(page: Page, settings: object) {
 				for (const id of listeners.get(event) ?? []) {
 					callbacks.get(id)?.({ event, id, payload });
 				}
+			},
+			__TAURI_EVENT_PLUGIN_INTERNALS__: {
+				unregisterListener: (event: string, eventId: number) => {
+					listeners.set(
+						event,
+						(listeners.get(event) ?? []).filter((id) => id !== eventId),
+					);
+					callbacks.delete(eventId);
+				},
 			},
 			__TAURI_INTERNALS__: {
 				metadata: {
@@ -47,7 +59,7 @@ export async function installDesktopStub(page: Page, settings: object) {
 					if (command === "plugin:event|listen") {
 						const event = String(args.event);
 						listeners.set(event, [...(listeners.get(event) ?? []), Number(args.handler)]);
-						return 1;
+						return Number(args.handler);
 					}
 					return null;
 				},

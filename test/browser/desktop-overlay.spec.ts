@@ -76,6 +76,72 @@ const reactionMessage = {
 	timestamp: 1,
 };
 
+test("an unparsable bot URL does not blank the overlay", async ({ page }) => {
+	const errors: Error[] = [];
+	page.on("pageerror", (error) => errors.push(error));
+	await page.routeWebSocket(wsUrl, (ws) => {
+		ws.onMessage((raw) => {
+			if (JSON.parse(String(raw)).type !== "JOIN") return;
+			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: guildId, success: true }));
+			ws.send(JSON.stringify(textMessage("Recovered after correcting the URL")));
+		});
+	});
+	await installDesktopStub(page, savedSettings({ wsUrl: "ws://" }));
+	await page.goto("/overlay.html");
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(window as unknown as DesktopStubWindow).desktopInvoked.some(
+					({ command, args }) =>
+						command === "plugin:event|emit" &&
+						args.event === "ws-status-changed" &&
+						args.payload === "error",
+				),
+			),
+		)
+		.toBe(true);
+	// An idle production overlay has no text; assert its rendered shell and recovery instead.
+	await expect(page.locator("#root > div")).toBeAttached();
+	await emit(page, "settings-changed", savedSettings());
+	await expect(
+		page.getByText("Recovered after correcting the URL", { exact: true }).locator("visible=true"),
+	).toBeVisible();
+	expect(errors).toEqual([]);
+});
+
+test("changing the server or token on the same bot URL joins with the new credentials", async ({
+	page,
+}) => {
+	const joins: string[] = [];
+	const tokens: string[] = [];
+	await page.routeWebSocket(wsUrl, (ws) => {
+		ws.onMessage((raw) => {
+			const message = JSON.parse(String(raw));
+			if (message.type !== "JOIN") return;
+			joins.push(message.guild_id);
+			tokens.push(message.token);
+			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: message.guild_id, success: true }));
+		});
+	});
+	await installDesktopStub(page, savedSettings());
+	await page.goto("/overlay.html");
+	await expect.poll(() => joins).toEqual([guildId]);
+	const secondGuildId = "223456789012345678";
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({ guildId: secondGuildId, token: "second-test-token" }),
+	);
+	await expect.poll(() => joins).toEqual([guildId, secondGuildId]);
+	await emit(
+		page,
+		"settings-changed",
+		savedSettings({ guildId: secondGuildId, token: "rotated-test-token" }),
+	);
+	await expect.poll(() => joins).toEqual([guildId, secondGuildId, secondGuildId]);
+	expect(tokens).toEqual(["desktop-test-token", "second-test-token", "rotated-test-token"]);
+});
+
 test("a stalled synced video releases the queue after the normal display duration", async ({
 	page,
 }) => {
