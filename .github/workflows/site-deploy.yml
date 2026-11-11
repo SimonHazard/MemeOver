@@ -43,16 +43,61 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # ── 0. Changes ───────────────────────────────────────────────────────────────
+  # Le filtre `paths` du déclencheur ne distingue pas un bump de version d'un vrai
+  # changement de dépendances dans bun.lock : chaque PR, même limitée au bot, déployait
+  # une preview sur le worker partagé, puis le site en production après son merge.
+  changes:
+    name: changes
+    # Forks and Dependabot use CI only; no Cloudflare build or deployment jobs.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      # Un dispatch (release ou manuel) déploie toujours.
+      site: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.site == 'true' || steps.dependencies.outputs.changed == 'true' }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@v4.0.3
+        with:
+          filters: |
+            site:
+              - 'site/**'
+              - 'packages/ui/**'
+              - 'shared/**'
+              - 'package.json'
+              - '.github/workflows/site-deploy.yml'
+            dependencies:
+              - 'bun.lock'
+      - uses: oven-sh/setup-bun@v2
+        if: steps.filter.outputs.dependencies == 'true'
+        with:
+          bun-version-file: package.json
+      # A workspace version bump alone does not change dependencies.
+      - id: dependencies
+        if: steps.filter.outputs.dependencies == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bun scripts/lockfile-dependencies.ts
+
   # ── 1. Build ─────────────────────────────────────────────────────────────────
   # Compile le site et uploade l'artefact dist/ pour les jobs suivants.
   # Séparer build / deploy permet de ne pas reconstruire si seul le deploy échoue.
   build:
     name: build
-    # Forks and Dependabot use CI only; no Cloudflare build or deployment jobs.
-    if: >-
-      github.event_name != 'pull_request' ||
-      (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -109,6 +154,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     environment:
       name: production
       url: https://memeover.simonhazard.com
@@ -157,6 +203,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.actor != 'dependabot[bot]'
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read         # Héritage explicite (job-level override remplace le top-level)
       pull-requests: write   # Pour poster le commentaire de preview

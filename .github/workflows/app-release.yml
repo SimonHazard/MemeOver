@@ -21,6 +21,10 @@ jobs:
       github.event.workflow_run.head_branch == 'main' &&
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Draft releases have no tag yet and are listed only for tokens with write access.
+    permissions:
+      contents: write
     outputs:
       version: ${{ steps.read.outputs.version }}
       released: ${{ steps.read.outputs.released }}
@@ -28,6 +32,8 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          # Keep the write token out of the checkout that runs repository scripts.
+          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
@@ -39,7 +45,13 @@ jobs:
         run: |
           version=$(jq -r .version app/package.json)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if gh release view "app-v$version" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "app-v$version" > /dev/null 2>&1; then
+          # A failed lookup fails the job: rebuilding would overwrite the assets of an existing draft.
+          releases=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq '.[] | "\(.tag_name)\t\(.draft)"')
+          tags=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/app-v$version" --jq '.[].ref')
+          if grep -qxF "app-v$version"$'\t'true <<< "$releases"; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "A draft release app-v$version already exists; nothing to build. If this commit changes the app, bump the app version to release it." >> "$GITHUB_STEP_SUMMARY"
+          elif grep -qxF "app-v$version"$'\t'false <<< "$releases" || grep -qxF "refs/tags/app-v$version" <<< "$tags"; then
             echo "released=true" >> "$GITHUB_OUTPUT"
             echo "app-v$version already exists; nothing to build" >> "$GITHUB_STEP_SUMMARY"
           else
@@ -61,6 +73,7 @@ jobs:
           - { name: macos, os: macos-latest, args: "--target universal-apple-darwin" }
     name: tauri (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
