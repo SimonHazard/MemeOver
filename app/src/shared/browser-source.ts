@@ -5,11 +5,9 @@ import {
 	pickOverlayProfileSettings,
 	pickStoredProfileSettings,
 	resolveOverlayProfileSettings,
-} from "./profiles";
+} from "./profile-settings";
 import {
 	DEFAULT_SETTINGS,
-	MAX_BROWSER_SOURCE_PORT,
-	MIN_BROWSER_SOURCE_PORT,
 	type MutedAuthor,
 	type OverlayProfile,
 	type OverlayProfileSettings,
@@ -58,15 +56,6 @@ interface BrowserSourceUrlInput {
 	hideAnonymous: boolean;
 	referenceSize: number | null;
 	language: BrowserSourceLanguage;
-}
-
-export function isValidBrowserSourcePort(port: unknown): port is number {
-	return (
-		typeof port === "number" &&
-		Number.isInteger(port) &&
-		port >= MIN_BROWSER_SOURCE_PORT &&
-		port <= MAX_BROWSER_SOURCE_PORT
-	);
 }
 
 /** Loopback only: the plugin is bound to 127.0.0.1, never to the LAN. */

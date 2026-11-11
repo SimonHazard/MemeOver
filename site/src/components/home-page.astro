@@ -1,0 +1,27 @@
+---
+import DownloadSection from "@/components/download-section.astro";
+import FaqSection from "@/components/faq-section.astro";
+import FeaturesSection from "@/components/features-section.astro";
+import HeroSection from "@/components/hero-section.astro";
+import HowItWorksSection from "@/components/how-it-works-section.astro";
+import OpenSourceSection from "@/components/open-source-section.astro";
+import UseCasesSection from "@/components/use-cases-section.astro";
+import type { Locale } from "@/i18n";
+import BaseLayout from "@/layouts/base-layout.astro";
+
+interface Props {
+	lang: Locale;
+}
+
+const { lang } = Astro.props;
+---
+
+<BaseLayout>
+	<HeroSection lang={lang} />
+	<HowItWorksSection lang={lang} />
+	<UseCasesSection lang={lang} />
+	<FeaturesSection lang={lang} />
+	<DownloadSection lang={lang} />
+	<FaqSection lang={lang} />
+	<OpenSourceSection lang={lang} />
+</BaseLayout>

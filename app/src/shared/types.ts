@@ -1,3 +1,5 @@
+import { DEFAULT_BROWSER_SOURCE_PORT } from "./browser-source-port";
+
 export interface MutedAuthor {
 	id: string;
 	username: string;
@@ -263,15 +265,6 @@ export interface OverlayProfile {
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
 export const CURRENT_SCHEMA_VERSION = 15;
-
-/**
- * Default port of the local browser source. Below the dynamic range (49152+)
- * and listed as "Unassigned" in the IANA Service Name and Transport Protocol Port
- * Number Registry, checked on 2026-11-01.
- */
-export const DEFAULT_BROWSER_SOURCE_PORT = 4466;
-export const MIN_BROWSER_SOURCE_PORT = 1024;
-export const MAX_BROWSER_SOURCE_PORT = 65535;
 
 /** Error codes returned by `start_browser_source`; anything else is an unexpected failure. */
 export type BrowserSourceStartError =

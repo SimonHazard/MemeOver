@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { extractDefaults } from "@/windows/settings/components/overlay-form/schema";
-import { pickOverlayProfileSettings } from "./profiles";
-import { normalizeSettings } from "./settings";
+import { DEFAULT_BROWSER_SOURCE_PORT } from "./browser-source-port";
+import { pickOverlayProfileSettings } from "./profile-settings";
+import { normalizeSettings } from "./settings-normalization";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	CURRENT_SCHEMA_VERSION,
-	DEFAULT_BROWSER_SOURCE_PORT,
 	DEFAULT_SETTINGS,
 	OVERLAY_PROFILE_FIELDS,
 } from "./types";

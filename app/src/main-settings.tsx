@@ -2,7 +2,7 @@ import { MotionConfig } from "framer-motion";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { startHistoryAutoPurge } from "./shared/history";
-import { initSettingsStore } from "./shared/store";
+import { initSettingsStore } from "./shared/store-init";
 import { initStreamControls } from "./shared/stream-controls";
 import { getTheme } from "./shared/theme";
 import {

@@ -7,32 +7,6 @@ export interface WSConnection {
 	close(code?: number, reason?: string): void;
 }
 
-// ─── Media ────────────────────────────────────────────────────────────────────
-
-import type { ExtractedMedia } from "../media/types";
-
-export type { ExtractedMedia };
-
-// ─── Protocol types (source of truth: @memeover/shared) ───────────────────────
-
-export type {
-	ClientMessage,
-	ErrorCode,
-	ErrorMessage,
-	GuildStateMessage,
-	JoinAckMessage,
-	JoinMessage,
-	LeaveMessage,
-	MediaEvent,
-	MediaType,
-	MemberCountUpdateMessage,
-	PingMessage,
-	PongMessage,
-	ReactionEvent,
-	ServerMessage,
-	TextEvent,
-} from "@memeover/shared";
-
 // ─── Internal state ───────────────────────────────────────────────────────────
 
 export interface ClientState {

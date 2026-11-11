@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { isValidBrowserSourcePort } from "@/shared/browser-source";
+import { isValidBrowserSourcePort } from "@/shared/browser-source-port";
 import { loadSettings, patchSettings } from "@/shared/settings";
 import { useAppStore } from "@/shared/store";
 import { refreshBrowserSourceStatus, startBrowserSource } from "@/shared/stream-controls";

@@ -25,6 +25,14 @@ function generateToken(): string {
 	return randomUUID().replace(/-/g, "");
 }
 
+function snapshotConfig(config: GuildConfig): GuildConfig {
+	return {
+		...config,
+		channel_ids: [...config.channel_ids],
+		unique_client_ids: [...config.unique_client_ids],
+	};
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 /**
@@ -70,7 +78,7 @@ export function createGuildRegistry(dataDir: string) {
 
 			let channel_ids: string[];
 			if (channelId === null) {
-				channel_ids = []; // null → all channels allowed
+				channel_ids = [];
 			} else {
 				const prev = existing?.channel_ids ?? [];
 				channel_ids = prev.includes(channelId) ? prev : [...prev, channelId];
@@ -93,18 +101,14 @@ export function createGuildRegistry(dataDir: string) {
 			if (!cfg) return null;
 			const next = { ...cfg, paused_until: pausedUntil };
 			commit(guildId, next);
-			return next;
+			return snapshotConfig(next);
 		},
 		setBotAppSources(guildId: string, enabled: boolean): GuildConfig | null {
 			const existing = registry[guildId];
 			if (!existing) return null;
 			const next = { ...existing, allow_bot_app_sources: enabled };
 			commit(guildId, next);
-			return {
-				...next,
-				channel_ids: [...next.channel_ids],
-				unique_client_ids: [...next.unique_client_ids],
-			};
+			return snapshotConfig(next);
 		},
 
 		recordClientActivity(guildId: string, clientId: string): void {
@@ -149,7 +153,8 @@ export function createGuildRegistry(dataDir: string) {
 		},
 
 		getConfig(guildId: string): GuildConfig | undefined {
-			return registry[guildId];
+			const config = registry[guildId];
+			return config ? snapshotConfig(config) : undefined;
 		},
 
 		getRegisteredCount(): number {
@@ -157,14 +162,7 @@ export function createGuildRegistry(dataDir: string) {
 		},
 
 		getRegisteredGuilds(): Array<[string, GuildConfig]> {
-			return Object.entries(registry).map(([guildId, cfg]) => [
-				guildId,
-				{
-					...cfg,
-					channel_ids: [...cfg.channel_ids],
-					unique_client_ids: [...cfg.unique_client_ids],
-				},
-			]);
+			return Object.entries(registry).map(([guildId, cfg]) => [guildId, snapshotConfig(cfg)]);
 		},
 
 		verifyToken(guildId: string, token: string): boolean {

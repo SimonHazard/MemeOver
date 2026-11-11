@@ -3,7 +3,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { MotionConfig } from "framer-motion";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { initOverlayStore } from "./shared/store";
+import { initOverlayStore } from "./shared/store-init";
 import { OverlayApp } from "./windows/overlay/OverlayApp";
 import "./App.css";
 

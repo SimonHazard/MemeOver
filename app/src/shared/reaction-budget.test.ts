@@ -1,15 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
 	appendReactionWithinBudget,
-	getReactionCapacity,
 	REACTION_ANIMATION_COST,
 	REACTION_SCENE_BUDGET,
 } from "./reaction-budget";
-import {
-	FLOATING_REACTION_ANIMATIONS,
-	type FloatingReaction,
-	type FloatingReactionAnimation,
-} from "./types";
+import type { FloatingReaction, FloatingReactionAnimation } from "./types";
 
 function createReaction(id: string, animation: FloatingReactionAnimation): FloatingReaction {
 	return {
@@ -40,33 +35,6 @@ function getSceneCost(reactions: readonly FloatingReaction[]): number {
 }
 
 describe("reaction complexity budget", () => {
-	test("retains the newest 30 straight reactions", () => {
-		const burst = Array.from({ length: 31 }, (_, index) =>
-			createReaction(`straight-${index + 1}`, "straight"),
-		);
-
-		const retained = appendBurst(burst);
-
-		expect(retained).toHaveLength(30);
-		expect(retained.map((reaction) => reaction.id)).toEqual(
-			burst.slice(1).map((reaction) => reaction.id),
-		);
-	});
-
-	test("limits fireworks to the scene budget", () => {
-		const burst = Array.from({ length: 13 }, (_, index) =>
-			createReaction(`firework-${index + 1}`, "firework"),
-		);
-
-		const retained = appendBurst(burst);
-
-		expect(retained).toHaveLength(12);
-		expect(retained.map((reaction) => reaction.id)).toEqual(
-			burst.slice(1).map((reaction) => reaction.id),
-		);
-		expect(getSceneCost(retained)).toBeLessThanOrEqual(REACTION_SCENE_BUDGET);
-	});
-
 	test("evicts the oldest mixed reactions and always admits the latest", () => {
 		const existing = [
 			...Array.from({ length: 20 }, (_, index) =>
@@ -99,24 +67,19 @@ describe("reaction complexity budget", () => {
 		expect(retained).not.toBe(existing);
 	});
 
-	test("defines an explicit cost and derived capacity for every preset", () => {
-		expect(Object.keys(REACTION_ANIMATION_COST).sort()).toEqual(
-			[...FLOATING_REACTION_ANIMATIONS].sort(),
-		);
-		expect(
-			Object.fromEntries(
-				FLOATING_REACTION_ANIMATIONS.map((animation) => [
-					animation,
-					getReactionCapacity(animation),
-				]),
-			),
-		).toEqual({
-			straight: 30,
-			serpentine: 20,
-			bounce: 20,
-			confetti: 20,
-			pop: 30,
-			firework: 12,
+	for (const [animation, capacity] of [
+		["straight", 30],
+		["serpentine", 20],
+		["bounce", 20],
+		["confetti", 20],
+		["pop", 30],
+		["firework", 12],
+	] as const) {
+		test(`a ${animation} burst keeps the newest ${capacity} reactions`, () => {
+			const burst = Array.from({ length: 40 }, (_, index) =>
+				createReaction(String(index), animation),
+			);
+			expect(appendBurst(burst)).toEqual(burst.slice(-capacity));
 		});
-	});
+	}
 });

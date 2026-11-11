@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, beforeAll, expect, mock, spyOn, test } from "bun:test";
 import pino from "pino";
 import { connect, joinGuild, startServer, type TestClient } from "./test-utils/ws-harness";
 
@@ -17,6 +17,7 @@ const { guildRegistry } = await import("./utils/registry");
 const { createServer, broadcastToGuild, evictGuild } = await import("./server");
 const { applyGuildPause } = await import("./utils/guild-pause-timers");
 const { markShardLost, markShardReady } = await import("./utils/discord-gateway");
+const { store } = await import("./utils/store");
 let server: ReturnType<typeof startServer>;
 const clients: TestClient[] = [];
 const guildId = "123456789012345678";
@@ -154,6 +155,24 @@ test("member counts follow second join, close, leave", async () => {
 	first.send("not json");
 	expect(await first.next()).toMatchObject({ code: "PARSE_ERROR" });
 });
+test("LEAVE from a socket that never joined leaves the guild untouched", async () => {
+	const member = await joined();
+	const outsider = await client();
+	const activity = spyOn(guildRegistry, "recordGuildActivity");
+	try {
+		outsider.send({ type: "LEAVE", guild_id: guildId });
+		outsider.send("not json");
+		expect(await outsider.next()).toMatchObject({ code: "PARSE_ERROR" });
+		expect(activity).not.toHaveBeenCalled();
+		member.send({ type: "LEAVE", guild_id: guildId });
+		member.send("not json");
+		expect(await member.next()).toMatchObject({ code: "PARSE_ERROR" });
+		expect(activity).toHaveBeenCalledTimes(1);
+		expect(activity).toHaveBeenCalledWith(guildId);
+	} finally {
+		activity.mockRestore();
+	}
+});
 test("a reconnecting install keeps the member count while its stale socket lingers", async () => {
 	const first = await joined();
 	const install = "install-reconnecting";
@@ -217,6 +236,68 @@ test("broadcast reaches only joined clients", async () => {
 	expect(await first.next()).toEqual(event);
 	await expect(unjoined.next(undefined, 50)).rejects.toThrow("Timed out");
 });
+
+for (const failure of ["broadcast", "heartbeat"] as const) {
+	test(`${failure} send failure removes membership once and closes the socket`, async () => {
+		const first = await joined();
+		const firstId = [...store.getGuildMembers(guildId)][0];
+		let heartbeat: (() => void) | undefined;
+		const nativeSetInterval = globalThis.setInterval;
+		const scheduler = spyOn(globalThis, "setInterval").mockImplementation(((
+			handler: TimerHandler,
+			delay?: number,
+			...args: unknown[]
+		) => {
+			if (delay === 30_000 && typeof handler === "function") {
+				heartbeat = () => handler(...args);
+			}
+			return nativeSetInterval(handler, delay, ...args);
+		}) as typeof globalThis.setInterval);
+		let second: TestClient;
+		try {
+			second = await client();
+		} finally {
+			scheduler.mockRestore();
+		}
+		await joinGuild(second, guildId, token);
+		await first.next((message) => message.type === "MEMBER_COUNT_UPDATE");
+		await second.next((message) => message.type === "MEMBER_COUNT_UPDATE");
+		const failedId = [...store.getGuildMembers(guildId)].find((id) => id !== firstId);
+		const failedClient = failedId ? store.getClient(failedId) : undefined;
+		if (!failedClient) throw new Error("Missing joined socket");
+		const connections = async () =>
+			(await (await fetch(`${server.baseUrl}/health`)).json()).connections.active as number;
+		const activeBefore = await connections();
+		const activity = spyOn(guildRegistry, "recordGuildActivity");
+		const send = spyOn(failedClient.ws_ref, "send").mockImplementation(() => {
+			throw new Error("Socket send failed");
+		});
+		try {
+			if (failure === "broadcast") {
+				broadcastToGuild(guildId, {
+					type: "GUILD_STATE",
+					guild_id: guildId,
+					paused_until: null,
+				});
+				await first.next((message) => message.type === "GUILD_STATE");
+			} else {
+				if (!heartbeat) throw new Error("Missing heartbeat callback");
+				heartbeat();
+			}
+			expect(store.getClient(failedClient.ws_id)).toBeUndefined();
+			expect(store.getGuildMembers(guildId)).toEqual(new Set([firstId]));
+			expect(await first.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
+			expect(activity.mock.calls).toEqual([[guildId]]);
+			await second.closed;
+			expect(await connections()).toBe(activeBefore - 1);
+			expect(activity.mock.calls).toEqual([[guildId]]);
+			await expect(first.next(undefined, 50)).rejects.toThrow("Timed out");
+		} finally {
+			send.mockRestore();
+			activity.mockRestore();
+		}
+	});
+}
 
 test("rotation evicts immediately and only new credentials can rejoin", async () => {
 	const g = "123456789012345679",

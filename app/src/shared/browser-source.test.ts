@@ -4,13 +4,13 @@ import {
 	browserSourceNeedsRestart,
 	browserSourceOrigin,
 	buildBrowserSourceUrl,
-	isValidBrowserSourcePort,
 	maskBrowserSourceUrl,
 	parseBrowserSourceFragment,
 	resolveBrowserSourceProfile,
 	scalePixelSettings,
 } from "./browser-source";
-import { pickOverlayProfileSettings } from "./profiles";
+import { isValidBrowserSourcePort } from "./browser-source-port";
+import { pickOverlayProfileSettings } from "./profile-settings";
 import { DEFAULT_SETTINGS, type OverlayProfile } from "./types";
 
 const GUILD_ID = "123456789012345678";

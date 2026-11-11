@@ -11,14 +11,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatedNumber } from "@/components/motion/animated-number";
 import { StatusLabel } from "@/components/motion/status-label";
+import { overlayHealthVariant } from "@/shared/helpers";
 import {
 	clearQueue,
-	overlayHealthVariant,
 	quitOverlay,
 	reloadOverlay,
 	showOverlay,
 	skipCurrentItem,
-} from "@/shared/helpers";
+} from "@/shared/overlay-window";
 import { useAppStore } from "@/shared/store";
 import { PauseIndicator } from "@/windows/overlay/components/pause-indicator";
 import { useSourceConnection } from "@/windows/settings/components/stream/use-source-connection";

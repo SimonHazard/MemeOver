@@ -1,3 +1,4 @@
+import type { MediaEvent } from "@memeover/shared";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { admitGuildEvent } from "../../media/admission";
@@ -13,7 +14,6 @@ import { broadcastToGuild } from "../../server";
 import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy";
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
-import type { MediaEvent } from "../../utils/types";
 import { notConfiguredResponse } from "../connection";
 import { errorResponse, successResponse } from "../response-panel";
 
@@ -114,9 +114,10 @@ export async function handleSecret(
 		return;
 	}
 	// Media URL dedup key: each interaction has a unique id, so pairing id+url
-	// would never collide. Keying on the URL alone gates anti-spam when the same
-	// meme is resubmitted within the TTL window.
-	if (!shouldDispatch(`secret:${urlPathname(mediaUrl)}`)) {
+	// would never collide. Keying on the guild and URL gates anti-spam when the same
+	// meme is resubmitted within the TTL window, without letting one guild suppress
+	// another guild's send.
+	if (!shouldDispatch(`secret:${guildId}:${urlPathname(mediaUrl)}`)) {
 		await interaction.reply(
 			errorResponse(
 				t(locale, "secret.alreadySentTitle"),

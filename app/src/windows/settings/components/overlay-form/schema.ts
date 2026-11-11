@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	FLOATING_REACTION_PRESETS,
+	OVERLAY_PROFILE_FIELDS,
 	type Settings,
 } from "@/shared/types";
 
@@ -67,37 +68,9 @@ export const OverlaySettingsSchema = z.object({
 
 export type OverlaySettingsValues = z.infer<typeof OverlaySettingsSchema>;
 
-export function extractDefaults(s: Settings): OverlaySettingsValues {
-	return {
-		connectionNotificationsEnabled: s.connectionNotificationsEnabled,
-		connectionNotificationPosition: s.connectionNotificationPosition,
-		connectionNotificationDuration: s.connectionNotificationDuration,
-		maxQueuedPerAuthor: s.maxQueuedPerAuthor,
-		mediaSize: s.mediaSize,
-		duration: s.duration,
-		syncMediaDuration: s.syncMediaDuration,
-		volume: s.volume,
-		position: s.position,
-		positionOffsetX: s.positionOffsetX,
-		positionOffsetY: s.positionOffsetY,
-		enabledTypes: s.enabledTypes,
-		showBotAppSources: s.showBotAppSources,
-		textSize: s.textSize,
-		textPosition: s.textPosition,
-		textColor: s.textColor,
-		mediaOpacity: s.mediaOpacity,
-		bgEnabled: s.bgEnabled,
-		bgColor: s.bgColor,
-		bgOpacity: s.bgOpacity,
-		bgBorderColor: s.bgBorderColor,
-		bgBorderOpacity: s.bgBorderOpacity,
-		bgBorderWidth: s.bgBorderWidth,
-		bgBorderRadius: s.bgBorderRadius,
-		bgPadding: s.bgPadding,
-		floatingReactionsEnabled: s.floatingReactionsEnabled,
-		floatingReactionPreset: s.floatingReactionPreset,
-		floatingReactionDuration: s.floatingReactionDuration,
-		floatingReactionOpacity: s.floatingReactionOpacity,
-		floatingReactionSize: s.floatingReactionSize,
-	};
+export function extractDefaults(settings: Settings): OverlaySettingsValues {
+	return OVERLAY_PROFILE_FIELDS.reduce((values, key) => {
+		values[key] = settings[key] as never;
+		return values;
+	}, {} as OverlaySettingsValues);
 }

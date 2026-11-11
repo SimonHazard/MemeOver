@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
-import { JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
+import type { JoinMessage, LeaveMessage, ServerMessage } from "@memeover/shared";
+import { ClientMessageSchema, JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
 import { Elysia } from "elysia";
 import { config } from "./utils/config";
 import { isDiscordGatewayUsable } from "./utils/discord-gateway";
@@ -9,14 +10,12 @@ import { discordRefLogFields } from "./utils/log-privacy";
 import { logger } from "./utils/logger";
 import { schedulePresenceRefresh } from "./utils/presence";
 import { guildRegistry } from "./utils/registry";
-import { ClientMessageSchema } from "./utils/schemas";
 import { stats } from "./utils/stats";
 import { store } from "./utils/store";
-import type { JoinMessage, LeaveMessage, ServerMessage, WSConnection } from "./utils/types";
+import type { WSConnection } from "./utils/types";
 
 const log = logger.child({ module: "server" });
 
-// Pre-compute once at startup to avoid per-request allocation
 const metricsTokenBuf = config.metricsToken ? Buffer.from(config.metricsToken) : null;
 
 // ─── Broadcast ────────────────────────────────────────────────────────────────
@@ -54,12 +53,11 @@ export function broadcastToGuild(guildId: string, event: ServerMessage): void {
 		try {
 			client.ws_ref.send(payload);
 		} catch (err) {
-			// Socket closed between check and send — clean up
 			log.warn(
 				{ ...discordRefLogFields({ wsId }), event: "send_failed", err },
 				"Failed to send to client, removing",
 			);
-			store.removeClient(wsId);
+			dropClient(client.ws_ref);
 		}
 	}
 
@@ -118,7 +116,6 @@ interface RateLimitState {
 
 const rateLimiters = new Map<string, RateLimitState>();
 
-/** Returns true if the message is allowed, false if rate-limited. */
 function checkRateLimit(wsId: string): boolean {
 	const now = Date.now();
 	let state = rateLimiters.get(wsId);
@@ -149,7 +146,7 @@ function startHeartbeat(ws: WSConnection): void {
 		try {
 			ws.send(JSON.stringify({ type: "PING" } satisfies ServerMessage));
 		} catch {
-			clearHeartbeat(ws.id);
+			dropClient(ws);
 			return;
 		}
 
@@ -162,23 +159,7 @@ function startHeartbeat(ws: WSConnection): void {
 				"Client missed PONG, closing connection",
 			);
 			stats.errorHeartbeatTimeout();
-			clearHeartbeat(ws.id);
-			rateLimiters.delete(ws.id);
-			// Capture guilds before removal so we can broadcast the updated count
-			const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
-			for (const guildId of guilds) {
-				guildRegistry.recordGuildActivity(guildId);
-			}
-			store.removeClient(ws.id);
-			for (const guildId of guilds) {
-				broadcastMemberCount(guildId);
-			}
-			schedulePresenceRefresh();
-			try {
-				ws.close();
-			} catch {
-				// Already closed
-			}
+			dropClient(ws);
 		}, PONG_TIMEOUT_MS);
 	}, PING_INTERVAL_MS);
 
@@ -191,6 +172,36 @@ function clearHeartbeat(wsId: string): void {
 	clearInterval(state.pingInterval);
 	if (state.pongTimeout) clearTimeout(state.pongTimeout);
 	heartbeats.delete(wsId);
+}
+
+function removeClientSession(wsId: string): void {
+	clearHeartbeat(wsId);
+	rateLimiters.delete(wsId);
+	const client = store.getClient(wsId);
+	if (!client) return;
+	const guilds = [...client.joined_guilds];
+	for (const guildId of guilds) {
+		guildRegistry.recordGuildActivity(guildId);
+	}
+	store.removeClient(wsId);
+	for (const guildId of guilds) {
+		broadcastMemberCount(guildId);
+	}
+	schedulePresenceRefresh();
+}
+
+/**
+ * Removes the session and closes the transport. A socket left open without
+ * membership or heartbeat would look connected to the overlay while receiving nothing;
+ * closing it lets the app reconnect.
+ */
+function dropClient(ws: WSConnection): void {
+	removeClientSession(ws.id);
+	try {
+		ws.close();
+	} catch {
+		// Already closed
+	}
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -271,6 +282,9 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 }
 
 function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
+	// LEAVE carries no token: only a socket admitted by JOIN may touch the guild's
+	// retention timestamp, member count and presence.
+	if (!store.isClientInGuild(ws.id, msg.guild_id)) return;
 	guildRegistry.recordGuildActivity(msg.guild_id);
 	store.leaveGuild(ws.id, msg.guild_id);
 	log
@@ -325,7 +339,6 @@ export function createServer() {
 			},
 
 			message(ws: WSConnection, raw: unknown) {
-				// Rate limiting
 				if (!checkRateLimit(ws.id)) {
 					ws.send(
 						JSON.stringify({
@@ -342,7 +355,6 @@ export function createServer() {
 					return;
 				}
 
-				// Parse JSON
 				let parsed: unknown;
 				try {
 					const text = typeof raw === "string" ? raw : JSON.stringify(raw);
@@ -363,7 +375,6 @@ export function createServer() {
 					return;
 				}
 
-				// Validate with Zod
 				const result = ClientMessageSchema.safeParse(parsed);
 				if (!result.success) {
 					ws.send(
@@ -391,7 +402,6 @@ export function createServer() {
 						handleLeave(ws, msg);
 						break;
 					case "PONG": {
-						// Clear the pending pong timeout for this client
 						const state = heartbeats.get(ws.id);
 						if (state?.pongTimeout) {
 							clearTimeout(state.pongTimeout);
@@ -400,7 +410,6 @@ export function createServer() {
 						break;
 					}
 					default: {
-						// TypeScript exhaustiveness guard
 						const _: never = msg;
 						void _;
 					}
@@ -408,23 +417,12 @@ export function createServer() {
 			},
 
 			close(ws: WSConnection) {
-				clearHeartbeat(ws.id);
-				rateLimiters.delete(ws.id);
-				// Capture guilds before removal so we can broadcast the updated count
-				const guilds = [...(store.getClient(ws.id)?.joined_guilds ?? [])];
-				for (const guildId of guilds) {
-					guildRegistry.recordGuildActivity(guildId);
-				}
-				store.removeClient(ws.id);
+				removeClientSession(ws.id);
 				stats.connectionClosed();
 				log.info(
 					{ ...discordRefLogFields({ wsId: ws.id }), event: "disconnected" },
 					"Client disconnected",
 				);
-				for (const guildId of guilds) {
-					broadcastMemberCount(guildId);
-				}
-				schedulePresenceRefresh();
 			},
 		});
 }

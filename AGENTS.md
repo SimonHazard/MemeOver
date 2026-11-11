@@ -24,8 +24,8 @@ Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or 
 ### Display setting
 
 1. Add type and default in `app/src/shared/types.ts`; include in `OVERLAY_PROFILE_FIELDS` only for display preferences.
-2. Advance `CURRENT_SCHEMA_VERSION` and add a backward-compatible migration in `app/src/shared/settings.ts` with a test in `settings.test.ts`.
-3. Update Zod schema and `extractDefaults` in `app/src/windows/settings/components/overlay-form/schema.ts`; check `use-overlay-form.ts` consumers.
+2. Advance `CURRENT_SCHEMA_VERSION` and add a backward-compatible migration in `app/src/shared/settings-normalization.ts` with a test in `settings.test.ts`. Keep native persistence in `settings.ts`.
+3. Update Zod schema in `app/src/windows/settings/components/overlay-form/schema.ts`; `extractDefaults` projects `OVERLAY_PROFILE_FIELDS` automatically. Check `use-overlay-form.ts` consumers.
 4. Add the control in the relevant form section, app en/fr JSON labels and overlay consumer.
 5. Keep credentials and machine preferences out of profiles.
 
@@ -45,8 +45,8 @@ Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or 
 
 ### Bot subcommand
 
-1. Add `bot/src/commands/subcommands/<name>.ts`, builder and dispatch in `bot/src/commands/commands.ts`.
-2. Add ManageGuild commands to `PRIVILEGED_SUBS`.
+1. Add `bot/src/commands/subcommands/<name>.ts` and its entry in the command catalogue in `bot/src/commands/commands.ts`.
+2. Keep the builder options, handler and `privileged` permission together in that entry; set `privileged: true` for ManageGuild commands.
 3. Add bot en/fr strings in `bot/src/i18n.ts`, update `/memeover help` and both README command tables.
 4. Update site command content when present and test permissions and behavior.
 

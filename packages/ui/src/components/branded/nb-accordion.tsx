@@ -8,10 +8,6 @@ import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import type * as React from "react";
 
-// ─── NbAccordion — Neo-brutalist accordion ───────────────────────────────────
-// Each item is a mini-card: 2px border + 2px offset shadow.
-// Trigger uses font-display; primary tint signals open state.
-
 function NbAccordion({ className, ...props }: React.ComponentProps<typeof Accordion>) {
 	return <Accordion className={cn("space-y-2", className)} {...props} />;
 }

@@ -14,6 +14,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- Bot (1.6.11): ignore `LEAVE` from a socket that never joined the guild, so an unauthenticated connection can no longer refresh another server's inactivity timestamp, and scope `/memeover secret` duplicate detection to the server so one server cannot block the same meme in another for 60 seconds.
 - App/site (1.10.0): keep Skip available while a browser source is loaded, even when the desktop overlay is empty or closed. Preserve repeated skip commands and their order with queue clears when several actions arrive in one check; repeated checks do not replay them. A source that missed more than the retained 64 actions discards stale playback instead of guessing the missing commands.
 - App/site (1.10.0): apply the media volume setting to audio files, which always played at full volume.
 - App/site (1.8.8): clear a connection field's validation error as soon as its value is corrected. The error previously disappeared only on blur, moving "Save & connect" between mouse press and release so the click could be lost. Retry WebKit browser tests once in CI after intermittent Linux WebKit page freezes.
@@ -32,6 +33,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Bot (1.6.3): filter reactions before calling Discord, then recheck the watched channel, pause and bot-source settings after the response. Limit Discord fetches and outgoing reactions independently to 10 per guild per second so delayed responses cannot flood the overlay.
 
 ### Changed
+
+- App/site (1.10.1): separate browser-safe settings and playback state from native window initialization, share the localized homepage composition, and remove unused internal configuration options without changing the display or saved settings.
+- Bot (1.6.11): group command definitions with permissions and dispatch, protect persisted guild settings from accidental mutation through returned objects, and centralize disconnected-client cleanup so failed sends update room membership and presence consistently and close the socket, letting the overlay reconnect.
 
 - App/site (1.8.9): slide a single active-tab pill between settings tabs instead of switching the highlight instantly. The pill keeps the neo-brutalist border and offset shadow, uses a 0.3 s spring and becomes an instant swap when reduced motion is requested. The active tab is announced with `aria-current="page"`.
 

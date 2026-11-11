@@ -1,3 +1,4 @@
+import type { ServerMessage } from "@memeover/shared";
 import { destroyDiscordClient, startBot } from "./bot";
 import { registerCommands } from "./commands/commands";
 import { createServer } from "./server";
@@ -6,16 +7,11 @@ import { rearmAllGuildPauses } from "./utils/guild-pause-timers";
 import { logger } from "./utils/logger";
 import { guildRegistry } from "./utils/registry";
 import { store } from "./utils/store";
-import type { ServerMessage } from "./utils/types";
 
 const log = logger.child({ module: "index" });
 
-// 1. Config is loaded and validated on import (throws at startup if invalid)
-
-// 2. Create the Elysia WebSocket server
 const app = createServer();
 
-// 3. Start listening
 app.listen(config.wsPort, () => {
 	log.info(
 		{ event: "listening", port: config.wsPort },
@@ -25,7 +21,6 @@ app.listen(config.wsPort, () => {
 
 rearmAllGuildPauses();
 
-// 4. Start the Discord bot, then register slash commands
 startBot()
 	.then(async () => {
 		await registerCommands();
@@ -52,7 +47,6 @@ async function shutdown(signal: string): Promise<void> {
 	killTimer.unref();
 	log.info({ event: "shutdown", signal }, `Received ${signal}, shutting down gracefully...`);
 
-	// Notify all connected clients and close their connections
 	const shutdownPayload = JSON.stringify({
 		type: "ERROR",
 		code: "SERVER_SHUTDOWN",
@@ -68,7 +62,6 @@ async function shutdown(signal: string): Promise<void> {
 		}
 	}
 
-	// Persist registry one last time
 	try {
 		guildRegistry.flush();
 	} catch (err) {

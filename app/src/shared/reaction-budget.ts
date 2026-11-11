@@ -12,13 +12,6 @@ export const REACTION_ANIMATION_COST = {
 	firework: 5,
 } as const satisfies Record<FloatingReactionAnimation, number>;
 
-export function getReactionCapacity(animation: FloatingReactionAnimation): number {
-	return Math.min(
-		MAX_REACTION_COUNT,
-		Math.floor(REACTION_SCENE_BUDGET / REACTION_ANIMATION_COST[animation]),
-	);
-}
-
 export function appendReactionWithinBudget(
 	reactions: readonly FloatingReaction[],
 	incoming: FloatingReaction,

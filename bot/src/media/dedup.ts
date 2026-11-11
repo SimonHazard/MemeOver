@@ -31,7 +31,3 @@ export function shouldDispatch(key: string): boolean {
 	evictOverflow();
 	return true;
 }
-
-export function dedupSize(): number {
-	return seen.size;
-}

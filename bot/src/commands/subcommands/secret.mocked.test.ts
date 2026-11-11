@@ -1,7 +1,7 @@
 import { afterEach, expect, mock, test } from "bun:test";
+import type { MediaEvent } from "@memeover/shared";
 import type { ChatInputCommandInteraction, InteractionReplyOptions } from "discord.js";
 import { t } from "../../i18n";
-import type { MediaEvent } from "../../utils/types";
 import { notConfiguredResponse } from "../connection";
 import { componentsToJson } from "../response-panel";
 
@@ -15,9 +15,10 @@ const { handleSecret } = await import("./secret");
 const guild = "123456789012345681";
 const channel = "123456789012345682";
 let sequence = 0;
-function interaction() {
+function interaction(
+	url = `https://cdn.discordapp.com/attachments/${guild}/${channel}/secret-${sequence++}.png`,
+) {
 	const replies: InteractionReplyOptions[] = [];
-	const url = `https://cdn.discordapp.com/attachments/${guild}/${channel}/secret-${sequence++}.png`;
 	const value = {
 		id: "123456789012345683",
 		channelId: channel,
@@ -89,4 +90,19 @@ test("secret duplicate within the TTL does not broadcast twice", async () => {
 	await handleSecret(input.value, guild);
 	expect(broadcasts).toHaveLength(1);
 	expect(replyText(input.replies[1])).toContain(t("en", "secret.alreadySentTitle"));
+});
+test("secret deduplication is scoped to the guild", async () => {
+	const otherGuild = "123456789012345685";
+	guildRegistry.register(guild, channel);
+	guildRegistry.register(otherGuild, null);
+	try {
+		const first = interaction();
+		const second = interaction(first.url);
+		await handleSecret(first.value, guild);
+		await handleSecret(second.value, otherGuild);
+		expect(broadcasts.map((b) => b.guild)).toEqual([guild, otherGuild]);
+		expect(replyText(second.replies[0])).toContain(t("en", "secret.successTitle"));
+	} finally {
+		guildRegistry.unregister(otherGuild);
+	}
 });
