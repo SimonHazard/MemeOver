@@ -50,6 +50,8 @@ jobs:
               - '.github/workflows/ci.yml'
             rust:
               - 'app/src-tauri/**'
+              - 'app/src/shared/browser-source-contract.ts'
+              - 'app/src/shared/stream-controls.ts'
               - 'package.json'
               - 'bunfig.toml'
               - '.github/workflows/ci.yml'
@@ -57,6 +59,8 @@ jobs:
               - 'site/**'
               - 'packages/ui/**'
               - 'shared/**'
+              - 'CHANGELOG.md'
+              - 'app/package.json'
               - 'package.json'
               - 'bunfig.toml'
               - 'scripts/**'
