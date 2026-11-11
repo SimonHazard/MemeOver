@@ -31,6 +31,7 @@ export const ALLOWED_MEDIA_HOSTS: ReadonlySet<string> = new Set([
 export function isAllowedAndFresh(url: string): boolean {
 	try {
 		const parsed = new URL(url);
+		if (parsed.protocol !== "https:" || parsed.port !== "") return false;
 		if (!ALLOWED_MEDIA_HOSTS.has(parsed.hostname)) return false;
 		if (isCdnUrlExpired(url)) return false;
 		return true;

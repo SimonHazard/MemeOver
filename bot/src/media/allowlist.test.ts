@@ -8,6 +8,11 @@ for (const [name, url, allowed, expired] of [
 	["fresh", `https://cdn.discordapp.com/a.png?ex=${expiry(60)}`, true, false],
 	["expired", `https://cdn.discordapp.com/a.png?ex=${expiry(-60)}`, false, true],
 	["no expiry", "https://cdn.discordapp.com/a.png", true, false],
+	["plain http", "http://cdn.discordapp.com/a.png", false, false],
+	["explicit port", "https://cdn.discordapp.com:8443/a.png", false, false],
+	["explicit default HTTPS port", "https://cdn.discordapp.com:443/a.png", true, false],
+	["userinfo trick", "https://cdn.discordapp.com@evil.test/a.png", false, false],
+	["trailing dot", "https://cdn.discordapp.com./a.png", false, false],
 	// characterization: expiry has no host check.
 	["unknown expired host", `https://evil.test/a.png?ex=${expiry(-60)}`, false, true],
 	["unknown host", "https://evil.test/a.png", false, false],

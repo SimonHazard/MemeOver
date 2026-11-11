@@ -243,6 +243,16 @@ test("unwatched channel dropped", () => {
 	dispatchMedia(makeMessage(), true);
 	expect(broadcasts).toEqual([]);
 });
+test("embed on an unsupported host emits nothing", () => {
+	dispatchMedia(
+		makeMessage({
+			content: "",
+			embeds: [{ image: { url: "https://example.test/preview.png" } }],
+		}),
+		false,
+	);
+	expect(broadcasts).toEqual([]);
+});
 test("new embed pathname detection", () => {
 	expect(
 		hasNewEmbedMedia(
