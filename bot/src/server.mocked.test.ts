@@ -155,6 +155,24 @@ test("member counts follow second join, close, leave", async () => {
 	first.send("not json");
 	expect(await first.next()).toMatchObject({ code: "PARSE_ERROR" });
 });
+test("LEAVE from a socket that never joined leaves the guild untouched", async () => {
+	const member = await joined();
+	const outsider = await client();
+	const activity = spyOn(guildRegistry, "recordGuildActivity");
+	try {
+		outsider.send({ type: "LEAVE", guild_id: guildId });
+		outsider.send("not json");
+		expect(await outsider.next()).toMatchObject({ code: "PARSE_ERROR" });
+		expect(activity).not.toHaveBeenCalled();
+		member.send({ type: "LEAVE", guild_id: guildId });
+		member.send("not json");
+		expect(await member.next()).toMatchObject({ code: "PARSE_ERROR" });
+		expect(activity).toHaveBeenCalledTimes(1);
+		expect(activity).toHaveBeenCalledWith(guildId);
+	} finally {
+		activity.mockRestore();
+	}
+});
 test("a reconnecting install keeps the member count while its stale socket lingers", async () => {
 	const first = await joined();
 	const install = "install-reconnecting";

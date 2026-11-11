@@ -114,9 +114,10 @@ export async function handleSecret(
 		return;
 	}
 	// Media URL dedup key: each interaction has a unique id, so pairing id+url
-	// would never collide. Keying on the URL alone gates anti-spam when the same
-	// meme is resubmitted within the TTL window.
-	if (!shouldDispatch(`secret:${urlPathname(mediaUrl)}`)) {
+	// would never collide. Keying on the guild and URL gates anti-spam when the same
+	// meme is resubmitted within the TTL window, without letting one guild suppress
+	// another guild's send.
+	if (!shouldDispatch(`secret:${guildId}:${urlPathname(mediaUrl)}`)) {
 		await interaction.reply(
 			errorResponse(
 				t(locale, "secret.alreadySentTitle"),

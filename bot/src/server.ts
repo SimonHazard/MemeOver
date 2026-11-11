@@ -273,6 +273,9 @@ function handleJoin(ws: WSConnection, msg: JoinMessage): void {
 }
 
 function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
+	// LEAVE carries no token: only a socket admitted by JOIN may touch the guild's
+	// retention timestamp, member count and presence.
+	if (!store.isClientInGuild(ws.id, msg.guild_id)) return;
 	guildRegistry.recordGuildActivity(msg.guild_id);
 	store.leaveGuild(ws.id, msg.guild_id);
 	log
