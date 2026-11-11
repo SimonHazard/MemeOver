@@ -27,6 +27,8 @@ const UNMANAGED_INSTALL_ERROR: &str = "Install folder is not managed by MemeOver
 #[derive(Clone, Default)]
 pub struct ServerCreatorState {
     child: Arc<Mutex<Option<Child>>>,
+    /// Held for a whole start, stop or restart, so lifecycle operations cannot race.
+    lifecycle: Arc<Mutex<()>>,
     logs: Arc<Mutex<VecDeque<String>>>,
     tools: Arc<Mutex<Option<(Instant, ToolProbe)>>>,
 }
@@ -391,6 +393,13 @@ fn prune_child(state: &ServerCreatorState) -> Result<bool, String> {
     }
 }
 
+fn lock_lifecycle(state: &ServerCreatorState) -> Result<std::sync::MutexGuard<'_, ()>, String> {
+    state
+        .lifecycle
+        .lock()
+        .map_err(|_| "Server lifecycle lock poisoned".to_string())
+}
+
 fn run_logged(
     state: &ServerCreatorState,
     program: impl AsRef<OsStr>,
@@ -648,16 +657,7 @@ fn install_bun_sync(state: &ServerCreatorState) -> Result<(), String> {
     }
 }
 
-fn start_sync(
-    app: &AppHandle,
-    state: &ServerCreatorState,
-    install_dir: Option<String>,
-) -> Result<(), String> {
-    if prune_child(state)? {
-        push_log(state, "Server is already running");
-        return Ok(());
-    }
-
+fn bot_command(app: &AppHandle, install_dir: Option<String>) -> Result<Command, String> {
     let root = normalize_install_dir(app, install_dir)?;
     let bot = bot_dir(&root);
     if !package_json_path(&root).exists() {
@@ -678,6 +678,40 @@ fn start_sync(
         .stderr(Stdio::piped());
     append_bun_path(&mut command, &bun, &env::var_os("PATH").unwrap_or_default());
 
+    Ok(command)
+}
+
+fn start_sync(
+    app: &AppHandle,
+    state: &ServerCreatorState,
+    install_dir: Option<String>,
+) -> Result<(), String> {
+    start_with(state, || bot_command(app, install_dir))
+}
+
+fn start_with(
+    state: &ServerCreatorState,
+    build: impl FnOnce() -> Result<Command, String>,
+) -> Result<(), String> {
+    let _lifecycle = lock_lifecycle(state)?;
+    if prune_child(state)? {
+        push_log(state, "Server is already running");
+        return Ok(());
+    }
+    spawn_tracked(state, build()?)
+}
+
+fn restart_with(
+    state: &ServerCreatorState,
+    build: impl FnOnce() -> Result<Command, String>,
+) -> Result<(), String> {
+    let _lifecycle = lock_lifecycle(state)?;
+    stop_process(state)?;
+    spawn_tracked(state, build()?)
+}
+
+/// Spawns `command` and tracks it. The caller holds the lifecycle lock.
+fn spawn_tracked(state: &ServerCreatorState, mut command: Command) -> Result<(), String> {
     let mut child = command
         .spawn()
         .map_err(|e| format!("Failed to start server: {e}"))?;
@@ -724,6 +758,7 @@ fn stop_process(state: &ServerCreatorState) -> Result<(), String> {
 /// Called from the app exit handler so the managed bot process does not
 /// outlive the app and keep its port bound.
 pub fn shutdown(state: &ServerCreatorState) {
+    let _lifecycle = state.lifecycle.lock();
     let _ = stop_process(state);
 }
 
@@ -783,7 +818,11 @@ pub async fn server_creator_stop(
     state: tauri::State<'_, ServerCreatorState>,
 ) -> Result<(), String> {
     let state = state.inner().clone();
-    run_blocking(move || stop_process(&state)).await
+    run_blocking(move || {
+        let _lifecycle = lock_lifecycle(&state)?;
+        stop_process(&state)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -793,11 +832,7 @@ pub async fn server_creator_restart(
     install_dir: Option<String>,
 ) -> Result<(), String> {
     let state = state.inner().clone();
-    run_blocking(move || {
-        stop_process(&state)?;
-        start_sync(&app, &state, install_dir)
-    })
-    .await
+    run_blocking(move || restart_with(&state, || bot_command(&app, install_dir))).await
 }
 
 #[tauri::command]
@@ -844,6 +879,51 @@ pub async fn server_creator_public_ip(
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[cfg(unix)]
+    #[test]
+    fn concurrent_starts_spawn_one_tracked_process() {
+        let root = unique_temp_root("concurrent-start");
+        fs::create_dir_all(&root).unwrap();
+        let marker = root.join("spawned");
+        let state = ServerCreatorState::default();
+        let barrier = Arc::new(std::sync::Barrier::new(2));
+        let threads: Vec<_> = (0..2)
+            .map(|_| {
+                let state = state.clone();
+                let marker = marker.clone();
+                let barrier = barrier.clone();
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    start_with(&state, || {
+                        let mut command = new_command("/bin/sh");
+                        command
+                            .arg("-c")
+                            .arg("echo started >> \"$MARKER\"; exec sleep 30")
+                            .env("MARKER", marker)
+                            .stdout(Stdio::piped())
+                            .stderr(Stdio::piped());
+                        Ok(command)
+                    })
+                })
+            })
+            .collect();
+        let results: Vec<_> = threads.into_iter().map(|thread| thread.join()).collect();
+        let spawned = fs::read_to_string(&marker).unwrap();
+        // Clean up the tracked fixture before checking assertions.
+        stop_process(&state).unwrap();
+        let tracked = state.child.lock().unwrap().is_none();
+        fs::remove_dir_all(&root).unwrap();
+        for result in results {
+            result.unwrap().unwrap();
+        }
+        assert_eq!(
+            spawned.lines().count(),
+            1,
+            "exactly one bot process may start"
+        );
+        assert!(tracked);
+    }
 
     #[test]
     fn standalone_requires_a_supported_bun_release() {
