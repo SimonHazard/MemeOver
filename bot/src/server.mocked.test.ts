@@ -238,66 +238,84 @@ test("broadcast reaches only joined clients", async () => {
 });
 
 for (const failure of ["broadcast", "heartbeat"] as const) {
-	test(`${failure} send failure removes membership once and closes the socket`, async () => {
-		const first = await joined();
-		const firstId = [...store.getGuildMembers(guildId)][0];
-		let heartbeat: (() => void) | undefined;
-		const nativeSetInterval = globalThis.setInterval;
-		const scheduler = spyOn(globalThis, "setInterval").mockImplementation(((
-			handler: TimerHandler,
-			delay?: number,
-			...args: unknown[]
-		) => {
-			if (delay === 30_000 && typeof handler === "function") {
-				heartbeat = () => handler(...args);
+	for (const shape of ["returns 0", "throws"] as const) {
+		test(`${failure} send that ${shape} removes membership once and closes the socket`, async () => {
+			const first = await joined();
+			const firstId = [...store.getGuildMembers(guildId)][0];
+			let heartbeat: (() => void) | undefined;
+			const nativeSetInterval = globalThis.setInterval;
+			const scheduler = spyOn(globalThis, "setInterval").mockImplementation(((
+				handler: TimerHandler,
+				delay?: number,
+				...args: unknown[]
+			) => {
+				if (delay === 30_000 && typeof handler === "function") {
+					heartbeat = () => handler(...args);
+				}
+				return nativeSetInterval(handler, delay, ...args);
+			}) as typeof globalThis.setInterval);
+			let second: TestClient;
+			try {
+				second = await client();
+			} finally {
+				scheduler.mockRestore();
 			}
-			return nativeSetInterval(handler, delay, ...args);
-		}) as typeof globalThis.setInterval);
-		let second: TestClient;
-		try {
-			second = await client();
-		} finally {
-			scheduler.mockRestore();
-		}
-		await joinGuild(second, guildId, token);
-		await first.next((message) => message.type === "MEMBER_COUNT_UPDATE");
-		await second.next((message) => message.type === "MEMBER_COUNT_UPDATE");
-		const failedId = [...store.getGuildMembers(guildId)].find((id) => id !== firstId);
-		const failedClient = failedId ? store.getClient(failedId) : undefined;
-		if (!failedClient) throw new Error("Missing joined socket");
-		const connections = async () =>
-			(await (await fetch(`${server.baseUrl}/health`)).json()).connections.active as number;
-		const activeBefore = await connections();
-		const activity = spyOn(guildRegistry, "recordGuildActivity");
-		const send = spyOn(failedClient.ws_ref, "send").mockImplementation(() => {
-			throw new Error("Socket send failed");
+			await joinGuild(second, guildId, token);
+			await first.next((message) => message.type === "MEMBER_COUNT_UPDATE");
+			await second.next((message) => message.type === "MEMBER_COUNT_UPDATE");
+			const failedId = [...store.getGuildMembers(guildId)].find((id) => id !== firstId);
+			const failedClient = failedId ? store.getClient(failedId) : undefined;
+			if (!failedClient) throw new Error("Missing joined socket");
+			const connections = async () =>
+				(await (await fetch(`${server.baseUrl}/health`)).json()).connections.active as number;
+			const activeBefore = await connections();
+			const activity = spyOn(guildRegistry, "recordGuildActivity");
+			const send = spyOn(failedClient.ws_ref, "send").mockImplementation(() => {
+				if (shape === "throws") throw new Error("Socket send failed");
+				return 0;
+			});
+			try {
+				if (failure === "broadcast") {
+					broadcastToGuild(guildId, {
+						type: "GUILD_STATE",
+						guild_id: guildId,
+						paused_until: null,
+					});
+					await first.next((message) => message.type === "GUILD_STATE");
+				} else {
+					if (!heartbeat) throw new Error("Missing heartbeat callback");
+					heartbeat();
+				}
+				expect(store.getClient(failedClient.ws_id)).toBeUndefined();
+				expect(store.getGuildMembers(guildId)).toEqual(new Set([firstId]));
+				expect(await first.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
+				expect(activity.mock.calls).toEqual([[guildId]]);
+				await second.closed;
+				expect(await connections()).toBe(activeBefore - 1);
+				expect(activity.mock.calls).toEqual([[guildId]]);
+				await expect(first.next(undefined, 50)).rejects.toThrow("Timed out");
+			} finally {
+				send.mockRestore();
+				activity.mockRestore();
+			}
 		});
-		try {
-			if (failure === "broadcast") {
-				broadcastToGuild(guildId, {
-					type: "GUILD_STATE",
-					guild_id: guildId,
-					paused_until: null,
-				});
-				await first.next((message) => message.type === "GUILD_STATE");
-			} else {
-				if (!heartbeat) throw new Error("Missing heartbeat callback");
-				heartbeat();
-			}
-			expect(store.getClient(failedClient.ws_id)).toBeUndefined();
-			expect(store.getGuildMembers(guildId)).toEqual(new Set([firstId]));
-			expect(await first.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
-			expect(activity.mock.calls).toEqual([[guildId]]);
-			await second.closed;
-			expect(await connections()).toBe(activeBefore - 1);
-			expect(activity.mock.calls).toEqual([[guildId]]);
-			await expect(first.next(undefined, 50)).rejects.toThrow("Timed out");
-		} finally {
-			send.mockRestore();
-			activity.mockRestore();
-		}
-	});
+	}
 }
+
+test("a send queued under backpressure keeps the client", async () => {
+	const first = await joined();
+	const firstId = [...store.getGuildMembers(guildId)][0];
+	const target = firstId ? store.getClient(firstId) : undefined;
+	if (!target) throw new Error("Missing joined socket");
+	const send = spyOn(target.ws_ref, "send").mockImplementation(() => -1);
+	try {
+		broadcastToGuild(guildId, { type: "GUILD_STATE", guild_id: guildId, paused_until: null });
+		expect(store.getGuildMembers(guildId)).toEqual(new Set([firstId]));
+	} finally {
+		send.mockRestore();
+	}
+	first.close();
+});
 
 test("rotation evicts immediately and only new credentials can rejoin", async () => {
 	const g = "123456789012345679",
