@@ -48,6 +48,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Bot (1.6.4): delete a server's configuration and revoke overlay sessions when the bot is removed from Discord. Preserve configurations when an overlay reconnects, recent activity is recorded or setup is replaced while a cleanup notice is being sent.
 - Bot (1.6.3): filter reactions before calling Discord, then recheck the watched channel, pause and bot-source settings after the response. Limit Discord fetches and outgoing reactions independently to 10 per guild per second so delayed responses cannot flood the overlay.
 
+### Security
+
+- App/site (1.10.10): restrict the overlay to the two app commands it uses; self-hosted bot management, updates and browser source controls are reserved to the settings window.
+
 ### Changed
 
 - App/site (1.10.1): separate browser-safe settings and playback state from native window initialization, share the localized homepage composition, and remove unused internal configuration options without changing the display or saved settings.

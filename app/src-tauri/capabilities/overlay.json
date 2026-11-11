@@ -7,6 +7,8 @@
     "core:default",
     "core:event:default",
     "store:default",
-    "core:window:allow-show"
+    "core:window:allow-show",
+    "allow-set-overlay-click-through",
+    "allow-move-overlay-to-monitor"
   ]
 }

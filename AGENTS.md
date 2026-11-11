@@ -93,6 +93,8 @@ A version bump does not authorize a push, tag or release. App release tags remai
 
 ## Conventions and boundaries
 
+A new Tauri command must be added to COMMANDS in app/src-tauri/build.rs and granted in the capability file of each window that calls it; scripts/tauri-command-acl.test.ts checks this.
+
 Biome uses tabs, double quotes, 100 columns. Biome covers every workspace, including `packages/ui/src`.
 Use conventional commits and squash merges. Do not push, tag, publish or open PRs without authorization.
 Preserve pre-existing changes and exclude them from unrelated commits.
