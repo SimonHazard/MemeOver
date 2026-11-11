@@ -87,6 +87,12 @@ Docker Compose is available from the repository root:
 docker compose up -d --build
 ```
 
+When the bot is reached only through a tunnel running on the same machine, set
+`WS_BIND_ADDRESS=127.0.0.1` in the root `.env` so Docker publishes the port only on
+loopback. Keep the default `0.0.0.0` when another container or host must reach that
+published port. Docker's published ports bypass host firewall rules such as ufw;
+use the explicit bind address to limit access.
+
 Updates stay manual, using the existing Compose checkout and project on `main`:
 
 1. Confirm the tracked working tree is clean (`git status --short`) and the intended

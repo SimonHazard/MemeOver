@@ -13,7 +13,8 @@ COPY shared/package.json ./shared/
 COPY packages/ui/package.json ./packages/ui/
 COPY site/package.json ./site/
 
-RUN bun install --frozen-lockfile
+# Dépendances de production du bot et du paquet partagé uniquement.
+RUN bun install --frozen-lockfile --production --filter @memeover/bot --filter @memeover/shared
 
 # ── Stage 2 : runtime ──────────────────────────────────────────────────────────
 FROM oven/bun:1.4.2-alpine AS runner
