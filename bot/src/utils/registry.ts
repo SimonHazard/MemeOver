@@ -17,7 +17,18 @@ const log = logger.child({ module: "registry" });
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
-const DATA_DIR = process.env.MEMEOVER_DATA_DIR || path.join(process.cwd(), "data");
+/** A test run without the preload would otherwise open the developer's real registry. */
+export function resolveDataDir(env: Record<string, string | undefined>, cwd: string): string {
+	if (env.MEMEOVER_DATA_DIR) return env.MEMEOVER_DATA_DIR;
+	if (env.NODE_ENV === "test") {
+		throw new Error(
+			"MEMEOVER_DATA_DIR is not set under a test runner: run tests through the repo scripts",
+		);
+	}
+	return path.join(cwd, "data");
+}
+
+const DATA_DIR = resolveDataDir(process.env, process.cwd());
 const REGISTRY_DB = "memeover.db";
 const LEGACY_REGISTRY_FILE = "guilds.json";
 

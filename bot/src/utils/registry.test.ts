@@ -3,10 +3,21 @@ import { afterEach, describe, expect, setSystemTime, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createGuildRegistry, type GuildRegistry, guildRegistry } from "./registry";
+import { createGuildRegistry, type GuildRegistry, guildRegistry, resolveDataDir } from "./registry";
 import { importLegacyRegistry, openRegistryDatabase } from "./registry-db";
 
 const ids: string[] = [];
+test("data directory: explicit override wins, default is cwd/data, tests never fall back", () => {
+	expect(resolveDataDir({ MEMEOVER_DATA_DIR: "/x" }, "/cwd")).toBe("/x");
+	expect(resolveDataDir({ NODE_ENV: "test", MEMEOVER_DATA_DIR: "/x" }, "/cwd")).toBe("/x");
+	expect(resolveDataDir({ NODE_ENV: "production" }, "/cwd")).toBe("/cwd/data");
+	expect(resolveDataDir({}, "/cwd")).toBe("/cwd/data");
+	expect(() => resolveDataDir({ NODE_ENV: "test" }, "/cwd")).toThrow("MEMEOVER_DATA_DIR");
+	expect(() => resolveDataDir({ NODE_ENV: "test", MEMEOVER_DATA_DIR: "" }, "/cwd")).toThrow(
+		"MEMEOVER_DATA_DIR",
+	);
+});
+
 function guild() {
 	const id = String(BigInt(`0x${crypto.randomUUID().replaceAll("-", "").slice(0, 14)}`)).padStart(
 		18,
