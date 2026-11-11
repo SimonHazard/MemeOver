@@ -116,14 +116,30 @@ test("expired attachment skipped", () => {
 	]) as unknown as Message["attachments"];
 	expect(extractMedia(message)).toEqual([]);
 });
-test("extensionless embed image retained, thumbnail skipped", () => {
+test("extensionless embed image on an allowed host retained, thumbnail skipped", () => {
 	expect(
 		extractMedia(
 			makeMessage({
-				embeds: [{ image: { url: "https://x/image" } }, { thumbnail: { url: "https://x/thumb" } }],
+				embeds: [
+					{ image: { url: "https://media.tenor.com/image" } },
+					{ thumbnail: { url: "https://media.tenor.com/thumb" } },
+				],
 			}),
 		),
-	).toEqual([{ url: "https://x/image", media_type: "image" }]);
+	).toEqual([{ url: "https://media.tenor.com/image", media_type: "image" }]);
+});
+test("embeds on hosts outside the allowlist are never relayed", () => {
+	expect(
+		extractMedia(
+			makeMessage({
+				embeds: [
+					{ data: { type: "video" }, video: { url: "https://example.test/clip.mp4" } },
+					{ image: { url: "https://example.test/preview.png" } },
+					{ thumbnail: { url: "https://example.test/thumb.png" } },
+				],
+			}),
+		),
+	).toEqual([]);
 });
 test("unknown content host rejected", () =>
 	expect(extractMedia(makeMessage({ content: "https://evil.test/a.png" }))).toEqual([]));

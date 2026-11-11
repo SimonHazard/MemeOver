@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- Bot (1.6.15): apply the media host allowlist and expiry checks to Discord embeds too, and require HTTPS on the default port. Unsupported previews no longer occupy an empty overlay slot.
+
 - Bot (1.6.13): omit failed Discord request bodies from error logs so rejected setup, token and rotation replies cannot write their credentials to the logs. Bound deep or circular error metadata without returning unfiltered payloads.
 
 - Bot (1.6.11): ignore `LEAVE` from a socket that never joined the guild, so an unauthenticated connection can no longer refresh another server's inactivity timestamp, and scope `/memeover secret` duplicate detection to the server so one server cannot block the same meme in another for 60 seconds.
