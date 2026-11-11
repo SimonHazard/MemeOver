@@ -57,7 +57,7 @@ export function broadcastToGuild(guildId: string, event: ServerMessage): void {
 				{ ...discordRefLogFields({ wsId }), event: "send_failed", err },
 				"Failed to send to client, removing",
 			);
-			removeClientSession(wsId);
+			dropClient(client.ws_ref);
 		}
 	}
 
@@ -146,7 +146,7 @@ function startHeartbeat(ws: WSConnection): void {
 		try {
 			ws.send(JSON.stringify({ type: "PING" } satisfies ServerMessage));
 		} catch {
-			removeClientSession(ws.id);
+			dropClient(ws);
 			return;
 		}
 
@@ -159,12 +159,7 @@ function startHeartbeat(ws: WSConnection): void {
 				"Client missed PONG, closing connection",
 			);
 			stats.errorHeartbeatTimeout();
-			removeClientSession(ws.id);
-			try {
-				ws.close();
-			} catch {
-				// Already closed
-			}
+			dropClient(ws);
 		}, PONG_TIMEOUT_MS);
 	}, PING_INTERVAL_MS);
 
@@ -193,6 +188,20 @@ function removeClientSession(wsId: string): void {
 		broadcastMemberCount(guildId);
 	}
 	schedulePresenceRefresh();
+}
+
+/**
+ * Removes the session and closes the transport. A socket left open without
+ * membership or heartbeat would look connected to the overlay while receiving nothing;
+ * closing it lets the app reconnect.
+ */
+function dropClient(ws: WSConnection): void {
+	removeClientSession(ws.id);
+	try {
+		ws.close();
+	} catch {
+		// Already closed
+	}
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────

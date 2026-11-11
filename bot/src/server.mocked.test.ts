@@ -238,7 +238,7 @@ test("broadcast reaches only joined clients", async () => {
 });
 
 for (const failure of ["broadcast", "heartbeat"] as const) {
-	test(`${failure} send failure removes membership once, then close decrements connections once`, async () => {
+	test(`${failure} send failure removes membership once and closes the socket`, async () => {
 		const first = await joined();
 		const firstId = [...store.getGuildMembers(guildId)][0];
 		let heartbeat: (() => void) | undefined;
@@ -288,9 +288,6 @@ for (const failure of ["broadcast", "heartbeat"] as const) {
 			expect(store.getGuildMembers(guildId)).toEqual(new Set([firstId]));
 			expect(await first.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
 			expect(activity.mock.calls).toEqual([[guildId]]);
-			expect(await connections()).toBe(activeBefore);
-			send.mockRestore();
-			second.close();
 			await second.closed;
 			expect(await connections()).toBe(activeBefore - 1);
 			expect(activity.mock.calls).toEqual([[guildId]]);
