@@ -54,6 +54,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- Bot (1.6.20): ship only production dependencies in the Docker image and allow the published port to bind to the local machine with WS_BIND_ADDRESS=127.0.0.1.
+
 - App/site (1.10.1): separate browser-safe settings and playback state from native window initialization, share the localized homepage composition, and remove unused internal configuration options without changing the display or saved settings.
 - Bot (1.6.11): group command definitions with permissions and dispatch, protect persisted guild settings from accidental mutation through returned objects, and centralize disconnected-client cleanup so failed sends update room membership and presence consistently and close the socket, letting the overlay reconnect.
 
