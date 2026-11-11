@@ -1,8 +1,8 @@
+import type { ReactionEvent } from "@memeover/shared";
 import type { MessageReaction, PartialMessageReaction, PartialUser, User } from "discord.js";
 import { broadcastToGuild } from "../server";
 import { canBroadcastReaction, canFetchReaction } from "../utils/reaction-rate-limit";
 import { guildRegistry } from "../utils/registry";
-import type { ReactionEvent } from "../utils/types";
 import { admitGuildEvent } from "./admission";
 import { classifyReactionSource, sourceField } from "./source";
 

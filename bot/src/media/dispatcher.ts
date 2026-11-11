@@ -1,9 +1,9 @@
+import type { MediaEvent, TextEvent } from "@memeover/shared";
 import type { Message, PartialMessage } from "discord.js";
 import { broadcastToGuild } from "../server";
 import { discordRefLogFields, logHash, mediaUrlLogFields } from "../utils/log-privacy";
 import { logger } from "../utils/logger";
 import { guildRegistry } from "../utils/registry";
-import type { MediaEvent, TextEvent } from "../utils/types";
 import { admitGuildEvent } from "./admission";
 import { shouldDispatch } from "./dedup";
 import { extractMedia, extractStickers, extractText, urlPathname } from "./extractor";

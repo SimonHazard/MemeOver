@@ -1,7 +1,8 @@
+import type { MediaType } from "@memeover/shared";
 import type { Message, PartialMessage } from "discord.js";
 import { StickerFormatType } from "discord.js";
 import { isAllowedAndFresh, isCdnUrlExpired } from "./allowlist";
-import type { ExtractedMedia, MediaType } from "./types";
+import type { ExtractedMedia } from "./types";
 
 // ─── URL patterns ─────────────────────────────────────────────────────────────
 
@@ -25,7 +26,6 @@ export function urlPathname(url: string): string {
 	}
 }
 
-/** Detect the media type of a URL based on its file extension. */
 export function detectMediaType(url: string): MediaType | null {
 	if (GIF_PATTERN.test(url)) return "gif";
 	if (IMAGE_PATTERN.test(url)) return "image";
@@ -66,7 +66,6 @@ export function normalizeCaption(raw: string | null | undefined): string | undef
 export function extractMedia(message: Message | PartialMessage): ExtractedMedia[] {
 	const results: ExtractedMedia[] = [];
 
-	// 1. File attachments
 	for (const attachment of message.attachments.values()) {
 		if (isCdnUrlExpired(attachment.url)) continue;
 		const media_type = detectAttachmentMediaType(attachment.contentType, attachment.url);
@@ -98,7 +97,6 @@ export function extractMedia(message: Message | PartialMessage): ExtractedMedia[
 		}
 	}
 
-	// 3. Direct URLs in message content
 	// Use pathname-based dedup: Discord CDN URLs for the same file may differ
 	// only in query params (time-limited tokens).
 	const content = message.content ?? "";
@@ -130,7 +128,6 @@ export function extractStickers(message: Message | PartialMessage): ExtractedMed
 	return results;
 }
 
-/** Extract caption text from a message, stripping URLs before normalizing. */
 export function extractText(message: Message | PartialMessage): string | undefined {
 	return normalizeCaption((message.content ?? "").replace(/https?:\/\/\S+/g, "").trim());
 }

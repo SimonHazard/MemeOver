@@ -1,10 +1,12 @@
 import {
+	type ChatInputCommandInteraction,
 	type Interaction,
 	InteractionContextType,
 	PermissionFlagsBits,
 	REST,
 	Routes,
 	SlashCommandBuilder,
+	type SlashCommandSubcommandBuilder,
 } from "discord.js";
 import { type BotTranslationKey, frLocalization, interactionLocale, t } from "../i18n";
 import { CAPTION_MAX_LENGTH } from "../media/extractor";
@@ -31,95 +33,95 @@ const log = logger.child({ module: "commands" });
 const en = (key: BotTranslationKey) => t("en", key);
 const fr = (key: BotTranslationKey) => frLocalization(key);
 
-export const memeover = new SlashCommandBuilder()
-	.setName("memeover")
-	.setDescription(en("commands.memeover.description"))
-	.setDescriptionLocalizations(fr("commands.memeover.description"))
-	.setContexts(InteractionContextType.Guild)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.setup.name"))
-			.setDescription(en("commands.setup.description"))
-			.setDescriptionLocalizations(fr("commands.setup.description"))
-			.addChannelOption((opt) =>
+interface SubcommandDefinition {
+	name: string;
+	privileged: boolean;
+	handle: (interaction: ChatInputCommandInteraction, guildId: string) => Promise<void>;
+	configure?: (sub: SlashCommandSubcommandBuilder) => SlashCommandSubcommandBuilder;
+}
+
+const subcommands: readonly SubcommandDefinition[] = [
+	{
+		name: "setup",
+		privileged: true,
+		handle: handleSetup,
+		configure: (sub) =>
+			sub.addChannelOption((opt) =>
 				opt
 					.setName(en("commands.setup.channel.name"))
 					.setDescription(en("commands.setup.channel.description"))
 					.setDescriptionLocalizations(fr("commands.setup.channel.description"))
 					.setRequired(false),
 			),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.token.name"))
-			.setDescription(en("commands.token.description"))
-			.setDescriptionLocalizations(fr("commands.token.description")),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.rotate.name"))
-			.setDescription(en("commands.rotate.description"))
-			.setDescriptionLocalizations(fr("commands.rotate.description")),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.remove.name"))
-			.setDescription(en("commands.remove.description"))
-			.setDescriptionLocalizations(fr("commands.remove.description")),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.bots.name"))
-			.setDescription(en("commands.bots.description"))
-			.setDescriptionLocalizations(fr("commands.bots.description"))
-			.addBooleanOption((opt) =>
+	},
+	{
+		name: "token",
+		privileged: false,
+		handle: handleToken,
+	},
+	{
+		name: "rotate",
+		privileged: true,
+		handle: handleRotate,
+	},
+	{
+		name: "remove",
+		privileged: true,
+		handle: handleRemove,
+	},
+	{
+		name: "bots",
+		privileged: true,
+		handle: handleBots,
+		configure: (sub) =>
+			sub.addBooleanOption((opt) =>
 				opt
 					.setName(en("commands.bots.enabled.name"))
 					.setDescription(en("commands.bots.enabled.description"))
 					.setDescriptionLocalizations(fr("commands.bots.enabled.description"))
 					.setRequired(true),
 			),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.secret.name"))
-			.setDescription(en("commands.secret.description"))
-			.setDescriptionLocalizations(fr("commands.secret.description"))
-			.addAttachmentOption((opt) =>
-				opt
-					.setName(en("commands.secret.media.name"))
-					.setDescription(en("commands.secret.media.description"))
-					.setDescriptionLocalizations(fr("commands.secret.media.description"))
-					.setRequired(false),
-			)
-			.addStringOption((opt) =>
-				opt
-					.setName(en("commands.secret.url.name"))
-					.setDescription(en("commands.secret.url.description"))
-					.setDescriptionLocalizations(fr("commands.secret.url.description"))
-					.setRequired(false),
-			)
-			.addStringOption((opt) =>
-				opt
-					.setName(en("commands.secret.text.name"))
-					.setDescription(en("commands.secret.text.description"))
-					.setDescriptionLocalizations(fr("commands.secret.text.description"))
-					.setMaxLength(CAPTION_MAX_LENGTH)
-					.setRequired(false),
-			),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.status.name"))
-			.setDescription(en("commands.status.description"))
-			.setDescriptionLocalizations(fr("commands.status.description")),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.pause.name"))
-			.setDescription(en("commands.pause.description"))
-			.setDescriptionLocalizations(fr("commands.pause.description"))
-			.addStringOption((opt) =>
+	},
+	{
+		name: "secret",
+		privileged: false,
+		handle: handleSecret,
+		configure: (sub) =>
+			sub
+				.addAttachmentOption((opt) =>
+					opt
+						.setName(en("commands.secret.media.name"))
+						.setDescription(en("commands.secret.media.description"))
+						.setDescriptionLocalizations(fr("commands.secret.media.description"))
+						.setRequired(false),
+				)
+				.addStringOption((opt) =>
+					opt
+						.setName(en("commands.secret.url.name"))
+						.setDescription(en("commands.secret.url.description"))
+						.setDescriptionLocalizations(fr("commands.secret.url.description"))
+						.setRequired(false),
+				)
+				.addStringOption((opt) =>
+					opt
+						.setName(en("commands.secret.text.name"))
+						.setDescription(en("commands.secret.text.description"))
+						.setDescriptionLocalizations(fr("commands.secret.text.description"))
+						.setMaxLength(CAPTION_MAX_LENGTH)
+						.setRequired(false),
+				),
+	},
+	{
+		name: "status",
+		privileged: true,
+		handle: handleStatus,
+	},
+	{
+		name: "pause",
+		privileged: true,
+		handle: handlePause,
+		configure: (sub) =>
+			sub.addStringOption((opt) =>
 				opt
 					.setName("duration")
 					.setDescription(en("commands.pause.duration.description"))
@@ -133,23 +135,36 @@ export const memeover = new SlashCommandBuilder()
 						})),
 					),
 			),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.resume.name"))
-			.setDescription(en("commands.resume.description"))
-			.setDescriptionLocalizations(fr("commands.resume.description")),
-	)
-	.addSubcommand((sub) =>
-		sub
-			.setName(en("commands.help.name"))
-			.setDescription(en("commands.help.description"))
-			.setDescriptionLocalizations(fr("commands.help.description")),
-	);
+	},
+	{
+		name: "resume",
+		privileged: true,
+		handle: handleResume,
+	},
+	{
+		name: "help",
+		privileged: false,
+		handle: handleHelp,
+	},
+];
 
-// Subcommands that require the Manage Server permission. `token` and `help`
-// are deliberately open to all members.
-const PRIVILEGED_SUBS = new Set(["setup", "remove", "rotate", "status", "bots", "pause", "resume"]);
+export const memeover = new SlashCommandBuilder()
+	.setName("memeover")
+	.setDescription(en("commands.memeover.description"))
+	.setDescriptionLocalizations(fr("commands.memeover.description"))
+	.setContexts(InteractionContextType.Guild);
+
+for (const definition of subcommands) {
+	memeover.addSubcommand((sub) => {
+		sub
+			.setName(en(`commands.${definition.name}.name` as BotTranslationKey))
+			.setDescription(en(`commands.${definition.name}.description` as BotTranslationKey))
+			.setDescriptionLocalizations(
+				fr(`commands.${definition.name}.description` as BotTranslationKey),
+			);
+		return definition.configure?.(sub) ?? sub;
+	});
+}
 
 // ─── Command registration ─────────────────────────────────────────────────────
 
@@ -181,9 +196,11 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		return;
 	}
 
-	const sub = interaction.options.getSubcommand();
+	const name = interaction.options.getSubcommand();
+	const sub = subcommands.find((definition) => definition.name === name);
+	if (!sub) return;
 
-	if (PRIVILEGED_SUBS.has(sub)) {
+	if (sub.privileged) {
 		if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
 			await interaction.reply(
 				errorResponse(
@@ -195,25 +212,5 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
 		}
 	}
 
-	if (sub === "setup") {
-		await handleSetup(interaction, guildId);
-	} else if (sub === "token") {
-		await handleToken(interaction, guildId);
-	} else if (sub === "rotate") {
-		await handleRotate(interaction, guildId);
-	} else if (sub === "remove") {
-		await handleRemove(interaction, guildId);
-	} else if (sub === "bots") {
-		await handleBots(interaction, guildId);
-	} else if (sub === "secret") {
-		await handleSecret(interaction, guildId);
-	} else if (sub === "status") {
-		await handleStatus(interaction, guildId);
-	} else if (sub === "pause") {
-		await handlePause(interaction, guildId);
-	} else if (sub === "resume") {
-		await handleResume(interaction, guildId);
-	} else if (sub === "help") {
-		await handleHelp(interaction);
-	}
+	await sub.handle(interaction, guildId);
 }

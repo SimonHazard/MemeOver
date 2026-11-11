@@ -155,6 +155,31 @@ describe("SQLite persistence", () => {
 		db.close();
 	});
 
+	for (const method of ["getConfig", "setPausedUntil", "setBotAppSources"] as const) {
+		test(`${method} returns a snapshot that cannot mutate the persisted registry`, () => {
+			const dir = dataDir();
+			const registry = open(dir);
+			const token = registry.register("guild-1", "channel-1");
+			registry.recordClientActivity("guild-1", "install-a");
+			const result =
+				method === "getConfig"
+					? registry.getConfig("guild-1")
+					: method === "setPausedUntil"
+						? registry.setPausedUntil("guild-1", 123)
+						: registry.setBotAppSources("guild-1", true);
+			if (!result) throw new Error("Missing registered guild");
+			const expected = structuredClone(result);
+			result.token = "mutated-token";
+			result.paused_until = 456;
+			result.channel_ids.push("other-channel");
+			result.unique_client_ids.push("other-install");
+			expect(registry.getConfig("guild-1")).toEqual(expected);
+			expect(registry.verifyToken("guild-1", token)).toBe(true);
+			expect(registry.isChannelAllowed("guild-1", "other-channel")).toBe(false);
+			expect(open(dir).getConfig("guild-1")).toEqual(expected);
+		});
+	}
+
 	test("guilds.json is imported once on first start, then renamed", () => {
 		const dir = dataDir();
 		writeFileSync(

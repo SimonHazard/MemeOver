@@ -1,7 +1,7 @@
 import { afterEach, expect, mock, test } from "bun:test";
+import type { MediaEvent } from "@memeover/shared";
 import type { ChatInputCommandInteraction, InteractionReplyOptions } from "discord.js";
 import { t } from "../../i18n";
-import type { MediaEvent } from "../../utils/types";
 import { notConfiguredResponse } from "../connection";
 import { componentsToJson } from "../response-panel";
 

@@ -1,3 +1,4 @@
+import type { MediaEvent } from "@memeover/shared";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { interactionLocale, t } from "../../i18n";
 import { admitGuildEvent } from "../../media/admission";
@@ -13,7 +14,6 @@ import { broadcastToGuild } from "../../server";
 import { discordRefLogFields, mediaUrlLogFields } from "../../utils/log-privacy";
 import { logger } from "../../utils/logger";
 import { guildRegistry } from "../../utils/registry";
-import type { MediaEvent } from "../../utils/types";
 import { notConfiguredResponse } from "../connection";
 import { errorResponse, successResponse } from "../response-panel";
 
