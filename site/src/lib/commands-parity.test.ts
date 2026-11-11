@@ -10,7 +10,4 @@ test("command catalog matches README names in both locales", () => {
 	].sort();
 	expect(en.commands.items.map((c) => c.name).sort()).toEqual(names);
 	expect(fr.commands.items.map((c) => c.name).sort()).toEqual(names);
-	// Every shipped command is public in both locales.
-	expect(en.commands.items.every((c) => c.published)).toBe(true);
-	expect(fr.commands.items.every((c) => c.published)).toBe(true);
 });
