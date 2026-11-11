@@ -3,7 +3,8 @@ import { useAppStore } from "@/shared/store";
 import type { DisplayQueueItem } from "@/shared/types";
 
 import {
-	displayDurationMs,
+	type DisplayTimerReason,
+	displayTimerMs,
 	EXIT_RECOVERY_MS,
 	isSkipRequest,
 	safetyDelayMs,
@@ -42,7 +43,8 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 
 	// Primary display timer
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	// Safety fallback timer (fires startTimer after a delay if onLoad/onPlay never fires)
+	const timerReasonRef = useRef<DisplayTimerReason | null>(null);
+	// Safety fallback timer (arms a normal-duration timer if onLoad/onPlay never fires)
 	const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// Stable refs so startTimer can always read current values without being recreated
@@ -61,6 +63,7 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 			clearTimeout(timerRef.current);
 			timerRef.current = null;
 		}
+		timerReasonRef.current = null;
 		if (safetyTimerRef.current !== null) {
 			clearTimeout(safetyTimerRef.current);
 			safetyTimerRef.current = null;
@@ -68,20 +71,37 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 		setIsVisible(false);
 	}, []);
 
-	// Idempotent: if the timer is already running, this is a no-op.
+	// Idempotent, except when synced playback replaces its stalled-media fallback.
 	// Cancels the safety timer the moment the real one starts.
-	// When syncMediaDuration is enabled for video/audio, skips the auto-hide timer —
-	// onVideoEnd will trigger hide() when the media finishes naturally.
-	const startTimer = useCallback(() => {
-		if (timerRef.current !== null) return; // already running
-		if (safetyTimerRef.current !== null) {
-			clearTimeout(safetyTimerRef.current);
-			safetyTimerRef.current = null;
-		}
-		const item = currentRef.current;
-		if (!shouldArmDisplayTimer(item, syncMediaDurationRef.current)) return;
-		timerRef.current = setTimeout(hide, displayDurationMs({ duration: durationRef.current }));
-	}, [hide]);
+	// Synced video/audio normally ends naturally, with a cap if `ended` never fires.
+	const armTimer = useCallback(
+		(reason: DisplayTimerReason) => {
+			const item = currentRef.current;
+			const synced = !shouldArmDisplayTimer(item, syncMediaDurationRef.current);
+			if (timerRef.current !== null) {
+				// Synced media that finally starts playing replaces the stalled-media fallback.
+				if (!(synced && reason === "started" && timerReasonRef.current === "fallback")) return;
+				clearTimeout(timerRef.current);
+				timerRef.current = null;
+			}
+			if (safetyTimerRef.current !== null) {
+				clearTimeout(safetyTimerRef.current);
+				safetyTimerRef.current = null;
+			}
+			timerReasonRef.current = reason;
+			timerRef.current = setTimeout(
+				hide,
+				displayTimerMs(
+					item,
+					{ duration: durationRef.current, syncMediaDuration: syncMediaDurationRef.current },
+					reason,
+				),
+			);
+		},
+		[hide],
+	);
+	// DOM handlers pass an event argument, which must not become the timer reason.
+	const startTimer = useCallback(() => armTimer("started"), [armTimer]);
 
 	// Skip the broken item — immediately triggers hide → onExitComplete → next
 	const onMediaError = useCallback(() => {
@@ -138,7 +158,7 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 		const delay = safetyDelayMs(current);
 		safetyTimerRef.current = setTimeout(() => {
 			safetyTimerRef.current = null;
-			startTimer();
+			armTimer("fallback");
 		}, delay);
 
 		return () => {
@@ -147,7 +167,7 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 				safetyTimerRef.current = null;
 			}
 		};
-	}, [current, startTimer]);
+	}, [current, armTimer]);
 
 	// ── Effect 5: Queue-stuck recovery ────────────────────────────────────────
 	// If isVisible becomes false but current is still set (exit animation in
