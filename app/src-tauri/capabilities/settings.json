@@ -14,6 +14,27 @@
     "core:window:allow-set-focus",
     "autostart:default",
     "process:allow-restart",
-    "updater:default"
+    "updater:default",
+    "allow-ensure-overlay-visible",
+    "allow-reload-overlay",
+    "allow-quit-overlay",
+    "allow-update-tray-labels",
+    "allow-set-tray-overlay-muted",
+    "allow-start-browser-source",
+    "allow-browser-source-status",
+    "allow-set-browser-source-controls",
+    "allow-browser-source-heartbeat",
+    "allow-toggle-overlay-preview-mode",
+    "allow-move-overlay-to-monitor",
+    "allow-server-creator-status",
+    "allow-server-creator-install",
+    "allow-server-creator-install-bun",
+    "allow-server-creator-start",
+    "allow-server-creator-stop",
+    "allow-server-creator-restart",
+    "allow-server-creator-logs",
+    "allow-server-creator-public-ip",
+    "allow-auto-update-stage",
+    "allow-auto-update-restart-now"
   ]
 }
