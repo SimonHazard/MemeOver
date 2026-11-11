@@ -1,6 +1,10 @@
 import { broadcastToGuild } from "../server";
 import { expiryDelay, isPausedAt } from "./guild-pause";
+import { discordRefLogFields } from "./log-privacy";
+import { logger } from "./logger";
 import { guildRegistry } from "./registry";
+
+const log = logger.child({ module: "guild-pause" });
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 function arm(guildId: string) {
@@ -13,10 +17,18 @@ function arm(guildId: string) {
 	if (delay === null) return;
 	const timer = setTimeout(() => {
 		timers.delete(guildId);
-		const latest = guildRegistry.getConfig(guildId);
-		if (!latest) return;
-		if (isPausedAt(latest, Date.now())) arm(guildId);
-		else applyGuildPause(guildId, null);
+		try {
+			const latest = guildRegistry.getConfig(guildId);
+			if (!latest) return;
+			if (isPausedAt(latest, Date.now())) arm(guildId);
+			else applyGuildPause(guildId, null);
+		} catch (err) {
+			// Dispatch checks the expiry against the clock, so this pause is already over.
+			log.error(
+				{ ...discordRefLogFields({ guildId }), event: "pause_expiry_failed", err },
+				"Could not clear an expired guild pause",
+			);
+		}
 	}, delay);
 	timer.unref();
 	timers.set(guildId, timer);
