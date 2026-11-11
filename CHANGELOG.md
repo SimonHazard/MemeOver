@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- Bot (1.6.16): detect dropped overlay WebSocket messages from the runtime result and close the stale connection immediately so the app can reconnect. Messages queued under backpressure keep their connection.
+
 - Bot (1.6.15): apply the media host allowlist and expiry checks to Discord embeds too, and require HTTPS on the default port. Unsupported previews no longer occupy an empty overlay slot.
 
 - Bot (1.6.13): omit failed Discord request bodies from error logs so rejected setup, token and rotation replies cannot write their credentials to the logs. Bound deep or circular error metadata without returning unfiltered payloads.

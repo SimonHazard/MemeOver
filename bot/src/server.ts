@@ -20,6 +20,15 @@ const metricsTokenBuf = config.metricsToken ? Buffer.from(config.metricsToken) :
 
 // ─── Broadcast ────────────────────────────────────────────────────────────────
 
+/** Bun returns 0 for a dropped message; -1 means queued under backpressure. */
+function delivered(ws: WSConnection, payload: string): boolean {
+	try {
+		return ws.send(payload) !== 0;
+	} catch {
+		return false;
+	}
+}
+
 /** Sends MEMBER_COUNT_UPDATE to every socket in the guild with the distinct install count. */
 function broadcastMemberCount(guildId: string): void {
 	const memberIds = [...store.getGuildMembers(guildId)];
@@ -50,11 +59,9 @@ export function broadcastToGuild(guildId: string, event: ServerMessage): void {
 		const client = store.getClient(wsId);
 		if (!client) continue;
 
-		try {
-			client.ws_ref.send(payload);
-		} catch (err) {
+		if (!delivered(client.ws_ref, payload)) {
 			log.warn(
-				{ ...discordRefLogFields({ wsId }), event: "send_failed", err },
+				{ ...discordRefLogFields({ wsId }), event: "send_failed" },
 				"Failed to send to client, removing",
 			);
 			dropClient(client.ws_ref);
@@ -143,9 +150,7 @@ const heartbeats = new Map<string, HeartbeatState>();
 
 function startHeartbeat(ws: WSConnection): void {
 	const pingInterval = setInterval(() => {
-		try {
-			ws.send(JSON.stringify({ type: "PING" } satisfies ServerMessage));
-		} catch {
+		if (!delivered(ws, JSON.stringify({ type: "PING" } satisfies ServerMessage))) {
 			dropClient(ws);
 			return;
 		}
