@@ -1,6 +1,27 @@
 import { createHash } from "node:crypto";
+import pino from "pino";
 
 const HASH_LENGTH = 12;
+const DROPPED_ERROR_KEYS = new Set(["requestBody"]);
+const MAX_ERROR_DEPTH = 6;
+
+function withoutRequestBodies(value: unknown, depth: number): unknown {
+	if (value === null || typeof value !== "object") return value;
+	// Never return an unfiltered subtree when bounding traversal, including cycles.
+	if (depth > MAX_ERROR_DEPTH) return "[Truncated]";
+	if (Array.isArray(value)) return value.map((entry) => withoutRequestBodies(entry, depth + 1));
+	const out: Record<string, unknown> = {};
+	for (const [key, entry] of Object.entries(value)) {
+		if (DROPPED_ERROR_KEYS.has(key)) continue;
+		out[key] = withoutRequestBodies(entry, depth + 1);
+	}
+	return out;
+}
+
+/** Discord errors carry outbound reply bodies that can contain guild credentials. */
+export function serializeLoggedError(err: unknown): unknown {
+	return withoutRequestBodies(pino.stdSerializers.err(err as Error), 0);
+}
 
 export function logHash(value: string | null | undefined): string | undefined {
 	if (!value) return undefined;

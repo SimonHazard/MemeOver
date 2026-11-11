@@ -1,5 +1,6 @@
 import pino from "pino";
 import { config } from "./config";
+import { serializeLoggedError } from "./log-privacy";
 
 const privacyRedact: pino.LoggerOptions["redact"] = {
 	paths: [
@@ -46,6 +47,7 @@ function createLogger(): pino.Logger {
 		return pino({
 			level: "debug",
 			redact: privacyRedact,
+			serializers: { err: serializeLoggedError },
 			transport: {
 				target: "pino-pretty",
 				options: {
@@ -62,6 +64,7 @@ function createLogger(): pino.Logger {
 		return pino({
 			level: "info",
 			redact: privacyRedact,
+			serializers: { err: serializeLoggedError },
 			transport: {
 				targets: [
 					{ target: "pino/file", options: { destination: 1 }, level: "info" },
@@ -76,7 +79,11 @@ function createLogger(): pino.Logger {
 	}
 
 	// Production, no Logtail: plain JSON to stdout (most performant, no transport overhead)
-	return pino({ level: "info", redact: privacyRedact });
+	return pino({
+		level: "info",
+		redact: privacyRedact,
+		serializers: { err: serializeLoggedError },
+	});
 }
 
 export const logger = createLogger();
