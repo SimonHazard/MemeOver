@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.10.5): serialize start, stop, restart and shutdown of the app-managed bot so overlapping actions cannot leave a second process running that Stop cannot reach.
+
 - App/site (1.10.4): with media-duration sync enabled, stalled video and audio no longer block the queue indefinitely. Media that never starts uses the normal display duration after the safety delay; playback is capped at ten minutes if it never ends.
 
 - Bot (1.6.16): detect dropped overlay WebSocket messages from the runtime result and close the stale connection immediately so the app can reconnect. Messages queued under backpressure keep their connection.
