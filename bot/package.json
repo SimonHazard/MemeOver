@@ -1,13 +1,13 @@
 {
 	"name": "@memeover/bot",
-	"version": "1.6.11",
+	"version": "1.6.12",
 	"engines": {
 		"bun": ">=1.4.2"
 	},
 	"scripts": {
 		"dev": "bun run --watch src/index.ts",
 		"typecheck": "tsc --noEmit",
-		"test": "bun test src",
+		"test": "bun test src --path-ignore-patterns='**/*.mocked.test.{ts,tsx}'",
 		"start": "bun run src/index.ts"
 	},
 	"dependencies": {

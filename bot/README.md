@@ -130,7 +130,10 @@ consistent snapshot of the running database with `VACUUM INTO`.
 
 ```bash
 bun run --cwd bot typecheck
-bun run --cwd bot test
+bun run test
 ```
 
-`MEMEOVER_DATA_DIR` optionally overrides registry storage (default: `./data` relative to the working directory).
+Run `bun run test` from the repository root: it runs every suite, including the `*.mocked.test.ts`
+suites that need one process each. `bun run --cwd bot test` only runs the non-mocked bot suites.
+Tests always use a temporary registry; `MEMEOVER_DATA_DIR` overrides registry storage for the bot
+itself (default: `./data` relative to the working directory).

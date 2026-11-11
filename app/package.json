@@ -1,13 +1,13 @@
 {
 	"name": "@memeover/app",
 	"private": true,
-	"version": "1.10.1",
+	"version": "1.10.2",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"typecheck": "tsc --noEmit",
 		"typecheck:browser": "tsc --project ../tsconfig.browser.json",
-		"test": "bun test ./src",
+		"test": "bun test ./src --path-ignore-patterns='**/*.mocked.test.{ts,tsx}'",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"build:browser": "vite build --config test/browser/vite.config.ts --outDir dist-browser",
