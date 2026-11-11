@@ -4,13 +4,11 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import { BROWSER_SOURCE_SESSION_HEADER } from "./src/shared/browser-source-contract.ts";
 
 const host = process.env.TAURI_DEV_HOST;
-// Mirror the native session header for dev and browser tests; every source test fails if it drifts
-// from src/shared/browser-source-contract.ts (not imported: outside the node tsconfig project).
-const sourceSessionHeaders = { "X-MemeOver-Source-Session": randomUUID() };
+const sourceSessionHeaders = { [BROWSER_SOURCE_SESSION_HEADER]: randomUUID() };
 
-// https://vite.dev/config/
 export default defineConfig({
 	plugins: [
 		tanstackRouter({
@@ -29,11 +27,9 @@ export default defineConfig({
 		},
 	},
 	envPrefix: ["VITE_", "TAURI_ENV_"],
-	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-	//
-	// 1. prevent Vite from obscuring rust errors
+	// Keep Rust errors visible when the dev server refreshes.
 	clearScreen: false,
-	// 2. tauri expects a fixed port, fail if that port is not available
+	// Tauri expects a fixed port.
 	server: {
 		headers: sourceSessionHeaders,
 		port: 1420,
@@ -47,12 +43,10 @@ export default defineConfig({
 				}
 			: undefined,
 		watch: {
-			// 3. tell Vite to ignore watching `src-tauri`
 			ignored: ["**/src-tauri/**"],
 		},
 	},
 	preview: { headers: sourceSessionHeaders },
-	// Multi-page : un bundle par fenêtre Tauri
 	build: {
 		rolldownOptions: {
 			input: {

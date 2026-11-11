@@ -10,13 +10,15 @@ import { toast } from "sonner";
 import { ConfirmActionButton } from "@/components/confirm-action-button";
 import { AnimatedList } from "@/components/motion/animated-list";
 import {
+	pickOverlayProfileSettings,
+	resolveOverlayProfileSettings,
+	serializeOverlayProfile,
+} from "@/shared/profile-settings";
+import {
 	createOverlayProfile,
 	deleteOverlayProfile,
 	importOverlayProfile,
 	loadOverlayProfiles,
-	pickOverlayProfileSettings,
-	resolveOverlayProfileSettings,
-	serializeOverlayProfile,
 	updateOverlayProfile,
 } from "@/shared/profiles";
 import type { OverlayProfile, OverlayProfileSettings } from "@/shared/types";

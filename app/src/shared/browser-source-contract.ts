@@ -1,5 +1,5 @@
 // What the page and the native server must agree on. A test in `src-tauri/src/browser_source.rs`
-// checks the native copies; `vite.config.ts` repeats the session header for the dev server.
+// checks the native copies; `vite.config.ts` imports the session header for the dev server.
 
 export const BROWSER_SOURCE_PATH = "/browser-source.html";
 /** Public identifier of the serving app instance, sent by the local server with every asset. */

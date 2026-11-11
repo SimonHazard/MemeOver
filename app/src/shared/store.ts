@@ -1,16 +1,9 @@
-import { isSessionRevocationCode, type SessionRevocationCode } from "@memeover/shared";
-import { emit, listen } from "@tauri-apps/api/event";
-import { toast } from "sonner";
+import type { SessionRevocationCode } from "@memeover/shared";
 import { create } from "zustand";
-import i18n from "@/i18n";
 import { isGuildPausedAt } from "./guild-pause";
-import { restoreOverlayMonitor } from "./helpers";
-import { toReplayItem } from "./history-expiry";
 import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors";
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
-import { loadSettings } from "./settings";
-import { desktopPlaybackEnabled } from "./stream-destination";
 import type {
 	BrowserSourceStartError,
 	DisplayQueueItem,
@@ -22,9 +15,6 @@ import type {
 	WsStatus,
 } from "./types";
 import { DEFAULT_SETTINGS, FLOATING_REACTION_ANIMATIONS } from "./types";
-import { decideStatusToast, INITIAL_TOAST_TRACKER } from "./ws-status-toasts";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 export const MAX_QUEUE_SIZE = 50;
 
@@ -47,8 +37,6 @@ function resolveReactionAnimation(settings: Settings): FloatingReactionAnimation
 	] as FloatingReactionAnimation;
 }
 
-// ─── State shape ──────────────────────────────────────────────────────────────
-
 interface AppStore {
 	lastJoinError: string | null;
 	serverFeatures: string[];
@@ -62,60 +50,46 @@ interface AppStore {
 	/** The bot refused this socket's JOIN (unknown guild or invalid token); it stays open and idle. */
 	wsJoinRejected: boolean;
 	setWsJoinRejected: (rejected: boolean) => void;
-	// Settings (loaded from Tauri Store by initOverlayStore / initSettingsStore)
 	settings: Settings;
 	updateSettings: (partial: Partial<Settings>) => void;
 
-	// Display queue — accepts both MediaQueueItem and TextQueueItem
 	queue: DisplayQueueItem[];
 	enqueue: (item: DisplayQueueItem, opts?: { isReplay?: boolean }) => void;
 	dequeue: () => void;
 	clearQueue: () => void;
 
-	// Queue size mirror — updated via Tauri event "queue-size-changed" in the settings window
 	queueSize: number;
 	setQueueSize: (size: number) => void;
 
-	// WebSocket connection status
 	wsStatus: WsStatus;
 	setWsStatus: (status: WsStatus) => void;
 
-	// Overlay window health (alive = visible, closed = destroyed)
 	overlayHealth: OverlayHealth;
 	setOverlayHealth: (health: OverlayHealth) => void;
 
-	// Number of overlay clients connected to the same guild (broadcast by bot)
 	memberCount: number;
 	setMemberCount: (count: number) => void;
 
-	// Incremented each time the settings window requests a skip of the current item
 	skipVersion: number;
 	bumpSkip: () => void;
 
-	// Floating reactions in flight on the overlay (independent of the media queue)
 	reactions: FloatingReaction[];
 	spawnReaction: (input: { emoji: string; emojiUrl?: string }) => void;
 	removeReaction: (id: string) => void;
 	clearReactions: () => void;
 
-	// True while the overlay is actively displaying an item (current !== null)
 	isDisplaying: boolean;
 	setIsDisplaying: (v: boolean) => void;
 
-	// True when the Tauri updater has detected a newer release on GitHub
 	updateAvailable: boolean;
 	setUpdateAvailable: (v: boolean) => void;
 
-	// Release downloaded in the background, applied on the next launch
 	stagedUpdate: StagedUpdate | null;
 	setStagedUpdate: (update: StagedUpdate) => void;
 
-	// Settings window: port the local browser source page is served on this session, and the last start error
 	browserSourceRunningPort: number | null;
 	browserSourceError: BrowserSourceStartError | null;
 }
-
-// ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useAppStore = create<AppStore>((set) => ({
 	lastJoinError: null,
@@ -157,8 +131,6 @@ export const useAppStore = create<AppStore>((set) => ({
 	enqueue: (item, opts) =>
 		set((state) => {
 			const isReplay = opts?.isReplay ?? item.replayOf !== undefined;
-			// Muting filters what arrives from Discord. A replay is an explicit local action
-			// (the History page confirms it was queued), so it is not filtered.
 			const mutedReason = isReplay
 				? null
 				: muteDropReason(
@@ -238,130 +210,3 @@ export const useAppStore = create<AppStore>((set) => ({
 	browserSourceRunningPort: null,
 	browserSourceError: null,
 }));
-
-// ─── Side-effect init (called from main.tsx, outside React) ───────────────────
-
-/**
- * Overlay window init:
- * - Loads persisted settings from disk into Zustand
- * - Subscribes to "settings-changed" Tauri events emitted by the settings window
- * - Emits "queue-size-changed" whenever the queue length changes (consumed by settings window)
- * - Listens for "replay-item" to re-enqueue a history item from the settings window
- */
-export async function initOverlayStore(): Promise<void> {
-	void emit("guild-pause-changed", null);
-	try {
-		const settings = await loadSettings();
-		useAppStore.getState().updateSettings(settings);
-		// Restore overlay to the saved monitor before show() is called.
-		// Must be awaited so the window is on the correct monitor when it becomes visible.
-		if (settings.overlayMonitor) {
-			await restoreOverlayMonitor(settings.overlayMonitor);
-		}
-	} catch (err) {
-		console.warn("[Store] Could not load settings:", err);
-	}
-
-	await listen<Settings>("settings-changed", (event) => {
-		useAppStore.getState().updateSettings(event.payload);
-	});
-
-	await listen("clear-queue", () => {
-		useAppStore.getState().clearQueue();
-	});
-
-	await listen("skip-current", () => {
-		useAppStore.getState().bumpSkip();
-	});
-
-	await listen<DisplayQueueItem>("replay-item", (event) => {
-		if (!desktopPlaybackEnabled(useAppStore.getState().settings)) return;
-		useAppStore
-			.getState()
-			.enqueue(toReplayItem(event.payload, crypto.randomUUID()), { isReplay: true });
-	});
-
-	// Track overlay visibility so the WS hook can discard messages while hidden.
-	// Also flush the queue immediately on hide — items queued on an invisible
-	// window would be consumed pointlessly and wiped on the next reload anyway.
-	await listen<OverlayHealth>("overlay-health-changed", (event) => {
-		useAppStore.getState().setOverlayHealth(event.payload);
-		if (event.payload === "closed") {
-			useAppStore.getState().clearQueue();
-			useAppStore.getState().clearReactions();
-		}
-	});
-
-	// Broadcast queue length and display state to the settings window whenever they change
-	useAppStore.subscribe((state, prevState) => {
-		if (state.guildPausedUntil !== prevState.guildPausedUntil)
-			void emit("guild-pause-changed", state.guildPausedUntil);
-		if (state.queue.length !== prevState.queue.length) {
-			void emit("queue-size-changed", state.queue.length);
-		}
-		if (state.isDisplaying !== prevState.isDisplaying) {
-			void emit("overlay-displaying-changed", state.isDisplaying);
-		}
-	});
-}
-
-/**
- * Settings window init:
- * - Subscribes to "ws-status-changed" Tauri events emitted by the overlay window
- * - Subscribes to "overlay-health-changed" Tauri events emitted by Rust
- * - Subscribes to "queue-size-changed" Tauri events emitted by the overlay window
- * - Subscribes to "member-count-changed" Tauri events emitted by the overlay window
- */
-export async function initSettingsStore(): Promise<void> {
-	await listen<string | null>("ws-join-error", (event) =>
-		useAppStore.setState({ lastJoinError: event.payload }),
-	);
-	await listen<string[]>("ws-features-changed", (event) =>
-		useAppStore.setState({ serverFeatures: event.payload }),
-	);
-	await listen<number | null>("guild-pause-changed", (event) =>
-		useAppStore.getState().setGuildPausedUntil(event.payload),
-	);
-	// Track status transitions and toast errors only once per outage.
-	// This runs entirely outside React — toast() and i18n.t() are both safe here.
-	let tracker = INITIAL_TOAST_TRACKER;
-
-	await listen<SessionRevocationCode>("ws-session-revoked", (event) => {
-		if (!isSessionRevocationCode(event.payload)) return;
-		useAppStore.getState().setWsRevokedReason(event.payload);
-		toast.error(i18n.t("toast.sessionRevoked"));
-	});
-
-	await listen<WsStatus>("ws-status-changed", (event) => {
-		const status = event.payload;
-		if (status === "connected") useAppStore.getState().setWsRevokedReason(null);
-		const decision = decideStatusToast(
-			tracker,
-			status,
-			Boolean(useAppStore.getState().wsRevokedReason),
-		);
-		if (decision.toast === "connected") {
-			toast.success(i18n.t("toast.wsConnected"));
-		} else if (decision.toast === "error") {
-			toast.error(i18n.t("toast.wsError"));
-		}
-		tracker = decision.next;
-		useAppStore.getState().setWsStatus(status);
-	});
-
-	await listen<OverlayHealth>("overlay-health-changed", (event) => {
-		useAppStore.getState().setOverlayHealth(event.payload);
-	});
-
-	await listen<number>("queue-size-changed", (event) => {
-		useAppStore.getState().setQueueSize(event.payload);
-	});
-
-	await listen<number>("member-count-changed", (event) => {
-		useAppStore.getState().setMemberCount(event.payload);
-	});
-
-	await listen<boolean>("overlay-displaying-changed", (event) => {
-		useAppStore.getState().setIsDisplaying(event.payload);
-	});
-}

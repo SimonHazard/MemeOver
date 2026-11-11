@@ -26,6 +26,5 @@
       "@memeover/ui/*": ["../packages/ui/src/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "vite.config.ts"]
 }

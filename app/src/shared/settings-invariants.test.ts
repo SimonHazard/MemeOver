@@ -3,7 +3,7 @@ import {
 	extractDefaults,
 	OverlaySettingsSchema,
 } from "../windows/settings/components/overlay-form/schema";
-import { normalizeSettings } from "./settings";
+import { normalizeSettings } from "./settings-normalization";
 import { DEFAULT_SETTINGS, OVERLAY_PROFILE_FIELDS } from "./types";
 
 // Update Settings, defaults/profile fields, form schema and extractDefaults together.

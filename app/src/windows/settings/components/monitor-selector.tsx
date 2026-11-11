@@ -12,8 +12,9 @@ import { Info, Monitor } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { moveOverlayToMonitor, sameMonitorPosition } from "@/shared/helpers";
+import { sameMonitorPosition } from "@/shared/helpers";
 import { useAvailableMonitors } from "@/shared/hooks/useAvailableMonitors";
+import { moveOverlayToMonitor } from "@/shared/overlay-window";
 import { loadSettings, patchSettings } from "@/shared/settings";
 
 export function MonitorSelector() {

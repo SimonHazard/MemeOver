@@ -5,7 +5,7 @@ import {
 	pickStoredProfileSettings,
 	resolveOverlayProfileSettings,
 	serializeOverlayProfile,
-} from "./profiles";
+} from "./profile-settings";
 import { CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, OVERLAY_PROFILE_FIELDS } from "./types";
 
 const settings = pickOverlayProfileSettings(DEFAULT_SETTINGS);
