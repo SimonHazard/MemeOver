@@ -2,9 +2,11 @@ import { expect, test } from "bun:test";
 import { mediaEventToQueueItem, textEventToQueueItem } from "@/shared/media-factory";
 import {
 	displayDurationMs,
+	displayTimerMs,
 	EXIT_RECOVERY_MS,
 	isSkipRequest,
 	MEDIA_SAFETY_DELAY_MS,
+	SYNCED_MEDIA_MAX_MS,
 	safetyDelayMs,
 	shouldArmDisplayTimer,
 	shouldDequeue,
@@ -20,6 +22,21 @@ const common = {
 	timestamp: 1,
 };
 const text = textEventToQueueItem({ ...common, type: "TEXT", text: "hi" });
+test("synced video and audio are always bounded", () => {
+	const synced = { duration: 6, syncMediaDuration: true };
+	for (const media_type of ["video", "audio"] as const) {
+		const item = mediaEventToQueueItem({
+			...common,
+			type: "MEDIA",
+			media_url: "url",
+			media_type,
+		});
+		expect(displayTimerMs(item, synced, "started")).toBe(SYNCED_MEDIA_MAX_MS);
+		expect(displayTimerMs(item, synced, "fallback")).toBe(6_000);
+		expect(displayTimerMs(item, { ...synced, syncMediaDuration: false }, "started")).toBe(6_000);
+	}
+	expect(displayTimerMs(text, synced, "started")).toBe(6_000);
+});
 for (const type of ["image", "gif", "video", "audio", "sticker"] as const)
 	test(`${type} display decisions`, () => {
 		const item = mediaEventToQueueItem({

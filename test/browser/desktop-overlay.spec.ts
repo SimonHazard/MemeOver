@@ -76,6 +76,17 @@ const reactionMessage = {
 	timestamp: 1,
 };
 
+test("a stalled synced video releases the queue after the normal display duration", async ({
+	page,
+}) => {
+	const sockets = await openOverlay(page, { syncMediaDuration: true, duration: 1 });
+	await expect.poll(() => sockets.length).toBe(1);
+	sockets[0]?.send(JSON.stringify(textMessage("After the stalled video")));
+	await expect(
+		page.getByText("After the stalled video", { exact: true }).locator("visible=true"),
+	).toBeVisible({ timeout: 8_000 });
+});
+
 test("stream-only cuts current desktop playback, drops queued and incoming content, and keeps the socket", async ({
 	page,
 }) => {

@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.10.4): with media-duration sync enabled, stalled video and audio no longer block the queue indefinitely. Media that never starts uses the normal display duration after the safety delay; playback is capped at ten minutes if it never ends.
+
 - Bot (1.6.16): detect dropped overlay WebSocket messages from the runtime result and close the stale connection immediately so the app can reconnect. Messages queued under backpressure keep their connection.
 
 - Bot (1.6.15): apply the media host allowlist and expiry checks to Discord embeds too, and require HTTPS on the default port. Unsupported previews no longer occupy an empty overlay slot.
