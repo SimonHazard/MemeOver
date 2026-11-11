@@ -244,7 +244,8 @@ Le déploiement attend une approbation manuelle si des reviewers obligatoires so
 configurés sur l’environnement GitHub `production`.
 
 Après la réussite complète de `ci` pour un push sur `main`, `app-release` prépare une
-release brouillon uniquement si la version n’existe pas déjà. Les builds et le tag
+release brouillon uniquement si la version n’existe pas déjà, y compris à l’état de
+brouillon : un changement de l’app sans nouvelle version n’est pas reconstruit. Les builds et le tag
 utilisent le commit exact validé par cette CI, même si `main` avance entre-temps.
 Une CI en échec ou annulée et les CI de PR ne déclenchent aucun build de release.
 
@@ -455,7 +456,8 @@ Deployment waits for manual approval if required reviewers are configured on the
 GitHub `production` environment.
 
 After `ci` fully succeeds for a push to `main`, `app-release` prepares a draft release
-only if the version does not already exist. Builds and the tag use the exact commit
+only if the version does not already exist, including as a draft: an app change without
+a new version is not rebuilt. Builds and the tag use the exact commit
 validated by that CI, even if `main` advances in the meantime. Failed or cancelled CI
 runs and pull request CI runs do not trigger release builds.
 
