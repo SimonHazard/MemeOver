@@ -3,10 +3,6 @@ import { NB_BTN_BASE, NB_BTN_DISABLED, NB_BTN_LG, NB_BTN_SM } from "@memeover/ui
 import { cn } from "@memeover/ui/lib/utils";
 import type * as React from "react";
 
-// ─── NbButton — Neo-brutalist button ─────────────────────────────────────────
-// Wraps shadcn Button with thick borders, offset shadow, and press animation.
-// Accepts all shadcn Button props — className merges on top of NB defaults.
-
 const nbSizeMap = {
 	default: NB_BTN_BASE,
 	xs: NB_BTN_SM,
@@ -18,23 +14,13 @@ const nbSizeMap = {
 	"icon-lg": NB_BTN_LG,
 } as const;
 
-type ButtonProps = React.ComponentProps<typeof Button>;
-type NbButtonProps = ButtonProps & {
-	/** Disable the neo-brutalist disabled styling (use shadcn default instead) */
-	nbDisabled?: boolean;
-};
+type NbButtonProps = React.ComponentProps<typeof Button>;
 
-function NbButton({ className, size = "default", nbDisabled = true, ...props }: NbButtonProps) {
+function NbButton({ className, size = "default", ...props }: NbButtonProps) {
 	const nbSize = nbSizeMap[size ?? "default"];
 
-	return (
-		<Button
-			size={size}
-			className={cn(nbSize, nbDisabled && NB_BTN_DISABLED, className)}
-			{...props}
-		/>
-	);
+	return <Button size={size} className={cn(nbSize, NB_BTN_DISABLED, className)} {...props} />;
 }
 
 export type { NbButtonProps };
-export { NbButton, nbSizeMap };
+export { NbButton };
