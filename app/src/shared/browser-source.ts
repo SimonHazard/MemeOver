@@ -13,6 +13,7 @@ import {
 	type OverlayProfileSettings,
 	type Settings,
 } from "./types";
+import { isWebSocketUrl } from "./ws-url";
 
 // ─── browser source URL ───────────────────────────────────────────────────
 // The local server only serves public assets. Credentials, the display profile and the
@@ -111,15 +112,6 @@ export function buildBrowserSourceUrl({
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join("&");
 	return `${origin}${BROWSER_SOURCE_PATH}#${fragment}`;
-}
-
-function isWebSocketUrl(value: string): boolean {
-	try {
-		const protocol = new URL(value).protocol;
-		return protocol === "ws:" || protocol === "wss:";
-	} catch {
-		return false;
-	}
 }
 
 function decodeProfile(value: string | null): Partial<OverlayProfileSettings> | null {

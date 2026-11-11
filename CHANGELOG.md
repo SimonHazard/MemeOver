@@ -14,6 +14,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.10.9): an invalid bot URL no longer crashes the overlay, and changing the guild reconnects with the new credentials immediately.
+
 - App/site (1.10.6): the browser source's liveness check reads a bounded response within one second, so a different program on its port cannot keep the Stream tab waiting.
 
 - App/site (1.10.5): serialize start, stop, restart and shutdown of the app-managed bot so overlapping actions cannot leave a second process running that Stop cannot reach.
