@@ -30,6 +30,8 @@ const MAX_HEARTBEAT_LENGTH: usize = 128;
 /// Bounds one connection or read. Windows can also spend this long on a closed port, so
 /// running out of time proves nothing about the server.
 const PROBE_TIMEOUT: Duration = Duration::from_secs(1);
+/// A HEAD answer is a few header lines. Anything larger did not come from our server.
+const MAX_PROBE_RESPONSE: usize = 8 * 1024;
 const START_TIMEOUT: Duration = Duration::from_secs(3);
 const START_RETRY_DELAY: Duration = Duration::from_millis(20);
 
@@ -121,12 +123,37 @@ impl StartError {
     }
 }
 
+/// Reads response headers until the blank line, the byte cap or `deadline`, whichever comes
+/// first. A peer that keeps sending cannot hold the caller past the deadline.
+fn read_response_head(stream: &mut TcpStream, deadline: Instant) -> Vec<u8> {
+    let mut response = Vec::new();
+    let mut chunk = [0_u8; 1024];
+    while response.len() < MAX_PROBE_RESPONSE {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() || stream.set_read_timeout(Some(remaining)).is_err() {
+            break;
+        }
+        match stream.read(&mut chunk) {
+            Ok(0) | Err(_) => break,
+            Ok(read) => {
+                let room = MAX_PROBE_RESPONSE - response.len();
+                response.extend_from_slice(&chunk[..read.min(room)]);
+                if response.windows(4).any(|window| window == b"\r\n\r\n") {
+                    break;
+                }
+            }
+        }
+    }
+    response
+}
+
 /// Asks `port` for the page. Only our session header proves that the answer comes from us.
 fn probe_session(port: u16, session: &str) -> ProbeAnswer {
     let address = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
     let Ok(mut stream) = TcpStream::connect_timeout(&address, PROBE_TIMEOUT) else {
         return ProbeAnswer::NoAnswer;
     };
+    let deadline = Instant::now() + PROBE_TIMEOUT;
     if stream.set_read_timeout(Some(PROBE_TIMEOUT)).is_err()
         || stream.set_write_timeout(Some(PROBE_TIMEOUT)).is_err()
         || write!(
@@ -137,8 +164,7 @@ fn probe_session(port: u16, session: &str) -> ProbeAnswer {
     {
         return ProbeAnswer::NoAnswer;
     }
-    let mut response = Vec::new();
-    let _ = stream.read_to_end(&mut response);
+    let response = read_response_head(&mut stream, deadline);
     if response.is_empty() {
         return ProbeAnswer::NoAnswer;
     }
@@ -575,6 +601,45 @@ mod tests {
         });
         assert_eq!(live_port(&mut running), None);
         other_program.join().unwrap();
+    }
+
+    #[test]
+    fn a_peer_that_keeps_sending_cannot_hold_the_probe() {
+        let taken = TcpListener::bind((LOOPBACK, 0)).unwrap();
+        let port = taken.local_addr().unwrap().port();
+        let slow_peer = std::thread::spawn(move || {
+            let (mut stream, _) = taken.accept().unwrap();
+            // One byte every 100 ms, never a blank line: each read succeeds within its timeout.
+            for _ in 0..100 {
+                if stream.write_all(b"x").is_err() {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(100));
+            }
+        });
+        let started = Instant::now();
+        assert_eq!(probe_session(port, "ours"), ProbeAnswer::AnotherServer);
+        assert!(
+            started.elapsed() < PROBE_TIMEOUT + Duration::from_secs(1),
+            "the probe must end at its deadline, not when the peer stops"
+        );
+        slow_peer.join().unwrap();
+    }
+
+    #[test]
+    fn an_oversized_answer_is_cut_at_the_cap() {
+        let taken = TcpListener::bind((LOOPBACK, 0)).unwrap();
+        let port = taken.local_addr().unwrap().port();
+        let noisy_peer = std::thread::spawn(move || {
+            let (mut stream, _) = taken.accept().unwrap();
+            let _ = stream.write_all(&vec![b'x'; 4 * MAX_PROBE_RESPONSE]);
+        });
+        let address = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
+        let mut stream = TcpStream::connect_timeout(&address, PROBE_TIMEOUT).unwrap();
+        let response = read_response_head(&mut stream, Instant::now() + PROBE_TIMEOUT);
+        assert_eq!(response.len(), MAX_PROBE_RESPONSE);
+        drop(stream);
+        noisy_peer.join().unwrap();
     }
 
     #[test]
