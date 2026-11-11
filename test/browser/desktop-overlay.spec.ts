@@ -79,6 +79,13 @@ const reactionMessage = {
 test("an unparsable bot URL does not blank the overlay", async ({ page }) => {
 	const errors: Error[] = [];
 	page.on("pageerror", (error) => errors.push(error));
+	await page.routeWebSocket(wsUrl, (ws) => {
+		ws.onMessage((raw) => {
+			if (JSON.parse(String(raw)).type !== "JOIN") return;
+			ws.send(JSON.stringify({ type: "JOIN_ACK", guild_id: guildId, success: true }));
+			ws.send(JSON.stringify(textMessage("Recovered after correcting the URL")));
+		});
+	});
 	await installDesktopStub(page, savedSettings({ wsUrl: "ws://" }));
 	await page.goto("/overlay.html");
 	await expect
@@ -93,7 +100,12 @@ test("an unparsable bot URL does not blank the overlay", async ({ page }) => {
 			),
 		)
 		.toBe(true);
-	await expect(page.locator("#root")).not.toBeEmpty();
+	// An idle production overlay has no text; assert its rendered shell and recovery instead.
+	await expect(page.locator("#root > div")).toBeAttached();
+	await emit(page, "settings-changed", savedSettings());
+	await expect(
+		page.getByText("Recovered after correcting the URL", { exact: true }).locator("visible=true"),
+	).toBeVisible();
 	expect(errors).toEqual([]);
 });
 
