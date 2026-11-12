@@ -53,6 +53,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 - App/site (1.10.10): restrict the overlay to the two app commands it uses; self-hosted bot management, updates and browser source controls are reserved to the settings window.
 
+### Security
+
+- App/site (1.10.12): restrict the local browser source to its own page and non-HTML files, accept only GET and HEAD addressed to 127.0.0.1 or localhost on its port, and keep settings pages and live moderation state off other paths. Existing links using these loopback hosts continue to work.
+
 ### Changed
 
 - Bot (1.6.20): ship only production dependencies in the Docker image and allow the published port to bind to the local machine with WS_BIND_ADDRESS=127.0.0.1.

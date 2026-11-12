@@ -1,10 +1,10 @@
 //! Opt-in local browser source.
 //!
-//! The official `tauri-plugin-localhost` serves the built frontend (including
-//! `browser-source.html`) on `127.0.0.1:<port>`. It is registered at runtime, only once the
-//! user enables the source, and has no stop mechanism: disabling it or changing
-//! the port takes effect after a restart. The server only serves public assets;
-//! credentials stay in the URL fragment, which browsers never send.
+//! A small HTTP server serves only `browser-source.html` and non-HTML assets on
+//! `127.0.0.1:<port>`, after the user enables the source. Requests must use GET or HEAD
+//! and address that port as `127.0.0.1` or `localhost`. There is no stop mechanism:
+//! disabling it or changing the port takes effect after a restart. Credentials stay
+//! in the URL fragment, which browsers never send.
 //!
 //! The page checks the server every second with a HEAD request. That check is also the only link
 //! between a loaded page and this app, in both directions: the response carries the live skip,
@@ -32,8 +32,6 @@ const MAX_HEARTBEAT_LENGTH: usize = 128;
 const PROBE_TIMEOUT: Duration = Duration::from_secs(1);
 /// A HEAD answer is a few header lines. Anything larger did not come from our server.
 const MAX_PROBE_RESPONSE: usize = 8 * 1024;
-const START_TIMEOUT: Duration = Duration::from_secs(3);
-const START_RETRY_DELAY: Duration = Duration::from_millis(20);
 
 #[derive(Debug, PartialEq, Eq)]
 enum ProbeAnswer {
@@ -56,7 +54,7 @@ pub struct SourceHeartbeat {
     query: String,
 }
 
-/// Shared with the server thread, which outlives any single registration of the plugin.
+/// Shared with the server thread, which outlives any single source state.
 #[derive(Default)]
 struct PageLink {
     /// Opaque to Rust: encoded and decoded by `src/shared/browser-source.ts`.
@@ -65,26 +63,21 @@ struct PageLink {
 }
 
 impl PageLink {
-    fn on_request(
-        &self,
-        session: &str,
-        request: &tauri_plugin_localhost::Request,
-        response: &mut tauri_plugin_localhost::Response,
-    ) {
-        response.add_header(SESSION_HEADER, session);
+    fn on_request(&self, session: &str, query: Option<&str>) -> Vec<(String, String)> {
+        let mut headers = vec![(SESSION_HEADER.into(), session.into())];
         if let Ok(controls) = self.controls.lock() {
             if !controls.is_empty() {
-                response.add_header(CONTROLS_HEADER, controls.as_str());
+                headers.push((CONTROLS_HEADER.into(), controls.clone()));
             }
         }
-        let report = request.url().split_once('?').map(|(_, query)| query);
-        if let Some(query) = report.filter(|query| {
+        if let Some(query) = query.filter(|query| {
             query.starts_with(HEARTBEAT_PREFIX) && query.len() <= MAX_HEARTBEAT_LENGTH
         }) {
             if let Ok(mut heartbeat) = self.heartbeat.lock() {
                 *heartbeat = Some((Instant::now(), query.to_owned()));
             }
         }
+        headers
     }
 
     fn heartbeat(&self) -> Option<SourceHeartbeat> {
@@ -93,6 +86,73 @@ impl PageLink {
             age_ms: u64::try_from(at.elapsed().as_millis()).unwrap_or(u64::MAX),
             query: query.clone(),
         })
+    }
+}
+
+struct Answer {
+    status: u16,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+}
+
+impl Answer {
+    fn refused(status: u16) -> Self {
+        Self {
+            status,
+            headers: Vec::new(),
+            body: Vec::new(),
+        }
+    }
+}
+
+/// Everything except the source page and non-HTML assets is refused.
+fn respond<R: Runtime>(
+    resolver: &tauri::AssetResolver<R>,
+    page: &PageLink,
+    session: &str,
+    port: u16,
+    method: &tiny_http::Method,
+    url: &str,
+    host: Option<&str>,
+) -> Answer {
+    if !host.is_some_and(|host| {
+        host.eq_ignore_ascii_case(&format!("{LOOPBACK}:{port}"))
+            || host.eq_ignore_ascii_case(&format!("localhost:{port}"))
+    }) {
+        return Answer::refused(403);
+    }
+    if !matches!(method, tiny_http::Method::Get | tiny_http::Method::Head) {
+        return Answer::refused(405);
+    }
+    let (path, query) = url
+        .split_once('?')
+        .map_or((url, None), |(path, query)| (path, Some(query)));
+    if path.contains("..") {
+        return Answer::refused(404);
+    }
+    let Some(asset) = resolver.get(path.into()) else {
+        return Answer::refused(404);
+    };
+    // Tauri falls back to index.html, but may infer MIME from a missing .js path.
+    // Its CSP header also identifies HTML after that fallback.
+    if (asset.mime_type.starts_with("text/html") || asset.csp_header.is_some()) && path != PAGE_PATH
+    {
+        return Answer::refused(404);
+    }
+    let mut headers = vec![
+        ("Content-Type".into(), asset.mime_type),
+        ("Cache-Control".into(), "no-cache".into()),
+    ];
+    if let Some(csp) = asset.csp_header {
+        headers.push(("Content-Security-Policy".into(), csp));
+    }
+    if path == PAGE_PATH {
+        headers.extend(page.on_request(session, query));
+    }
+    Answer {
+        status: 200,
+        headers,
+        body: asset.bytes,
     }
 }
 
@@ -105,7 +165,7 @@ pub struct BrowserSourceState {
 /// Why the source could not start, as a stable code the settings page translates.
 #[derive(Debug, PartialEq, Eq)]
 pub enum StartError {
-    /// Already serving on another port; the plugin cannot be stopped or rebound.
+    /// Already serving on another port; the server cannot be stopped or rebound.
     RestartRequired,
     InvalidPort,
     PortInUse,
@@ -158,7 +218,7 @@ fn probe_session(port: u16, session: &str) -> ProbeAnswer {
         || stream.set_write_timeout(Some(PROBE_TIMEOUT)).is_err()
         || write!(
             stream,
-            "HEAD {PAGE_PATH} HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n"
+            "HEAD {PAGE_PATH} HTTP/1.1\r\nHost: {LOOPBACK}:{port}\r\nConnection: close\r\n\r\n"
         )
         .is_err()
     {
@@ -218,10 +278,8 @@ pub fn start<R: Runtime>(
     if port < MIN_PORT {
         return Err(StartError::InvalidPort);
     }
-    // The plugin binds on its own thread and panics there when the port is taken,
-    // with no feedback. Probe first; a race with another program in between only
-    // ends that thread, because the release profile unwinds, and is reported below.
-    drop(TcpListener::bind((LOOPBACK, port)).map_err(|_| StartError::PortInUse)?);
+    // Bind before returning: no preflight gap lets another program take the port.
+    let server = tiny_http::Server::http((LOOPBACK, port)).map_err(|_| StartError::PortInUse)?;
     // This is a public instance identifier, not a credential. A new process gets
     // a new value even if it restarts between two browser liveness checks.
     let session = format!(
@@ -232,34 +290,42 @@ pub fn start<R: Runtime>(
             .map_err(|e| StartError::Plugin(e.to_string()))?
             .as_nanos()
     );
-    app.plugin(
-        tauri_plugin_localhost::Builder::new(port)
-            .host(LOOPBACK)
-            .on_request({
-                let session = session.clone();
-                let page = Arc::clone(&state.page);
-                move |request, response| page.on_request(&session, request, response)
-            })
-            .build(),
-    )
-    .map_err(|e| StartError::Plugin(e.to_string()))?;
-    // Only HTTP while the thread may still be binding: a bind here could make it panic.
-    let deadline = Instant::now() + START_TIMEOUT;
-    while probe_session(port, &session) != ProbeAnswer::OurSession {
-        if Instant::now() >= deadline {
-            if !server_is_alive(port, &session) {
-                return Err(StartError::PortInUse);
+    let resolver = app.asset_resolver();
+    let page = Arc::clone(&state.page);
+    let serving_session = session.clone();
+    std::thread::spawn(move || {
+        for request in server.incoming_requests() {
+            let host = request
+                .headers()
+                .iter()
+                .find(|header| header.field.equiv("Host"))
+                .map(|header| header.value.as_str());
+            let answer = respond(
+                &resolver,
+                &page,
+                &serving_session,
+                port,
+                request.method(),
+                request.url(),
+                host,
+            );
+            let mut response =
+                tiny_http::Response::from_data(answer.body).with_status_code(answer.status);
+            for (name, value) in answer.headers {
+                if let Ok(header) = tiny_http::Header::from_bytes(name, value) {
+                    response.add_header(header);
+                }
             }
-            break;
+            // A disconnected client must not terminate the server thread.
+            let _ = request.respond(response);
         }
-        std::thread::sleep(START_RETRY_DELAY);
-    }
+    });
     *running = Some(RunningServer { port, session });
     Ok(port)
 }
 
 /// Start serving the browser source page. Idempotent for the running port. The checks can wait
-/// for seconds on sockets, a lock and sleeps: a blocking thread keeps them off the async runtime.
+/// for seconds on sockets and a lock: a blocking thread keeps them off the async runtime.
 #[tauri::command]
 pub async fn start_browser_source(app: AppHandle, port: u16) -> Result<u16, String> {
     tauri::async_runtime::spawn_blocking(move || {
@@ -310,7 +376,12 @@ mod tests {
 
     impl<R: Runtime> Assets<R> for SourceAssets {
         fn get(&self, key: &AssetKey) -> Option<Cow<'_, [u8]>> {
-            (key.as_ref() == PAGE_PATH).then_some(Cow::Borrowed(SOURCE_HTML))
+            match key.as_ref() {
+                PAGE_PATH => Some(Cow::Borrowed(SOURCE_HTML)),
+                "/assets/source.js" => Some(Cow::Borrowed(b"console.log(1)")),
+                "/index.html" => Some(Cow::Borrowed(b"<!doctype html><title>Settings</title>")),
+                _ => None,
+            }
         }
         fn iter(&self) -> Box<AssetsIter<'_>> {
             Box::new(std::iter::empty())
@@ -329,6 +400,10 @@ mod tests {
     }
 
     fn request(port: u16, path: &str, method: &str) -> String {
+        request_with_host(port, &format!("{LOOPBACK}:{port}"), path, method)
+    }
+
+    fn request_with_host(port: u16, host: &str, path: &str, method: &str) -> String {
         for _ in 0..50 {
             if let Ok(mut stream) = TcpStream::connect((LOOPBACK, port)) {
                 stream
@@ -336,7 +411,7 @@ mod tests {
                     .unwrap();
                 write!(
                     stream,
-                    "{method} {path} HTTP/1.1\r\nHost: {LOOPBACK}\r\nConnection: close\r\n\r\n"
+                    "{method} {path} HTTP/1.1\r\nHost: {host}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
                 )
                 .unwrap();
                 let mut response = String::new();
@@ -352,8 +427,77 @@ mod tests {
         request(port, path, "GET")
     }
 
+    #[test]
+    fn only_the_source_page_and_its_assets_are_served() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        for path in [PAGE_PATH, "/assets/source.js"] {
+            let response = get(port, path);
+            assert!(response.starts_with("HTTP/1.1 200"), "{path}: {response}");
+        }
+        for path in [
+            "/",
+            "/index.html",
+            "/settings",
+            "/../Cargo.toml",
+            "/missing.js",
+        ] {
+            let response = get(port, path);
+            assert!(response.starts_with("HTTP/1.1 404"), "{path}: {response}");
+        }
+    }
+
+    #[test]
+    fn other_methods_are_refused() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        let response = request(port, PAGE_PATH, "POST");
+        assert!(response.starts_with("HTTP/1.1 405"), "{response}");
+    }
+
+    #[test]
+    fn a_foreign_host_header_is_refused() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        for host in ["evil.example", LOOPBACK] {
+            let response = request_with_host(port, &host, PAGE_PATH, "GET");
+            assert!(response.starts_with("HTTP/1.1 403"), "{host}: {response}");
+        }
+        for host in [
+            format!("{LOOPBACK}:{port}"),
+            format!("localhost:{port}"),
+            format!("LOCALHOST:{port}"),
+        ] {
+            let response = request_with_host(port, &host, PAGE_PATH, "GET");
+            assert!(response.starts_with("HTTP/1.1 200"), "{host}: {response}");
+        }
+    }
+
+    #[test]
+    fn controls_and_heartbeats_belong_to_the_page_only() {
+        let app = app();
+        let state = BrowserSourceState::default();
+        *state.page.controls.lock().unwrap() = "private-controls".into();
+        let port = free_port();
+        start(app.handle(), &state, port).unwrap();
+        let response = get(port, "/assets/source.js?source=1&sound=on&bot=connected");
+        assert!(response.starts_with("HTTP/1.1 200"), "{response}");
+        assert!(!response.contains(CONTROLS_HEADER), "{response}");
+        assert!(!response.contains(SESSION_HEADER), "{response}");
+        assert_eq!(state.page.heartbeat(), None);
+    }
+
     fn app() -> tauri::App<tauri::test::MockRuntime> {
-        let context = tauri::test::mock_context(SourceAssets);
+        let mut context = tauri::test::mock_context(SourceAssets);
+        context.config_mut().app.security.csp = Some(tauri::utils::config::Csp::Policy(
+            "default-src 'self'".into(),
+        ));
         tauri::test::mock_builder().build(context).unwrap()
     }
 
@@ -457,7 +601,7 @@ mod tests {
         assert!(get(port, PAGE_PATH).contains(&format!("{controls}before")));
         assert_eq!(state.page.heartbeat(), None);
 
-        // The plugin answers from the store, so a change applies without a new registration.
+        // The server answers from the store, so a change applies without restarting it.
         *state.page.controls.lock().unwrap() = "after".into();
         let report = "source=1&sound=on&bot=connected";
         let check = request(port, &format!("{PAGE_PATH}?{report}"), "HEAD");
@@ -488,12 +632,24 @@ mod tests {
         let response = get(port, PAGE_PATH);
         assert!(response.starts_with("HTTP/1.1 200"), "{response}");
         assert!(response.contains("Cache-Control: no-cache"), "{response}");
+        assert!(response.contains("Content-Security-Policy:"), "{response}");
         assert!(response.contains("MemeOver Browser Source"), "{response}");
         let session = session_header(&response);
         assert!(!session.is_empty());
         let head = request(port, PAGE_PATH, "HEAD");
         assert!(head.starts_with("HTTP/1.1 200"), "{head}");
         assert_eq!(session_header(&head), session);
+        for header in [
+            "Content-Type:",
+            "Content-Security-Policy:",
+            "Cache-Control:",
+            "Content-Length:",
+        ] {
+            let get_value = response.lines().find(|line| line.starts_with(header));
+            let head_value = head.lines().find(|line| line.starts_with(header));
+            assert!(get_value.is_some(), "GET missing {header}: {response}");
+            assert_eq!(head_value, get_value, "HEAD must preserve {header}");
+        }
         assert!(
             !head.contains("MemeOver Browser Source"),
             "HEAD sends no asset body"
@@ -569,8 +725,7 @@ mod tests {
     }
 
     #[test]
-    fn the_plugin_can_be_registered_again_on_the_same_app() {
-        // What restarting a dead server does: the first registration stays in the plugin store.
+    fn a_second_server_can_start_on_the_same_app() {
         let app = app();
         let first = free_port();
         start(app.handle(), &BrowserSourceState::default(), first).unwrap();

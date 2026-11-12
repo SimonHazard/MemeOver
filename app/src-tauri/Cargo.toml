@@ -1,6 +1,6 @@
 [package]
 name = "memeover"
-version = "1.10.11"
+version = "1.10.12"
 description = "An overlay application that lets friends send memes to each other in real time from a Discord text channel."
 authors = ["Simon Hazard"]
 edition = "2021"
@@ -26,8 +26,8 @@ tauri-plugin-process = "2"
 tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-dialog = "2"
-# Opt-in browser source; registered at runtime only (see browser_source.rs).
-tauri-plugin-localhost = "2"
+# Loopback server for the opt-in browser source (see browser_source.rs).
+tiny_http = "0.12"
 # Already in the tree via tauri-plugin-updater (rustls); used for public IP detection.
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
 serde = { version = "1", features = ["derive"] }
