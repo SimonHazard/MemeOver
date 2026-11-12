@@ -255,6 +255,64 @@ test("PONG has no reply", async () => {
 	c.send("not json");
 	expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
 });
+for (const responds of [false, true]) {
+	test(
+		responds ? "a PONG in time keeps the client" : "a client that misses PONG is dropped",
+		async () => {
+			let heartbeat: (() => void) | undefined;
+			let timeout: (() => void) | undefined;
+			let timeoutHandle: unknown;
+			const nativeSetInterval = globalThis.setInterval;
+			const nativeSetTimeout = globalThis.setTimeout;
+			const interval = spyOn(globalThis, "setInterval").mockImplementation(((
+				handler: TimerHandler,
+				delay?: number,
+				...args: unknown[]
+			) => {
+				if (delay === 30_000 && typeof handler === "function") {
+					heartbeat = () => handler(...args);
+				}
+				return nativeSetInterval(handler, delay, ...args);
+			}) as typeof globalThis.setInterval);
+			const scheduler = spyOn(globalThis, "setTimeout").mockImplementation(((
+				handler: TimerHandler,
+				delay?: number,
+				...args: unknown[]
+			) => {
+				const handle = nativeSetTimeout(handler, delay, ...args);
+				if (delay === 10_000 && typeof handler === "function") {
+					timeout = () => handler(...args);
+					timeoutHandle = handle;
+				}
+				return handle;
+			}) as typeof globalThis.setTimeout);
+			const clear = spyOn(globalThis, "clearTimeout");
+			try {
+				const c = await joined();
+				const wsId = [...store.getGuildMembers(guildId)][0];
+				if (!heartbeat || !wsId) throw new Error("Missing heartbeat or joined client");
+				heartbeat();
+				expect(await c.next()).toEqual({ type: "PING" });
+				if (!timeout || !timeoutHandle) throw new Error("Missing PONG timeout");
+				if (responds) {
+					c.send({ type: "PONG" });
+					c.send("not json");
+					expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
+					expect(clear).toHaveBeenCalledWith(timeoutHandle);
+					expect(store.getGuildMembers(guildId)).toEqual(new Set([wsId]));
+				} else {
+					timeout();
+					expect(store.getGuildMembers(guildId).has(wsId)).toBe(false);
+					await c.closed;
+				}
+			} finally {
+				interval.mockRestore();
+				scheduler.mockRestore();
+				clear.mockRestore();
+			}
+		},
+	);
+}
 test("broadcast reaches only joined clients", async () => {
 	const first = await joined(),
 		unjoined = await client();

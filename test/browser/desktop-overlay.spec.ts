@@ -153,6 +153,27 @@ test("a stalled synced video releases the queue after the normal display duratio
 	).toBeVisible({ timeout: 8_000 });
 });
 
+test("an image that fails to load is skipped", async ({ page }) => {
+	const brokenUrl = "https://media.desktop.test/broken.png";
+	await page.route(`${brokenUrl}*`, (route) => route.fulfill({ status: 404 }));
+	const requested = page.waitForRequest(`${brokenUrl}*`);
+	const sockets = await openOverlay(
+		page,
+		{},
+		{
+			...media,
+			media_type: "image",
+			media_url: brokenUrl,
+		},
+	);
+	await requested;
+	await expect.poll(() => sockets.length).toBe(1);
+	sockets[0]?.send(JSON.stringify(textMessage("After the broken image")));
+	await expect(
+		page.getByText("After the broken image", { exact: true }).locator("visible=true"),
+	).toBeVisible({ timeout: 8_000 });
+});
+
 test("stream-only cuts current desktop playback, drops queued and incoming content, and keeps the socket", async ({
 	page,
 }) => {

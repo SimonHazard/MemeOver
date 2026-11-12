@@ -26,12 +26,13 @@ function interaction(
 	action: string,
 	actor = user,
 	rejectUpdate = false,
+	overrides: { guildId?: string; allowed?: boolean } = {},
 ): ButtonInteraction {
 	return {
 		customId: `memeover:${command}:${action}:${guild}:${user}`,
 		user: { id: actor },
-		guildId: guild,
-		memberPermissions: { has: () => true },
+		guildId: overrides.guildId ?? guild,
+		memberPermissions: { has: () => overrides.allowed ?? true },
 		locale: "en",
 		update: mock(async () => {
 			if (rejectUpdate) throw updateError;
@@ -73,6 +74,26 @@ test("wrong user cannot revoke", async () => {
 	expect(evictGuild).not.toHaveBeenCalled();
 	expect(guildRegistry.getConfig(guild)?.token).toBe(token);
 });
+for (const command of ["rotate", "remove"]) {
+	test(`${command} confirm from another server changes nothing`, async () => {
+		const confirmation = interaction(command, "confirm", user, false, {
+			guildId: "123456789012345699",
+		});
+		await handleComponentInteraction(confirmation);
+		expect(evictGuild).not.toHaveBeenCalled();
+		expect(guildRegistry.getConfig(guild)?.token).toBe(token);
+		expect(confirmation.update).toHaveBeenCalledTimes(1);
+		expect(confirmation.reply).not.toHaveBeenCalled();
+	});
+	test(`${command} confirm without Manage Server changes nothing`, async () => {
+		const confirmation = interaction(command, "confirm", user, false, { allowed: false });
+		await handleComponentInteraction(confirmation);
+		expect(evictGuild).not.toHaveBeenCalled();
+		expect(guildRegistry.getConfig(guild)?.token).toBe(token);
+		expect(confirmation.reply).toHaveBeenCalledTimes(1);
+		expect(confirmation.update).not.toHaveBeenCalled();
+	});
+}
 for (const [command, event] of [
 	["rotate", "admin_rotate"],
 	["remove", "admin_remove"],
