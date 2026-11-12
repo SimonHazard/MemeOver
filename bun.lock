@@ -12,7 +12,7 @@
     },
     "app": {
       "name": "@memeover/app",
-      "version": "1.10.13",
+      "version": "1.10.14",
       "dependencies": {
         "@memeover/shared": "workspace:*",
         "@memeover/ui": "workspace:*",
@@ -55,7 +55,7 @@
     },
     "bot": {
       "name": "@memeover/bot",
-      "version": "1.6.21",
+      "version": "1.6.22",
       "dependencies": {
         "@logtail/pino": "^0.5.12",
         "@memeover/shared": "workspace:*",
@@ -102,7 +102,7 @@
     },
     "site": {
       "name": "@memeover/site",
-      "version": "1.10.13",
+      "version": "1.10.14",
       "dependencies": {
         "@astrojs/react": "7.0.0",
         "@astrojs/sitemap": "3.7.4",

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { checkVersions } from "./check-versions";
+import { checkBunVersions, checkVersions } from "./check-versions";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -81,4 +81,8 @@ describe("release version consistency", () => {
 			true,
 		);
 	});
+});
+
+test("the repository's Bun version copies agree", () => {
+	expect(checkBunVersions()).toEqual([]);
 });

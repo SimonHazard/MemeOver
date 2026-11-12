@@ -1,5 +1,7 @@
+import { PAUSE_INDEFINITE } from "@memeover/shared";
 import type { GuildConfig } from "./registry-state";
-export const PAUSE_INDEFINITE = Number.MAX_SAFE_INTEGER;
+
+export { PAUSE_INDEFINITE } from "@memeover/shared";
 export const MAX_TIMER_MS = 2_147_483_647;
 export const PAUSE_CHOICES = {
 	"5m": 300_000,
