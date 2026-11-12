@@ -14,6 +14,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 
+- App/site (1.10.14): name KLIPY among the third parties MemeOver is not affiliated with on the legal pages.
 - App/site (1.10.11): replace invalid display positions and on/off values with their defaults when loading settings, importing profiles or reading browser-source links. Preserve valid choices and ignore unknown media types.
 - Bot (1.6.19): contain registry write failures during disconnect, pause expiry and scheduled cleanup so a temporary storage error does not leave stale clients or stop the bot.
 
