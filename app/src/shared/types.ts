@@ -96,21 +96,30 @@ export interface OverlayMonitor {
 	y: number;
 }
 
-export type OverlayPosition =
-	| "center"
-	| "top-left"
-	| "top"
-	| "top-right"
-	| "left"
-	| "right"
-	| "bottom-left"
-	| "bottom"
-	| "bottom-right";
+export const OVERLAY_POSITIONS = [
+	"center",
+	"top-left",
+	"top",
+	"top-right",
+	"left",
+	"right",
+	"bottom-left",
+	"bottom",
+	"bottom-right",
+] as const;
+export type OverlayPosition = (typeof OVERLAY_POSITIONS)[number];
 
 /** @deprecated Legacy enum — kept only for settings migration. Use numeric pixels instead. */
 export type TextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
-export type TextPosition = "above" | "below" | "overlay-top" | "overlay-middle" | "overlay-bottom";
+export const TEXT_POSITIONS = [
+	"above",
+	"below",
+	"overlay-top",
+	"overlay-middle",
+	"overlay-bottom",
+] as const;
+export type TextPosition = (typeof TEXT_POSITIONS)[number];
 
 export interface EnabledTypes {
 	image: boolean;
