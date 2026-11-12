@@ -1,5 +1,7 @@
-// Coupled to bot/src/utils/guild-pause.ts; never schedule this sentinel as a timer.
-export const PAUSE_INDEFINITE = Number.MAX_SAFE_INTEGER;
+import { PAUSE_INDEFINITE } from "@memeover/shared";
+
+export { PAUSE_INDEFINITE } from "@memeover/shared";
+
 const MAX_TIMER_MS = 2_147_483_647;
 export function isGuildPausedAt(pausedUntil: number | null, now: number): boolean {
 	return pausedUntil !== null && pausedUntil > now;
