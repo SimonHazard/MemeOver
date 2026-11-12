@@ -9,7 +9,12 @@ import {
 	FLOATING_REACTION_PRESETS,
 	type FloatingReactionPreset,
 	LEGACY_DEFAULT_WS_URL,
+	OVERLAY_POSITIONS,
+	OVERLAY_PROFILE_FIELDS,
+	type OverlayPosition,
 	type Settings,
+	TEXT_POSITIONS,
+	type TextPosition,
 } from "./types";
 
 // Pre-v2 releases stored textSize as a Tailwind-style key. This table maps those
@@ -177,6 +182,28 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 			out[field] = DEFAULT_SETTINGS[field];
 		}
 	}
+	if (!OVERLAY_POSITIONS.includes(out.position as OverlayPosition)) {
+		out.position = DEFAULT_SETTINGS.position;
+	}
+	if (!TEXT_POSITIONS.includes(out.textPosition as TextPosition)) {
+		out.textPosition = DEFAULT_SETTINGS.textPosition;
+	}
+	// Every on/off display preference: anything but a real boolean falls back to its default.
+	for (const field of OVERLAY_PROFILE_FIELDS) {
+		if (typeof DEFAULT_SETTINGS[field] === "boolean" && typeof out[field] !== "boolean") {
+			out[field] = DEFAULT_SETTINGS[field];
+		}
+	}
+	const savedTypes =
+		out.enabledTypes && typeof out.enabledTypes === "object"
+			? (out.enabledTypes as Record<string, unknown>)
+			: {};
+	out.enabledTypes = Object.fromEntries(
+		Object.entries(DEFAULT_SETTINGS.enabledTypes).map(([kind, fallback]) => [
+			kind,
+			typeof savedTypes[kind] === "boolean" ? savedTypes[kind] : fallback,
+		]),
+	);
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { extractDefaults } from "@/windows/settings/components/overlay-form/schema";
 import { DEFAULT_BROWSER_SOURCE_PORT } from "./browser-source-port";
-import { pickOverlayProfileSettings } from "./profile-settings";
+import { pickOverlayProfileSettings, pickStoredProfileSettings } from "./profile-settings";
 import { normalizeSettings } from "./settings-normalization";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
@@ -9,6 +9,42 @@ import {
 	DEFAULT_SETTINGS,
 	OVERLAY_PROFILE_FIELDS,
 } from "./types";
+
+test("invalid positions and on/off display values fall back to defaults", () => {
+	for (const schemaVersion of [0, CURRENT_SCHEMA_VERSION]) {
+		const normalized = normalizeSettings({
+			schemaVersion,
+			position: "middle-ish",
+			textPosition: 42,
+			bgEnabled: "yes",
+			syncMediaDuration: 1,
+			enabledTypes: { video: "no", gif: null, image: false, unknownKind: true },
+		});
+		expect(normalized.position).toBe(DEFAULT_SETTINGS.position);
+		expect(normalized.textPosition).toBe(DEFAULT_SETTINGS.textPosition);
+		expect(normalized.bgEnabled).toBe(DEFAULT_SETTINGS.bgEnabled);
+		expect(normalized.syncMediaDuration).toBe(DEFAULT_SETTINGS.syncMediaDuration);
+		expect(normalized.enabledTypes).toEqual({ ...DEFAULT_SETTINGS.enabledTypes, image: false });
+	}
+});
+
+test("valid positions and on/off display values are preserved", () => {
+	const saved = {
+		position: "top-left",
+		textPosition: "above",
+		bgEnabled: true,
+		syncMediaDuration: true,
+		enabledTypes: { ...DEFAULT_SETTINGS.enabledTypes, video: false },
+	};
+	expect(normalizeSettings(saved)).toMatchObject(saved);
+});
+
+test("an imported profile cannot carry an invalid position", () => {
+	expect(pickStoredProfileSettings({ position: "nowhere", textPosition: "below" })).toEqual({
+		position: DEFAULT_SETTINGS.position,
+		textPosition: "below",
+	});
+});
 
 test("connection notifications migrate on, preserve opt out and validate all four corners", () => {
 	expect(normalizeSettings({ schemaVersion: 12 })).toMatchObject({

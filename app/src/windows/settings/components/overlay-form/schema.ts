@@ -2,29 +2,11 @@ import { z } from "zod";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	FLOATING_REACTION_PRESETS,
+	OVERLAY_POSITIONS,
 	OVERLAY_PROFILE_FIELDS,
 	type Settings,
+	TEXT_POSITIONS,
 } from "@/shared/types";
-
-const OVERLAY_POSITIONS = [
-	"center",
-	"top-left",
-	"top",
-	"top-right",
-	"left",
-	"right",
-	"bottom-left",
-	"bottom",
-	"bottom-right",
-] as const;
-
-const TEXT_POSITIONS = [
-	"above",
-	"below",
-	"overlay-top",
-	"overlay-middle",
-	"overlay-bottom",
-] as const;
 
 export const OverlaySettingsSchema = z.object({
 	connectionNotificationsEnabled: z.boolean(),
