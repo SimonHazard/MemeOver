@@ -3,7 +3,7 @@ set -eu
 input=$(cat)
 [ "$(printf '%s' "$input" | jq -r '.stop_hook_active // false')" = true ] && exit 0
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
-bot=false; app=false; shared=false; ui=false
+bot=false; app=false; shared=false; ui=false; browser=false
 while IFS= read -r -d '' file; do
  case "$file" in
   bot/*.ts|bot/package.json|bot/tsconfig.json) bot=true ;;
@@ -11,10 +11,13 @@ while IFS= read -r -d '' file; do
   shared/*.ts|shared/package.json|shared/tsconfig.json) shared=true ;;
   packages/ui/*.ts|packages/ui/*.tsx|packages/ui/package.json|packages/ui/tsconfig.json) ui=true ;;
  esac
+ case "$file" in
+  test/browser/*|app/test/browser/*|playwright.config.ts|tsconfig.browser.json) browser=true ;;
+ esac
 done < <(git diff --name-only -z HEAD; git ls-files --others --exclude-standard -z)
 failed=false
-for workspace in bot app shared ui; do
- case "$workspace" in bot) touched=$bot ;; app) touched=$app ;; shared) touched=$shared ;; ui) touched=$ui ;; esac
+for workspace in bot app shared ui browser; do
+ case "$workspace" in bot) touched=$bot ;; app) touched=$app ;; shared) touched=$shared ;; ui) touched=$ui ;; browser) touched=$browser ;; esac
  if [ "$touched" = true ]; then
   output=$(bun run "typecheck:$workspace" 2>&1) || { printf '%s\n' "$output" >&2; failed=true; }
  fi
