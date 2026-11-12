@@ -2225,7 +2225,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "memeover"
-version = "1.10.11"
+version = "1.10.12"
 dependencies = [
  "objc2",
  "raw-window-handle",
@@ -2236,12 +2236,12 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-autostart",
  "tauri-plugin-dialog",
- "tauri-plugin-localhost",
  "tauri-plugin-opener",
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
  "tauri-plugin-store",
  "tauri-plugin-updater",
+ "tiny_http",
  "windows",
 ]
 
@@ -4179,21 +4179,6 @@ dependencies = [
  "thiserror 2.0.21",
  "toml 1.1.6+spec-1.1.0",
  "url",
-]
-
-[[package]]
-name = "tauri-plugin-localhost"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8c9c1c5b33e5f19317f30520a9ce542e231fabc1b793da70337151dc01f3bb4"
-dependencies = [
- "http",
- "log",
- "serde",
- "serde_json",
- "tauri",
- "thiserror 2.0.21",
- "tiny_http",
 ]
 
 [[package]]
