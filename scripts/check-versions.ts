@@ -56,9 +56,43 @@ export function checkVersions(root = dirname(dirname(fileURLToPath(import.meta.u
 	return errors;
 }
 
+/** Every place that names the Bun version must agree with package.json's packageManager. */
+export function checkBunVersions(
+	root = dirname(dirname(fileURLToPath(import.meta.url))),
+): string[] {
+	const read = (path: string) => readFileSync(join(root, path), "utf8");
+	const expected = JSON.parse(read("package.json")).packageManager?.match(/^bun@(.+)$/)?.[1];
+	if (!expected) return ["package.json: packageManager must be bun@<version>"];
+	const errors: string[] = [];
+	const expectAll = (path: string, found: string[], minimum: number) => {
+		if (found.length < minimum) errors.push(`${path}: Bun version not found`);
+		for (const value of found) {
+			if (value !== expected) errors.push(`${path}: expected Bun ${expected}, found ${value}`);
+		}
+	};
+	expectAll(
+		"Dockerfile.bot",
+		[...read("Dockerfile.bot").matchAll(/^FROM oven\/bun:([\d.]+)/gm)].map((m) => m[1]),
+		1,
+	);
+	expectAll(
+		"app/src-tauri/src/server_creator.rs",
+		[
+			...read("app/src-tauri/src/server_creator.rs").matchAll(/MIN_BUN_VERSION: &str = "([^"]+)"/g),
+		].map((m) => m[1]),
+		1,
+	);
+	const bot = JSON.parse(read("bot/package.json"));
+	const app = JSON.parse(read("app/package.json"));
+	expectAll("bot/package.json engines.bun", [String(bot.engines?.bun ?? "").replace(/^>=/, "")], 1);
+	expectAll("bot/package.json bun-types", [bot.devDependencies?.["bun-types"] ?? ""], 1);
+	expectAll("app/package.json bun-types", [app.devDependencies?.["bun-types"] ?? ""], 1);
+	return errors;
+}
+
 if (import.meta.main) {
 	try {
-		const errors = checkVersions();
+		const errors = [...checkVersions(), ...checkBunVersions()];
 		if (errors.length > 0) {
 			console.error(errors.join("\n"));
 			process.exitCode = 1;
