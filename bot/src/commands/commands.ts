@@ -8,6 +8,7 @@ import {
 	SlashCommandBuilder,
 	type SlashCommandSubcommandBuilder,
 } from "discord.js";
+import { Redacted } from "effect";
 import { type BotTranslationKey, frLocalization, interactionLocale, t } from "../i18n";
 import { CAPTION_MAX_LENGTH } from "../media/extractor";
 import { config } from "../utils/config";
@@ -169,7 +170,7 @@ for (const definition of subcommands) {
 // ─── Command registration ─────────────────────────────────────────────────────
 
 export async function registerCommands(): Promise<void> {
-	const rest = new REST().setToken(config.discordToken);
+	const rest = new REST().setToken(Redacted.value(config.discordToken));
 	await rest.put(Routes.applicationCommands(config.discordClientId), {
 		body: [memeover.toJSON()],
 	});

@@ -60,6 +60,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- Bot (1.6.25): mask configuration tokens in string and JSON representations while keeping existing log privacy protections. Validate WS_PORT as an integer from 1 to 65535, rejecting malformed values such as 3001x and fractional ports; missing or empty optional values keep their defaults.
+
 - Bot (1.6.24): cancel WebSocket heartbeat jobs with their connection or runtime. Send the next PING 30 seconds after PONG, with a 10-second response deadline; close rejected sends while preserving queued backpressure and session cleanup.
 
 - Bot (1.6.23): own guild pause timers in one disposable runtime and test their deadlines with a virtual clock. Preserve pause commands, expiry write-failure protection and the shared indefinite pause value.
