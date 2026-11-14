@@ -60,6 +60,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- Bot (1.6.24): cancel WebSocket heartbeat jobs with their connection or runtime. Send the next PING 30 seconds after PONG, with a 10-second response deadline; close rejected sends while preserving queued backpressure and session cleanup.
+
 - Bot (1.6.23): own guild pause timers in one disposable runtime and test their deadlines with a virtual clock. Preserve pause commands, expiry write-failure protection and the shared indefinite pause value.
 
 - Bot (1.6.20): ship only production dependencies in the Docker image and allow the published port to bind to the local machine with WS_BIND_ADDRESS=127.0.0.1.
