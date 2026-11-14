@@ -60,6 +60,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- Bot (1.6.26): release owned resources in order when startup fails as well as on shutdown: notify clients, flush registrations, destroy Discord, stop the server, then dispose background tasks. Keep the eight-second shutdown deadline for both paths.
+
 - Bot (1.6.25): mask configuration tokens in string and JSON representations while keeping existing log privacy protections. Validate WS_PORT as an integer from 1 to 65535, rejecting malformed values such as 3001x and fractional ports; missing or empty optional values keep their defaults.
 
 - Bot (1.6.24): cancel WebSocket heartbeat jobs with their connection or runtime. Send the next PING 30 seconds after PONG, with a 10-second response deadline; close rejected sends while preserving queued backpressure and session cleanup.
