@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import type { JoinMessage, LeaveMessage, ServerMessage } from "@memeover/shared";
 import { ClientMessageSchema, JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
-import { Effect, type ManagedRuntime } from "effect";
+import { Effect, type ManagedRuntime, Redacted } from "effect";
 import { Elysia } from "elysia";
 import { BotRuntime } from "./runtime";
 import { Heartbeats } from "./services/heartbeats";
@@ -19,7 +19,9 @@ import type { WSConnection } from "./utils/types";
 
 const log = logger.child({ module: "server" });
 
-const metricsTokenBuf = config.metricsToken ? Buffer.from(config.metricsToken) : null;
+const metricsTokenBuf = config.metricsToken
+	? Buffer.from(Redacted.value(config.metricsToken))
+	: null;
 
 // ─── Broadcast ────────────────────────────────────────────────────────────────
 
