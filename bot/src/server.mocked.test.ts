@@ -1,5 +1,8 @@
 import { afterAll, afterEach, beforeAll, expect, mock, spyOn, test } from "bun:test";
+import { Layer, ManagedRuntime } from "effect";
+import { TestClock } from "effect/testing";
 import pino from "pino";
+import { Heartbeats } from "./services/heartbeats";
 import { connect, joinGuild, startServer, type TestClient } from "./test-utils/ws-harness";
 
 mock.module("./utils/config", () => ({
@@ -13,18 +16,24 @@ mock.module("./utils/config", () => ({
 	},
 }));
 mock.module("./utils/logger", () => ({ logger: pino({ level: "silent" }) }));
+const { BotRuntime } = await import("./runtime");
+const heartbeatRuntime = ManagedRuntime.make(
+	Heartbeats.layer.pipe(Layer.provideMerge(TestClock.layer())),
+);
+const advanceHeartbeat = (ms: number) => heartbeatRuntime.runPromise(TestClock.adjust(ms));
 const { guildRegistry } = await import("./utils/registry");
 const { createServer, broadcastToGuild, evictGuild } = await import("./server");
 const { applyGuildPause } = await import("./utils/guild-pause-timers");
 const { markShardLost, markShardReady } = await import("./utils/discord-gateway");
 const { store } = await import("./utils/store");
+const { stats } = await import("./utils/stats");
 let server: ReturnType<typeof startServer>;
 const clients: TestClient[] = [];
 const guildId = "123456789012345678";
 let token: string;
 beforeAll(() => {
 	token = guildRegistry.register(guildId, null);
-	server = startServer(createServer);
+	server = startServer(() => createServer(heartbeatRuntime));
 });
 afterEach(async () => {
 	for (const client of clients) client.close();
@@ -33,6 +42,8 @@ afterEach(async () => {
 });
 afterAll(async () => {
 	await server.stop();
+	await heartbeatRuntime.dispose();
+	await BotRuntime.dispose();
 	guildRegistry.unregister(guildId);
 });
 async function client() {
@@ -259,60 +270,57 @@ for (const responds of [false, true]) {
 	test(
 		responds ? "a PONG in time keeps the client" : "a client that misses PONG is dropped",
 		async () => {
-			let heartbeat: (() => void) | undefined;
-			let timeout: (() => void) | undefined;
-			let timeoutHandle: unknown;
-			const nativeSetInterval = globalThis.setInterval;
-			const nativeSetTimeout = globalThis.setTimeout;
-			const interval = spyOn(globalThis, "setInterval").mockImplementation(((
-				handler: TimerHandler,
-				delay?: number,
-				...args: unknown[]
-			) => {
-				if (delay === 30_000 && typeof handler === "function") {
-					heartbeat = () => handler(...args);
-				}
-				return nativeSetInterval(handler, delay, ...args);
-			}) as typeof globalThis.setInterval);
-			const scheduler = spyOn(globalThis, "setTimeout").mockImplementation(((
-				handler: TimerHandler,
-				delay?: number,
-				...args: unknown[]
-			) => {
-				const handle = nativeSetTimeout(handler, delay, ...args);
-				if (delay === 10_000 && typeof handler === "function") {
-					timeout = () => handler(...args);
-					timeoutHandle = handle;
-				}
-				return handle;
-			}) as typeof globalThis.setTimeout);
-			const clear = spyOn(globalThis, "clearTimeout");
-			try {
-				const c = await joined();
-				const wsId = [...store.getGuildMembers(guildId)][0];
-				if (!heartbeat || !wsId) throw new Error("Missing heartbeat or joined client");
-				heartbeat();
-				expect(await c.next()).toEqual({ type: "PING" });
-				if (!timeout || !timeoutHandle) throw new Error("Missing PONG timeout");
-				if (responds) {
-					c.send({ type: "PONG" });
-					c.send("not json");
-					expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
-					expect(clear).toHaveBeenCalledWith(timeoutHandle);
-					expect(store.getGuildMembers(guildId)).toEqual(new Set([wsId]));
-				} else {
-					timeout();
-					expect(store.getGuildMembers(guildId).has(wsId)).toBe(false);
-					await c.closed;
-				}
-			} finally {
-				interval.mockRestore();
-				scheduler.mockRestore();
-				clear.mockRestore();
+			const c = await joined();
+			const wsId = [...store.getGuildMembers(guildId)][0];
+			if (!wsId) throw new Error("Missing joined client");
+			await advanceHeartbeat(30_000);
+			expect(await c.next()).toEqual({ type: "PING" });
+			if (responds) {
+				c.send({ type: "PONG" });
+				c.send("not json");
+				expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
+				await advanceHeartbeat(10_000);
+				expect(store.getGuildMembers(guildId)).toEqual(new Set([wsId]));
+				expect(c.socket.readyState).toBe(WebSocket.OPEN);
+			} else {
+				await advanceHeartbeat(9_999);
+				expect(store.getGuildMembers(guildId).has(wsId)).toBe(true);
+				await advanceHeartbeat(1);
+				expect(store.getGuildMembers(guildId).has(wsId)).toBe(false);
+				await c.closed;
 			}
 		},
 	);
 }
+test("a missed PONG removes membership and records timeout and close metrics only once", async () => {
+	const staying = await joined();
+	const stayingId = [...store.getGuildMembers(guildId)][0];
+	const missing = await client();
+	await joinGuild(missing, guildId, token);
+	await staying.next();
+	await missing.next();
+	const before = stats.snapshot();
+	const activity = spyOn(guildRegistry, "recordGuildActivity");
+	try {
+		await advanceHeartbeat(30_000);
+		expect(await staying.next()).toEqual({ type: "PING" });
+		expect(await missing.next()).toEqual({ type: "PING" });
+		staying.send({ type: "PONG" });
+		staying.send("not json");
+		expect(await staying.next()).toMatchObject({ code: "PARSE_ERROR" });
+		await advanceHeartbeat(10_000);
+		await missing.closed;
+		expect(store.getGuildMembers(guildId)).toEqual(new Set([stayingId]));
+		expect(await staying.next()).toMatchObject({ type: "MEMBER_COUNT_UPDATE", count: 1 });
+		expect(activity.mock.calls).toEqual([[guildId]]);
+		expect(stats.snapshot().connections.active).toBe(before.connections.active - 1);
+		expect(stats.snapshot().errors.heartbeatTimeout).toBe(before.errors.heartbeatTimeout + 1);
+		await expect(staying.next(undefined, 50)).rejects.toThrow("Timed out");
+		expect(activity.mock.calls).toEqual([[guildId]]);
+	} finally {
+		activity.mockRestore();
+	}
+});
 test("broadcast reaches only joined clients", async () => {
 	const first = await joined(),
 		unjoined = await client();
@@ -338,24 +346,7 @@ for (const failure of ["broadcast", "heartbeat"] as const) {
 		test(`${failure} send that ${shape} removes membership once and closes the socket`, async () => {
 			const first = await joined();
 			const firstId = [...store.getGuildMembers(guildId)][0];
-			let heartbeat: (() => void) | undefined;
-			const nativeSetInterval = globalThis.setInterval;
-			const scheduler = spyOn(globalThis, "setInterval").mockImplementation(((
-				handler: TimerHandler,
-				delay?: number,
-				...args: unknown[]
-			) => {
-				if (delay === 30_000 && typeof handler === "function") {
-					heartbeat = () => handler(...args);
-				}
-				return nativeSetInterval(handler, delay, ...args);
-			}) as typeof globalThis.setInterval);
-			let second: TestClient;
-			try {
-				second = await client();
-			} finally {
-				scheduler.mockRestore();
-			}
+			const second = await client();
 			await joinGuild(second, guildId, token);
 			await first.next((message) => message.type === "MEMBER_COUNT_UPDATE");
 			await second.next((message) => message.type === "MEMBER_COUNT_UPDATE");
@@ -365,6 +356,7 @@ for (const failure of ["broadcast", "heartbeat"] as const) {
 			const connections = async () =>
 				(await (await fetch(`${server.baseUrl}/health`)).json()).connections.active as number;
 			const activeBefore = await connections();
+			const timeoutBefore = stats.snapshot().errors.heartbeatTimeout;
 			const activity = spyOn(guildRegistry, "recordGuildActivity");
 			const send = spyOn(failedClient.ws_ref, "send").mockImplementation(() => {
 				if (shape === "throws") throw new Error("Socket send failed");
@@ -379,8 +371,13 @@ for (const failure of ["broadcast", "heartbeat"] as const) {
 					});
 					await first.next((message) => message.type === "GUILD_STATE");
 				} else {
-					if (!heartbeat) throw new Error("Missing heartbeat callback");
-					heartbeat();
+					await advanceHeartbeat(30_000);
+					expect(await first.next()).toEqual({ type: "PING" });
+					first.send({ type: "PONG" });
+					first.send("not json");
+					expect(await first.next((message) => message.type === "ERROR")).toMatchObject({
+						code: "PARSE_ERROR",
+					});
 				}
 				expect(store.getClient(failedClient.ws_id)).toBeUndefined();
 				expect(store.getGuildMembers(guildId)).toEqual(new Set([firstId]));
@@ -388,6 +385,7 @@ for (const failure of ["broadcast", "heartbeat"] as const) {
 				expect(activity.mock.calls).toEqual([[guildId]]);
 				await second.closed;
 				expect(await connections()).toBe(activeBefore - 1);
+				expect(stats.snapshot().errors.heartbeatTimeout).toBe(timeoutBefore);
 				expect(activity.mock.calls).toEqual([[guildId]]);
 				await expect(first.next(undefined, 50)).rejects.toThrow("Timed out");
 			} finally {
@@ -411,6 +409,26 @@ test("a send queued under backpressure keeps the client", async () => {
 		send.mockRestore();
 	}
 	first.close();
+});
+
+test("a heartbeat queued under backpressure accepts PONG and keeps the client", async () => {
+	const c = await joined();
+	const wsId = [...store.getGuildMembers(guildId)][0];
+	const target = wsId ? store.getClient(wsId) : undefined;
+	if (!target) throw new Error("Missing joined socket");
+	const send = spyOn(target.ws_ref, "send").mockImplementation(() => -1);
+	try {
+		await advanceHeartbeat(30_000);
+		expect(send).toHaveBeenCalledWith(JSON.stringify({ type: "PING" }));
+	} finally {
+		send.mockRestore();
+	}
+	c.send({ type: "PONG" });
+	c.send("not json");
+	expect(await c.next()).toMatchObject({ code: "PARSE_ERROR" });
+	await advanceHeartbeat(10_000);
+	expect(store.getGuildMembers(guildId)).toEqual(new Set([wsId]));
+	expect(c.socket.readyState).toBe(WebSocket.OPEN);
 });
 
 test("rotation evicts immediately and only new credentials can rejoin", async () => {
