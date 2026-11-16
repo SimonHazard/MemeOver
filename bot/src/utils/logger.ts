@@ -1,3 +1,4 @@
+import { Redacted } from "effect";
 import pino from "pino";
 import { config } from "./config";
 import { serializeLoggedError } from "./log-privacy";
@@ -70,7 +71,7 @@ function createLogger(): pino.Logger {
 					{ target: "pino/file", options: { destination: 1 }, level: "info" },
 					{
 						target: "@logtail/pino",
-						options: { sourceToken: config.logtailToken },
+						options: { sourceToken: Redacted.value(config.logtailToken) },
 						level: "info",
 					},
 				],

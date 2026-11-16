@@ -8,6 +8,7 @@ import {
 	type PartialMessage,
 	Partials,
 } from "discord.js";
+import { Redacted } from "effect";
 import { handleInteraction } from "./commands/commands";
 import { errorResponse } from "./commands/response-panel";
 import { interactionLocale, t } from "./i18n";
@@ -138,7 +139,7 @@ discordClient.on(Events.InteractionCreate, (interaction) => {
 
 export async function startBot(): Promise<void> {
 	try {
-		await discordClient.login(config.discordToken);
+		await discordClient.login(Redacted.value(config.discordToken));
 	} catch (err) {
 		throw normalizeBotLoginError(err);
 	}

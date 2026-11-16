@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, expect, mock, spyOn, test } from "bun:test";
-import { Layer, ManagedRuntime } from "effect";
+import { Layer, ManagedRuntime, Redacted } from "effect";
 import { TestClock } from "effect/testing";
 import pino from "pino";
 import { Heartbeats } from "./services/heartbeats";
@@ -7,12 +7,12 @@ import { connect, joinGuild, startServer, type TestClient } from "./test-utils/w
 
 mock.module("./utils/config", () => ({
 	config: {
-		discordToken: "x",
+		discordToken: Redacted.make("x"),
 		discordClientId: "123456789012345678",
 		wsPort: 0,
 		publicWsUrl: "wss://test.example/ws",
 		logtailToken: undefined,
-		metricsToken: "test-metrics-token",
+		metricsToken: Redacted.make("test-metrics-token"),
 	},
 }));
 mock.module("./utils/logger", () => ({ logger: pino({ level: "silent" }) }));
