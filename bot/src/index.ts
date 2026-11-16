@@ -1,6 +1,8 @@
 import type { ServerMessage } from "@memeover/shared";
+import { Effect } from "effect";
 import { destroyDiscordClient, startBot } from "./bot";
 import { registerCommands } from "./commands/commands";
+import { createShutdownDeadline, lifecycleExitCode, runBot } from "./lifecycle";
 import { BotRuntime } from "./runtime";
 import { createServer } from "./server";
 import { config } from "./utils/config";
@@ -11,87 +13,70 @@ import { store } from "./utils/store";
 
 const log = logger.child({ module: "index" });
 
-const app = createServer();
-
-app.listen(config.wsPort, () => {
-	log.info(
-		{ event: "listening", port: config.wsPort },
-		`WebSocket server running at ws://localhost:${config.wsPort}/ws`,
-	);
+const deadline = createShutdownDeadline(() => {
+	log.error({ event: "shutdown_timeout" }, "Graceful shutdown timed out");
+	process.exit(1);
 });
 
-rearmAllGuildPauses();
+// The lifecycle owns BotRuntime, so it must run outside that runtime.
+const lifecycle = Effect.runFork(
+	runBot({
+		listen: () => {
+			const app = createServer();
+			app.listen(config.wsPort, () => {
+				log.info(
+					{ event: "listening", port: config.wsPort },
+					`WebSocket server running at ws://localhost:${config.wsPort}/ws`,
+				);
+			});
+			return async () => {
+				await app.stop();
+			};
+		},
+		rearmPauses: rearmAllGuildPauses,
+		loginDiscord: startBot,
+		registerCommands,
+		destroyDiscord: destroyDiscordClient,
+		flushRegistry: () => guildRegistry.flush(),
+		notifyClientsOfShutdown: () => {
+			const shutdownPayload = JSON.stringify({
+				type: "ERROR",
+				code: "SERVER_SHUTDOWN",
+				message: "Server is shutting down",
+			} satisfies ServerMessage);
+			for (const client of store.getAllClients()) {
+				try {
+					client.ws_ref.send(shutdownPayload);
+					client.ws_ref.close();
+				} catch {
+					// Client already disconnected — ignore
+				}
+			}
+		},
+		disposeRuntime: () => BotRuntime.dispose(),
+		beginShutdown: () => deadline.start(),
+		logFailure: (event, err, message) => log.error({ event, err }, message),
+	}),
+);
 
-startBot()
-	.then(async () => {
-		await registerCommands();
-	})
-	.catch((err: unknown) => {
-		const message = err instanceof Error ? err.message : "Failed to start Discord bot";
-		log.error({ event: "bot_start_failed", err }, message);
-		process.exit(1);
-	});
+lifecycle.addObserver((exit) => {
+	deadline.clear();
+	process.exit(lifecycleExitCode(exit));
+});
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 
-// Below Docker's default 10 s stop timeout, so this exit and its log happen before SIGKILL.
-const SHUTDOWN_TIMEOUT_MS = 8_000;
 let shuttingDown = false;
-
-async function shutdown(signal: string): Promise<void> {
+function shutdown(signal: string): void {
 	if (shuttingDown) return;
 	shuttingDown = true;
-	const killTimer = setTimeout(() => {
-		log.error({ event: "shutdown_timeout" }, "Graceful shutdown timed out");
-		process.exit(1);
-	}, SHUTDOWN_TIMEOUT_MS);
-	killTimer.unref();
+	deadline.start();
 	log.info({ event: "shutdown", signal }, `Received ${signal}, shutting down gracefully...`);
-
-	const shutdownPayload = JSON.stringify({
-		type: "ERROR",
-		code: "SERVER_SHUTDOWN",
-		message: "Server is shutting down",
-	} satisfies ServerMessage);
-
-	for (const client of store.getAllClients()) {
-		try {
-			client.ws_ref.send(shutdownPayload);
-			client.ws_ref.close();
-		} catch {
-			// Client already disconnected — ignore
-		}
-	}
-
-	try {
-		guildRegistry.flush();
-	} catch (err) {
-		log.error({ event: "shutdown_flush_failed", err }, "Failed to flush registry during shutdown");
-	}
-
-	try {
-		await destroyDiscordClient();
-	} catch (err) {
-		log.error({ event: "shutdown_discord_failed", err }, "Failed to destroy Discord client");
-	}
-
-	try {
-		await app.stop();
-	} catch (err) {
-		log.error({ event: "shutdown_stop_failed", err }, "Failed to stop server during shutdown");
-	}
-
-	try {
-		await BotRuntime.dispose();
-	} catch (err) {
-		log.error({ event: "shutdown_runtime_failed", err }, "Failed to dispose Effect runtime");
-	}
-
-	process.exit(0);
+	lifecycle.interruptUnsafe();
 }
 
-process.on("SIGTERM", () => void shutdown("SIGTERM"));
-process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 // ─── Unhandled errors ─────────────────────────────────────────────────────────
 
