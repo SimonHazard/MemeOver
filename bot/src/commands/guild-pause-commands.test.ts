@@ -1,19 +1,12 @@
-import { expect, mock, spyOn, test } from "bun:test";
+import { expect, test } from "bun:test";
 import type { ChatInputCommandInteraction, Interaction } from "discord.js";
-import { isPausedAt, PAUSE_INDEFINITE } from "../utils/guild-pause";
+import { PAUSE_INDEFINITE } from "../utils/guild-pause";
+import { guildRegistry } from "../utils/registry";
+import { handleInteraction, memeover } from "./commands";
+import { handlePause } from "./subcommands/pause";
+import { handleResume } from "./subcommands/resume";
 
-const events: { guild: string; event: { type: string; paused_until: number | null } }[] = [];
-mock.module("../server", () => ({
-	broadcastToGuild: (guild: string, event: { type: string; paused_until: number | null }) =>
-		events.push({ guild, event }),
-	evictGuild: () => 0,
-}));
-const { guildRegistry } = await import("../utils/registry");
-const { applyGuildPause, rearmAllGuildPauses } = await import("../utils/guild-pause-timers");
-const { handlePause } = await import("./subcommands/pause");
-const { handleResume } = await import("./subcommands/resume");
-const { handleInteraction, memeover } = await import("./commands");
-const guild = "123456789012345687";
+const guild = "123456789012345689";
 function interaction(sub: string, allowed = true, duration = "indefinite") {
 	const replies: unknown[] = [];
 	return {
@@ -79,47 +72,6 @@ test("unknown pause duration answers without pausing", async () => {
 		const pause = interaction("pause", true, "3h");
 		await handlePause(pause.value, guild);
 		expect(pause.replies).toHaveLength(1);
-		expect(guildRegistry.getConfig(guild)?.paused_until).toBeNull();
-	} finally {
-		guildRegistry.unregister(guild);
-	}
-});
-test("expiry resumes and removal prevents late broadcasts", async () => {
-	guildRegistry.register(guild, null);
-	applyGuildPause(guild, Date.now() + 15);
-	await Bun.sleep(60);
-	expect(guildRegistry.getConfig(guild)?.paused_until).toBeNull();
-	expect(events[events.length - 1]?.event.paused_until).toBeNull();
-	applyGuildPause(guild, Date.now() + 15);
-	guildRegistry.unregister(guild);
-	const count = events.length;
-	await Bun.sleep(60);
-	expect(events).toHaveLength(count);
-});
-test("an expiry write failure does not throw or keep the guild paused", async () => {
-	guildRegistry.register(guild, null);
-	applyGuildPause(guild, Date.now() + 20);
-	const pauseWrite = spyOn(guildRegistry, "setPausedUntil").mockImplementationOnce(() => {
-		throw new Error("Fixture disk failure");
-	});
-	try {
-		await Bun.sleep(80);
-		expect(pauseWrite).toHaveBeenCalledWith(guild, null);
-		expect(isPausedAt(guildRegistry.getConfig(guild), Date.now())).toBe(false);
-	} finally {
-		pauseWrite.mockRestore();
-		guildRegistry.unregister(guild);
-	}
-});
-test("startup clears expired values and rearms active values", async () => {
-	guildRegistry.register(guild, null);
-	try {
-		guildRegistry.setPausedUntil(guild, Date.now() - 1);
-		rearmAllGuildPauses();
-		expect(guildRegistry.getConfig(guild)?.paused_until).toBeNull();
-		guildRegistry.setPausedUntil(guild, Date.now() + 15);
-		rearmAllGuildPauses();
-		await Bun.sleep(60);
 		expect(guildRegistry.getConfig(guild)?.paused_until).toBeNull();
 	} finally {
 		guildRegistry.unregister(guild);

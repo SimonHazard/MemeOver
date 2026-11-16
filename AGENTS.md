@@ -66,6 +66,24 @@ CI (`.github/workflows/ci.yml`) always runs Biome, version consistency, all type
 
 `app-release` runs after `ci` completes successfully for a push to `main` in this repository. Check out `github.event.workflow_run.head_sha` for version checks and every release build, and use the same SHA for the release tag. PR, failed and cancelled CI runs must not prepare releases; existing versions remain skipped, including a version that only exists as a draft release, so an app change needs its own version to be built.
 
+## Bot Effect conventions
+
+The bot uses `effect@4.1.4`. Keep domain services under `bot/src/services` with explicit layers;
+service files never import the runtime or server. `bot/src/runtime.ts` owns the single production
+composition and runtime. Run effects at Discord/Elysia boundaries; preserve facade signatures.
+Tests inject fake layers, own and dispose their runtimes, and stop servers before runtime disposal.
+
+Use Effect clock/sleep and `TestClock` for effect scheduling. Align virtual time with registry
+fixtures, whose writes use `Date.now`. Never remove or restart a fiber through its own `FiberMap`
+key; replacement finalizers must not clear newer waits. Expected Discord failures use tagged
+errors. Expiry and scheduled-job boundaries contain defects and propagate interruption;
+`E = never` does not exclude defects. Unwrap `Redacted` only at its consuming integrations,
+preserving Pino's safe serializers and hashed Discord references.
+
+Keep behavior assertions when replacing module mocks with layers. Suites still using `mock.module`
+remain `*.mocked.test.ts`; plain suites must run safely together in the shared unit process.
+The lifecycle owns reverse finalizers; every added resource needs release and failure tests.
+
 ## Design and motion
 
 Preserve the existing neo-brutalist system: shared `NB_*` classes, strong borders, offset shadows and display typography.

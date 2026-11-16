@@ -1,27 +1,21 @@
-import { afterEach, expect, mock, spyOn, test } from "bun:test";
+import { afterEach, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { Client, Events, type Guild } from "discord.js";
 import { Effect, Layer, ManagedRuntime } from "effect";
 import { TestClock } from "effect/testing";
-import { BackgroundJobs, GuildCleanup, GuildEvictor } from "../services/guild-cleanup";
-import type { GuildConfig } from "./registry";
+import {
+	BackgroundJobs,
+	cleanupReason,
+	GuildCleanup,
+	GuildEvictor,
+} from "../services/guild-cleanup";
+import { type GuildConfig, guildRegistry } from "./registry";
+import { store } from "./store";
 
 const evictions: unknown[][] = [];
 const unregisteredAtEviction: boolean[] = [];
-mock.module("../server", () => ({
-	broadcastToGuild: () => {},
-	evictGuild: (...args: unknown[]) => {
-		evictions.push(args);
-		unregisteredAtEviction.push(guildRegistry.getConfig(String(args[0])) === undefined);
-		return 0;
-	},
-}));
-const { guildRegistry } = await import("./registry");
-const { store } = await import("./store");
-const { cleanupReason, runGuildCleanup, unregisterRemovedGuild } = await import("./cleanup");
-
 const HOUR = 60 * 60 * 1000;
-const guild = "123456789012345678";
-const wsId = "cleanup-test-ws";
+const guild = "123456789012345688";
+const wsId = "cleanup-layer-test-ws";
 const client = { guilds: { fetch: async () => null } } as unknown as Client;
 const cfg: GuildConfig = {
 	registered_at: 0,
@@ -33,13 +27,50 @@ const cfg: GuildConfig = {
 	token: "t",
 };
 
-afterEach(() => {
-	mock.restore();
-	guildRegistry.unregister(guild);
-	store.removeClient(wsId);
-	evictions.length = 0;
-	unregisteredAtEviction.length = 0;
+let runtime: ManagedRuntime.ManagedRuntime<GuildCleanup | TestClock.TestClock, never>;
+beforeEach(async () => {
+	runtime = ManagedRuntime.make(
+		GuildCleanup.layer.pipe(
+			Layer.provide(
+				Layer.mergeAll(
+					BackgroundJobs.layer,
+					Layer.succeed(GuildEvictor, {
+						evict: (...args) => {
+							evictions.push(args);
+							unregisteredAtEviction.push(guildRegistry.getConfig(args[0]) === undefined);
+							return 0;
+						},
+					}),
+				),
+			),
+			Layer.provideMerge(TestClock.layer()),
+		),
+	);
+	// Registry writes use Date.now; the test clock must start at the same fixture epoch.
+	await runtime.runPromise(TestClock.setTime(Date.now()));
 });
+
+afterEach(async () => {
+	try {
+		await runtime.dispose();
+	} finally {
+		mock.restore();
+		guildRegistry.unregister(guild);
+		store.removeClient(wsId);
+		evictions.length = 0;
+		unregisteredAtEviction.length = 0;
+	}
+});
+
+function runGuildCleanup(discord: Client, scanAt?: number): Promise<void> {
+	return runtime.runPromise(
+		Effect.flatMap(GuildCleanup, (cleanup) => cleanup.run(discord, scanAt)),
+	);
+}
+
+function unregisterRemovedGuild(guildId: string): boolean {
+	return runtime.runSync(Effect.flatMap(GuildCleanup, (cleanup) => cleanup.unregister(guildId)));
+}
 
 // Stamp an old fixture through the real registry API, then restore the real clock before
 // running the job. This exercises SQLite deletion without modifying registry internals.
@@ -130,35 +161,14 @@ test("the cleanup scheduler contains a failed run and retries on its next tick",
 	const removal = spyOn(guildRegistry, "unregister").mockImplementationOnce(() => {
 		throw new Error("Fixture disk failure");
 	});
-	const runtime = ManagedRuntime.make(
-		GuildCleanup.layer.pipe(
-			Layer.provide(
-				Layer.mergeAll(
-					BackgroundJobs.layer,
-					Layer.succeed(GuildEvictor, {
-						evict: (...args) => {
-							evictions.push(args);
-							return 0;
-						},
-					}),
-				),
-			),
-			Layer.provideMerge(TestClock.layer()),
-		),
-	);
-	try {
-		await runtime.runPromise(TestClock.setTime(Date.now()));
-		runtime.runSync(Effect.flatMap(GuildCleanup, (cleanup) => cleanup.start(client)));
-		await runtime.runPromise(TestClock.adjust(0));
-		expect(removal).toHaveBeenCalledTimes(1);
-		expect(guildRegistry.getConfig(guild)).toBeDefined();
-		await runtime.runPromise(TestClock.adjust(HOUR));
-		expect(removal).toHaveBeenCalledTimes(2);
-		expect(guildRegistry.getConfig(guild)).toBeUndefined();
-		expect(evictions).toHaveLength(1);
-	} finally {
-		await runtime.dispose();
-	}
+	runtime.runSync(Effect.flatMap(GuildCleanup, (cleanup) => cleanup.start(client)));
+	await runtime.runPromise(TestClock.adjust(0));
+	expect(removal).toHaveBeenCalledTimes(1);
+	expect(guildRegistry.getConfig(guild)).toBeDefined();
+	await runtime.runPromise(TestClock.adjust(HOUR));
+	expect(removal).toHaveBeenCalledTimes(2);
+	expect(guildRegistry.getConfig(guild)).toBeUndefined();
+	expect(evictions).toHaveLength(1);
 });
 
 test("reconnecting during the Discord notice preserves the registration", async () => {
