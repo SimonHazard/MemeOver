@@ -1,6 +1,7 @@
 import { Layer, ManagedRuntime } from "effect";
 import { broadcastToGuild } from "./server";
 import { GuildPauseTimers, PauseBroadcaster, PauseStore } from "./services/guild-pause-timers";
+import { Heartbeats } from "./services/heartbeats";
 import { guildRegistry } from "./utils/registry";
 
 const PauseStoreLive = Layer.succeed(PauseStore, {
@@ -17,8 +18,9 @@ const PauseBroadcasterLive = Layer.succeed(PauseBroadcaster, {
 		}),
 });
 
-export const BotLive = GuildPauseTimers.layer.pipe(
-	Layer.provide(Layer.mergeAll(PauseStoreLive, PauseBroadcasterLive)),
+export const BotLive = Layer.mergeAll(
+	GuildPauseTimers.layer.pipe(Layer.provide(Layer.mergeAll(PauseStoreLive, PauseBroadcasterLive))),
+	Heartbeats.layer,
 );
 
 // Construction is lazy; synchronous facades share this one owned service graph.

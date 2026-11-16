@@ -1,7 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import type { JoinMessage, LeaveMessage, ServerMessage } from "@memeover/shared";
 import { ClientMessageSchema, JOIN_ACK_ERRORS, type SessionRevocationCode } from "@memeover/shared";
+import { Effect, type ManagedRuntime } from "effect";
 import { Elysia } from "elysia";
+import { BotRuntime } from "./runtime";
+import { Heartbeats } from "./services/heartbeats";
 import { config } from "./utils/config";
 import { isDiscordGatewayUsable } from "./utils/discord-gateway";
 import { SERVER_FEATURES } from "./utils/features";
@@ -138,45 +141,13 @@ function checkRateLimit(wsId: string): boolean {
 
 // ─── Heartbeat ────────────────────────────────────────────────────────────────
 
-const PING_INTERVAL_MS = 30_000;
-const PONG_TIMEOUT_MS = 10_000;
-
-interface HeartbeatState {
-	pingInterval: ReturnType<typeof setInterval>;
-	pongTimeout: ReturnType<typeof setTimeout> | null;
-}
-
-const heartbeats = new Map<string, HeartbeatState>();
-
-function startHeartbeat(ws: WSConnection): void {
-	const pingInterval = setInterval(() => {
-		if (!delivered(ws, JSON.stringify({ type: "PING" } satisfies ServerMessage))) {
-			dropClient(ws);
-			return;
-		}
-
-		const state = heartbeats.get(ws.id);
-		if (!state) return;
-
-		state.pongTimeout = setTimeout(() => {
-			log.warn(
-				{ ...discordRefLogFields({ wsId: ws.id }), event: "heartbeat_timeout" },
-				"Client missed PONG, closing connection",
-			);
-			stats.errorHeartbeatTimeout();
-			dropClient(ws);
-		}, PONG_TIMEOUT_MS);
-	}, PING_INTERVAL_MS);
-
-	heartbeats.set(ws.id, { pingInterval, pongTimeout: null });
-}
+const PING_PAYLOAD = JSON.stringify({ type: "PING" } satisfies ServerMessage);
+const heartbeatStops = new Map<string, () => void>();
 
 function clearHeartbeat(wsId: string): void {
-	const state = heartbeats.get(wsId);
-	if (!state) return;
-	clearInterval(state.pingInterval);
-	if (state.pongTimeout) clearTimeout(state.pongTimeout);
-	heartbeats.delete(wsId);
+	const stop = heartbeatStops.get(wsId);
+	heartbeatStops.delete(wsId);
+	stop?.();
 }
 
 /** Activity only feeds inactivity cleanup: losing one update must not break session cleanup. */
@@ -313,7 +284,11 @@ function handleLeave(ws: WSConnection, msg: LeaveMessage): void {
 
 // ─── Server factory ───────────────────────────────────────────────────────────
 
-export function createServer() {
+export function createServer(
+	heartbeatRuntime: Pick<ManagedRuntime.ManagedRuntime<Heartbeats, never>, "runSync"> = BotRuntime,
+) {
+	const runHeartbeat = (effect: Effect.Effect<void, never, Heartbeats>) =>
+		heartbeatRuntime.runSync(effect);
 	return new Elysia()
 		.get("/health", (ctx) => {
 			const snapshot = stats.snapshot();
@@ -347,7 +322,26 @@ export function createServer() {
 			maxPayloadLength: 4 * 1024, // 4 KB — JOIN/LEAVE/PONG never exceed ~500 bytes
 			open(ws: WSConnection) {
 				store.addClient(ws.id, ws);
-				startHeartbeat(ws);
+				heartbeatStops.set(ws.id, () =>
+					runHeartbeat(Effect.flatMap(Heartbeats, (heartbeats) => heartbeats.stop(ws.id))),
+				);
+				runHeartbeat(
+					Effect.flatMap(Heartbeats, (heartbeats) =>
+						heartbeats.start({
+							id: ws.id,
+							sendPing: () => delivered(ws, PING_PAYLOAD),
+							onSendFailure: () => dropClient(ws),
+							onTimeout: () => {
+								log.warn(
+									{ ...discordRefLogFields({ wsId: ws.id }), event: "heartbeat_timeout" },
+									"Client missed PONG, closing connection",
+								);
+								stats.errorHeartbeatTimeout();
+								dropClient(ws);
+							},
+						}),
+					),
+				);
 				stats.connectionOpened();
 				log.info(
 					{ ...discordRefLogFields({ wsId: ws.id }), event: "connected" },
@@ -419,11 +413,7 @@ export function createServer() {
 						handleLeave(ws, msg);
 						break;
 					case "PONG": {
-						const state = heartbeats.get(ws.id);
-						if (state?.pongTimeout) {
-							clearTimeout(state.pongTimeout);
-							state.pongTimeout = null;
-						}
+						runHeartbeat(Effect.flatMap(Heartbeats, (heartbeats) => heartbeats.pong(ws.id)));
 						break;
 					}
 					default: {
