@@ -1,6 +1,6 @@
 {
 	"name": "@memeover/bot",
-	"version": "1.6.22",
+	"version": "1.6.23",
 	"engines": {
 		"bun": ">=1.4.2"
 	},
@@ -14,6 +14,7 @@
 		"@logtail/pino": "^0.5.12",
 		"@memeover/shared": "workspace:*",
 		"discord.js": "^14.27.0",
+		"effect": "4.1.4",
 		"elysia": "^1.4.30",
 		"pino": "^10.4.0"
 	},

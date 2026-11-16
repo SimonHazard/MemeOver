@@ -1,6 +1,7 @@
 import type { ServerMessage } from "@memeover/shared";
 import { destroyDiscordClient, startBot } from "./bot";
 import { registerCommands } from "./commands/commands";
+import { BotRuntime } from "./runtime";
 import { createServer } from "./server";
 import { config } from "./utils/config";
 import { rearmAllGuildPauses } from "./utils/guild-pause-timers";
@@ -78,6 +79,12 @@ async function shutdown(signal: string): Promise<void> {
 		await app.stop();
 	} catch (err) {
 		log.error({ event: "shutdown_stop_failed", err }, "Failed to stop server during shutdown");
+	}
+
+	try {
+		await BotRuntime.dispose();
+	} catch (err) {
+		log.error({ event: "shutdown_runtime_failed", err }, "Failed to dispose Effect runtime");
 	}
 
 	process.exit(0);
