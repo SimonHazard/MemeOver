@@ -1,5 +1,8 @@
 import { afterEach, expect, mock, spyOn, test } from "bun:test";
 import { Client, Events, type Guild } from "discord.js";
+import { Effect, Layer, ManagedRuntime } from "effect";
+import { TestClock } from "effect/testing";
+import { BackgroundJobs, GuildCleanup, GuildEvictor } from "../services/guild-cleanup";
 import type { GuildConfig } from "./registry";
 
 const evictions: unknown[][] = [];
@@ -14,8 +17,7 @@ mock.module("../server", () => ({
 }));
 const { guildRegistry } = await import("./registry");
 const { store } = await import("./store");
-const { cleanupReason, runGuildCleanup, startGuildCleanupScheduler, unregisterRemovedGuild } =
-	await import("./cleanup");
+const { cleanupReason, runGuildCleanup, unregisterRemovedGuild } = await import("./cleanup");
 
 const HOUR = 60 * 60 * 1000;
 const guild = "123456789012345678";
@@ -128,33 +130,34 @@ test("the cleanup scheduler contains a failed run and retries on its next tick",
 	const removal = spyOn(guildRegistry, "unregister").mockImplementationOnce(() => {
 		throw new Error("Fixture disk failure");
 	});
-	let tick: (() => void) | undefined;
-	let clearTimer: (() => void) | undefined;
-	const nativeSetInterval = globalThis.setInterval;
-	const scheduler = spyOn(globalThis, "setInterval").mockImplementation(((
-		handler: TimerHandler,
-		delay?: number,
-		...args: unknown[]
-	) => {
-		if (delay === HOUR && typeof handler === "function") tick = () => handler(...args);
-		const timer = nativeSetInterval(handler, delay, ...args);
-		clearTimer = () => clearInterval(timer);
-		return timer;
-	}) as typeof globalThis.setInterval);
+	const runtime = ManagedRuntime.make(
+		GuildCleanup.layer.pipe(
+			Layer.provide(
+				Layer.mergeAll(
+					BackgroundJobs.layer,
+					Layer.succeed(GuildEvictor, {
+						evict: (...args) => {
+							evictions.push(args);
+							return 0;
+						},
+					}),
+				),
+			),
+			Layer.provideMerge(TestClock.layer()),
+		),
+	);
 	try {
-		startGuildCleanupScheduler(client);
-		await Bun.sleep(0);
+		await runtime.runPromise(TestClock.setTime(Date.now()));
+		runtime.runSync(Effect.flatMap(GuildCleanup, (cleanup) => cleanup.start(client)));
+		await runtime.runPromise(TestClock.adjust(0));
 		expect(removal).toHaveBeenCalledTimes(1);
 		expect(guildRegistry.getConfig(guild)).toBeDefined();
-		if (!tick) throw new Error("Missing cleanup callback");
-		tick();
-		await Bun.sleep(0);
+		await runtime.runPromise(TestClock.adjust(HOUR));
 		expect(removal).toHaveBeenCalledTimes(2);
 		expect(guildRegistry.getConfig(guild)).toBeUndefined();
 		expect(evictions).toHaveLength(1);
 	} finally {
-		scheduler.mockRestore();
-		clearTimer?.();
+		await runtime.dispose();
 	}
 });
 
