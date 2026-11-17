@@ -379,16 +379,14 @@ test("the desktop's skip, clear and moderation actions are published for loaded 
 			[event, payload],
 		);
 	const current = await settings(page);
-	await expect
-		.poll(published)
-		.toEqual({
-			m: [],
-			a: false,
-			s: 0,
-			c: 0,
-			q: "",
-			p: expect.objectContaining({ textSize: current.textSize }),
-		});
+	await expect.poll(published).toEqual({
+		m: [],
+		a: false,
+		s: 0,
+		c: 0,
+		q: "",
+		p: expect.objectContaining({ textSize: current.textSize }),
+	});
 	await send("skip-current");
 	await expect.poll(published).toMatchObject({ s: 1, c: 0 });
 	await send("clear-queue");
@@ -399,16 +397,14 @@ test("the desktop's skip, clear and moderation actions are published for loaded 
 		mutedAuthors: [{ id: "111", username: "Troll", avatarUrl: "", mutedAt: 1 }],
 		hideAnonymous: true,
 	});
-	await expect
-		.poll(published)
-		.toEqual({
-			m: ["111"],
-			a: true,
-			s: 1,
-			c: 1,
-			q: "sc",
-			p: expect.objectContaining({ textSize: 36 }),
-		});
+	await expect.poll(published).toEqual({
+		m: ["111"],
+		a: true,
+		s: 1,
+		c: 1,
+		q: "sc",
+		p: expect.objectContaining({ textSize: 36 }),
+	});
 });
 
 test("the stream tab says what a loaded source reports", async ({ page }) => {
