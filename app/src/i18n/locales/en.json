@@ -315,7 +315,7 @@
 			"softwareAudio": "If available, let your software control the source's audio so it gets its own mixer entry.",
 			"softwareMonitor": "To hear memes yourself, enable audio monitoring for that source.",
 			"softwareRefresh": "If your software opens before MemeOver, the page cannot load: once MemeOver is running, refresh the source. After that, it resumes on its own when MemeOver restarts.",
-			"linkScope": "Skip, clear and hidden authors reach a loaded source within seconds. After changing the display, the connection or the overlay's screen, copy the link again."
+			"linkScope": "With Current settings, the source follows display changes automatically. Replace an older source link once to enable this. Saved profiles and default settings keep their appearance. Replace the link after a connection or overlay screen change."
 		},
 		"desktopMute": {
 			"title": "Mute the desktop overlay",

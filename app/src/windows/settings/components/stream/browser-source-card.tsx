@@ -117,6 +117,7 @@ function BrowserSourceLink({ settings, runningPort }: { settings: Settings; runn
 		token: settings.token,
 		wsUrl: settings.wsUrl,
 		clientId: settings.clientId,
+		followDisplay: choice === "current",
 		profile: resolveBrowserSourceProfile(choice, settings, profiles),
 		mutedAuthors: settings.mutedAuthors,
 		hideAnonymous: settings.hideAnonymous,

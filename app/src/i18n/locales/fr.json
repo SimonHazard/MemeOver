@@ -315,7 +315,7 @@
 			"softwareAudio": "Si possible, laissez votre logiciel contrôler le son de la source pour qu'elle ait sa propre entrée dans le mixeur.",
 			"softwareMonitor": "Pour entendre vous-même les memes, activez le monitoring audio de cette source.",
 			"softwareRefresh": "Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver lancé, actualisez la source. Ensuite, elle reprend seule quand MemeOver redémarre.",
-			"linkScope": "Passer, vider la file et masquer un auteur atteignent une source chargée en quelques secondes. Après un changement d'affichage, de connexion ou d'écran de l'overlay, recopiez le lien."
+			"linkScope": "Avec Réglages actuels, la source suit les changements d’affichage automatiquement. Si vous avez déjà une source, remplacez son lien une fois pour activer ce suivi. Les profils enregistrés et les réglages par défaut gardent leur apparence. Après un changement de connexion ou d’écran, remplacez le lien."
 		},
 		"desktopMute": {
 			"title": "Couper le son de l'overlay",

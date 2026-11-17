@@ -36,6 +36,7 @@ export interface BrowserSourceConfig {
 	clientId: string | null;
 	/** Only the profile fields the link defines; null when absent or undecodable. */
 	profile: Partial<OverlayProfileSettings> | null;
+	followDisplay: boolean;
 	mutedAuthors: MutedAuthor[];
 	hideAnonymous: boolean;
 	/** Short side of the desktop overlay in CSS pixels, to keep its proportions; null when absent. */
@@ -47,6 +48,7 @@ export interface BrowserSourceConfig {
 export type BrowserSourceLanguage = "en" | "fr";
 
 interface BrowserSourceUrlInput {
+	followDisplay: boolean;
 	origin: string;
 	guildId: string;
 	token: string;
@@ -84,6 +86,7 @@ function filtersPayload(mutedAuthors: readonly MutedAuthor[], hideAnonymous: boo
 }
 
 export function buildBrowserSourceUrl({
+	followDisplay,
 	origin,
 	guildId,
 	token,
@@ -105,6 +108,7 @@ export function buildBrowserSourceUrl({
 		["w", wsUrl],
 		["c", clientId],
 		["p", encodedProfile],
+		...(followDisplay ? [["live", "1"]] : []),
 		["f", encodedFilters],
 		...(referenceSize === null ? [] : [["r", String(referenceSize)]]),
 		["l", language],
@@ -178,6 +182,7 @@ export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | 
 		wsUrl,
 		clientId: parseClientId(params.get("c")),
 		profile: decodeProfile(params.get("p")),
+		followDisplay: params.get("live") === "1",
 		...decodeFilters(params.get("f")),
 		referenceSize: parseReferenceSize(params.get("r")),
 		language: parseLanguage(params.get("l")),
@@ -186,12 +191,13 @@ export function parseBrowserSourceFragment(hash: string): BrowserSourceConfig | 
 
 // ─── Live link between the app and loaded pages ───────────────────────────────
 // A loaded page's only contact with the app is its liveness check. These values travel over an
-// unauthenticated loopback server: author ids and commands only, never the link's credentials.
+// unauthenticated loopback server: display preferences, author ids and commands only, never the link's credentials.
 
 /** Enough for a burst of clicks while keeping the HTTP header bounded. */
 export const SOURCE_COMMAND_LOG_LIMIT = 64;
 
 export interface SourceControls {
+	profile?: Partial<OverlayProfileSettings>;
 	/** Changes each time the streamer skips the current item. */
 	skip: number;
 	/** Changes each time the streamer clears the queue. */
@@ -203,6 +209,7 @@ export interface SourceControls {
 }
 
 export function encodeSourceControls({
+	profile,
 	skip,
 	clear,
 	commandLog,
@@ -215,6 +222,7 @@ export function encodeSourceControls({
 			s: skip,
 			c: clear,
 			q: commandLog,
+			p: profile && pickStoredProfileSettings(profile),
 		}),
 	);
 }
@@ -225,7 +233,7 @@ export function decodeSourceControls(value: string | null): SourceControls | nul
 	try {
 		const parsed: unknown = JSON.parse(decodeBase64Url(value));
 		if (!parsed || typeof parsed !== "object") return null;
-		const { s, c, q } = parsed as { s?: unknown; c?: unknown; q?: unknown };
+		const { s, c, q, p } = parsed as { p?: unknown; s?: unknown; c?: unknown; q?: unknown };
 		if (typeof s !== "number" || typeof c !== "number") return null;
 		if (!Number.isSafeInteger(s) || !Number.isSafeInteger(c) || s < 0 || c < 0) return null;
 		if (!Number.isSafeInteger(s + c)) return null;
@@ -235,7 +243,15 @@ export function decodeSourceControls(value: string | null): SourceControls | nul
 			const skips = [...q].filter((command) => command === "s").length;
 			if (skips > s || q.length - skips > c) return null;
 		}
-		return { skip: s, clear: c, commandLog: q as string | undefined, ...decodeFilters(value) };
+		const profile =
+			p && typeof p === "object" && !Array.isArray(p) ? pickStoredProfileSettings(p) : undefined;
+		return {
+			profile,
+			skip: s,
+			clear: c,
+			commandLog: q as string | undefined,
+			...decodeFilters(value),
+		};
 	} catch {
 		return null;
 	}
