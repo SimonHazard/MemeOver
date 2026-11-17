@@ -6,6 +6,7 @@ import {
 	BROWSER_SOURCE_SESSION_HEADER,
 } from "@/shared/browser-source-contract";
 import { useAppStore } from "@/shared/store";
+import type { OverlayProfileSettings } from "@/shared/types";
 import { applySourceControls } from "./source-controls";
 import {
 	INITIAL_LIVENESS,
@@ -31,7 +32,10 @@ function silencePlayers() {
  * so it resumes on its own once MemeOver serves the page again. Each check also applies the
  * streamer's live controls and tells the app how this page is doing.
  */
-export function useSourceSession(soundBlocked: boolean): SourceStatus {
+export function useSourceSession(
+	soundBlocked: boolean,
+	onDisplay: (profile: Partial<OverlayProfileSettings>) => void,
+): SourceStatus {
 	const [status, setStatus] = useState<SourceStatus>(INITIAL_LIVENESS.status);
 	const soundBlockedRef = useRef(soundBlocked);
 	soundBlockedRef.current = soundBlocked;
@@ -88,8 +92,15 @@ export function useSourceSession(soundBlocked: boolean): SourceStatus {
 			}
 			if (next.state.status === "stopped" && liveness.status !== "stopped") silencePlayers();
 			// Before the stage mounts on the first check, so nothing muted gets through.
-			if (next.state.status === "active")
-				controls = applySourceControls(controls, result.controls ?? null);
+			if (next.state.status === "active") {
+				const previous = controls;
+				controls = applySourceControls(previous, result.controls ?? null);
+				if (
+					controls?.profile &&
+					JSON.stringify(controls.profile) !== JSON.stringify(previous?.profile)
+				)
+					onDisplay(controls.profile);
+			}
 			liveness = next.state;
 			setStatus(liveness.status);
 			nextCheck = setTimeout(() => void check(), CHECK_INTERVAL_MS);
@@ -101,7 +112,7 @@ export function useSourceSession(soundBlocked: boolean): SourceStatus {
 			clearTimeout(nextCheck);
 			controller?.abort();
 		};
-	}, []);
+	}, [onDisplay]);
 
 	return status;
 }

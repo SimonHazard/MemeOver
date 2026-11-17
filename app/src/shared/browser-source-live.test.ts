@@ -6,11 +6,18 @@ import {
 	sourceHeartbeatQuery,
 } from "./browser-source";
 
+import { DEFAULT_SETTINGS } from "./types";
+
 const author = (id: string) => ({ id, username: "Name", avatarUrl: "url", mutedAt: 1 });
 
 describe("browser source live controls", () => {
 	test("survive the header round trip, with ids only and header-safe characters", () => {
 		const value = encodeSourceControls({
+			profile: {
+				...DEFAULT_SETTINGS,
+				token: "private-value",
+				textSize: 40,
+			} as typeof DEFAULT_SETTINGS,
 			skip: 3,
 			clear: 1,
 			commandLog: "sscs",
@@ -19,7 +26,9 @@ describe("browser source live controls", () => {
 		});
 		expect(value).toMatch(/^[A-Za-z0-9_-]+$/);
 		expect(Buffer.from(value, "base64url").toString()).not.toContain("Name");
+		expect(Buffer.from(value, "base64url").toString()).not.toContain("private-value");
 		const decoded = decodeSourceControls(value);
+		expect(decoded?.profile?.textSize).toBe(40);
 		expect(decoded).toMatchObject({ skip: 3, clear: 1, commandLog: "sscs", hideAnonymous: true });
 		expect(decoded?.mutedAuthors.map((muted) => muted.id).sort()).toEqual(["111", "222"]);
 	});

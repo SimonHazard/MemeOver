@@ -54,7 +54,7 @@ flowchart TD
   and Replay are disabled. There is no desktop fallback if the browser source is unavailable.
 - The browser source is **off by default**. Keep MemeOver running on the same computer as
   your streaming software. Disabling the source restores desktop playback immediately.
-- Display settings are copied into the source link; copy it again after changing them.
+- Browser sources created with **Current settings** follow display changes automatically.
   Skip, clear and moderation filters reach an already loaded source live.
 
 ---
@@ -109,7 +109,7 @@ le mixeur.
   ne le montrez pas en stream et ne partagez pas les fichiers de scènes de votre logiciel, qui
   peuvent le conserver en clair. S'il fuite, faites lancer `/memeover rotate` par un gestionnaire
   du serveur, collez le nouveau code dans le Tableau de bord, puis copiez le nouveau lien.
-- La page ne suit pas les changements d'affichage ni de connexion : copiez à nouveau le lien.
+- Avec **Réglages actuels**, la source suit les changements d’affichage automatiquement. Si vous avez déjà une source, remplacez son lien une fois pour activer ce suivi. Les profils enregistrés et les réglages par défaut gardent leur apparence. Après un changement de connexion, remplacez le lien.
 - Passer un meme, vider la file, masquer un auteur et le choix sur les memes anonymes agissent
   aussi sur une source déjà chargée en une ou deux secondes, tant que MemeOver est lancé.
   « Passer » reste disponible lorsqu'une source est chargée, même si l'overlay du bureau est
@@ -325,7 +325,7 @@ sound can have its own mixer entry.
   do not show it on stream and do not share your software's scene files, which may store it in
   clear text. If it leaks, have a server manager run `/memeover rotate`, paste the new code in
   the Dashboard, then copy the new link.
-- The page does not follow display or connection changes: copy the link again.
+- With **Current settings**, the source follows display changes automatically. Replace an older source link once to enable this. Saved profiles and default settings keep their appearance. Replace the link after a connection change.
 - Skipping a meme, clearing the queue, muting an author and your choice about anonymous memes
   also reach a loaded source within a couple of seconds, as long as MemeOver is running.
   Skip stays available while a source is loaded, even when the desktop overlay is closed or

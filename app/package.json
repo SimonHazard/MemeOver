@@ -1,7 +1,7 @@
 {
 	"name": "@memeover/app",
 	"private": true,
-	"version": "1.10.14",
+	"version": "1.11.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",

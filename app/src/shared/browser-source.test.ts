@@ -21,6 +21,7 @@ const NOW = 1_700_000_000_000;
 
 function build(profile = DEFAULT_SETTINGS) {
 	return buildBrowserSourceUrl({
+		followDisplay: true,
 		origin: browserSourceOrigin(4466),
 		guildId: GUILD_ID,
 		token: TOKEN,
@@ -57,6 +58,7 @@ describe("browser source URL", () => {
 			wsUrl: WS_URL,
 			clientId: CLIENT_ID,
 			profile: pickOverlayProfileSettings(profile),
+			followDisplay: true,
 			mutedAuthors: [],
 			hideAnonymous: false,
 			referenceSize: null,
@@ -64,8 +66,14 @@ describe("browser source URL", () => {
 		});
 	});
 
+	test("only explicitly live links follow display changes", () => {
+		for (const live of [null, "0", "unknown"])
+			expect(parseBrowserSourceFragment(fragmentWith({ live }))?.followDisplay).toBe(false);
+	});
+
 	test("carries the moderation filters as ids, without names or avatars", () => {
 		const url = buildBrowserSourceUrl({
+			followDisplay: true,
 			origin: browserSourceOrigin(4466),
 			guildId: GUILD_ID,
 			token: TOKEN,

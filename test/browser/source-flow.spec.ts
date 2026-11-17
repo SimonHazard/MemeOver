@@ -145,6 +145,16 @@ for (const destination of ["both", "stream"] as const) {
 		await expect(text).toBeVisible();
 		const fontSize = await text.evaluate((el) => getComputedStyle(el).fontSize);
 		expect(Number.parseFloat(fontSize)).toBeGreaterThan(20);
+		const saved = await desktop.evaluate(
+			() => JSON.parse(localStorage.getItem("test-store:settings.json") ?? "{}").settings,
+		);
+		await send(desktop, "settings-changed", { ...saved, textSize: 24 });
+		const pixels = (el: Element) => Number.parseFloat(getComputedStyle(el).fontSize);
+		await expect.poll(() => text.evaluate(pixels)).toBeCloseTo(Number.parseFloat(fontSize) / 2, 1);
+		await source.setViewportSize({ width: 960, height: 640 });
+		await expect
+			.poll(() => text.evaluate(pixels))
+			.toBeCloseTo(Number.parseFloat(fontSize) * 0.4, 1);
 		// Closing the desktop overlay must not remove control of the stream's own player.
 		await send(desktop, "overlay-health-changed", "closed");
 		await expect(skip).toBeEnabled();

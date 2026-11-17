@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { OverlayProfileSettings } from "@/shared/types";
 import { OverlayStage } from "@/windows/overlay/OverlayStage";
 import type { SourceMode } from "./autoplay";
 import { SoundUnlock } from "./sound-unlock";
@@ -10,9 +11,15 @@ import { useSourceSession } from "./use-source-session";
  * The browser source: the desktop overlay's stage, without history or window APIs.
  * Preview aids appear only in `preview` mode and fade quickly, so nothing stays on stream.
  */
-export function BrowserSourceApp({ mode }: { mode: SourceMode }) {
+export function BrowserSourceApp({
+	mode,
+	onDisplay,
+}: {
+	mode: SourceMode;
+	onDisplay: (profile: Partial<OverlayProfileSettings>) => void;
+}) {
 	const [audioUnlocked, setAudioUnlocked] = useState(mode === "stream");
-	const sourceState = useSourceSession(!audioUnlocked);
+	const sourceState = useSourceSession(!audioUnlocked, onDisplay);
 	const aidsVisible = useAidsVisible();
 
 	useEffect(() => {

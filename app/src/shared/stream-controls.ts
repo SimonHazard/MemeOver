@@ -90,10 +90,18 @@ async function publishSourceControls(initial: Settings): Promise<void> {
 	let skip = 0;
 	let clear = 0;
 	let commandLog = "";
-	let { mutedAuthors, hideAnonymous } = initial;
+	let settings = initial;
 	let pending = Promise.resolve();
 	const publish = () => {
-		const value = encodeSourceControls({ skip, clear, commandLog, mutedAuthors, hideAnonymous });
+		const { mutedAuthors, hideAnonymous } = settings;
+		const value = encodeSourceControls({
+			skip,
+			clear,
+			commandLog,
+			mutedAuthors,
+			hideAnonymous,
+			profile: settings,
+		});
 		// Preserve publication order even if a native invocation is slow.
 		pending = pending
 			.then(() => invoke<void>("set_browser_source_controls", { value }))
@@ -112,7 +120,7 @@ async function publishSourceControls(initial: Settings): Promise<void> {
 		void publish();
 	});
 	await listen<Settings>("settings-changed", (event) => {
-		({ mutedAuthors, hideAnonymous } = event.payload);
+		settings = event.payload;
 		void publish();
 	});
 	await publish();
