@@ -101,8 +101,7 @@ puis activez les événements. `!meme <lien direct>` affiche un média ; `!say <
 texte lorsque vous activez cette commande. Les deux commandes sont réservées par défaut aux
 modérateurs et au streamer. Les suppressions et exclusions du chat retirent les contenus concernés.
 Les événements Twitch ne sont pas transmis à la source navigateur et ne s'affichent donc pas en
-mode **Stream uniquement**. Une application Twitch publique et son Client ID doivent être configurés
-dans la version installée pour que la connexion soit proposée.
+mode **Stream uniquement**. Le navigateur vous demande l’autorisation sur Twitch avec le code affiché par MemeOver.
 
 L'onglet **Stream** de l'app présente les problèmes connus à l'image et au son, avec quelques
 pistes. Il est en bêta : il peut changer ou disparaître à tout moment.
@@ -328,8 +327,7 @@ desktop overlay. It is off by default. Connect your account in **Stream**, then 
 `!meme <direct link>` shows media; `!say <text>` shows text when you enable that command.
 Both commands default to moderators and the streamer. Chat deletions and timeouts remove the
 affected content. Twitch events are not relayed to the browser source, so **Stream only** mode
-does not display them. A public Twitch application and its Client ID must be configured in the
-installed build before account connection is offered.
+does not display them. Twitch asks you to approve the connection in your browser using the code shown by MemeOver.
 
 The app's **Stream** tab lists the known picture and sound problems, with a few ideas. It is in
 beta: it may change or disappear at any time.

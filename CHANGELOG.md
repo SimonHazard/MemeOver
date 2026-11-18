@@ -8,7 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Added
 
-- App/site (1.12.0): add optional Twitch account connection and desktop overlay events: role-gated media/text commands, floating emotes, channel-point redemptions and subscription/raid/cheer alerts. Deleted messages and timed-out viewers are purged; Twitch content stays out of history. A public Twitch Client ID must be configured before the connection card is available. Twitch events are not yet relayed to the browser source.
+- App/site (1.12.0): add optional Twitch account connection and desktop overlay events: role-gated media/text commands, floating emotes, channel-point redemptions and subscription/raid/cheer alerts. Deleted messages and timed-out viewers are purged; Twitch content stays out of history. Twitch events are not yet relayed to the browser source.
 - App/site (1.11.0): browser sources created with Current settings follow desktop display changes automatically. Replace an older source link once to enable live updates. Saved and default profiles keep their chosen appearance.
 
 - App/site (1.10.0): choose whether memes play on both the desktop and stream or only on the stream. Stream-only hides desktop media, text, reactions and sound immediately, with no desktop fallback when the source is unavailable. Disabling the source restores desktop playback and keeps the destination for its next activation; the desktop mute stays independent. In stream-only mode, history records nothing and the History tab disables Replay and says why.
