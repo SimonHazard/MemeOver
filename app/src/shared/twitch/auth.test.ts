@@ -49,8 +49,8 @@ describe("Twitch account", () => {
 		for (const scope of TWITCH_SCOPES) expect(hasRequiredScopes({ scopes: [scope] })).toBe(false);
 		expect(hasRequiredScopes({ scopes: [] })).toBe(false);
 	});
-	test("keeps configuration disabled without a valid public client id", () => {
-		expect(isTwitchConfigured()).toBe(false);
+	test("enables the bundled Twitch application and rejects invalid overrides", () => {
+		expect(isTwitchConfigured()).toBe(true);
 		for (const id of ["", "abc", "A".repeat(30), "a".repeat(41)])
 			expect(isTwitchConfigured(id)).toBe(false);
 		expect(isTwitchConfigured("a".repeat(30))).toBe(true);
