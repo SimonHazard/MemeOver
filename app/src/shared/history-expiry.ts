@@ -20,5 +20,6 @@ export function toReplayItem(
 	return { ...display, queueId: newQueueId, replayOf: item.queueId };
 }
 export function shouldLogToHistory(item: DisplayQueueItem): boolean {
-	return !item.replayOf;
+	// Twitch chat content is displayed, never stored.
+	return !item.replayOf && item.origin !== "twitch";
 }

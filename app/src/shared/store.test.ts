@@ -8,6 +8,7 @@ beforeEach(() =>
 		reactions: [],
 		skipVersion: 0,
 		currentAuthorId: null,
+		currentTwitchItem: null,
 		settings: DEFAULT_SETTINGS,
 	}),
 );
@@ -30,6 +31,26 @@ function item(id: string): DisplayQueueItem {
 		timestamp: 1,
 	};
 }
+
+test("moderation purges only Twitch items and skips only a matching current item", () => {
+	const discord = item("same");
+	const twitch = { ...item("same"), origin: "twitch" as const, author_id: "twitch:123" };
+	useAppStore.setState({ queue: [discord, twitch], currentTwitchItem: twitch });
+	useAppStore.getState().applyTwitchPurge({ kind: "purge_message", messageId: "other" });
+	expect(useAppStore.getState().queue).toHaveLength(2);
+	expect(useAppStore.getState().skipVersion).toBe(0);
+	useAppStore.getState().applyTwitchPurge({ kind: "purge_message", messageId: "same" });
+	expect(useAppStore.getState().queue).toEqual([discord]);
+	expect(useAppStore.getState().skipVersion).toBe(1);
+	useAppStore.getState().setCurrentTwitchItem(discord);
+	useAppStore.getState().applyTwitchPurge({ kind: "purge_all" });
+	expect(useAppStore.getState().queue).toEqual([discord]);
+	expect(useAppStore.getState().skipVersion).toBe(1);
+	useAppStore.setState({ queue: [twitch], currentTwitchItem: twitch });
+	useAppStore.getState().applyTwitchPurge({ kind: "purge_author", authorId: "twitch:123" });
+	expect(useAppStore.getState().queue).toEqual([]);
+	expect(useAppStore.getState().skipVersion).toBe(2);
+});
 test("queue overflow drops the newest", () => {
 	useAppStore.getState().updateSettings({ maxQueuedPerAuthor: 0 });
 	// characterization: full queue rejects item 51, preserving its head.

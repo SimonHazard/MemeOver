@@ -1,5 +1,6 @@
 import { DEFAULT_BROWSER_SOURCE_PORT, isValidBrowserSourcePort } from "./browser-source-port";
 import { normalizeMutedAuthors } from "./muted-authors";
+import { normalizeTwitchOptions } from "./twitch/options";
 import {
 	CONNECTION_NOTIFICATION_POSITIONS,
 	type ConnectionNotificationPosition,
@@ -204,6 +205,8 @@ function migrateSettings(saved: unknown): Partial<Settings> {
 			typeof savedTypes[kind] === "boolean" ? savedTypes[kind] : fallback,
 		]),
 	);
+	// v15 → v16: account-bound Twitch options, off by default.
+	out.twitch = normalizeTwitchOptions(out.twitch);
 	out.schemaVersion = CURRENT_SCHEMA_VERSION;
 
 	return out as Partial<Settings>;

@@ -317,6 +317,57 @@
 			"softwareRefresh": "Si votre logiciel s'ouvre avant MemeOver, la page ne peut pas se charger : une fois MemeOver lancé, actualisez la source. Ensuite, elle reprend seule quand MemeOver redémarre.",
 			"linkScope": "Avec Réglages actuels, la source suit les changements d’affichage automatiquement. Si vous avez déjà une source, remplacez son lien une fois pour activer ce suivi. Les profils enregistrés et les réglages par défaut gardent leur apparence. Après un changement de connexion ou d’écran, remplacez le lien."
 		},
+		"twitch": {
+			"title": "Twitch",
+			"desc": "Connectez votre chaîne pour afficher le chat et les événements sur votre overlay de bureau.",
+			"connect": "Connecter Twitch",
+			"disconnect": "Déconnecter",
+			"connected": "Connecté en tant que {{login}}",
+			"enterCode": "Saisissez ce code sur la page Twitch qui vient de s’ouvrir.",
+			"openAgain": "Ouvrir à nouveau la page",
+			"cancel": "Annuler",
+			"retry": "Réessayer",
+			"starting": "Connexion…",
+			"permissions": "MemeOver lit votre chat et les utilisations de points de chaîne. Il ne peut ni envoyer de messages ni modifier votre chaîne. L’accès reste sur cet ordinateur.",
+			"errors": {
+				"denied": "Vous avez refusé la connexion sur Twitch.",
+				"expired": "Ce code a expiré. Veuillez réessayer.",
+				"network": "La connexion à Twitch a échoué. Veuillez réessayer.",
+				"wrong_scopes": "Twitch n’a pas accordé les permissions requises. Veuillez vous reconnecter."
+			},
+			"options": {
+				"enabled": "Afficher les événements Twitch sur l’overlay",
+				"emoteReactions": "Faire flotter les emotes du chat à l’écran",
+				"mediaCommand": "!meme <lien> affiche un média",
+				"textCommand": "!say <texte> affiche un texte",
+				"alerts": "Afficher les subs, raids et cheers en texte"
+			},
+			"roles": {
+				"broadcaster": "Streamer uniquement",
+				"moderator": "Modérateurs et au-dessus",
+				"vip": "VIP et au-dessus",
+				"subscriber": "Abonnés et au-dessus",
+				"everyone": "Tout le monde"
+			},
+			"status": {
+				"disabled": "Les événements Twitch sont désactivés.",
+				"signed_out": "Connectez votre compte Twitch pour recevoir les événements.",
+				"connecting": "Connexion à Twitch…",
+				"connected": "Les événements Twitch sont connectés.",
+				"reauth_required": "Reconnectez votre compte Twitch pour continuer.",
+				"error": "Les événements Twitch sont indisponibles. Essayez de les désactiver puis de les réactiver."
+			},
+			"minimumRole": "Qui peut utiliser cette commande",
+			"everyoneWarning": "Tout spectateur peut afficher du contenu sur votre stream.",
+			"reward": "Récompense de points de chaîne affichée sur l’overlay",
+			"noReward": "Aucune",
+			"savedReward": "Récompense sélectionnée précédemment",
+			"rewardsUnavailable": "Les points de chaîne ne sont pas disponibles sur cette chaîne.",
+			"rewardInputHint": "Seules les récompenses demandant une saisie au spectateur peuvent être sélectionnées. Activez les événements Twitch pour charger vos récompenses.",
+			"mediaAndModeration": "Les commandes média acceptent les liens directs Imgur, Tenor, Giphy et Klipy. Les messages supprimés et les contenus des spectateurs exclus temporairement ou bannis sont retirés de l’overlay.",
+			"desktopOnly": "Les événements Twitch apparaissent uniquement sur l’overlay du bureau. La source navigateur ne les reçoit pas.",
+			"streamOnly": "Vous avez choisi Stream uniquement : les événements Twitch ne s’affichent sur aucune des deux surfaces."
+		},
 		"desktopMute": {
 			"title": "Couper le son de l'overlay",
 			"desc": "Coupe le son des memes sur votre écran uniquement. La source navigateur garde son son. Aussi disponible depuis le menu de la barre système.",

@@ -4,6 +4,8 @@ import { isGuildPausedAt } from "./guild-pause";
 import { dropMutedFromQueue, muteDropReason, mutedIdSet } from "./muted-authors";
 import { canEnqueue } from "./queue-policy";
 import { appendReactionWithinBudget } from "./reaction-budget";
+import { isPurged, purgeTwitchQueue } from "./twitch/purge";
+import type { TwitchPurgeAction } from "./twitch/route-twitch-event";
 import type {
 	BrowserSourceStartError,
 	DisplayQueueItem,
@@ -38,6 +40,9 @@ function resolveReactionAnimation(settings: Settings): FloatingReactionAnimation
 }
 
 interface AppStore {
+	currentTwitchItem: Pick<DisplayQueueItem, "message_id" | "author_id" | "origin"> | null;
+	setCurrentTwitchItem: (item: AppStore["currentTwitchItem"]) => void;
+	applyTwitchPurge: (action: TwitchPurgeAction) => void;
 	lastJoinError: string | null;
 	serverFeatures: string[];
 	guildPausedUntil: number | null;
@@ -92,6 +97,13 @@ interface AppStore {
 }
 
 export const useAppStore = create<AppStore>((set) => ({
+	currentTwitchItem: null,
+	setCurrentTwitchItem: (currentTwitchItem) => set({ currentTwitchItem }),
+	applyTwitchPurge: (action) =>
+		set((state) => ({
+			queue: purgeTwitchQueue(state.queue, action),
+			skipVersion: state.skipVersion + (isPurged(state.currentTwitchItem, action) ? 1 : 0),
+		})),
 	lastJoinError: null,
 	serverFeatures: [],
 	guildPausedUntil: null,

@@ -38,3 +38,13 @@ test("replay gets new identity without history timestamp", () => {
 	expect(shouldLogToHistory(replay)).toBe(false);
 	expect(shouldLogToHistory(text)).toBe(true);
 });
+
+test("Twitch content is never logged to history", () => {
+	expect(shouldLogToHistory({ ...text, origin: "twitch" })).toBe(false);
+	expect(shouldLogToHistory({ ...media("https://i.imgur.com/a.png"), origin: "twitch" })).toBe(
+		false,
+	);
+});
+test("ordinary bot items remain eligible for history", () => {
+	expect(shouldLogToHistory(text)).toBe(true);
+});

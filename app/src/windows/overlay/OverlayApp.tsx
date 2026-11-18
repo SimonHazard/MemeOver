@@ -5,6 +5,7 @@ import { useAppStore } from "@/shared/store";
 import { desktopPlaybackEnabled } from "@/shared/stream-destination";
 import { showConnectionNotification } from "./components/connection-notifications";
 import { logDisplayedItem } from "./hooks/history-logger";
+import { useTwitchEvents } from "./hooks/useTwitchEvents";
 import { OverlayStage } from "./OverlayStage";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ const DevMediaWrapper = OverlayTestRuntime
 
 export function OverlayApp() {
 	useLanguageSync();
+	useTwitchEvents();
 	const muted = useAppStore((s) => s.settings.desktopOverlayMuted);
 	const playbackEnabled = useAppStore((s) => desktopPlaybackEnabled(s.settings));
 
