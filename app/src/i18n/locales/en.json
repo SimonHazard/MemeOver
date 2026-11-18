@@ -317,6 +317,57 @@
 			"softwareRefresh": "If your software opens before MemeOver, the page cannot load: once MemeOver is running, refresh the source. After that, it resumes on its own when MemeOver restarts.",
 			"linkScope": "With Current settings, the source follows display changes automatically. Replace an older source link once to enable this. Saved profiles and default settings keep their appearance. Replace the link after a connection or overlay screen change."
 		},
+		"twitch": {
+			"title": "Twitch",
+			"desc": "Connect your channel to show chat and channel events on your desktop overlay.",
+			"connect": "Connect Twitch",
+			"disconnect": "Disconnect",
+			"connected": "Connected as {{login}}",
+			"enterCode": "Enter this code on the Twitch page that just opened.",
+			"openAgain": "Open the page again",
+			"cancel": "Cancel",
+			"retry": "Try again",
+			"starting": "Connecting…",
+			"permissions": "MemeOver reads your chat and channel-point redemptions. It cannot send messages or change your channel. Access stays on this computer.",
+			"errors": {
+				"denied": "You declined the connection on Twitch.",
+				"expired": "This code expired. Please try again.",
+				"network": "Could not connect to Twitch. Please try again.",
+				"wrong_scopes": "Twitch did not grant the required permissions. Please connect again."
+			},
+			"options": {
+				"enabled": "Show Twitch events on the overlay",
+				"emoteReactions": "Chat emotes float on screen",
+				"mediaCommand": "!meme <link> shows media",
+				"textCommand": "!say <text> shows text",
+				"alerts": "Subs, raids and cheers show as text"
+			},
+			"roles": {
+				"broadcaster": "Streamer only",
+				"moderator": "Moderators and above",
+				"vip": "VIPs and above",
+				"subscriber": "Subscribers and above",
+				"everyone": "Everyone"
+			},
+			"status": {
+				"disabled": "Twitch events are switched off.",
+				"signed_out": "Connect your Twitch account to receive events.",
+				"connecting": "Connecting to Twitch…",
+				"connected": "Twitch events are connected.",
+				"reauth_required": "Reconnect your Twitch account to continue.",
+				"error": "Twitch events are unavailable. Try switching them off and on again."
+			},
+			"minimumRole": "Who can use this command",
+			"everyoneWarning": "Any viewer can put content on your stream.",
+			"reward": "Channel-point reward shown on the overlay",
+			"noReward": "None",
+			"savedReward": "Previously selected reward",
+			"rewardsUnavailable": "Channel points are not available on this channel.",
+			"rewardInputHint": "Only rewards that ask for viewer input can be selected. Enable Twitch events to load your rewards.",
+			"mediaAndModeration": "Media commands accept direct links from Imgur, Tenor, Giphy and Klipy. Deleted messages and content from timed-out or banned viewers are removed from the overlay.",
+			"desktopOnly": "Twitch events appear on the desktop overlay only. The browser source does not receive them.",
+			"streamOnly": "Stream only is selected: Twitch events are not displayed on either surface."
+		},
 		"desktopMute": {
 			"title": "Mute the desktop overlay",
 			"desc": "Mutes memes on your screen only. The browser source keeps its sound. Also available from the tray menu.",

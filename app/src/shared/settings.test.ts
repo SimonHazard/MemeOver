@@ -146,8 +146,10 @@ test("an invalid browser source port falls back to the default", () => {
 });
 
 test("the destination preserves desktop playback and is validated", () => {
-	// Pre-release builds stored schema 16 for this field: it normalizes back to the current version.
-	expect(normalizeSettings({ schemaVersion: 16, desktopOverlayMuted: true })).toMatchObject({
+	// Future pre-release files normalize back to the current version.
+	expect(
+		normalizeSettings({ schemaVersion: CURRENT_SCHEMA_VERSION + 1, desktopOverlayMuted: true }),
+	).toMatchObject({
 		schemaVersion: CURRENT_SCHEMA_VERSION,
 		streamDestination: "both",
 		desktopOverlayMuted: true,
@@ -184,6 +186,26 @@ test("browser source and desktop mute stay machine preferences, out of profiles"
 });
 
 describe("settings normalization", () => {
+	test("v15 gains opt-in Twitch defaults, preserves other fields and excludes profiles", () => {
+		expect(normalizeSettings({ schemaVersion: 15, volume: 42, guildId: "123" })).toMatchObject({
+			schemaVersion: CURRENT_SCHEMA_VERSION,
+			twitch: DEFAULT_SETTINGS.twitch,
+			volume: 42,
+			guildId: "123",
+		});
+		expect(
+			normalizeSettings({
+				twitch: { enabled: true, alerts: "yes", mediaMinRole: "administrator", textCommand: true },
+			}).twitch,
+		).toEqual({
+			...DEFAULT_SETTINGS.twitch,
+			enabled: true,
+			textCommand: true,
+		});
+		expect(OVERLAY_PROFILE_FIELDS as readonly string[]).not.toContain("twitch");
+		expect("twitch" in pickOverlayProfileSettings(DEFAULT_SETTINGS)).toBe(false);
+		expect("twitch" in extractDefaults(DEFAULT_SETTINGS)).toBe(false);
+	});
 	test("clamps hand-edited display settings without advancing the schema", () => {
 		expect(
 			normalizeSettings({

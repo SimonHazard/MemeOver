@@ -111,8 +111,13 @@ jobs:
   app:
     needs: changes
     if: needs.changes.outputs.app == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, webkit]
+    name: app (${{ matrix.browser }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -125,21 +130,34 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       - name: Build app frontend
+        if: matrix.browser == 'chrome'
         run: bun run --cwd app build
       - id: pw
+        if: matrix.browser == 'webkit'
         run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6.1.0
+        if: matrix.browser == 'webkit'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
-      - run: bun run playwright install --with-deps chrome webkit
-      - run: bun run test:browser
+      # ubuntu-24.04 already provides Chrome. Give WebKit's system packages time
+      # to download separately from the test budget.
+      - name: Verify installed Chrome
+        if: matrix.browser == 'chrome'
+        run: google-chrome --version
+      - name: Install WebKit and system dependencies
+        if: matrix.browser == 'webkit'
+        timeout-minutes: 30
+        run: bun run playwright install --with-deps webkit
+      - name: Run Playwright (${{ matrix.browser }})
+        timeout-minutes: 12
+        run: bun run test:browser --project=${{ matrix.browser }}
         env:
           BROWSER_PRODUCTION: "1"
       - uses: actions/upload-artifact@v7.0.2
         if: failure()
         with:
-          name: browser-test-failures
+          name: browser-test-failures-${{ matrix.browser }}
           path: test-results/
           retention-days: 7
 
@@ -152,7 +170,9 @@ jobs:
         include:
           - { name: ubuntu, os: ubuntu-24.04, cmd: "cargo test --manifest-path app/src-tauri/Cargo.toml" }
           - { name: windows, os: windows-latest, cmd: "cargo check --manifest-path app/src-tauri/Cargo.toml" }
-          - { name: macos, os: macos-latest, cmd: "cargo check --manifest-path app/src-tauri/Cargo.toml" }
+          # Intel runners avoid the hosted ARM capacity issue for this check.
+          # app-release still builds the universal macOS bundle.
+          - { name: macos, os: macos-15-intel, cmd: "cargo check --manifest-path app/src-tauri/Cargo.toml" }
     name: rust (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30

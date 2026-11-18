@@ -32,6 +32,7 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 	const queue = useAppStore((s) => s.queue);
 	const dequeue = useAppStore((s) => s.dequeue);
 	const setCurrentAuthorId = useAppStore((s) => s.setCurrentAuthorId);
+	const setCurrentTwitchItem = useAppStore((s) => s.setCurrentTwitchItem);
 	const setIsDisplaying = useAppStore((s) => s.setIsDisplaying);
 	const duration = useAppStore((s) => s.settings.duration);
 	const syncMediaDuration = useAppStore((s) => s.settings.syncMediaDuration);
@@ -135,7 +136,8 @@ export function useMediaDisplay(playbackEnabled = true): UseMediaDisplayReturn {
 		setCurrentAuthorId(
 			current?.type === "MEDIA" && current.anonymous ? "secret" : (current?.author_id ?? null),
 		);
-	}, [current, setCurrentAuthorId]);
+		setCurrentTwitchItem(current?.origin === "twitch" ? current : null);
+	}, [current, setCurrentAuthorId, setCurrentTwitchItem]);
 
 	// Admit the current queue head immediately. A guild pause empties the queue and drops
 	// server events upstream, so only explicit history replays can be admitted while paused.

@@ -1,4 +1,5 @@
 import { DEFAULT_BROWSER_SOURCE_PORT } from "./browser-source-port";
+import { DEFAULT_TWITCH_OPTIONS, type TwitchOptions } from "./twitch/options";
 
 export interface MutedAuthor {
 	id: string;
@@ -17,6 +18,8 @@ export interface MediaQueueItem extends MediaEvent {
 	queueId: string;
 	/** Set on replays; replayed items are not logged again. */
 	replayOf?: string;
+	/** Set on items created locally from a Twitch event; absent for bot events. */
+	origin?: "twitch";
 }
 
 /** TextEvent enriched with a unique per-display ID for React keys / queue dedup */
@@ -24,6 +27,8 @@ export interface TextQueueItem extends TextEvent {
 	queueId: string;
 	/** Set on replays; replayed items are not logged again. */
 	replayOf?: string;
+	/** Set on items created locally from a Twitch event; absent for bot events. */
+	origin?: "twitch";
 }
 
 /**
@@ -139,6 +144,8 @@ export const CONNECTION_NOTIFICATION_POSITIONS = [
 export type ConnectionNotificationPosition = (typeof CONNECTION_NOTIFICATION_POSITIONS)[number];
 
 export interface Settings {
+	/** Account-bound Twitch options, never part of a display profile. */
+	twitch: TwitchOptions;
 	/** Show a toast when another overlay connects to this server. */
 	connectionNotificationsEnabled: boolean;
 	connectionNotificationPosition: ConnectionNotificationPosition;
@@ -273,7 +280,7 @@ export interface OverlayProfile {
 }
 
 /** Current settings schema version. Bump + add a branch in `migrateSettings` when introducing a breaking change. */
-export const CURRENT_SCHEMA_VERSION = 15;
+export const CURRENT_SCHEMA_VERSION = 16;
 
 /** Error codes returned by `start_browser_source`; anything else is an unexpected failure. */
 export type BrowserSourceStartError =
@@ -288,6 +295,7 @@ export const DEFAULT_WS_URL = DEFAULT_PUBLIC_WS_URL;
 export const LEGACY_DEFAULT_WS_URL = "ws://localhost:3001/ws";
 
 export const DEFAULT_SETTINGS: Settings = {
+	twitch: DEFAULT_TWITCH_OPTIONS,
 	connectionNotificationsEnabled: true,
 	connectionNotificationPosition: "bottom-right",
 	connectionNotificationDuration: 4,
