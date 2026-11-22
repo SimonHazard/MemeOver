@@ -2,6 +2,8 @@
 
 Mesures initiales le 16 novembre 2026, actualisées le 18 novembre après la PR #129. **Recommandation : option C, un journal JSON lu toutes les 250 ms sur le même serveur loopback. Effort estimé : M.** Ce rapport ne livre aucun relais Twitch : sa réalisation demandera un nouveau plan et une demande explicite.
 
+L’intégration Twitch du bureau est en **alpha** et peut être retirée à tout moment. La proposition pour OBS dépend de son maintien.
+
 ## Périmètre et état constaté
 
 Les mesures HTTP ont été effectuées sur le serveur de `89d4618`. Le rebase sur `8084cf7` conserve exactement le même fichier `browser_source.rs`. La PR #129 ajoute toutefois le profil d’affichage courant aux contrôles publiés. Les mesures d’encodage ci-dessous tiennent compte de cette évolution. Le raccordement Twitch du plan 112 est lu dans la même livraison : `eventsub-runtime.ts` possède la session, et `useTwitchEvents.ts` route les notifications puis applique les actions au store du desktop.
