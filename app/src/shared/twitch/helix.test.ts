@@ -48,25 +48,36 @@ test("all six subscriptions use the streamer's identity", () => {
 		expect(request.condition).toEqual({ broadcaster_user_id: "123", user_id: "123" });
 	expect(requests[5].condition).toEqual({ broadcaster_user_id: "123" });
 });
-test("reward parsing filters invalid ids, bounds titles and keeps input eligibility", async () => {
+test("reward parsing filters invalid ids, bounds titles and reads input and availability from Twitch", async () => {
 	const result = await listRewards(
 		deps(
 			Response.json({
 				data: [
-					{ id: "reward-1", title: "A".repeat(100), is_user_input_required: true },
-					{ id: "bad/id", title: "bad", is_user_input_required: true },
-					{ id: "reward-2", title: "No input", is_user_input_required: false },
+					{
+						id: "reward-1",
+						title: "A".repeat(100),
+						is_user_input_required: true,
+						is_enabled: true,
+					},
+					{ id: "bad/id", title: "bad", is_user_input_required: true, is_enabled: true },
+					{ id: "reward-2", title: "No input", is_user_input_required: false, is_enabled: true },
+					{ id: "reward-3", title: "Disabled", is_user_input_required: true, is_enabled: false },
 				],
 			}),
-			(url) => expect(url).toEndWith("?broadcaster_id=123"),
+			(url, init) => {
+				expect(url).toEndWith("/custom_rewards?broadcaster_id=123");
+				expect(init?.method ?? "GET").toBe("GET");
+				expect(init?.signal).toBeInstanceOf(AbortSignal);
+			},
 		),
 		"123",
 	);
 	expect(result).toEqual({
 		status: "ok",
 		rewards: [
-			{ id: "reward-1", title: "A".repeat(80), needsInput: true },
-			{ id: "reward-2", title: "No input", needsInput: false },
+			{ id: "reward-1", title: "A".repeat(80), needsInput: true, enabled: true },
+			{ id: "reward-2", title: "No input", needsInput: false, enabled: true },
+			{ id: "reward-3", title: "Disabled", needsInput: true, enabled: false },
 		],
 	});
 });

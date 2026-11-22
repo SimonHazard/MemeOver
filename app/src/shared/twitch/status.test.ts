@@ -13,7 +13,7 @@ test("every chat subscription is required, redemption alone may fail", () => {
 				...success,
 				"channel.channel_points_custom_reward_redemption.add": outcome,
 			}),
-		).toBe("connected");
+		).toBe("chat_only");
 		for (const { type } of subscriptionRequests("123").slice(0, 5))
 			expect(sessionOutcome({ ...success, [type]: outcome })).toBe("error");
 	}

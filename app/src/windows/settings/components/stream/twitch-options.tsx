@@ -15,13 +15,19 @@ import { toast } from "sonner";
 import { useTauriEvent } from "@/hooks/useTauriEvent";
 import { emitIfTauri } from "@/shared/platform-events";
 import { loadSettings, patchSettings } from "@/shared/settings";
-import type { RewardsResult } from "@/shared/twitch/helix";
 import { TWITCH_ROLES, type TwitchOptions, type TwitchRole } from "@/shared/twitch/options";
 import type { TwitchStatus } from "@/shared/twitch/status";
+import { TwitchRewards } from "./twitch-rewards";
 
 const SWITCHES = ["enabled", "emoteReactions", "mediaCommand", "textCommand", "alerts"] as const;
 
-export function TwitchOptionsPanel({ alphaNoticeId }: { alphaNoticeId: string }) {
+export function TwitchOptionsPanel({
+	alphaNoticeId,
+	account,
+}: {
+	alphaNoticeId: string;
+	account: { login: string; userId: string };
+}) {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const { data: settings } = useQuery({
@@ -30,7 +36,6 @@ export function TwitchOptionsPanel({ alphaNoticeId }: { alphaNoticeId: string })
 		staleTime: 0,
 	});
 	const status = useTauriEvent<TwitchStatus>("twitch-status-changed");
-	const rewards = useTauriEvent<RewardsResult>("twitch-rewards-changed");
 	const { mutate, isPending } = useMutation({
 		mutationFn: (patch: Partial<TwitchOptions>) =>
 			patchSettings((saved) => ({ ...saved, twitch: { ...saved.twitch, ...patch } })),
@@ -38,27 +43,10 @@ export function TwitchOptionsPanel({ alphaNoticeId }: { alphaNoticeId: string })
 		onError: () => toast.error(t("toast.settingsError")),
 	});
 	useEffect(() => {
-		void emitIfTauri("twitch-rewards-request").catch(() => {});
+		void emitIfTauri("twitch-status-request").catch(() => {});
 	}, []);
 	if (!settings) return null;
 	const options = settings.twitch;
-	const rewardItems = [
-		{ value: "", label: t("stream.twitch.noReward"), disabled: false },
-		...(rewards?.status === "ok"
-			? rewards.rewards.map((reward) => ({
-					value: reward.id,
-					label: reward.title,
-					disabled: !reward.needsInput,
-				}))
-			: []),
-	];
-	if (options.rewardId && !rewardItems.some((item) => item.value === options.rewardId)) {
-		rewardItems.push({
-			value: options.rewardId,
-			label: t("stream.twitch.savedReward"),
-			disabled: true,
-		});
-	}
 	return (
 		<div className="flex flex-col gap-4 border-t-2 border-foreground pt-4">
 			<p role="status" className="text-sm font-text">
@@ -76,6 +64,14 @@ export function TwitchOptionsPanel({ alphaNoticeId }: { alphaNoticeId: string })
 							onCheckedChange={(value) => mutate({ [key]: value })}
 						/>
 					</div>
+					{key === "enabled" ? (
+						<TwitchRewards
+							account={account}
+							rewardId={options.rewardId}
+							saving={isPending}
+							onChange={(rewardId) => mutate({ rewardId })}
+						/>
+					) : null}
 					{key === "mediaCommand" || key === "textCommand" ? (
 						<CommandRoleSelect
 							id={key === "mediaCommand" ? "mediaMinRole" : "textMinRole"}
@@ -88,39 +84,6 @@ export function TwitchOptionsPanel({ alphaNoticeId }: { alphaNoticeId: string })
 					) : null}
 				</div>
 			))}
-			{rewards?.status === "unavailable" ? (
-				<p className="text-sm font-text text-muted-foreground">
-					{t("stream.twitch.rewardsUnavailable")}
-				</p>
-			) : (
-				<div className="flex flex-col gap-2">
-					<Label htmlFor="twitch-reward">{t("stream.twitch.reward")}</Label>
-					<Select
-						items={rewardItems}
-						value={options.rewardId}
-						disabled={isPending}
-						onValueChange={(value) => {
-							if (value !== null) mutate({ rewardId: value });
-						}}
-					>
-						<SelectTrigger id="twitch-reward" className="w-full">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectGroup>
-								{rewardItems.map(({ value, label, disabled }) => (
-									<SelectItem key={value} value={value} disabled={disabled}>
-										{label}
-									</SelectItem>
-								))}
-							</SelectGroup>
-						</SelectContent>
-					</Select>
-					<p className="text-xs font-text text-muted-foreground">
-						{t("stream.twitch.rewardInputHint")}
-					</p>
-				</div>
-			)}
 			<p className="text-xs font-text text-muted-foreground">
 				{t("stream.twitch.mediaAndModeration")}
 			</p>

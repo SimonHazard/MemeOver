@@ -14,7 +14,7 @@ import { nextReconnectDelay } from "../reconnect-backoff";
 export function useTwitchEvents(): void {
 	const enabled = useAppStore((state) => state.settings.twitch.enabled);
 	const authVersion = useTauriEventVersion("twitch-auth-changed");
-	const rewardsRequest = useTauriEventVersion("twitch-rewards-request");
+	const statusRequest = useTauriEventVersion("twitch-status-request");
 	const runtime = useRef<ReturnType<typeof startTwitchRuntime> | null>(null);
 
 	useEffect(() => {
@@ -32,9 +32,6 @@ export function useTwitchEvents(): void {
 			reconnectDelay: nextReconnectDelay,
 			onStatus: (status) => {
 				void emitIfTauri("twitch-status-changed", status).catch(() => {});
-			},
-			onRewards: (result) => {
-				void emitIfTauri("twitch-rewards-changed", result).catch(() => {});
 			},
 			onAccountCleared: () => useAppStore.getState().applyTwitchPurge({ kind: "purge_all" }),
 			onNotification: (type, event) => {
@@ -76,6 +73,6 @@ export function useTwitchEvents(): void {
 		if (authVersion > 0) void runtime.current?.authChanged().catch(() => {});
 	}, [authVersion]);
 	useEffect(() => {
-		if (rewardsRequest > 0) void runtime.current?.requestRewards();
-	}, [rewardsRequest]);
+		if (statusRequest > 0) runtime.current?.requestStatus();
+	}, [statusRequest]);
 }

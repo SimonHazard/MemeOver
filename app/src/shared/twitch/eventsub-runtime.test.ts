@@ -85,7 +85,6 @@ function harness(
 					expires_in: 14_400,
 					scope: ["user:read:chat", "channel:read:redemptions"],
 				});
-			if (path.includes("/custom_rewards")) return Response.json({ data: [] });
 			return new Response(null, { status: 202 });
 		}) as typeof fetch,
 		createSocket: (url: string) => {
@@ -108,7 +107,6 @@ function harness(
 		onStatus: (status: TwitchStatus) => {
 			statuses.push(status);
 		},
-		onRewards: () => {},
 		onAccountCleared: () => {
 			accountClears++;
 		},
@@ -327,7 +325,7 @@ test("reopening settings can request the current connected status, and silence r
 	h.sockets[0].welcome();
 	await flush();
 	const count = h.statuses.length;
-	await runtime.requestRewards();
+	runtime.requestStatus();
 	expect(h.statuses.slice(count)).toEqual(["connected"]);
 	h.setTime(35_101);
 	h.intervals.get(5_000)?.();

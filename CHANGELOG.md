@@ -8,6 +8,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Added
 
+- App/site (1.13.0): set up Twitch Channel Points in the Stream tab before enabling Twitch events. Open your channel’s reward settings, create a custom reward with required text input, refresh the list and select it. Viewers can spend points to show text or a supported media link on the desktop overlay.
+
 - App/site (1.12.0): add an optional alpha Twitch integration for the desktop overlay, with role-gated media and text commands, floating emotes, channel-point redemptions and subscription, raid and cheer alerts. The Stream tab warns before connecting or enabling events that the integration may change or be removed at any time. Deleted messages and timed-out viewers are purged; Twitch content stays out of history. Twitch events are not yet relayed to the browser source.
 - App/site (1.11.0): browser sources created with Current settings follow desktop display changes automatically. Replace an older source link once to enable live updates. Saved and default profiles keep their chosen appearance.
 

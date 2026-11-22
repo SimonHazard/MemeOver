@@ -112,7 +112,7 @@ function ConfiguredTwitchCard() {
 					</div>
 				)}
 				<p className="text-xs font-text text-muted-foreground">{t("stream.twitch.permissions")}</p>
-				{account ? <TwitchOptionsPanel alphaNoticeId={alphaNoticeId} /> : null}
+				{account ? <TwitchOptionsPanel alphaNoticeId={alphaNoticeId} account={account} /> : null}
 			</div>
 		</NbCard>
 	);

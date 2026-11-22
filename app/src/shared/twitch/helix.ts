@@ -17,6 +17,7 @@ export interface TwitchReward {
 	id: string;
 	title: string;
 	needsInput: boolean;
+	enabled: boolean;
 }
 export type RewardsResult =
 	| { status: "ok"; rewards: TwitchReward[] }
@@ -79,6 +80,7 @@ const rewardSchema = z.object({
 	id: z.string().regex(/^[A-Za-z0-9-]{1,64}$/),
 	title: z.string().transform((value) => value.slice(0, 80)),
 	is_user_input_required: z.boolean(),
+	is_enabled: z.boolean(),
 });
 const rewardsSchema = z.object({ data: z.array(z.unknown()) });
 
@@ -87,9 +89,13 @@ export async function listRewards(
 	broadcasterId: string,
 ): Promise<RewardsResult> {
 	const fetchRequest = deps.fetch;
+	const timeout = AbortSignal.timeout(8_000);
 	const response = await fetchRequest(
 		`${TWITCH_API_BASE}/channel_points/custom_rewards?${new URLSearchParams({ broadcaster_id: broadcasterId })}`,
-		{ headers: headers(deps), signal: deps.signal },
+		{
+			headers: headers(deps),
+			signal: deps.signal ? AbortSignal.any([deps.signal, timeout]) : timeout,
+		},
 	);
 	if (response.status === 403) return { status: "unavailable" };
 	if (response.status === 401) return { status: "unauthorized" };
@@ -112,6 +118,7 @@ export async function listRewards(
 							id: reward.data.id,
 							title: reward.data.title,
 							needsInput: reward.data.is_user_input_required,
+							enabled: reward.data.is_enabled,
 						},
 					]
 				: [];
