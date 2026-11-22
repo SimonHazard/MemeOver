@@ -53,6 +53,10 @@ mockIPC(
 				throw new Error("Simulated save failure");
 			return null;
 		}
+		if (cmd === "plugin:opener|open_url") {
+			localStorage.setItem("test-opened-url", String(args.url));
+			return null;
+		}
 		if (cmd === "plugin:window|available_monitors")
 			return [monitor, { ...monitor, name: "Second display", position: { x: 1920, y: 0 } }];
 		if (cmd === "plugin:window|current_monitor" || cmd === "plugin:window|primary_monitor")

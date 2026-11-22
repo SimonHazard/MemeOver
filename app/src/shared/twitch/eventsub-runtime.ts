@@ -1,6 +1,6 @@
 import { hasRequiredScopes, type TwitchAuth, tokenDecision } from "./auth";
 import { INITIAL_SESSION, isSilent, onSessionMessage, type SessionState } from "./eventsub-session";
-import { createSubscription, listRewards, type RewardsResult, subscriptionRequests } from "./helix";
+import { createSubscription, subscriptionRequests } from "./helix";
 import { refreshTokens, validateToken } from "./oauth";
 import { sessionOutcome, type TwitchStatus } from "./status";
 
@@ -12,7 +12,6 @@ export interface TwitchRuntimeDependencies {
 	saveAuth: (auth: TwitchAuth, previous: TwitchAuth) => Promise<boolean>;
 	clearAuth: (previous: TwitchAuth) => Promise<boolean>;
 	onStatus: (status: TwitchStatus) => void;
-	onRewards: (result: RewardsResult) => void;
 	onAccountCleared: () => void;
 	onNotification: (type: string, event: unknown) => void;
 	now?: () => number;
@@ -186,20 +185,6 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 		auth = candidate;
 		return candidate;
 	}
-	async function requestRewards() {
-		if (!disposed) deps.onStatus(lastStatus);
-		const candidate = auth;
-		const expected = generation;
-		if (disposed || halted || !candidate) return;
-		try {
-			const result = await request((signal) =>
-				listRewards({ ...deps, accessToken: candidate.accessToken, signal }, candidate.userId),
-			);
-			if (live(expected)) deps.onRewards(result);
-		} catch {
-			if (live(expected)) deps.onRewards({ status: "failed" });
-		}
-	}
 	async function subscribe(session: SocketSession, sessionId: string) {
 		const candidate = auth;
 		if (!candidate) return;
@@ -236,8 +221,7 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 			}
 			retriedUnauthorized = false;
 			attempt = 0;
-			status("connected");
-			void requestRewards();
+			status(outcome);
 		} catch {
 			if (live(session.generation)) retryConnection();
 		}
@@ -263,7 +247,6 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 				pending = null;
 				closeSession(old);
 				attempt = 0;
-				status("connected");
 			}
 			switch (result.effect.kind) {
 				case "subscribe":
@@ -335,7 +318,9 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 	);
 	void connect();
 	return {
-		requestRewards,
+		requestStatus() {
+			if (!disposed) deps.onStatus(lastStatus);
+		},
 		async authChanged() {
 			const change = ++authChangeVersion;
 			let loaded = await deps.loadAuth();

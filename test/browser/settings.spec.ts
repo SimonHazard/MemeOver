@@ -153,6 +153,9 @@ for (const { lang, title, notice, connect, enable } of [
 	test(`Twitch explains its alpha status before connection and activation (${lang})`, async ({
 		page,
 	}) => {
+		await page.route("https://api.twitch.tv/helix/channel_points/custom_rewards?*", (route) =>
+			route.fulfill({ json: { data: [] } }),
+		);
 		await page.addInitScript((locale) => localStorage.setItem("lang", locale), lang);
 		await page.goto("/test/browser/settings.html");
 		const stream = page.getByRole("button", { name: "Stream", exact: true });

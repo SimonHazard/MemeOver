@@ -13,57 +13,79 @@ export interface DesktopStubWindow {
 }
 
 /** Just enough of the native side for the real overlay.html: settings come from its store. */
-export async function installDesktopStub(page: Page, settings: object) {
-	await page.addInitScript((saved) => {
-		const callbacks = new Map<number, Handler>();
-		const listeners = new Map<string, number[]>();
-		const invoked: DesktopStubWindow["desktopInvoked"] = [];
-		let nextCallback = 1;
-		Object.assign(window, {
-			isTauri: true,
-			desktopInvoked: invoked,
-			desktopEmit: (event: string, payload?: unknown) => {
-				for (const id of listeners.get(event) ?? []) {
-					callbacks.get(id)?.({ event, id, payload });
-				}
-			},
-			__TAURI_EVENT_PLUGIN_INTERNALS__: {
-				unregisterListener: (event: string, eventId: number) => {
-					listeners.set(
-						event,
-						(listeners.get(event) ?? []).filter((id) => id !== eventId),
-					);
-					callbacks.delete(eventId);
-				},
-			},
-			__TAURI_INTERNALS__: {
-				metadata: {
-					currentWindow: { label: "overlay" },
-					currentWebview: { label: "overlay", windowLabel: "overlay" },
-				},
-				transformCallback: (callback: Handler) => {
-					const id = nextCallback++;
-					callbacks.set(id, callback);
-					return id;
-				},
-				unregisterCallback: (id: number) => callbacks.delete(id),
-				invoke: async (
-					command: string,
-					args: { key?: string; value?: unknown; event?: string; handler?: number },
-				) => {
-					invoked.push({ command, args });
-					if (command === "plugin:store|load") return 1;
-					if (command === "plugin:store|get") {
-						return args.key === "settings" ? [saved, true] : [null, false];
+export async function installDesktopStub(
+	page: Page,
+	settings: object,
+	stores: Record<string, Record<string, unknown>> = {},
+) {
+	await page.addInitScript(
+		({ settings, stores }) => {
+			const callbacks = new Map<number, Handler>();
+			const listeners = new Map<string, number[]>();
+			const paths = new Map<number, string>();
+			const invoked: DesktopStubWindow["desktopInvoked"] = [];
+			let nextCallback = 1;
+			Object.assign(window, {
+				isTauri: true,
+				desktopInvoked: invoked,
+				desktopEmit: (event: string, payload?: unknown) => {
+					for (const id of listeners.get(event) ?? []) {
+						callbacks.get(id)?.({ event, id, payload });
 					}
-					if (command === "plugin:event|listen") {
-						const event = String(args.event);
-						listeners.set(event, [...(listeners.get(event) ?? []), Number(args.handler)]);
-						return Number(args.handler);
-					}
-					return null;
 				},
-			},
-		});
-	}, settings);
+				__TAURI_EVENT_PLUGIN_INTERNALS__: {
+					unregisterListener: (event: string, eventId: number) => {
+						listeners.set(
+							event,
+							(listeners.get(event) ?? []).filter((id) => id !== eventId),
+						);
+						callbacks.delete(eventId);
+					},
+				},
+				__TAURI_INTERNALS__: {
+					metadata: {
+						currentWindow: { label: "overlay" },
+						currentWebview: { label: "overlay", windowLabel: "overlay" },
+					},
+					transformCallback: (callback: Handler) => {
+						const id = nextCallback++;
+						callbacks.set(id, callback);
+						return id;
+					},
+					unregisterCallback: (id: number) => callbacks.delete(id),
+					invoke: async (
+						command: string,
+						args: {
+							key?: string;
+							value?: unknown;
+							event?: string;
+							handler?: number;
+							path?: string;
+							rid?: number;
+						},
+					) => {
+						invoked.push({ command, args });
+						if (command === "plugin:store|load") {
+							const id = paths.size + 1;
+							paths.set(id, String(args.path));
+							return id;
+						}
+						if (command === "plugin:store|get") {
+							const path = paths.get(Number(args.rid)) ?? "";
+							const data = path === "settings.json" ? { settings } : stores[path];
+							const key = String(args.key);
+							return data && key in data ? [data[key], true] : [null, false];
+						}
+						if (command === "plugin:event|listen") {
+							const event = String(args.event);
+							listeners.set(event, [...(listeners.get(event) ?? []), Number(args.handler)]);
+							return Number(args.handler);
+						}
+						return null;
+					},
+				},
+			});
+		},
+		{ settings, stores },
+	);
 }

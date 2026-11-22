@@ -105,6 +105,8 @@ modérateurs et au streamer. Les suppressions et exclusions du chat retirent les
 Les événements Twitch ne sont pas transmis à la source navigateur et ne s'affichent donc pas en
 mode **Stream uniquement**. Le navigateur vous demande l’autorisation sur Twitch avec le code affiché par MemeOver.
 
+**Points de chaîne.** Dans **Stream → Twitch**, ouvrez la gestion des récompenses de votre chaîne. Créez une récompense personnalisée active avec saisie obligatoire et choisissez son coût. Dans MemeOver, actualisez la liste, sélectionnez la récompense et activez les événements. Les spectateurs peuvent alors dépenser leurs points pour afficher un texte ou un lien média direct pris en charge. L’affichage commence dès l’échange. Les remboursements se gèrent sur Twitch.
+
 L'onglet **Stream** de l'app présente les problèmes connus à l'image et au son, avec quelques
 pistes. Il est en bêta : il peut changer ou disparaître à tout moment.
 
@@ -332,6 +334,8 @@ desktop overlay. It is off by default. Connect your account in **Stream**, then 
 Both commands default to moderators and the streamer. Chat deletions and timeouts remove the
 affected content. Twitch events are not relayed to the browser source, so **Stream only** mode
 does not display them. Twitch asks you to approve the connection in your browser using the code shown by MemeOver.
+
+**Channel Points.** In **Stream → Twitch**, open your channel’s reward settings. Create an enabled custom reward with required viewer input and set its cost. In MemeOver, refresh the list, select the reward and enable Twitch events. Viewers can then redeem their points to display text or a supported direct media link. Display starts on redemption. Manage refunds on Twitch.
 
 The app's **Stream** tab lists the known picture and sound problems, with a few ideas. It is in
 beta: it may change or disappear at any time.
