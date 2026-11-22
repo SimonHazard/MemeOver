@@ -114,6 +114,10 @@ test("ordinary events honour enable and overlay gates", () => {
 			"author_muted",
 		);
 });
+test("chat without shared-channel metadata still accepts moderator commands", () => {
+	const { source_broadcaster_user_id: _, ...event } = command("!meme https://i.imgur.com/a.png");
+	expect(item(route(event))).toMatchObject({ type: "MEDIA", origin: "twitch" });
+});
 test("shared chat is rejected and reward chat is not displayed twice", () => {
 	drop(route({ ...chat, source_broadcaster_user_id: "3" }), "shared_chat");
 	drop(route({ ...chat, channel_points_custom_reward_id: "reward-1" }), "nothing_to_show");

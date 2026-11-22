@@ -28,7 +28,7 @@ export const ChatMessageSchema = z.object({
 	badges: z.array(z.object({ set_id: z.string() })),
 	cheer: z.object({ bits: z.number().int().nonnegative() }).nullable(),
 	channel_points_custom_reward_id: rewardId.nullable(),
-	source_broadcaster_user_id: userId.nullable(),
+	source_broadcaster_user_id: userId.nullable().default(null),
 });
 export const ChatNotificationSchema = z.object({
 	...chatter,
