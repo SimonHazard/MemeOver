@@ -93,7 +93,9 @@ dans l'app et fournissez votre propre URL WebSocket.
 
 ## Streamer avec MemeOver
 
-### Twitch (facultatif)
+### Twitch (alpha, facultatif)
+
+Cette intégration expérimentale peut être modifiée ou retirée à tout moment.
 
 L'intégration Twitch affiche les emotes, récompenses de points de chaîne, subs, raids et cheers
 sur l'overlay du bureau. Elle est désactivée par défaut. Connectez votre compte dans **Stream**,
@@ -320,7 +322,9 @@ mode in the app and provide your own WebSocket URL.
 
 ## Streaming with MemeOver
 
-### Twitch (optional)
+### Twitch (alpha, optional)
+
+This experimental integration may change or be removed at any time.
 
 The Twitch integration displays emotes, channel-point rewards, subs, raids and cheers on the
 desktop overlay. It is off by default. Connect your account in **Stream**, then enable events.

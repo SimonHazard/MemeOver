@@ -21,7 +21,7 @@ import type { TwitchStatus } from "@/shared/twitch/status";
 
 const SWITCHES = ["enabled", "emoteReactions", "mediaCommand", "textCommand", "alerts"] as const;
 
-export function TwitchOptionsPanel() {
+export function TwitchOptionsPanel({ alphaNoticeId }: { alphaNoticeId: string }) {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const { data: settings } = useQuery({
@@ -70,6 +70,7 @@ export function TwitchOptionsPanel() {
 						<Label htmlFor={`twitch-${key}`}>{t(`stream.twitch.options.${key}`)}</Label>
 						<NbSwitch
 							id={`twitch-${key}`}
+							aria-describedby={key === "enabled" ? alphaNoticeId : undefined}
 							checked={options[key]}
 							disabled={isPending}
 							onCheckedChange={(value) => mutate({ [key]: value })}

@@ -134,6 +134,61 @@ test("unsaved dialog supports stay, escape, discard, save and failed save", asyn
 	await expect(dialog).toBeHidden();
 });
 
+for (const { lang, title, notice, connect, enable } of [
+	{
+		lang: "en",
+		title: "Twitch integration is in alpha",
+		notice: "This experimental integration may change or be removed at any time.",
+		connect: "Connect Twitch",
+		enable: "Show Twitch events on the overlay",
+	},
+	{
+		lang: "fr",
+		title: "L’intégration Twitch est en alpha",
+		notice: "Cette intégration expérimentale peut être modifiée ou retirée à tout moment.",
+		connect: "Connecter Twitch",
+		enable: "Afficher les événements Twitch sur l’overlay",
+	},
+]) {
+	test(`Twitch explains its alpha status before connection and activation (${lang})`, async ({
+		page,
+	}) => {
+		await page.addInitScript((locale) => localStorage.setItem("lang", locale), lang);
+		await page.goto("/test/browser/settings.html");
+		const stream = page.getByRole("button", { name: "Stream", exact: true });
+		const alpha = page.getByRole("note").filter({ hasText: title });
+		await stream.click();
+		await expect(alpha).toBeVisible();
+		await expect(page.getByRole("button", { name: connect })).toHaveAccessibleDescription(
+			`${title} ${notice}`,
+		);
+
+		await page.evaluate(() => {
+			const sessionId = crypto.randomUUID();
+			localStorage.setItem(
+				"test-store:twitch.json",
+				JSON.stringify({
+					sessionId,
+					[`auth:${sessionId}`]: {
+						login: "test_streamer",
+						userId: "123",
+						accessToken: "test-access",
+						refreshToken: "test-refresh",
+						expiresAt: Date.now() + 3_600_000,
+						scopes: [],
+					},
+				}),
+			);
+		});
+		await page.reload();
+		await stream.click();
+		await expect(alpha).toBeVisible();
+		const events = page.getByRole("switch", { name: enable });
+		await expect(events).not.toBeChecked();
+		await expect(events).toHaveAccessibleDescription(`${title} ${notice}`);
+	});
+}
+
 test("navigation, language, theme, history and dashboard controls", async ({ page }) => {
 	await page.goto("/test/browser/settings.html");
 	for (const tab of ["Overlay", "Stream", "Server", "History", "About", "Dashboard"]) {

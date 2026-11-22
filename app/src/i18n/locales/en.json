@@ -320,6 +320,8 @@
 		"twitch": {
 			"title": "Twitch",
 			"desc": "Connect your channel to show chat and channel events on your desktop overlay.",
+			"alphaTitle": "Twitch integration is in alpha",
+			"alphaNotice": "This experimental integration may change or be removed at any time.",
 			"connect": "Connect Twitch",
 			"disconnect": "Disconnect",
 			"connected": "Connected as {{login}}",

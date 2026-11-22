@@ -1,9 +1,11 @@
 import { NbButton } from "@memeover/ui/components/branded/nb-button";
 import { NbCard } from "@memeover/ui/components/branded/nb-card";
+import { Alert, AlertDescription } from "@memeover/ui/components/ui/alert";
 import { NB_SHADOW_SM } from "@memeover/ui/lib/nb-classes";
 import { cn } from "@memeover/ui/lib/utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { MessageSquare } from "lucide-react";
+import { FlaskConical, MessageSquare } from "lucide-react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { isTwitchConfigured } from "@/shared/twitch/config";
@@ -17,6 +19,7 @@ export function TwitchCard() {
 
 function ConfiguredTwitchCard() {
 	const { t } = useTranslation();
+	const alphaNoticeId = useId();
 	const { account, loading, state, connect, cancel, disconnect, disconnecting } =
 		useTwitchConnect();
 	return (
@@ -33,6 +36,16 @@ function ConfiguredTwitchCard() {
 						</p>
 					</div>
 				</div>
+				<Alert
+					role="note"
+					className="border-2 border-foreground bg-secondary-100 dark:bg-secondary-950"
+				>
+					<FlaskConical aria-hidden="true" />
+					<AlertDescription id={alphaNoticeId} className="text-foreground">
+						<strong className="font-display">{t("stream.twitch.alphaTitle")}</strong>
+						<p>{t("stream.twitch.alphaNotice")}</p>
+					</AlertDescription>
+				</Alert>
 				{account ? (
 					<div className="flex flex-wrap items-center gap-3">
 						<p role="status" className="text-sm font-text">
@@ -81,6 +94,7 @@ function ConfiguredTwitchCard() {
 						) : null}
 						<NbButton
 							type="button"
+							aria-describedby={alphaNoticeId}
 							disabled={loading || state.phase === "starting"}
 							onClick={() => void connect()}
 						>
@@ -98,7 +112,7 @@ function ConfiguredTwitchCard() {
 					</div>
 				)}
 				<p className="text-xs font-text text-muted-foreground">{t("stream.twitch.permissions")}</p>
-				{account ? <TwitchOptionsPanel /> : null}
+				{account ? <TwitchOptionsPanel alphaNoticeId={alphaNoticeId} /> : null}
 			</div>
 		</NbCard>
 	);

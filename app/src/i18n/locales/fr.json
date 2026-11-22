@@ -320,6 +320,8 @@
 		"twitch": {
 			"title": "Twitch",
 			"desc": "Connectez votre chaîne pour afficher le chat et les événements sur votre overlay de bureau.",
+			"alphaTitle": "L’intégration Twitch est en alpha",
+			"alphaNotice": "Cette intégration expérimentale peut être modifiée ou retirée à tout moment.",
 			"connect": "Connecter Twitch",
 			"disconnect": "Déconnecter",
 			"connected": "Connecté en tant que {{login}}",
