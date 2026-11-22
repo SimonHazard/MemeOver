@@ -57,6 +57,7 @@ function harness(
 	const sockets: FakeSocket[] = [];
 	const statuses: TwitchStatus[] = [];
 	const notifications: unknown[] = [];
+	let accountClears = 0;
 	const calls: string[] = [];
 	const saves: TwitchAuth[] = [];
 	const timers: { callback: () => void; delay: number; active: boolean }[] = [];
@@ -108,6 +109,9 @@ function harness(
 			statuses.push(status);
 		},
 		onRewards: () => {},
+		onAccountCleared: () => {
+			accountClears++;
+		},
 		onNotification: (_type: string, event: unknown) => {
 			notifications.push(event);
 		},
@@ -135,6 +139,7 @@ function harness(
 		notifications,
 		intervals,
 		stored: () => stored,
+		accountClears: () => accountClears,
 		setStored: (auth: TwitchAuth | null) => {
 			stored = auth;
 		},
@@ -298,6 +303,7 @@ test("disconnect closes an active session immediately while hourly refresh is pe
 	expect(release).toBeDefined();
 	h.setStored(null);
 	await runtime.authChanged();
+	expect(h.accountClears()).toBe(1);
 	expect(h.sockets[0].closed).toBe(true);
 	expect(h.statuses[h.statuses.length - 1]).toBe("signed_out");
 	release?.(

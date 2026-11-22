@@ -13,6 +13,7 @@ export interface TwitchRuntimeDependencies {
 	clearAuth: (previous: TwitchAuth) => Promise<boolean>;
 	onStatus: (status: TwitchStatus) => void;
 	onRewards: (result: RewardsResult) => void;
+	onAccountCleared: () => void;
 	onNotification: (type: string, event: unknown) => void;
 	now?: () => number;
 	later?: (callback: () => void, delay: number) => () => void;
@@ -116,6 +117,7 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 	async function reauth(previous: TwitchAuth | null) {
 		if (disposed) return;
 		halted = true;
+		deps.onAccountCleared();
 		disconnect();
 		retry?.();
 		retry = null;
@@ -340,6 +342,7 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 			if (disposed || change !== authChangeVersion) return;
 			// Disconnect takes effect immediately, even while a token rotation is still in flight.
 			if (!loaded) {
+				deps.onAccountCleared();
 				disconnect();
 				retry?.();
 				retry = null;
@@ -356,6 +359,7 @@ export function startTwitchRuntime(deps: TwitchRuntimeDependencies) {
 			disconnect();
 			retry?.();
 			retry = null;
+			if (auth && auth.userId !== loaded?.userId) deps.onAccountCleared();
 			auth = loaded;
 			halted = false;
 			retriedUnauthorized = false;

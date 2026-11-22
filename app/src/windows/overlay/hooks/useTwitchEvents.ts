@@ -36,6 +36,7 @@ export function useTwitchEvents(): void {
 			onRewards: (result) => {
 				void emitIfTauri("twitch-rewards-changed", result).catch(() => {});
 			},
+			onAccountCleared: () => useAppStore.getState().applyTwitchPurge({ kind: "purge_all" }),
 			onNotification: (type, event) => {
 				const state = useAppStore.getState();
 				const { settings } = state;
