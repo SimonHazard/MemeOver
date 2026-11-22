@@ -34,6 +34,7 @@ Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or 
 1. Update `ALLOWED_MEDIA_HOSTS` in `bot/src/media/allowlist.ts`.
 2. Update app CSP `img-src`/`media-src` in `app/src-tauri/tauri.conf.json` for the host.
 3. Update `bot/src/media/extractor.ts`, with extraction and host validation tests.
+4. If viewers should be able to post the host from Twitch chat, add its direct-media hostname to `TWITCH_MEDIA_HOSTS` in `app/src/shared/twitch/media-url.ts` (a test checks it against the CSP).
 
 ### Protocol message
 

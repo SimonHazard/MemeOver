@@ -9,6 +9,7 @@ import { useTauriEventVersion } from "@/hooks/useTauriEvent";
 import { BrowserSourceCard } from "@/windows/settings/components/stream/browser-source-card";
 import { DesktopMuteCard } from "@/windows/settings/components/stream/desktop-mute-card";
 import { StreamIssues } from "@/windows/settings/components/stream/stream-issues";
+import { TwitchCard } from "@/windows/settings/components/stream/twitch-card";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export function StreamPage() {
 					</NbBadge>
 				</Alert>
 				<BrowserSourceCard />
+				<TwitchCard />
 				<DesktopMuteCard />
 				<StreamIssues />
 			</div>
