@@ -1,0 +1,7 @@
+# Dependent PRs on GitHub
+
+The integrator owns layer order, versions and authorized publication. The bottom PR targets the trunk and each child targets its predecessor. Review the diff and version bump of each layer against its own parent.
+
+Read existing membership with `GET /repos/{owner}/{repo}/stacks?pull_request=<number>`. When publication is authorized and the requested stack is missing, register the open PR numbers bottom to top. Verify GitHub’s returned trunk, order and size against the expected heads and bases, then check conflicts and CI for those heads. Chained bases alone cannot establish membership. Include the stack link in the handoff. See the [GitHub stack endpoints](https://docs.github.com/en/rest/pulls/stacks).
+
+After a squash merge, refresh the remote heads, the child’s actual base and its PR diff. GitHub may already have updated the child. If the diff contains only the intended layer, recheck its versions and current-head CI. If it still includes the old parent’s commits and rewriting is in scope, preserve the old refs and replay the child with `git rebase --onto <new-parent> <old-parent> <child>`. Work bottom to top. Inspect the resulting layer diff and `git range-diff`, recheck versions, descriptions and stack membership. For a rewritten push covered by the delivery request, use `--force-with-lease=<ref>:<expected-sha>`. A failed lease requires inspection of the new head.

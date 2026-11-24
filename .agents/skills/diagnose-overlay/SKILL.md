@@ -1,16 +1,11 @@
 ---
 name: diagnose-overlay
-description: Investigate a MemeOver overlay that connects but displays nothing using concrete local status and bot evidence.
+description: Diagnose missing media on the MemeOver desktop overlay or browser source using destination settings, routing and playback evidence.
 ---
 
-# diagnose-overlay
+# Diagnose missing playback
 
-1. Read [AGENTS.md](../../../AGENTS.md). Check connection status and overlay visibility in the app without exposing the connection token.
-
-2. Read bot `/health`; use `/metrics` only with authorized credentials, and `/memeover status` only in an authorized test/server interaction.
-
-3. Check Message Content Intent, guild registration, watched channels, bot/app source policies, enabled media types, local author filters, expired URLs and exclusive-fullscreen games.
-
-4. Inspect `app/src/windows/overlay/hooks/route-server-message.ts` and `useMediaDisplay.ts`; distinguish a routing drop from queue and playback failures.
-
-5. Report exact observed evidence and missing platform/Discord proof; never mutate live registry data to diagnose a source issue.
+1. Identify the missing event (Discord or Twitch), affected player and destination. Use [playback destinations](../../../CONTEXT.md#playback-destinations) to establish whether it should appear there. Check desktop visibility, source enablement and whether the page has reported in. Redact source links and setup codes.
+2. For Discord, check the affected player’s own connection, guild registration, watched channels, Message Content Intent and bot/app source policies. Use bot `/health`, authorized `/metrics` or `/memeover status` as appropriate. A healthy bot alone establishes little about delivery. For Twitch desktop, inspect account/event enablement and the event-specific reward, role or command options.
+3. Trace a representative event through the corresponding router, local filters, queue and playback. For Discord start at `app/src/windows/overlay/hooks/route-server-message.ts`. For Twitch start at `app/src/shared/twitch/route-twitch-event.ts`. Check pause, media type, author filters, URL expiry and visibility as applicable. Browser sessions live in `app/src/windows/browser-source/use-source-session.ts`. Desktop presentation can depend on exclusive fullscreen.
+4. Use the [local simulator](../../../docs/local-overlay-testing.md) for rendering or [browser fixtures](../../../test/browser/README.md) for a reproducible player/control flow. Report the first observed drop or remaining unknown. A native window, OBS audio or live Discord claim needs evidence from that environment. Leave live registry data untouched.

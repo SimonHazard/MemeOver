@@ -1,124 +1,63 @@
-# MemeOver agent guide
+# Working on MemeOver
 
-## Workspace
+Start with the requested outcome and the current checkout. [CONTEXT.md](CONTEXT.md) explains what each player can display and which settings travel with it. The [README](README.md) describes what users can do today.
 
-- `app/`: Tauri v2 + React desktop settings and transparent overlay.
-- `bot/`: Bun + discord.js + Elysia Discord bot and WebSocket server.
-- `shared/`: Zod protocol, setup codes and media expiry helpers.
-- `packages/ui/`: shadcn components and neo-brutalist classes; app and site alias `@memeover/ui/*` to its `src`, nothing is built.
-- `site/`: Astro marketing site deployed to Cloudflare.
-- `plans/`: ignored implementation plans; read the applicable plan and update `plans/README.md` truthfully.
+## Picking up work
 
-## Commands and checks
+- Keep analysis-only requests read-only. For a review, inspect the current implementation and explain the concrete gain, cost and observed regressions. Identify what already worked on the base branch before crediting a change.
+- For plan work, start with the [roadmap](plans/README.md) and the linked plan on the requested base. Check its prerequisites against the current code. Hand off the plan path, base revision and outstanding acceptance. If a STOP condition applies or shipped behavior conflicts with the plan, surface the precise decision before changing that behavior. [Feature ideas](docs/feature-ideas.md) need their own implementation request.
+- In a requested multi-agent wave, assign one agent per plan in isolated worktrees. The integrator reconciles dependent changes, regression coverage and versions against each actual parent. Update the versioned plan index with the outcome and any outstanding acceptance.
+- Preserve unrelated dirty files. If they overlap your task, use a separate worktree at the requested base. “Ship” means create the branch, commit, push and open the PR. Follow narrower instructions such as “local only”. Merge, tag and publication require their own authorization.
+- When handing off, give the checkout/branch, what changed for the user, the checks actually run and any remaining decision or acceptance step. Cite the tested SHA for remote CI. Give exact visible copy or captures when the task calls for them. Keep updates for decisions, blockers and results. In touched code, keep comments that explain constraints or surprising behavior and remove stale narration alongside the change.
 
-Use Bun 1.4.2+ for tests: older Bun 1.3.12 can hang during server-initiated WebSocket shutdown.
-`bun install --frozen-lockfile`; `bun run dev:app`, `bun run dev:bot`, `bun run dev:site`.
-Run `bun run check`, `bun run typecheck`, `bun run test`, and `bun run --cwd app build` after relevant source changes.
-Run `bun run build:site` and `bun run --cwd site check` for site or shared UI changes.
-For Rust: `cargo check --manifest-path app/src-tauri/Cargo.toml` and appropriate Rust tests.
-Local bot development reads `bot/.env`; Docker Compose reads the root `.env`.
-Add shadcn components with `bunx --bun shadcn@latest add <name>` from `app/` or `packages/ui/`; preview updates with `--dry-run` and `--diff` to preserve local customizations. Keep the root `shadcn` devDependency: `app/src/App.css` imports its shared Tailwind CSS at build time.
+## Where to work
 
-## Change checklists
+| Change | Entry point |
+| --- | --- |
+| Desktop settings or display profiles | [add-setting](.agents/skills/add-setting/SKILL.md) |
+| Missing events on desktop or stream | [diagnose-overlay](.agents/skills/diagnose-overlay/SKILL.md) |
+| Media provider / direct-media host | [add-media-host](.agents/skills/add-media-host/SKILL.md) |
+| WebSocket message or capability | [add-protocol-message](.agents/skills/add-protocol-message/SKILL.md) |
+| Discord command | [add-bot-subcommand](.agents/skills/add-bot-subcommand/SKILL.md) |
+| Bot runtime, services or lifecycle tests | [bot conventions](bot/AGENTS.md) |
+| CI filters, merge or release workflows | [workflow constraints](.github/workflows/AGENTS.md) |
+| Preparing a PR, including a draft or operator handoff | [prepare-pr](.agents/skills/prepare-pr/SKILL.md) for gates, mandatory per-product versions and French PR copy |
+| Preparing or verifying a desktop release | [release](.agents/skills/release/SKILL.md) |
 
-### Display setting
+`app/` contains the React windows and Tauri host. `bot/` runs Discord and the Elysia WebSocket server. `shared/` owns the Zod protocol, setup codes and expiry helpers. The app and Astro site import `@memeover/ui/*` directly from `packages/ui/src/`. A new Tauri command needs registration in `app/src-tauri/build.rs` and a grant in each calling window’s capability file.
 
-1. Add type and default in `app/src/shared/types.ts`; include in `OVERLAY_PROFILE_FIELDS` only for display preferences.
-2. Advance `CURRENT_SCHEMA_VERSION` and add a backward-compatible migration in `app/src/shared/settings-normalization.ts` with a test in `settings.test.ts`. Keep native persistence in `settings.ts`.
-3. Update Zod schema in `app/src/windows/settings/components/overlay-form/schema.ts`; `extractDefaults` projects `OVERLAY_PROFILE_FIELDS` automatically. Check `use-overlay-form.ts` consumers.
-4. Add the control in the relevant form section, app en/fr JSON labels and overlay consumer.
-5. Keep credentials and machine preferences out of profiles.
+## Checking a library API
 
-### Media host
+Before introducing a library call, permission or CLI flag, find the resolved version in `bun.lock` or `app/src-tauri/Cargo.lock`. Consult the installed CLI’s help or the library’s documentation MCP when available. Match the result to that version and the project configuration. If the tool lacks the answer, check the versioned upstream reference or the installed types and source. Verify the specific call in its consuming workspace. If a runtime behavior is still uncertain, say which part needs a live check.
 
-1. Update `ALLOWED_MEDIA_HOSTS` in `bot/src/media/allowlist.ts`.
-2. Update app CSP `img-src`/`media-src` in `app/src-tauri/tauri.conf.json` for the host.
-3. Update `bot/src/media/extractor.ts`, with extraction and host validation tests.
-4. If viewers should be able to post the host from Twitch chat, add its direct-media hostname to `TWITCH_MEDIA_HOSTS` in `app/src/shared/twitch/media-url.ts` (a test checks it against the CSP).
+- Tauri commands and flags: run `bun run --cwd app tauri --version` and the relevant subcommand’s `--help`, for example `bun run --cwd app tauri permission --help`. For API signatures use the [JavaScript reference](https://v2.tauri.app/reference/javascript/api/) or the Rust crate documentation for the locked version.
+- shadcn components: run `bun run --cwd packages/ui shadcn docs button` (replace `button` with the component). Open the returned docs for the configured base, then check the component MemeOver actually ships under `packages/ui/src/`.
+- Astro site APIs: use the [Astro Docs MCP](https://docs.astro.build/en/guides/build-with-ai/) when connected. Its index follows the latest release, so check that the API exists in the installed Astro version.
 
-### Protocol message
+## Interface changes
 
-1. Add schema and exported type in `shared/src/protocol.ts` (re-exported by `shared/src/index.ts`).
-2. Update bot routing and its exhaustive guard in `bot/src/server.ts`.
-3. Update `app/src/windows/overlay/hooks/route-server-message.ts` and the hook action executor.
-4. For optional messages, negotiate the capability through JOIN_ACK features before sending; missing features means an older bot.
-5. Test validation, routing, backward compatibility and real WebSocket behavior.
+Start with the shipped screen and its audience. Use [surface behavior](CONTEXT.md#what-belongs-on-screen) to decide where a change belongs. Trace each visual variant to a mounted caller. Scope the change to the variant users reach on that surface. Use the existing visual language for changes to shipped screens. Use the generic frontend-design skill for visual exploration when the brief calls for a new direction.
 
-### Bot subcommand
+Use the closest [branded component](packages/ui/src/components/branded/nb-button.tsx), the shared [theme](packages/ui/src/theme.css) and [NB classes](packages/ui/src/lib/nb-classes.ts). Bungee display type, Poppins text, strong borders and offset shadows come from these shared styles. Keep labels actionable in both languages. App strings live in `app/src/i18n/locales/`, bot strings in `bot/src/i18n.ts` and site strings in `site/src/i18n/`. Match interpolation placeholders.
 
-1. Add `bot/src/commands/subcommands/<name>.ts` and its entry in the command catalogue in `bot/src/commands/commands.ts`.
-2. Keep the builder options, handler and `privileged` permission together in that entry; set `privileged: true` for ManageGuild commands.
-3. Add bot en/fr strings in `bot/src/i18n.ts`, update `/memeover help` and both README command tables.
-4. Update site command content when present and test permissions and behavior.
+For a visual change, compare the same state before and after in the affected surface. Pick the case that could expose the regression: a French label at minimum window width, a toast in light and dark themes, or the [same media on desktop and stream](test/browser/overlay-parity.spec.ts). A settings preview is only evidence for what it actually renders.
 
-### Translations
+Use [motion tokens](packages/ui/src/lib/motion.ts), explicit transition properties (including `translate` and `scale` when used) and `ease-out` or `ease-in-out`. Provide a reduced-motion path. Preserve the media entrance from 0.3 to 1 with the 0.28 s, 0.2-bounce spring. Keep keyboard and frequent actions free of decorative motion.
 
-App: `app/src/i18n/locales/{en,fr}.json`; bot: `bot/src/i18n.ts`; site: `site/src/i18n/{en,fr}.ts`.
-Keep both languages and interpolation placeholders in parity; these are separate systems.
+For shadcn changes, run `bunx --bun shadcn@latest add <name>` from `app/` or `packages/ui/`. Preview updates with `--dry-run` and `--diff`. The app imports the root shadcn package’s CSS at build time.
 
-## Tests
+## Running and checking
 
-Use `bun:test` for pure decisions and state modules; no component DOM test harness exists.
-Root `test:unit` discovers tests under app/bot/shared/site/packages UI and scripts.
-Name suites using `mock.module` `*.mocked.test.ts`: `scripts/run-mocked-tests.ts` runs each in its own process.
-Add meaningful tests for changed behavior, not snapshots of class strings.
-`test/setup.ts` isolates environment, local storage and registry data. Never use live guild data in tests.
-CI (`.github/workflows/ci.yml`) always runs Biome, version consistency, all typechecks and Bun tests in `checks`. App frontend builds/browser tests, native Rust checks, Astro checks/site builds and bot Docker builds are filtered by changed inputs on PRs and main pushes; merge groups run everything. Files embedded by Rust tests with include_str! and files the site imports from outside site/ must be listed in the matching CI filters; scripts/ci-filters.test.ts checks both. Third-party GitHub Actions are pinned to a commit SHA with a version comment; scripts/workflow-pins.test.ts enforces it. Real dependency changes run all groups; workspace version-only lockfile changes do not (`scripts/lockfile-dependencies.ts`, shared with `site-deploy`, which skips its build and deployments for them). Every job sets `timeout-minutes`. Each push to `main` runs in its own concurrency group: do not serialize `ci` on `main`, since a pending run replaced by a newer one skips that commit's release and bot image. Docker validation never publishes an image; the separate `bot-image` job publishes to GHCR only on main after `status` succeeds. `status` must pass before merging; configure it as the sole required check. Fork and Dependabot PRs never run site deployment jobs. CI Ubuntu runners use 24.04; Linux release bundles use 22.04. Local success is not remote CI proof.
+Use the Bun version in the root `package.json`. Bun 1.3.12 can hang on server-initiated WebSocket shutdown. Run `bun install --frozen-lockfile` in the worktree. Start the needed surface with `bun run dev:app`, `dev:bot` or `dev:site`. Local bot development reads `bot/.env` and Compose reads the root `.env`.
 
-`app-release` runs after `ci` completes successfully for a push to `main` in this repository. Check out `github.event.workflow_run.head_sha` for version checks and every release build, and use the same SHA for the release tag. PR, failed and cancelled CI runs must not prepare releases; existing versions remain skipped, including a version that only exists as a draft release, so an app change needs its own version to be built.
+- After relevant source changes run `bun run check`, `bun run typecheck`, `bun run test` and the affected builds. Biome uses tabs, double quotes and 100 columns. App frontend build is `bun run --cwd app build`. For site, shared or shared UI changes also run `bun run build:site` and `bun run --cwd site check`. For Rust, build the app frontend first so Tauri can resolve `frontendDist`, then run `cargo check --manifest-path app/src-tauri/Cargo.toml` and the relevant Rust tests.
+- Use `bun:test` for pure decisions. Name suites using `mock.module` `*.mocked.test.ts` for process isolation. Use the repo’s test preload and temporary registry data. Preserve the regression assertions behind refactors.
+- Exercise visible changes through the real control. [Playwright fixtures](test/browser/README.md) cover Chrome/WebKit, themes, keyboard, reduced motion and persistence. [Local overlay simulation](docs/local-overlay-testing.md) exercises rendering. State which integrations were simulated and which ran live when reporting a result.
 
-## Bot Effect conventions
+## Local boundaries
 
-The bot uses `effect@4.1.4`. Keep domain services under `bot/src/services` with explicit layers;
-service files never import the runtime or server. `bot/src/runtime.ts` owns the single production
-composition and runtime. Run effects at Discord/Elysia boundaries; preserve facade signatures.
-Tests inject fake layers, own and dispose their runtimes, and stop servers before runtime disposal.
+Keep ordinary edits out of `.env*`, every `data/` directory (including registry and WAL), `app/src-tauri/target/` and `.claude/settings.local.json`. Redact setup codes, full browser-source links and tokens from shared output.
 
-Use Effect clock/sleep and `TestClock` for effect scheduling. Align virtual time with registry
-fixtures, whose writes use `Date.now`. Never remove or restart a fiber through its own `FiberMap`
-key; replacement finalizers must not clear newer waits. Expected Discord failures use tagged
-errors. Expiry and scheduled-job boundaries contain defects and propagate interruption;
-`E = never` does not exclude defects. Unwrap `Redacted` only at its consuming integrations,
-preserving Pino's safe serializers and hashed Discord references.
+The [Claude hooks](.claude/settings.json) guard common writes and format the named file. The Stop hook selects TypeScript checks for bot, app, shared, UI and browser tests. For Astro changes run `bun run --cwd site check` explicitly. Shell detection is heuristic. Outside Claude Code, apply the same boundaries yourself. For shell edits use `.claude/hooks/format-touched.sh <files…>` on your own files. After a hook change run `bash .claude/hooks/test-hooks.sh`.
 
-Keep behavior assertions when replacing module mocks with layers. Suites still using `mock.module`
-remain `*.mocked.test.ts`; plain suites must run safely together in the shared unit process.
-The lifecycle owns reverse finalizers; every added resource needs release and failure tests.
-
-## Design and motion
-
-Preserve the existing neo-brutalist system: shared `NB_*` classes, strong borders, offset shadows and display typography.
-Overlay = spectacle; settings = tool; site = marketing. Settings tab changes stay instant.
-Use `@memeover/ui/lib/motion` tokens and `ease-out`/`ease-in-out` utilities; avoid `transition-all`.
-Include `translate` and `scale` in explicit transitions for Tailwind v4 movement utilities.
-Every animation needs a reduced-motion path; avoid decorative motion for keyboard or frequent actions.
-The media `0.3 → 1` entrance and its 0.28 s / 0.2-bounce spring are product decisions: preserve them.
-
-## Pull requests and versions
-
-Every PR must include a version bump before it is opened, including draft PRs and PRs prepared for the user to open. Fix a missing bump when updating an existing PR.
-
-- Review the full PR diff against the latest target branch and choose the bump from its actual impact, not its size or title. Use the highest required level for each affected product.
-- **Minor** (`x.y.z → x.(y+1).0`): new user-facing functionality or a significant feature that preserves compatibility. Example: `1.6.3 → 1.7.0`.
-- **Patch** (`x.y.z → x.y.(z+1)`): bug fixes, minor adjustments, performance/security fixes, refactors and package updates. A dependency's own major bump does not automatically make MemeOver's bump major.
-- **Major** (`x.y.z → (x+1).0.0`): an intentional compatibility break in MemeOver (protocol, configuration or supported usage). Explain the break and migration in the PR.
-- Documentation, CI, tests and tooling-only PRs still require a patch for the relevant product; repository-wide-only work bumps both app and bot.
-- Keep app and bot independent: bot changes and their supporting documentation bump the bot; app/site changes bump the app/site stream. Shared code or dependencies bump every product they actually affect.
-- App versions stay synchronized in `app/package.json`, `app/src-tauri/{Cargo.toml,Cargo.lock,tauri.conf.json}` and `site/package.json`. Bot version lives in `bot/package.json`. Synchronize the corresponding workspace versions in `bun.lock`; avoid unrelated dependency changes.
-- Bump once per PR, not once per commit or review round. An adequate bump already in the PR satisfies the rule. After a rebase or another PR's merge, recheck that the version is still above the target branch and matches the final scope; recompute it if necessary.
-- Before opening or handing off the PR, verify the version diff and lockfile consistency, add a factual `CHANGELOG.md` entry for product changes, and state the old/new versions and the reason in the PR description.
-
-A version bump does not authorize a push, tag or release. App release tags remain `app-vX.Y.Z`.
-
-## Conventions and boundaries
-
-A new Tauri command must be added to COMMANDS in app/src-tauri/build.rs and granted in the capability file of each window that calls it; scripts/tauri-command-acl.test.ts checks this.
-
-Biome uses tabs, double quotes, 100 columns. Biome covers every workspace, including `packages/ui/src`.
-Use conventional commits and squash merges. Do not push, tag, publish or open PRs without authorization.
-Preserve pre-existing changes and exclude them from unrelated commits.
-Never edit `.env*`, `**/data/` (guild registry `memeover.db*`, legacy `guilds.json*`), `app/src-tauri/target/` or `.claude/settings.local.json` during ordinary source work.
-Project skills live under `.agents/skills` with `.claude/skills` and `.agent/skills` symlinks; vendored skill metadata stays in `skills-lock.json`.
-Claude Code hooks in `.claude/settings.json` guard edits and common shell writes to protected paths, format files named by Edit/Write and typecheck touched workspaces when the agent stops. These hooks run only in Claude Code; Codex must enforce the same boundaries through its own workflow. Both guards share the rules in `.claude/hooks/protected-paths.mjs`, apply them below the project root and fail closed when `jq` or `bun` cannot run. The Bash guard resolves, from the hook cwd, the literal targets of redirections and known write commands (`rm`, `mv`, `cp`, `tee`, `touch`, `sed -i`, `dd`, `sqlite3`, `rsync`, `git rm`/`mv`/`clean -x`, `find -delete`, `bash -c`, …), follows `cd`, `pushd` and subshells, and blocks removing a directory or glob that contains an existing protected entry; its regression suite runs in `bun run test`. It remains a command-text heuristic, not a shell parser or sandbox: dynamic paths, interpreters (Python, Perl, Bun, Node), `find -exec`, `xargs` input and aliases are not covered, and `sqlite3` on a registry is blocked even for reads. For Bash edits, explicitly format only your named files with `.claude/hooks/format-touched.sh path/to/file.ts [...]`; it never scans the dirty tree or runs on Stop. Run `bash .claude/hooks/test-hooks.sh` after hook changes, and the `prepare-pr` skill before asking for a review.
-
-Product ideas in `docs/feature-ideas.md` are not implementation plans. Require an explicit user request before implementing them.
+Edit project skills under `.agents/skills/`. The other agent directories link there. Keep vendored skill provenance in `skills-lock.json`.
