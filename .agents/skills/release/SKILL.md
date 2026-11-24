@@ -1,16 +1,12 @@
 ---
 name: release
-description: Prepare a MemeOver desktop release with synchronized versions, changelog and validation; publishing remains an operator action.
+description: Prepare or verify a MemeOver desktop release, from synchronized app versions through the draft artifacts and updater manifest.
 ---
 
-# release
+# Desktop release
 
-1. Read [AGENTS.md](../../../AGENTS.md) and confirm the intended version and branch.
+For local preparation, follow [PR versions and gates](../prepare-pr/SKILL.md). Confirm the intended branch and app version, synchronize the app/Tauri/site and workspace lock entries, and write the user-facing changelog. Run the Bun and Rust checks and tests, app build, site build and site check. Report which platforms ran.
 
-2. Synchronize app version in `app/package.json`, `app/src-tauri/Cargo.toml`, `app/src-tauri/Cargo.lock`, `app/src-tauri/tauri.conf.json` and `site/package.json`. Keep bot version independent.
+For a delivery request, follow the [release workflow](../../../.github/workflows/app-release.yml) for the CI-validated main SHA. A draft can exist before all platform jobs finish. Wait for the complete workflow, then verify `app-vX.Y.Z` targets that SHA, the platform installers and updater artifacts exist, and `latest.json` refers to the matching downloads with signatures. Inspect the workflow conclusion and job outcomes if a release was skipped or failed.
 
-3. Refresh Cargo.lock via cargo check and write a factual user-facing CHANGELOG entry.
-
-4. Run check, typecheck, Bun and Rust tests, app build and site build/check. State any unverified platform gates.
-
-5. Stop after preparing reviewable changes: tagging `app-vX.Y.Z` and publishing the draft release are operator actions unless the user explicitly authorized them.
+Publish only within the operator’s authorization. For an authorized publication verify the release is public and report the resulting [site refresh](../../../.github/workflows/site-refresh.yml) state. Bot image publication and deployment have their own [delivery path](../../../README.md#deployment).

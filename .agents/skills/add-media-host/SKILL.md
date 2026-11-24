@@ -11,4 +11,6 @@ description: Add a supported MemeOver media host consistently across bot validat
 
 3. Update `bot/src/media/extractor.ts` and its tests; cover lookalike hosts, actual media forms and expiry where applicable.
 
-4. Run extraction, host-validation and app-build gates. Record CORS observations separately from physical WebView playback proof.
+4. When the requested scope includes Twitch viewer submissions, add the direct-media hostname to `TWITCH_MEDIA_HOSTS` in `app/src/shared/twitch/media-url.ts`. Exercise its URL validation and CSP parity in `media-url.test.ts`.
+
+5. Run extraction, host-validation and app-build gates. Record CORS observations separately from physical WebView playback proof.
