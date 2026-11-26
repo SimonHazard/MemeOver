@@ -24,12 +24,17 @@
     "test:unit": "bun test ./app/src ./bot/src ./shared/src ./site/src ./packages/ui/src ./scripts --path-ignore-patterns='**/*.mocked.test.{ts,tsx}'",
     "test:mocked": "bun scripts/run-mocked-tests.ts",
     "test:browser": "playwright test",
+    "playwright:cli": "playwright cli",
     "typecheck:browser": "bun run --cwd app typecheck:browser"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@playwright/test": "^1.63.0",
+    "@tanstack/intent": "0.5.6",
     "shadcn": "^4.23.0"
+  },
+  "intent": {
+    "skills": ["@tanstack/router-core", "@tanstack/router-plugin", "@tanstack/virtual-file-routes"]
   },
   "overrides": {
     "miniflare": {

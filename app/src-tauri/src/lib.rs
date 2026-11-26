@@ -648,7 +648,14 @@ fn setup_settings_close_behavior(app: &tauri::App) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(all(feature = "native-e2e", debug_assertions))]
+    let builder = if std::env::var_os("TAURI_WEBDRIVER_PORT").is_some() {
+        builder.plugin(tauri_plugin_wdio_webdriver::init())
+    } else {
+        builder
+    };
+    builder
         .manage(server_creator::ServerCreatorState::default())
         .manage(auto_update::AutoUpdateState::default())
         // The localhost plugin is not in this chain: it starts only once the user

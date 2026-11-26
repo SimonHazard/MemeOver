@@ -34,6 +34,13 @@ Before introducing a library call, permission or CLI flag, find the resolved ver
 - shadcn components: run `bun run --cwd packages/ui shadcn docs button` (replace `button` with the component). Open the returned docs for the configured base, then check the component MemeOver actually ships under `packages/ui/src/`.
 - Astro site APIs: use the [Astro Docs MCP](https://docs.astro.build/en/guides/build-with-ai/) when connected. Its index follows the latest release, so check that the API exists in the installed Astro version.
 
+## Agent tools
+
+- Use the `discord-docs` MCP for Discord developer APIs and the `astro-docs` MCP for Astro. Codex loads [project settings](.codex/config.toml) in a trusted checkout. Claude Code asks for approval for each [project server](.mcp.json). Check availability with `codex mcp list` or `claude mcp list`. Both public docs services accept queries without credentials. Keep tokens, private Discord data and full browser-source links out of queries. If a server is unavailable, use [Discord Developer Documentation](https://docs.discord.com/llms.txt) or [Astro Docs](https://docs.astro.build/).
+- For TanStack work, run `bun run intent list` from the workspace root and `bun run intent load '<package>#<skill>'` for the matching guide. Intent resolves the guide from the installed package. For Query and Form, use [TanStack CLI's documentation commands](https://tanstack.com/cli/latest/docs/cli-reference#tanstack-doc) when Intent has no guide. For example, run `bunx @tanstack/cli@0.72.16 doc query framework/react/overview --docs-version v5` or `bunx @tanstack/cli@0.72.16 search-docs 'form validation' --library form --framework react`. Verify APIs against the installed versions.
+- For Elysia WebSocket or HTTP work, use the [Elysia 1.x skill](.agents/skills/elysia-v1/SKILL.md) and [bot conventions](bot/AGENTS.md). The skill points to the official 1.x source revision.
+- For interactive web checks, use [Playwright CLI](test/browser/README.md#interactive-browser-checks) from the installed Playwright version. Use the [browser suite](test/browser/README.md) for repeatable regression checks. To check the real desktop windows, run the [native smoke test](test/browser/README.md#native-desktop-smoke-test).
+
 ## Interface changes
 
 Start with the shipped screen and its audience. Use [surface behavior](CONTEXT.md#what-belongs-on-screen) to decide where a change belongs. Trace each visual variant to a mounted caller. Scope the change to the variant users reach on that surface. Use the existing visual language for changes to shipped screens. Use the generic frontend-design skill for visual exploration when the brief calls for a new direction.

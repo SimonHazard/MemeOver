@@ -10,6 +10,25 @@ bun run test:browser
 BROWSER_PRODUCTION=1 bun run test:browser
 ```
 
+## Interactive browser checks
+
+The installed Playwright ships an interactive CLI. From the repository root, keep
+`bun run dev:site` running in one terminal and use a named browser session in another:
+
+```sh
+bun run playwright:cli --help
+bun run playwright:cli -s=memeover-site open http://localhost:4321/ --browser=chrome
+bun run playwright:cli -s=memeover-site snapshot
+bun run playwright:cli -s=memeover-site close
+```
+
+For WebKit, install it with `bun run playwright install webkit` and use
+`--browser=webkit`. CLI output goes to `.playwright-cli/`. Use local fixtures
+and synthetic data for links and account state. Tauri APIs need the desktop fixture
+or a native session.
+
+## Regression suite
+
 The production mode compiles the same components with the app Vite config into an ignored `app/dist-browser/` directory and serves them with Vite preview. Normal app builds do not include these fixtures.
 
 The suite starts its own Vite server on port 1429 and runs on Chrome and WebKit.
@@ -74,3 +93,9 @@ On failure, `test-results/` contains Playwright's trace and error context. Both
 `test-results/` and `playwright-report/` are ignored by Git.
 
 The stream destination regressions cover live desktop suppression (including queued content, reactions, audio pause and history replays), persistence and keyboard selection, restoration on source disable, no fallback on source failure, and copied-link controls in both destinations. The History tab explains stream-only mode and disables Replay there, and Skip is enabled for the source only once a loaded page reports in.
+
+## Native desktop smoke test
+
+Run `bun run --cwd app test:native` from the repository root on a desktop with the Tauri build prerequisites and a graphical session. WebdriverIO launches a debug build with a separate app identifier, selects the real settings window and checks its navigation and the presence of the overlay window. The embedded loopback driver is enabled by the `native-e2e` Cargo feature in debug builds. The production build uses the default features.
+
+The native smoke test exercises window creation and the WebView. Use the browser fixtures above for media playback scenarios and an actual OBS source for streaming acceptance.

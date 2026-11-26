@@ -32,6 +32,7 @@ data/
 # Browser test artifacts
 /test-results/
 /playwright-report/
+/.playwright-cli/
 
 # Production browser regression fixtures
 app/dist-browser/

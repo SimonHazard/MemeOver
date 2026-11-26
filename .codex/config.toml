@@ -1,0 +1,6 @@
+[mcp_servers.discord-docs]
+url = "https://docs.discord.com/mcp"
+disabled_tools = ["submit_feedback"]
+
+[mcp_servers.astro-docs]
+url = "https://mcp.docs.astro.build/mcp"
