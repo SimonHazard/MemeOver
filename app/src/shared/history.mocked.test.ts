@@ -69,7 +69,7 @@ test("clear persists and emits", async () => {
 	expect(events.emitted).toEqual([{ event: "history-updated", payload: undefined }]);
 });
 test("replay preserves queue identity", async () => {
-	// characterization: replay reuses queueId; fixed by plan 018.
+	// characterization: replay reuses queueId.
 	await replayHistoryItem(item("original"));
 	expect(events.emitted).toEqual([{ event: "replay-item", payload: item("original") }]);
 });

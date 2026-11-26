@@ -1,5 +1,5 @@
 // A public client's refresh token is single-use. To avoid two windows spending the same one,
-// only the OVERLAY window refreshes (plan 112). The settings window writes this store in exactly
+// only the OVERLAY window refreshes. The settings window writes this store in exactly
 // two cases: after a completed device flow, and on disconnect.
 import { emit } from "@tauri-apps/api/event";
 import { Store } from "@tauri-apps/plugin-store";

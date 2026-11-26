@@ -10,7 +10,7 @@ export const DURATION = {
 	exit: 0.13,
 	reduced: 0.12,
 } as const;
-/** The product's overlay media pop; retain plan 007's values. */
+/** The product's overlay media pop spring. */
 export const SPRING_MEDIA_POP = {
 	type: "spring",
 	duration: 0.28,
