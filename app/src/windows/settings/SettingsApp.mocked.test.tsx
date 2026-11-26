@@ -8,12 +8,13 @@ import { HistoryItemCard } from "./components/history-item";
 // Isolate navigation/native APIs; keep the real settings root and Base UI components.
 mock.module("../../routeTree.gen", () => ({ routeTree: {} }));
 let currentItem: HistoryItem;
+const RouterProvider = () => (
+	<HistoryItemCard item={currentItem} onReplay={() => {}} onMuteAuthor={() => {}} />
+);
 mock.module("@tanstack/react-router", () => ({
 	createMemoryHistory: () => ({}),
 	createRouter: () => ({}),
-	RouterProvider: () => (
-		<HistoryItemCard item={currentItem} onReplay={() => {}} onMuteAuthor={() => {}} />
-	),
+	RouterProvider,
 }));
 const { SettingsApp } = await import("./SettingsApp");
 
