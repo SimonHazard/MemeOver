@@ -19,6 +19,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- App/site (1.13.5), bot (1.6.32): no behavior change — the media CDN host allowlist (Tenor, Giphy, KLIPY, Imgur) now lives once in `@memeover/shared` and both the bot's Discord admission and the app's Twitch chat media read the same set, and URL parsing guards share one `tryParseUrl` helper. Characterization tests pin the exact host sets and admission behavior.
+
 - App/site (1.13.4): no behavior change — profile names keep the exact same trim and 48-character cap when saving, importing or restoring profiles; the rule now lives in one shared helper pinned by characterization tests.
 
 - App/site (1.13.3), bot (1.6.31): update dependencies to the latest compatible patch and minor versions — including React 19.3, Vite 8.4, Astro 7.4, Tauri 2.12.7, discord.js 14.28, Biome 2.6 and Effect 4.1.6 — with no breaking change for the APIs in use.
