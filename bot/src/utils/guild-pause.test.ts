@@ -10,6 +10,7 @@ import {
 import { normalizeRegistry } from "./registry-state";
 
 test("pause choices, indefinite and expiry are bounded", () => {
+	expect(MAX_TIMER_MS).toBe(2_147_483_647);
 	for (const choice of Object.keys(PAUSE_CHOICES) as (keyof typeof PAUSE_CHOICES)[])
 		expect(resolvePausedUntil(choice, 1000)).toBe(
 			choice === "indefinite" ? PAUSE_INDEFINITE : 1000 + (PAUSE_CHOICES[choice] ?? 0),
