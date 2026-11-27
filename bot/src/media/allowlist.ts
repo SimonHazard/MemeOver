@@ -1,41 +1,22 @@
-import { isCdnUrlExpired } from "@memeover/shared";
+import { DISCORD_CDN_HOSTS, isCdnUrlExpired, MEDIA_CDN_HOSTS, tryParseUrl } from "@memeover/shared";
 
 export { isCdnUrlExpired } from "@memeover/shared";
+
+const BARE_MEDIA_DOMAINS = ["tenor.com", "giphy.com", "klipy.com"];
+
 export const ALLOWED_MEDIA_HOSTS: ReadonlySet<string> = new Set([
-	"cdn.discordapp.com",
-	"media.discordapp.net",
-	// Tenor (Google) — media1 subdomain also active
-	"tenor.com",
-	"media.tenor.com",
-	"media1.tenor.com",
-	"c.tenor.com",
-	// Giphy (Shutterstock) — numbered subdomains media0–media4 for load balancing
-	"giphy.com",
-	"media.giphy.com",
-	"media0.giphy.com",
-	"media1.giphy.com",
-	"media2.giphy.com",
-	"media3.giphy.com",
-	"media4.giphy.com",
-	"i.giphy.com",
-	// KLIPY — current GIF delivery domains
-	"klipy.com",
-	"static.klipy.com",
-	"static1.klipy.com",
-	"static2.klipy.com",
-	"i.imgur.com",
+	...DISCORD_CDN_HOSTS,
+	...MEDIA_CDN_HOSTS,
+	...BARE_MEDIA_DOMAINS,
 ]);
 
 /** Host in allowlist AND (for Discord CDN URLs) the `ex=` expiry param is fresh.
  *  Ref: https://discord.com/developers/docs/reference#cdn-formatting */
 export function isAllowedAndFresh(url: string): boolean {
-	try {
-		const parsed = new URL(url);
-		if (parsed.protocol !== "https:" || parsed.port !== "") return false;
-		if (!ALLOWED_MEDIA_HOSTS.has(parsed.hostname)) return false;
-		if (isCdnUrlExpired(url)) return false;
-		return true;
-	} catch {
-		return false;
-	}
+	const parsed = tryParseUrl(url);
+	if (!parsed) return false;
+	if (parsed.protocol !== "https:" || parsed.port !== "") return false;
+	if (!ALLOWED_MEDIA_HOSTS.has(parsed.hostname)) return false;
+	if (isCdnUrlExpired(url)) return false;
+	return true;
 }

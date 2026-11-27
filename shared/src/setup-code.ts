@@ -1,4 +1,5 @@
 import { DISCORD_SNOWFLAKE_REGEX, DISCORD_SNOWFLAKE_SEARCH_REGEX } from "./protocol";
+import { tryParseUrl } from "./url";
 
 export interface ParsedConnectionCode {
 	guildId: string;
@@ -24,21 +25,18 @@ function stripCodeFence(raw: string): string {
 }
 
 function parseSetupUrl(raw: string): ParsedConnectionCode | null {
-	try {
-		const url = new URL(raw);
-		if (url.protocol !== "memeover:") return null;
-		const action = url.hostname || url.pathname.replace(/^\/+/, "");
-		if (action !== "setup") return null;
+	const url = tryParseUrl(raw);
+	if (!url) return null;
+	if (url.protocol !== "memeover:") return null;
+	const action = url.hostname || url.pathname.replace(/^\/+/, "");
+	if (action !== "setup") return null;
 
-		const guildId = url.searchParams.get("guild_id") ?? url.searchParams.get("guildId");
-		const token = url.searchParams.get("token");
-		const wsUrl = url.searchParams.get("ws_url") ?? url.searchParams.get("wsUrl") ?? undefined;
-		if (!guildId || !token || !DISCORD_SNOWFLAKE_REGEX.test(guildId)) return null;
+	const guildId = url.searchParams.get("guild_id") ?? url.searchParams.get("guildId");
+	const token = url.searchParams.get("token");
+	const wsUrl = url.searchParams.get("ws_url") ?? url.searchParams.get("wsUrl") ?? undefined;
+	if (!guildId || !token || !DISCORD_SNOWFLAKE_REGEX.test(guildId)) return null;
 
-		return { guildId, token, wsUrl };
-	} catch {
-		return null;
-	}
+	return { guildId, token, wsUrl };
 }
 
 function parseJson(raw: string): ParsedConnectionCode | null {
