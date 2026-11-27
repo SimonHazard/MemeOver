@@ -80,7 +80,7 @@ test("switches, select, text inputs, toggles, color controls and save", async ({
 	await select.click();
 	const options = page.getByRole("option");
 	await expect(options.first()).toBeVisible();
-	const label = await options.nth(1).innerText();
+	const label = (await options.nth(1).textContent()) ?? "";
 	await options.nth(1).click();
 	await expect(select).toContainText(label.trim());
 	await select.focus();

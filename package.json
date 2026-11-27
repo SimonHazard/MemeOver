@@ -28,10 +28,10 @@
     "typecheck:browser": "bun run --cwd app typecheck:browser"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.15",
-    "@playwright/test": "^1.63.0",
+    "@biomejs/biome": "^2.6.9",
+    "@playwright/test": "^1.65.1",
     "@tanstack/intent": "0.5.6",
-    "shadcn": "^4.23.0"
+    "shadcn": "^4.23.1"
   },
   "intent": {
     "skills": ["@tanstack/router-core", "@tanstack/router-plugin", "@tanstack/virtual-file-routes"]

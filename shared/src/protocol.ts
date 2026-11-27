@@ -111,6 +111,9 @@ const ReactionEventSchema = z.object({
 /** `paused_until` value meaning "until an admin resumes". Never schedule it as a timer. */
 export const PAUSE_INDEFINITE = Number.MAX_SAFE_INTEGER;
 
+/** Largest delay a setTimeout-style timer accepts (2^31 - 1 ms); longer waits must be split. */
+export const MAX_TIMER_MS = 2_147_483_647;
+
 export const GUILD_STATE_FEATURE = "guild_state";
 const GuildStateMessageSchema = z.object({
 	type: z.literal("GUILD_STATE"),

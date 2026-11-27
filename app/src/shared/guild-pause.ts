@@ -1,8 +1,6 @@
-import { PAUSE_INDEFINITE } from "@memeover/shared";
+import { MAX_TIMER_MS, PAUSE_INDEFINITE } from "@memeover/shared";
 
 export { PAUSE_INDEFINITE } from "@memeover/shared";
-
-const MAX_TIMER_MS = 2_147_483_647;
 export function isGuildPausedAt(pausedUntil: number | null, now: number): boolean {
 	return pausedUntil !== null && pausedUntil > now;
 }

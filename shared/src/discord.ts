@@ -1,3 +1,5 @@
+import { DISCORD_SNOWFLAKE_REGEX } from "./protocol";
+
 /** View Channel + Send Messages + Read Message History. */
 export const DISCORD_INVITE_PERMISSIONS = 68608;
 export function createDiscordInviteUrl(
@@ -6,7 +8,7 @@ export function createDiscordInviteUrl(
 	options: { integrationType?: 0 } = {},
 ): string | null {
 	const id = clientId.trim();
-	if (!/^\d{17,20}$/.test(id)) return null;
+	if (!DISCORD_SNOWFLAKE_REGEX.test(id)) return null;
 	const params = new URLSearchParams({
 		client_id: id,
 		scope: "bot applications.commands",

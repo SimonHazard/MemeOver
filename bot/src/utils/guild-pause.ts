@@ -1,8 +1,7 @@
-import { PAUSE_INDEFINITE } from "@memeover/shared";
+import { MAX_TIMER_MS, PAUSE_INDEFINITE } from "@memeover/shared";
 import type { GuildConfig } from "./registry-state";
 
-export { PAUSE_INDEFINITE } from "@memeover/shared";
-export const MAX_TIMER_MS = 2_147_483_647;
+export { MAX_TIMER_MS, PAUSE_INDEFINITE } from "@memeover/shared";
 export const PAUSE_CHOICES = {
 	"5m": 300_000,
 	"15m": 900_000,

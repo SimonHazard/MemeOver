@@ -22,6 +22,12 @@ export function cleanTwitchText(text: string): string {
 		.trim()
 		.slice(0, 140);
 }
+const MEDIA_TYPE_PATTERNS: ReadonlyArray<readonly [RegExp, TwitchMediaType]> = [
+	[/\.gif$/i, "gif"],
+	[/\.(png|jpe?g|webp|bmp|svg)$/i, "image"],
+	[/\.(mp4|webm|mov|mkv|avi)$/i, "video"],
+	[/\.(mp3|wav|ogg|flac|aac|m4a)$/i, "audio"],
+];
 export function detectMediaType(url: string): TwitchMediaType | null {
 	let pathname: string;
 	try {
@@ -29,10 +35,8 @@ export function detectMediaType(url: string): TwitchMediaType | null {
 	} catch {
 		return null;
 	}
-	if (/\.gif$/i.test(pathname)) return "gif";
-	if (/\.(png|jpe?g|webp|bmp|svg)$/i.test(pathname)) return "image";
-	if (/\.(mp4|webm|mov|mkv|avi)$/i.test(pathname)) return "video";
-	if (/\.(mp3|wav|ogg|flac|aac|m4a)$/i.test(pathname)) return "audio";
+	for (const [pattern, mediaType] of MEDIA_TYPE_PATTERNS)
+		if (pattern.test(pathname)) return mediaType;
 	return null;
 }
 export function mediaFromChatText(
