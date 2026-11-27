@@ -19,25 +19,29 @@ export const NB_HOVER_SHADOW_LG = "hover:shadow-[4px_4px_0px_0px_var(--nb-shadow
 
 // ─── Button classes ──────────────────────────────────────────────────────────
 
+const NB_BTN_BORDER = "border-2 border-foreground";
+const NB_BTN_TRANSITION =
+	"transition-[color,background-color,border-color,box-shadow,transform,translate,scale,opacity] duration-150 ease-out font-display tracking-wide";
+
 /** Standard neo-brutalist button — 2px shadow, active press, display font */
 export const NB_BTN_BASE = [
-	"border-2 border-foreground",
+	NB_BTN_BORDER,
 	NB_SHADOW_SM,
 	"hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_var(--nb-shadow)] motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0",
 	"active:scale-100 motion-reduce:active:translate-x-0 motion-reduce:active:translate-y-0 active:shadow-none active:translate-x-0.5 active:translate-y-0.5",
-	"transition-[color,background-color,border-color,box-shadow,transform,translate,scale,opacity] duration-150 ease-out font-display tracking-wide",
+	NB_BTN_TRANSITION,
 ].join(" ");
 
 /** Small button — NB_BTN_BASE + text-xs */
-export const NB_BTN_SM = NB_BTN_BASE + " text-xs";
+export const NB_BTN_SM = [NB_BTN_BASE, "text-xs"].join(" ");
 
 /** Large button — 3px shadow, bigger active press offset */
 export const NB_BTN_LG = [
-	"border-2 border-foreground",
+	NB_BTN_BORDER,
 	NB_SHADOW_MD,
 	"hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--nb-shadow)] motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0",
 	"active:scale-100 motion-reduce:active:translate-x-0 motion-reduce:active:translate-y-0 active:shadow-none active:translate-x-0.75 active:translate-y-0.75",
-	"transition-[color,background-color,border-color,box-shadow,transform,translate,scale,opacity] duration-150 ease-out font-display tracking-wide",
+	NB_BTN_TRANSITION,
 ].join(" ");
 
 /** Disabled state — combine with any NB_BTN_* */
