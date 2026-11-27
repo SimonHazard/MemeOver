@@ -22,6 +22,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
+export const MAX_PROFILE_NAME_LENGTH = 48;
+
+export function sanitizeProfileName(name: string): string {
+	return name.trim().slice(0, MAX_PROFILE_NAME_LENGTH);
+}
+
 export function pickOverlayProfileSettings(settings: unknown): OverlayProfileSettings {
 	const normalized = normalizeSettings({
 		schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -59,13 +65,13 @@ export function resolveOverlayProfileSettings(
 export function normalizeProfile(raw: unknown): OverlayProfile | null {
 	if (!isRecord(raw)) return null;
 	const now = Date.now();
-	const name = typeof raw.name === "string" ? raw.name.trim() : "";
+	const name = typeof raw.name === "string" ? sanitizeProfileName(raw.name) : "";
 	if (!name) return null;
 	if (!isRecord(raw.settings)) return null;
 
 	return {
 		id: typeof raw.id === "string" && raw.id.length > 0 ? raw.id : crypto.randomUUID(),
-		name: name.slice(0, 48),
+		name,
 		settings: pickStoredProfileSettings(raw.settings),
 		createdAt: typeof raw.createdAt === "number" ? raw.createdAt : now,
 		updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : now,
@@ -99,7 +105,7 @@ export function parseOverlayProfileImport(text: string): OverlayProfile {
 		settingsSource = raw.settings ?? raw;
 	}
 
-	const cleanName = name.trim().slice(0, 48);
+	const cleanName = sanitizeProfileName(name);
 	if (!cleanName) throw new Error("Missing profile name");
 	if (!isRecord(settingsSource)) throw new Error("Missing profile settings");
 
