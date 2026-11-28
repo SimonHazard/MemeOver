@@ -19,6 +19,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 
+- App/site (1.13.4): no behavior change — profile names keep the exact same trim and 48-character cap when saving, importing or restoring profiles; the rule now lives in one shared helper pinned by characterization tests.
+
 - App/site (1.13.3), bot (1.6.31): update dependencies to the latest compatible patch and minor versions — including React 19.3, Vite 8.4, Astro 7.4, Tauri 2.12.7, discord.js 14.28, Biome 2.6 and Effect 4.1.6 — with no breaking change for the APIs in use.
 
 ### Fixed

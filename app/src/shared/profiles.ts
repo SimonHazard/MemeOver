@@ -3,6 +3,7 @@ import {
 	normalizeProfile,
 	parseOverlayProfileImport,
 	pickOverlayProfileSettings,
+	sanitizeProfileName,
 } from "./profile-settings";
 import type { OverlayProfile, OverlayProfileSettings } from "./types";
 
@@ -33,7 +34,7 @@ export async function createOverlayProfile(
 	const now = Date.now();
 	const profile: OverlayProfile = {
 		id: crypto.randomUUID(),
-		name: name.trim().slice(0, 48),
+		name: sanitizeProfileName(name),
 		settings: pickOverlayProfileSettings(settings),
 		createdAt: now,
 		updatedAt: now,
