@@ -1,3 +1,4 @@
+import { tryParseUrl } from "@memeover/shared";
 import { z } from "zod";
 
 export interface SessionState {
@@ -44,18 +45,15 @@ const revocationSchema = z.object({
 });
 
 export function isTrustedReconnectUrl(value: string): boolean {
-	try {
-		const url = new URL(value);
-		return (
-			url.protocol === "wss:" &&
-			(url.hostname === "twitch.tv" || url.hostname.endsWith(".twitch.tv")) &&
-			!url.username &&
-			!url.password &&
-			!url.port
-		);
-	} catch {
-		return false;
-	}
+	const url = tryParseUrl(value);
+	if (!url) return false;
+	return (
+		url.protocol === "wss:" &&
+		(url.hostname === "twitch.tv" || url.hostname.endsWith(".twitch.tv")) &&
+		!url.username &&
+		!url.password &&
+		!url.port
+	);
 }
 
 export function onSessionMessage(

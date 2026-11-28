@@ -1,4 +1,4 @@
-import type { MediaType } from "@memeover/shared";
+import { type MediaType, tryParseUrl } from "@memeover/shared";
 import type { Message, PartialMessage } from "discord.js";
 import { StickerFormatType } from "discord.js";
 import { isAllowedAndFresh, isCdnUrlExpired } from "./allowlist";
@@ -19,11 +19,7 @@ const AUDIO_PATTERN = /\.(mp3|wav|ogg|flac|aac|m4a)(\?.*)?$/i;
  * are treated as the same media.
  */
 export function urlPathname(url: string): string {
-	try {
-		return new URL(url).pathname;
-	} catch {
-		return url;
-	}
+	return tryParseUrl(url)?.pathname ?? url;
 }
 
 export function detectMediaType(url: string): MediaType | null {

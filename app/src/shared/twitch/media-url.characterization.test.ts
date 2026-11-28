@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { detectMediaType } from "./media-url";
+import { detectMediaType, mediaFromChatText, TWITCH_MEDIA_HOSTS } from "./media-url";
 
 // Characterization: pins the exact detectMediaType result for a fixed battery of
 // inputs. Expected values were captured from the implementation before the
@@ -48,3 +48,55 @@ for (const [input, expected] of CASES)
 	test(`detectMediaType(${JSON.stringify(input)}) === ${JSON.stringify(expected)}`, () => {
 		expect(detectMediaType(input)).toBe(expected);
 	});
+
+// Characterization: pins the exact Twitch media-host set before sourcing it
+// from @memeover/shared. Expected values were captured from the implementation
+// as it stands on main.
+const EXPECTED_TWITCH_HOSTS = [
+	"c.tenor.com",
+	"i.giphy.com",
+	"i.imgur.com",
+	"media.giphy.com",
+	"media.tenor.com",
+	"media0.giphy.com",
+	"media1.giphy.com",
+	"media1.tenor.com",
+	"media2.giphy.com",
+	"media3.giphy.com",
+	"media4.giphy.com",
+	"static.klipy.com",
+	"static1.klipy.com",
+	"static2.klipy.com",
+];
+
+test("Twitch media hosts are exactly the expected set", () => {
+	expect([...TWITCH_MEDIA_HOSTS].sort()).toEqual(EXPECTED_TWITCH_HOSTS);
+	expect(TWITCH_MEDIA_HOSTS.size).toBe(14);
+});
+
+test("every Twitch media host admits a direct gif URL and keeps the original token", () => {
+	for (const host of TWITCH_MEDIA_HOSTS)
+		expect(mediaFromChatText(`https://${host}/a.gif`)).toEqual({
+			url: `https://${host}/a.gif`,
+			mediaType: "gif",
+			rest: "",
+		});
+});
+
+test("chat media pins scheme/host normalization and rejection cases", () => {
+	expect(mediaFromChatText("HTTPS://I.IMGUR.COM/A.GIF")).toEqual({
+		url: "HTTPS://I.IMGUR.COM/A.GIF",
+		mediaType: "gif",
+		rest: "",
+	});
+	for (const text of [
+		"https://tenor.com/a.gif",
+		"https://giphy.com/gifs/a",
+		"https://cdn.discordapp.com/a.png",
+		"https://i.imgur.com:444/a.png",
+		"https://user:pw@i.imgur.com/a.png",
+		"http://i.imgur.com/a.png",
+		"not a url",
+	])
+		expect(mediaFromChatText(text)).toBeNull();
+});

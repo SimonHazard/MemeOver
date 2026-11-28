@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { tryParseUrl } from "@memeover/shared";
 import pino from "pino";
 
 const HASH_LENGTH = 12;
@@ -32,18 +33,16 @@ export function mediaUrlLogFields(rawUrl: string): {
 	media_host: string;
 	media_path_hash: string | undefined;
 } {
-	try {
-		const parsed = new URL(rawUrl);
-		return {
-			media_host: parsed.hostname,
-			media_path_hash: logHash(parsed.pathname),
-		};
-	} catch {
+	const parsed = tryParseUrl(rawUrl);
+	if (!parsed)
 		return {
 			media_host: "invalid-url",
 			media_path_hash: logHash(rawUrl),
 		};
-	}
+	return {
+		media_host: parsed.hostname,
+		media_path_hash: logHash(parsed.pathname),
+	};
 }
 
 export function discordRefLogFields(refs: {
